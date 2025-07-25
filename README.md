@@ -5,9 +5,13 @@ Laravel is a web application framework with expressive, elegant syntax. We belie
 ## How to Setup 
 
 git clone https://github.com/yourusername/katibayan.git
+##
 cd katibayan
+##
 composer install
+##
 copy .env.example .env
+##
 
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
