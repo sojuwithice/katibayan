@@ -1,0 +1,238 @@
+/* Global styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+}
+
+body {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #dddfe5;
+}
+
+.container {
+    display: flex;
+    width: 100%;
+    max-width: 1100px;
+    height: 600px;
+    background: #fff;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Left panel */
+.left-panel {
+    flex: 1;
+    background: linear-gradient(135deg, #e6f0d7, #2e86de);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 60px;
+    border-top-right-radius: 120px;
+    border-bottom-right-radius: 120px;
+}
+
+.welcome-text {
+    font-size: 22px;
+    font-weight: 400;
+}
+
+.brand-text {
+    font-size: 42px;
+    font-weight: 700;
+}
+
+.brand-text span {
+    font-weight: 600;
+}
+
+.portal-badge {
+    margin-top: 15px;
+    background: #002b45;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 6px 20px;
+    border-radius: 20px;
+}
+
+/* Right panel */
+.right-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 50px;
+    position: relative;
+}
+
+.theme-toggle {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 22px;
+}
+
+.login-box {
+    max-width: 350px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.login-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: #0077c2;
+}
+
+.login-subtitle {
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 25px;
+}
+
+/* Form */
+.form-group {
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #dcdcdc;
+    border-radius: 30px;
+    outline: none;
+    font-size: 14px;
+    transition: border 0.3s ease;
+}
+
+.form-group input:focus {
+    border-color: #0077c2;
+}
+
+.password-group {
+    display: flex;
+    align-items: center;
+}
+
+.password-group .toggle-password {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+}
+
+/* Remember / Forgot */
+.remember-forgot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    font-size: 13px;
+}
+
+.remember-forgot a {
+    color: #0077c2;
+    text-decoration: none;
+}
+
+.remember-forgot a:hover {
+    text-decoration: underline;
+}
+
+/* Button */
+.login-button {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 30px;
+    background: #0077c2;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.login-button:hover {
+    background: #005f99;
+}
+
+/* Register */
+.register-section {
+    margin-top: 15px;
+    font-size: 13px;
+}
+
+.register-section a {
+    color: #0077c2;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.register-section a:hover {
+    text-decoration: underline;
+}
+
+/* ✅ Responsive Design */
+@media (max-width: 900px) {
+    .container {
+        flex-direction: column;
+        height: auto;
+        max-width: 95%;
+    }
+
+    .left-panel {
+        border-radius: 0;
+        border-bottom-right-radius: 60px;
+        border-bottom-left-radius: 60px;
+        align-items: center;
+        text-align: center;
+        padding: 40px 20px;
+    }
+
+    .right-panel {
+        padding: 40px 20px;
+    }
+
+    .login-box {
+        width: 100%;
+    }
+}
+/* ============================= */
+/* Password Toggle (Eye Icon)    */
+/* ============================= */
+.password-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-group input {
+    padding-right: 45px; /* leave space for the eye icon */
+}
+
+.toggle-password {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    font-size: 18px;
+    color: #888;
+    transition: color 0.3s ease;
+}
+
+.toggle-password:hover {
+    color: #0077c2; /* highlight on hover */
+}
+
