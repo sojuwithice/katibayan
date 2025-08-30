@@ -36,6 +36,13 @@ body, .container, .form-group input, .login-button, .portal-badge {
   transition: background 0.3s ease, color 0.3s ease, border 0.3s ease;
 }
 
+.theme-toggle-floating {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 20;
+}
+
 /* ============================= */
 /* Layout                        */
 /* ============================= */
@@ -51,8 +58,8 @@ body {
 .container {
     display: flex;
     width: 100%;
-    max-width: 1100px;
-    height: 600px;
+    max-width: 1200px;   /* was 1100px */
+    height: 650px;       /* was 600px */
     background: var(--bg-container);
     border-radius: 20px;
     overflow: hidden;
@@ -64,9 +71,9 @@ body {
 /* ============================= */
 .left-panel {
   flex: 1;
-  background: linear-gradient(270deg, #FFE9AD, #3C87C4, #FFE9AD);
-  background-size: 400% 400%;        
-  animation: gradientScroll 20s linear infinite; 
+  background: linear-gradient(135deg, #FFE9AD, #3C87C4, #FFE9AD);
+  background-size: 600% 600%;              
+  animation: gradientScroll 25s linear infinite;
   color: #fff;
   display: flex;
   flex-direction: column;
@@ -78,17 +85,19 @@ body {
 }
 
 @keyframes gradientScroll {
-  0%   { background-position: 0% 50%; }
-  100% { background-position: 200% 50%; }
+  0%   { background-position: 50% 100%; }  
+  100% { background-position: 50% 0%; }    
 }
 
+
+
 .welcome-text {
-    font-size: 22px;
+    font-size: 30px;
     font-weight: 400;
 }
 
 .brand-text {
-    font-size: 42px;
+    font-size: 50px;
     font-weight: 700;
 }
 
@@ -100,7 +109,7 @@ body {
     margin-top: 15px;
     background: var(--badge-bg);
     color: #fff;
-    font-size: 14px;
+    font-size: 17px;
     font-weight: 500;
     padding: 6px 20px;
     border-radius: 20px;
@@ -118,6 +127,7 @@ body {
     position: relative;
 }
 
+
 /* Theme toggle button */
 .theme-toggle {
     position: absolute;
@@ -126,12 +136,21 @@ body {
     font-size: 22px;
     cursor: pointer;
     color: var(--text-color);
+    background: transparent;   
+    border: none;              
+    outline: none;             
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     transition: color 0.3s ease;
 }
 
 .theme-toggle:hover {
-    color: var(--primary);
+    color: var(--primary);   
 }
+
+
 
 /* ============================= */
 /* Login box                     */
@@ -143,13 +162,13 @@ body {
 }
 
 .login-title {
-    font-size: 26px;
+    font-size: 30px;
     font-weight: 700;
     color: var(--primary);
 }
 
 .login-subtitle {
-    font-size: 14px;
+    font-size: 15px;
     color: var(--text-muted);
     margin-bottom: 25px;
 }
@@ -248,6 +267,29 @@ body {
     text-decoration: underline;
 }
 
+.back-button {
+  margin-top: 2rem; 
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: #3C87C4;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  display: flex; 
+  align-items: center;
+  justify-content: center; 
+  gap: 0.5rem; 
+  transition: color 0.3s ease, text-decoration 0.3s ease;
+  text-decoration: none;
+}
+
+.back-button:hover {
+  text-decoration: underline;
+}
+
+
 /* ============================= */
 /* Responsive Design             */
 /* ============================= */
@@ -256,6 +298,7 @@ body {
         flex-direction: column;
         height: auto;
         max-width: 95%;
+        margin: 20px;   
     }
 
     .left-panel {
@@ -265,13 +308,60 @@ body {
         align-items: center;
         text-align: center;
         padding: 40px 20px;
+        position: relative;
     }
 
     .right-panel {
-        padding: 40px 20px;
+        padding: 30px 15px;
     }
 
     .login-box {
         width: 100%;
     }
+
+    .welcome-text {
+        font-size: 18px; 
+    }
+
+    .brand-text {
+        font-size: 32px; 
+    }
+
+    .portal-badge {
+        font-size: 12px; 
+        padding: 5px 15px;
+    }
+
+    .login-title {
+        font-size: 22px; 
+    }
+
+    .login-subtitle {
+        font-size: 13px; 
+        margin-bottom: 20px;
+    }
+
+    .form-group input {
+        font-size: 13px; 
+        padding: 10px 14px;
+    }
+
+    .login-button {
+        font-size: 15px; 
+        padding: 12px;
+    }
+
+    .register-section {
+        font-size: 12px; 
+    }
+
+    .theme-toggle-floating {
+    right: auto;       
+    left: auto;        
+    top: 15px;
+    right: 15px;       
+  }
+
+  
 }
+

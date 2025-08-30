@@ -9,6 +9,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
+
+
   <div class="container">
     <!-- Left side -->
     <div class="left-panel">
@@ -19,9 +21,9 @@
 
     <!-- Right side -->
     <div class="right-panel">
-      <div class="theme-toggle">
-        <i id="themeIcon" class="fa fa-moon"></i>
-      </div>
+      <button class="theme-toggle" id="themeToggle">
+        <i data-lucide="moon"></i>
+      </button>
 
       <div class="login-box">
         <h2 class="login-title">LOGIN</h2>
@@ -51,46 +53,65 @@
 
         <div class="register-section">
           <p>Don’t have an account? Please register first. 
-            <a href="#" class="register-link">Register</a>
+            <a href="{{ url('/register') }}" class="register-link">Register</a>
           </p>
         </div>
+
+        <button type="button" class="back-button" id="backButton">
+          <a href="{{ url('/') }}" class="back-button">
+  <i data-lucide="arrow-left"></i>
+  Back
+</a>
       </div>
     </div>
   </div>
 
   <!-- JS -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
   <script>
-    // Show/Hide password
-    function togglePassword() {
-      const passwordField = document.getElementById("password");
-      const eyeIcon = document.getElementById("eyeIcon");
+  // Show/Hide password
+  function togglePassword() {
+    const passwordField = document.getElementById("password");
+    const eyeIcon = document.getElementById("eyeIcon");
 
-      if (passwordField.type === "password") {
-        passwordField.type = "text";
-        eyeIcon.classList.remove("fa-eye-slash");
-        eyeIcon.classList.add("fa-eye");
-      } else {
-        passwordField.type = "password";
-        eyeIcon.classList.remove("fa-eye");
-        eyeIcon.classList.add("fa-eye-slash");
-      }
+    if (passwordField.type === "password") {
+      passwordField.type = "text";
+      eyeIcon.classList.remove("fa-eye-slash");
+      eyeIcon.classList.add("fa-eye");
+    } else {
+      passwordField.type = "password";
+      eyeIcon.classList.remove("fa-eye");
+      eyeIcon.classList.add("fa-eye-slash");
     }
+  }
 
-    // Theme Toggle
-    const themeIcon = document.getElementById("themeIcon");
-    const htmlTag = document.documentElement;
+  // Init Lucide icons
+  lucide.createIcons();
 
-    themeIcon.addEventListener("click", () => {
-      if (htmlTag.getAttribute("data-theme") === "light") {
-        htmlTag.setAttribute("data-theme", "dark");
-        themeIcon.classList.remove("fa-moon");
-        themeIcon.classList.add("fa-sun");
-      } else {
-        htmlTag.setAttribute("data-theme", "light");
-        themeIcon.classList.remove("fa-sun");
-        themeIcon.classList.add("fa-moon");
-      }
-    });
+  // Theme Toggle with Lucide
+  const themeToggle = document.getElementById("themeToggle");
+  const htmlTag = document.documentElement;
+
+  // Load saved theme
+  const savedTheme = localStorage.getItem("theme") || "light";
+  htmlTag.setAttribute("data-theme", savedTheme);
+  updateIcon(savedTheme);
+
+  themeToggle.addEventListener("click", () => {
+    const currentTheme = htmlTag.getAttribute("data-theme");
+    const newTheme = currentTheme === "light" ? "dark" : "light";
+    htmlTag.setAttribute("data-theme", newTheme);
+    localStorage.setItem("theme", newTheme);
+    updateIcon(newTheme);
+  });
+
+  function updateIcon(theme) {
+    const icon = theme === "dark" ? "sun" : "moon";
+    themeToggle.innerHTML = `<i data-lucide="${icon}"></i>`;
+    lucide.createIcons(); 
+  }
   </script>
+
 </body>
 </html>

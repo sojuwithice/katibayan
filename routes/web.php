@@ -10,3 +10,7 @@ Route::get('loginpage', function () {
     return view('loginpage');
 })->name('loginpage');
 
+// routes/web.php
+Route::get('/register', function () {
+    return view('register'); // resources/views/register.blade.php
+});

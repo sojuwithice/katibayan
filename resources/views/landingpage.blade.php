@@ -33,36 +33,39 @@
   <li class="mobile-login">
     <a href="{{ route('loginpage') }}" class="login-btn">Login your Account</a>
   </li>
+
+  <li class="mobile-theme-toggle">
+    <button class="theme-toggle" id="mobileThemeToggle">
+      <i data-lucide="sun"></i>
+    </button>
+  </li>
 </ul>
 
 <!-- Desktop login button -->
 <div class="login-container">
   <a href="{{ route('loginpage') }}" class="login-btn">Login your Account</a>
+  <button class="theme-toggle" id="themeToggle">
+    <i data-lucide="sun"></i>
+  </button>
 </div>
+
 </nav>
 
 
 <section class="welcome">
   <div class="welcome-container">
-    <!-- Left side image -->
-    <div class="welcome-img">
-      <img src="{{ asset('images/laptop.png') }}" alt="laptop" class="laptop-img">
-    </div>
-
-    <!-- Right side text -->
-    <div class="welcome-text">
-      <h1>
-        Welcome to 
-        <span class="katibayan">
-          <span class="yellow">K</span>ati<span class="yellow">B</span>ayan
-        </span> 
-        <br>web portal register now!</br>
-      </h1>
-      <p>KatiBayan will help you engage with your SK Council. Register now to be a part of it. If you already have an account, please log in.</p>
-      <button class="register-btn">CLICK HERE TO REGISTER</button>
-    </div>
+    <div class="welcome-text"> 
+      <h1> Welcome to <span class="katibayan"> <span class="yellow">K</span>ati<span class="yellow">B</span>ayan </span> 
+      <br>web portal register now!</br> 
+    </h1> 
+    <p>KatiBayan will help you engage with your SK Council. 
+      Register now to be a part of it. If you already have an account, please log in.</p> 
+      <a href="{{ url('/register') }}" class="register-btn">CLICK HERE TO REGISTER</a>
+ 
+    </div> 
   </div>
 </section>
+
 
 
 
@@ -319,15 +322,43 @@
     <!-- Contact Info -->
     <div class="footer-contact">
       <h3>CONTACT INFORMATION</h3>
-      <p>Sangguniang Kabataan</p>
-      <p>Sangguniang Kabataan</p>
-      <p>Sangguniang Kabataan</p>
+      <p>Address: SK Office, Barangay 3, EM’s Barrio East, Legazpi City, Albay</p>
+      <p>Email: skbrrgy3emsbarrioeast@gmail.com</p>
+      <p>Mobile: 09XX-XXX-XXXX</p>
+      <p>Facebook Page: <a href="#">SK Brgy. 3 EM's Barrio East, Legazpi City</a></p>
     </div>
+
+    <!-- Quick Links -->
+    <div class="footer-links">
+      <h3>QUICK LINKS</h3>
+      <ul>
+        <li><a href="#">Home</a></li>
+        <li><a href="#">About Us</a></li>
+        <li><a href="#">Programs & Events</a></li>
+        <li><a href="#">Committees</a></li>
+        <li><a href="#">Contact Us</a></li>
+      </ul>
+    </div>
+
+    <!-- Legal -->
+    <div class="footer-legal">
+      <h3>LEGAL</h3>
+      <ul>
+        <li><a href="#">Privacy Policy</a></li>
+        <li><a href="#">Terms and Conditions</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Bottom Bar -->
+  <div class="footer-bottom">
+    <p>© 2025 SK Barangay 3 | All Rights Reserved | Powered by KatiBayan</p>
   </div>
 </footer>
 
 
 
+<script src="https://unpkg.com/lucide@latest"></script>
   <script>
   // === NAVBAR TOGGLE ===
   const toggle = document.getElementById('menu-toggle');
@@ -390,7 +421,43 @@
       });
     }
   });
+
+// === DARK/LIGHT MODE TOGGLE ===
+const body = document.body;
+const toggles = document.querySelectorAll('.theme-toggle');
+
+// --- Function to apply theme ---
+function applyTheme(isDark) {
+  body.classList.toggle('dark-mode', isDark);
+  const icon = isDark ? 'moon' : 'sun';
+
+  toggles.forEach(btn => {
+    btn.innerHTML = `<i data-lucide="${icon}"></i>`;
+  });
+
+  lucide.createIcons();
+  localStorage.setItem('theme', isDark ? 'dark' : 'light');
+}
+
+// --- Load saved theme ---
+const savedTheme = localStorage.getItem('theme') === 'dark';
+applyTheme(savedTheme);
+
+// --- Add event listeners to all toggles ---
+toggles.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const isDark = !body.classList.contains('dark-mode');
+    applyTheme(isDark);
+  });
+});
+
+
 </script>
+
+<script>
+  lucide.createIcons(); 
+</script>
+
 
 
 
