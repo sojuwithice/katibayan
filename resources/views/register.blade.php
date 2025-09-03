@@ -87,7 +87,7 @@
       <div class="profile-section">
         <div class="profile-header">
           <div>
-            <h3>I. KK Profile</h3>
+            <h3>I. Profile</h3>
             <p>Enter your account details</p>
           </div>
         </div>
@@ -284,7 +284,7 @@
 <section class="step-content" data-step="3">
 
   <div class="review-section">
-    <h2>I. KK Profile</h2>
+    <h2>I. Profile</h2>
     <div class="review-grid">
       <p><strong>Last Name:</strong> <span id="review_lastname"></span></p>
       <p><strong>Given Name:</strong> <span id="review_givenname"></span></p>
