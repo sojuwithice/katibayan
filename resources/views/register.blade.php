@@ -8,6 +8,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <!-- Icons -->
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <!-- CSRF Token -->
+  <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 <body>
 
@@ -80,14 +82,16 @@
   <div class="steps-divider"></div>
 
   <!-- Form -->
-  <form id="multiStepForm" class="register-form">
+  <form id="multiStepForm" class="register-form" action="{{ route('register') }}" method="POST" enctype="multipart/form-data">
+    @csrf
+    <input type="hidden" name="current_step" id="currentStep" value="1">
 
     <!-- STEP 1 -->
     <section class="step-content" data-step="1">
       <div class="profile-section">
         <div class="profile-header">
           <div>
-            <h3>I. Profile</h3>
+            <h3>I. Account Profile</h3>
             <p>Enter your account details</p>
           </div>
         </div>
@@ -104,17 +108,17 @@
         </div>
 
         <div class="select-wrapper full-width">
-          <input type="text" id="step1_address" placeholder="Enter your full address">
+          <input type="text" id="step1_address" name="address" placeholder="Enter your full address" required>
         </div>
 
         <div class="form-grid-4">
           <div class="input-icon">
-            <input type="date" id="step1_dob" placeholder="Date of Birth">
+            <input type="date" id="step1_dob" name="date_of_birth" placeholder="Date of Birth" required>
             <span class="icon" id="calendarIcon"><i data-lucide="calendar"></i></span>
           </div>
 
           <div class="select-wrapper">
-            <input type="text" id="step1_sex" placeholder="Sex" readonly>
+            <input type="text" id="step1_sex" name="sex" placeholder="Sex" readonly required>
             <span class="arrow"><i data-lucide="chevron-down"></i></span>
             <ul class="dropdown-options">
               <li data-value="male">Male</li>
@@ -122,8 +126,8 @@
             </ul>
           </div>
 
-          <input type="email" id="step1_email" placeholder="Email Address">
-          <input type="tel" placeholder="Contact No.">
+          <input type="email" id="step1_email" name="email" placeholder="Email Address" required>
+          <input type="tel" name="contact_no" placeholder="Contact No." required>
         </div>
       </div>
 
@@ -132,45 +136,45 @@
       </div>
       <div class="form-grid">
         <div class="select-wrapper">
-          <input type="text" id="step1_civil" placeholder="Civil Status" readonly>
+          <input type="text" id="step1_civil" name="civil_status" placeholder="Civil Status" readonly required>
           <ul class="dropdown-options">
-            <li>Single</li>
-            <li>Married</li>
-            <li>Widowed</li>
-            <li>Divorced</li>
-            <li>Separated</li>
-            <li>Anulled</li>
-            <li>Unknown</li>
-            <li>Live-in</li>
+            <li data-value="Single">Single</li>
+            <li data-value="Married">Married</li>
+            <li data-value="Widowed">Widowed</li>
+            <li data-value="Divorced">Divorced</li>
+            <li data-value="Separated">Separated</li>
+            <li data-value="Anulled">Anulled</li>
+            <li data-value="Unknown">Unknown</li>
+            <li data-value="Live-in">Live-in</li>
           </ul>
           <span class="arrow"><i data-lucide="chevron-down"></i></span>
         </div>
         <div class="select-wrapper">
-          <input type="text" name="education" placeholder="Educational Background" readonly>
+          <input type="text" name="education" placeholder="Educational Background" readonly required>
           <ul class="dropdown-options">
-            <li>Elementary Level</li>
-            <li>Elementary Graduate</li>
-            <li>High School Level</li>
-            <li>High School Graduate</li>
-            <li>Vocational Graduate</li>
-            <li>College Level</li>
-            <li>College Graduate</li>
-            <li>Masters Level</li>
-            <li>Masters Graduate</li>
-            <li>Doctorate Level</li>
-            <li>Doctorate Graduate</li>
+           <li data-value="Elementary Level">Elementary Level</li>
+            <li data-value="Elementary Graduate">Elementary Graduate</li>
+            <li data-value="High School Level">High School Level</li>
+            <li data-value="High School Graduate">High School Graduate</li>
+            <li data-value="Vocational Graduate">Vocational Graduate</li>
+            <li data-value="College Level">College Level</li>
+            <li data-value="College Graduate">College Graduate</li>
+            <li data-value="Masters Level">Masters Level</li>
+            <li data-value="Masters Graduate">Masters Graduate</li>
+            <li data-value="Doctorate Level">Doctorate Level</li>
+            <li data-value="Doctorate Graduate">Doctorate Graduate</li>
           </ul>
           <span class="arrow"><i data-lucide="chevron-down"></i></span>
         </div>
         <div class="select-wrapper">
-          <input type="text" name="work_status" placeholder="Work Status" readonly>
+          <input type="text" name="work_status" placeholder="Work Status" readonly required>
           <ul class="dropdown-options">
-            <li>Student</li>
-            <li>Employed</li>
-            <li>Unemployed</li>
-            <li>Self-Employed</li>
-            <li>Currently looking for a Job</li>
-            <li>Not Interested Looking for a Job</li>
+            <li data-value="Student">Student</li>
+            <li data-value="Employed">Employed</li>
+            <li data-value="Unemployed">Unemployed</li>
+            <li data-value="Self-Employed">Self-Employed</li>
+            <li data-value="Currently looking for a Job">Currently looking for a Job</li>
+            <li data-value="Not Interested Looking for a Job">Not Interested Looking for a Job</li>
           </ul>
           <span class="arrow"><i data-lucide="chevron-down"></i></span>
         </div>
@@ -178,24 +182,24 @@
 
       <div class="form-grid">
         <div class="select-wrapper">
-          <input type="text" name="youth_classification" placeholder="Youth Classification" readonly>
+          <input type="text" name="youth_classification" placeholder="Youth Classification" readonly required>
           <ul class="dropdown-options">
-            <li>In-School Youth</li>
-            <li>Out-of-School Youth</li>
-            <li>Working Youth</li>
-            <li>Youth with Specific Needs</li>
-            <li>Person with Disability (PWD)</li>
-            <li>Children in Conflict with the Law (CICL)</li>
-            <li>Indigenous People (IP)</li>
+           <li data-value="In-School Youth">In-School Youth</li>
+            <li data-value="Out-of-School Youth">Out-of-School Youth</li>
+            <li data-value="Working Youth">Working Youth</li>
+            <li data-value="Youth with Specific Needs">Youth with Specific Needs</li>
+            <li data-value="Person with Disability (PWD)">Person with Disability (PWD)</li>
+            <li data-value="Children in Conflict with the Law (CICL)">Children in Conflict with the Law (CICL)</li>
+            <li data-value="Indigenous People (IP)">Indigenous People (IP)</li>
           </ul>
           <span class="arrow"><i data-lucide="chevron-down"></i></span>
         </div>
 
         <div class="select-wrapper">
-          <input type="text" name="sk_voter" placeholder="Are you a registered SK voter?" readonly>
+          <input type="text" name="sk_voter" placeholder="Are you a registered SK voter?" readonly required>
           <ul class="dropdown-options">
-            <li>Yes</li>
-            <li>No</li>
+           <li data-value="Yes">Yes</li>
+            <li data-value="No">No</li>
           </ul>
           <span class="arrow"><i data-lucide="chevron-down"></i></span>
         </div>
@@ -204,42 +208,48 @@
 
     <!-- STEP 2 -->
     <section class="step-content" data-step="2">
-
       <h2>III. Verification Document</h2>
-        <div class="select-wrapper short-select">
-          <input type="text" name="role" placeholder="Select your role (SK, KK, etc)" readonly>
-          <ul class="dropdown-options">
-            <li>SK</li>
-            <li>KK</li>
-          </ul>
-          <span class="arrow"><i data-lucide="chevron-down"></i></span>
-        </div>
+      <div class="select-wrapper short-select">
+        <input type="text" name="role" placeholder="Select your role (SK, KK, etc)" readonly required>
+        <ul class="dropdown-options">
+         <li data-value="sk">SK</li>
+          <li data-value="kk">KK</li>
+        </ul>
+        <span class="arrow"><i data-lucide="chevron-down"></i></span>
+      </div>
 
+      <!-- SK Specific Fields -->
+      <div id="skFields" style="display: none;">
         <div class="file-section">
-          <p>Upload Oath Taking Certificate or Appointment Letter</p>
+          <p>Upload Oath Taking Certificate</p>
           <div class="upload-box">
-            <label for="documentUpload1" class="upload-label">Choose File</label>
-            <input type="file" id="documentUpload1" accept=".pdf" required hidden>
+            <label for="oath_certificate" class="upload-label">Choose File</label>
+            <input type="file" id="oath_certificate" name="oath_certificate" accept=".pdf" required hidden>
             <span id="fileText1" class="file-text">Accepted: PDF, max 5 MB</span>
           </div>
         </div>
+      </div>
 
+      <!-- KK Specific Fields -->
+      <div id="kkFields" style="display: none;">
         <div class="file-section">
-          <p>Upload Proof of Residency  (e.g. Barangay Indigency or valid ID with Full Address)</p>
+          <p>Upload Barangay Indigency or Valid ID with Full Address</p>
           <div class="upload-box">
-            <label for="documentUpload2" class="upload-label">Choose File</label>
-            <input type="file" id="documentUpload2" accept=".pdf" required hidden>
-            <span id="fileText2" class="file-text">Accepted: PDF, max 5 MB</span>
+            <label for="barangay_indigency" class="upload-label">Choose File</label>
+            <input type="file" id="barangay_indigency" name="barangay_indigency" accept=".pdf" required hidden>
+            <span id="fileText3" class="file-text">Accepted: PDF, max 5 MB</span>
           </div>
         </div>
+      </div>
 
-        <h2>IV. Account Setup & Verification</h2>
+
+    
+
+      <h2>IV. Account Setup & Verification</h2>
       <p>Confirmation of your account details.</p>
 
       <div class="form-grid">
-  
-<!-- STEP 2 -->
-    <div class="input-with-btn">
+         <div class="input-with-btn">
       <input 
         type="text" 
         id="contactInput" 
@@ -274,71 +284,62 @@
 
       <div class="checkbox-group">
         <label>
-          <input type="checkbox" required>
+          <input type="checkbox" name="certify_info" required>
           I certify that the information and documents I submitted are true and correct. <span class="required">*</span>
         </label>
       </div>
     </section>
 
     <!-- STEP 3 -->
-<section class="step-content" data-step="3">
+    <section class="step-content" data-step="3">
+      <div class="review-section">
+        <h2>I. Profile</h2>
+        <div class="review-grid">
+          <p><strong>Last Name:</strong> <span id="review_lastname"></span></p>
+          <p><strong>Given Name:</strong> <span id="review_givenname"></span></p>
+          <p><strong>Middle Name:</strong> <span id="review_middlename"></span></p>
+          <p><strong>Suffix:</strong> <span id="review_suffix"></span></p>
+          <p><strong>Address:</strong> <span id="review_address"></span></p>
+          <p><strong>Date of Birth:</strong> <span id="review_dob"></span></p>
+          <p><strong>Sex:</strong> <span id="review_sex"></span></p>
+          <p><strong>Email:</strong> <span id="review_email"></span></p>
+          <p><strong>Contact No.:</strong> <span id="review_contact"></span></p>
+        </div>
 
-  <div class="review-section">
-    <h2>I. Profile</h2>
-    <div class="review-grid">
-      <p><strong>Last Name:</strong> <span id="review_lastname"></span></p>
-      <p><strong>Given Name:</strong> <span id="review_givenname"></span></p>
-      <p><strong>Middle Name:</strong> <span id="review_middlename"></span></p>
-      <p><strong>Suffix:</strong> <span id="review_suffix"></span></p>
-      <p><strong>Address:</strong> <span id="review_address"></span></p>
-      <p><strong>Date of Birth:</strong> <span id="review_dob"></span></p>
-      <p><strong>Sex:</strong> <span id="review_sex"></span></p>
-      <p><strong>Email:</strong> <span id="review_email"></span></p>
-      <p><strong>Contact No.:</strong> <span id="review_contact"></span></p>
-    </div>
+        <h2>II. Demographics</h2>
+        <div class="review-grid">
+          <p><strong>Civil Status:</strong> <span id="review_civil"></span></p>
+          <p><strong>Education:</strong> <span id="review_education"></span></p>
+          <p><strong>Work Status:</strong> <span id="review_work"></span></p>
+          <p><strong>Youth Classification:</strong> <span id="review_youth"></span></p>
+          <p><strong>SK Voter:</strong> <span id="review_sk"></span></p>
+        </div>
 
-    <h2>II. Demographics</h2>
-    <div class="review-grid">
-      <p><strong>Civil Status:</strong> <span id="review_civil"></span></p>
-      <p><strong>Education:</strong> <span id="review_education"></span></p>
-      <p><strong>Work Status:</strong> <span id="review_work"></span></p>
-      <p><strong>Youth Classification:</strong> <span id="review_youth"></span></p>
-      <p><strong>SK Voter:</strong> <span id="review_sk"></span></p>
-    </div>
+        <h2>III. Document</h2>
+        <div class="review-grid">
+          <p><strong>Role:</strong> <span id="review_role"></span></p>
+          <p><strong>Uploaded Files:</strong> <span id="review_files"></span></p>
+        </div>
+      </div>
 
-    <h2>III. Document</h2>
-    <div class="review-grid">
-      <p><strong>Role:</strong> <span id="review_role"></span></p>
-      <p><strong>Uploaded Files:</strong> <span id="review_files"></span></p>
-    </div>
+      <div class="checkbox-group">
+        <label>
+          <input type="checkbox" name="certify_final" required>
+          I certify that the information and documents I submitted are true and correct. <span class="required">*</span>
+        </label>
 
-    
-  </div>
-
-  <div class="checkbox-group">
-    <label>
-      <input type="checkbox" required>
-      I certify that the information and documents I submitted are true and correct. <span class="required">*</span>
-    </label>
-
-    <label>
-      <input type="checkbox" required>
-      I confirm that I have reviewed my information and this will be my final submission. <span class="required">*</span>
-    </label>
-  </div>
-</section>
-
-
+        <label>
+          <input type="checkbox" name="confirm_submission" required>
+          I confirm that I have reviewed my information and this will be my final submission. <span class="required">*</span>
+        </label>
+      </div>
+    </section>
 
     <!-- Form Actions -->
-<div class="form-actions">
-  <button type="button" class="back-btn">Back
-  </button>
-
-  <button type="button" class="next-btn">Next</button>
-</div>
-
-
+    <div class="form-actions">
+      <button type="button" class="back-btn">Back</button>
+      <button type="button" class="next-btn">Next</button>
+    </div>
   </form>
 </section>
 
@@ -352,7 +353,7 @@
 
     <div class="footer-contact">
       <h3>CONTACT INFORMATION</h3>
-      <p>Address: SK Office, Barangay 3, EM’s Barrio East, Legazpi City, Albay</p>
+      <p>Address: SK Office, Barangay 3, EM's Barrio East, Legazpi City, Albay</p>
       <p>Email: skbrrgy3emsbarrioeast@gmail.com</p>
       <p>Mobile: 09XX-XXX-XXXX</p>
       <p>Facebook Page: <a href="#">SK Brgy. 3 EM's Barrio East, Legazpi City</a></p>
@@ -454,11 +455,31 @@ document.querySelectorAll(".select-wrapper").forEach(wrapper => {
     dropdown.style.display = wrapper.classList.contains("open") ? "block" : "none";
   });
 
-  dropdown.querySelectorAll("li").forEach(option => {
+  dropdown?.querySelectorAll("li").forEach(option => {
     option.addEventListener("click", () => {
-      input.value = option.textContent;
+      // Use data-value if present, else use text
+      input.value = option.getAttribute("data-value") || option.textContent;
+
+      // Close dropdown
       wrapper.classList.remove("open");
       dropdown.style.display = "none";
+
+      // Show/hide role-specific fields
+      if (input.name === "role") {
+        const skFields = document.getElementById("skFields");
+        const kkFields = document.getElementById("kkFields");
+
+        if (input.value.toLowerCase() === "sk") {
+          skFields.style.display = "block";
+          kkFields.style.display = "none";
+        } else if (input.value.toLowerCase() === "kk") {
+          skFields.style.display = "none";
+          kkFields.style.display = "block";
+        } else {
+          skFields.style.display = "none";
+          kkFields.style.display = "none";
+        }
+      }
     });
   });
 });
@@ -480,9 +501,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const progressSteps = document.querySelectorAll(".step");
   const backBtn = document.querySelector(".back-btn");
   const nextBtn = document.querySelector(".next-btn");
-
-  // gawin editable yung step2_email palagi
-  document.getElementById("step2_email")?.removeAttribute("readonly");
+  const form = document.getElementById("multiStepForm");
+  const currentStepInput = document.getElementById("currentStep");
 
   function showStep(step) {
     steps.forEach((s, i) => s.classList.toggle("active", i === step - 1));
@@ -502,74 +522,44 @@ document.addEventListener("DOMContentLoaded", () => {
         if (currentStep > 1) {
           currentStep--;
           showStep(currentStep);
+          currentStepInput.value = currentStep;
         }
       };
     }
 
-    
-if (step === steps.length) {
-  nextBtn.innerText = "Submit";
-  nextBtn.type = "submit"; 
-} else {
-  nextBtn.innerText = "Next";
-  nextBtn.type = "button";
-}
-}
+    if (step === steps.length) {
+      nextBtn.innerText = "Submit";
+      nextBtn.type = "button";
+      nextBtn.onclick = () => form.submit();
+    } else {
+      nextBtn.innerText = "Next";
+      nextBtn.type = "button";
+      nextBtn.onclick = () => {
+        if (currentStep === 2) {
+          fillStep3();
+        }
+        if (currentStep < steps.length) {
+          currentStep++;
+          showStep(currentStep);
+          currentStepInput.value = currentStep;
+        }
+      };
+    }
+  }
 
   // NEXT BUTTON
-  nextBtn.addEventListener("click", () => {
-    if (currentStep === 2) {
-      fillStep3();
-    }
-    if (currentStep < steps.length) {
-      currentStep++;
-      showStep(currentStep);
-    }
-  });
+  
+
 
   showStep(currentStep);
 });
-
-// ---- STEP 2 ROLE & FILES LOGIC ----
-document.addEventListener("DOMContentLoaded", () => {
-  const roleInputEl = document.querySelector(".select-wrapper input[name='role']");
-  if (!roleInputEl) return;
-
-  const roleWrapper = roleInputEl.closest(".select-wrapper");
-  const roleInput = roleWrapper?.querySelector("input[name='role']");
-  const roleOptions = roleWrapper?.querySelectorAll("ul li") || [];
-  const fileSections = document.querySelectorAll(".file-section");
-
-  if (roleInput) roleInput.value = "";
-  fileSections.forEach(section => section.style.display = "none");
-
-  const roleSections = {
-    "SK": ["documentUpload1"],
-    "KK": ["documentUpload2"]
-  };
-
-  roleOptions.forEach(option => {
-    option.addEventListener("click", () => {
-      const selectedRole = option.textContent.trim();
-      if (roleInput) roleInput.value = selectedRole;
-
-      fileSections.forEach(section => section.style.display = "none");
-
-      if (roleSections[selectedRole]) {
-        roleSections[selectedRole].forEach(id => {
-          const fileSection = document.getElementById(id)?.closest(".file-section");
-          if (fileSection) fileSection.style.display = "block";
-        });
-      }
-    });
-  });
-});
-
 // ---- VERIFY MODAL ----
 document.addEventListener("DOMContentLoaded", () => {
   const contactInput = document.getElementById("contactInput");
   const methodModal  = document.getElementById("methodModal");
   const closeModal   = document.getElementById("closeModal");
+  const mobileOption = document.getElementById("mobileOption");
+  const googleOption = document.getElementById("googleOption");
 
   // open on input click
   contactInput?.addEventListener("click", () => {
@@ -585,10 +575,18 @@ document.addEventListener("DOMContentLoaded", () => {
   methodModal?.addEventListener("click", (e) => {
     if (e.target === methodModal) methodModal.style.display = "none";
   });
+
+  // handle option clicks
+  mobileOption?.addEventListener("click", () => {
+    contactInput.value = "Mobile Number";
+    methodModal.style.display = "none";
+  });
+
+  googleOption?.addEventListener("click", () => {
+    contactInput.value = "Google Account";
+    methodModal.style.display = "none";
+  });
 });
-
-
-
 
 // ---- FILE UPLOAD LABEL UPDATE ----
 function setupFileUpload(inputId, fileTextId) {
@@ -602,8 +600,8 @@ function setupFileUpload(inputId, fileTextId) {
     });
   }
 }
-setupFileUpload("documentUpload1", "fileText1");
-setupFileUpload("documentUpload2", "fileText2");
+setupFileUpload("oath_certificate", "fileText1");
+setupFileUpload("barangay_indigency", "fileText3");
 
 // ---- STEP 3 REVIEW ----
 function fillStep3() {
@@ -624,7 +622,7 @@ function fillStep3() {
   document.getElementById("review_email").textContent =
     document.getElementById("step1_email")?.value || "";
   document.getElementById("review_contact").textContent =
-    document.querySelector("input[type='tel']")?.value || "";
+    document.querySelector("input[name='contact_no']")?.value || "";
 
   document.getElementById("review_civil").textContent =
     document.getElementById("step1_civil")?.value || "";
@@ -637,22 +635,21 @@ function fillStep3() {
   document.getElementById("review_sk").textContent =
     document.querySelector("input[name='sk_voter']")?.value || "";
 
-
   document.getElementById("review_role").textContent =
     document.querySelector("input[name='role']")?.value || "";
 
-  const doc1 = document.getElementById("documentUpload1")?.files[0]?.name;
-  const doc2 = document.getElementById("documentUpload2")?.files[0]?.name;
+  const oathCert = document.getElementById("oath_certificate")?.files[0]?.name;
+  const barangayInd = document.getElementById("barangay_indigency")?.files[0]?.name;
+  const proofResidency = document.getElementById("proof_of_residency")?.files[0]?.name;
+  
   let filesText = "";
-  if (doc1) filesText += `File 1: ${doc1} `;
-  if (doc2) filesText += `File 2: ${doc2}`;
+  if (oathCert) filesText += `Oath Certificate: ${oathCert} `;
+  if (barangayInd) filesText += `Barangay Indigency: ${barangayInd} `;
+  if (proofResidency) filesText += `Proof of Residency: ${proofResidency}`;
+  
   document.getElementById("review_files").textContent =
     filesText || "No files uploaded";
 }
 </script>
-
-
-
-
 </body>
 </html>
