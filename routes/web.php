@@ -19,3 +19,9 @@ Route::post('/register', [RegisterController::class, 'register']);
 Route::get('/registration/success', function () {
     return view('registration-success'); 
 })->name('registration.success');
+
+
+Route::get('/dashboard', function () {
+    return view('dashboard');
+});
+
