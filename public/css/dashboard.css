@@ -111,7 +111,7 @@ body {
 .sidebar nav a.active {
   background: #fff;
   color: #1C6DD0;
-  border-radius: 8px;
+  border-radius: 50px;
   padding: 0.5rem;
 }
 .sidebar.open nav a.active {
@@ -198,30 +198,6 @@ body {
   margin-left: auto;   
 }
 
-/* Search */
-.search-box {
-  width: 500px;         
-  max-width: 100%;      
-  background: #e7e7e7;
-  border: 2px solid #3C87C4;
-  padding: .6rem 1rem;
-  border-radius: 50px;
-  display: flex;
-  align-items: center;
-  gap: .6rem;
-}
-.search-box input {
-  flex: 1;                
-  border: none;
-  outline: none;
-  font-size: 14px;
-  color: #686868;
-  background: transparent;
-  font-weight: bold;
-}
-.search-box i {
-  color: #3C87C4;
-}
 
 /* Time Button */
 .topbar-right .time {
@@ -250,11 +226,120 @@ body {
   font-size: 25px;
   color: #3C87C4;
 }
+
+.profile-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
 .avatar {
-  width: 50px;
-  height: 50px;
+  width: 45px;
+  height: 45px;
   border-radius: 50%;
   border: 3px solid #3C87C4;
+  cursor: pointer;
+}
+
+.profile-dropdown {
+  position: absolute;
+  top: 60px;
+  right: 0;
+  width: 280px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  overflow: hidden;
+  display: none;
+  z-index: 1000;
+}
+
+.profile-wrapper.active .profile-dropdown {
+  display: block;
+}
+
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px;
+}
+
+.profile-dropdown hr {
+  border: none;               
+  height: 2px;                
+  background-color: #3C87C4;  
+  margin: 0;                  
+}
+
+
+.profile-avatar {
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
+  border: 3px solid #3C87C4;
+}
+
+.profile-info h4 {
+  font-size: 16px;
+  margin: 0;
+  margin-bottom: .3rem;
+}
+
+.profile-badge {
+  display: inline-flex;
+  align-items: center;
+  background: #3C87C4;
+  border: 1px solid #3C87C4;
+  border-radius: 25px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  overflow: hidden;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.profile-badge span {
+  padding: 3px 9px;
+}
+
+.profile-badge span + span {
+  border-left: 1px solid #F9CD55; 
+}
+
+
+
+.profile-menu {
+  list-style: none;
+  padding: 10px 0;
+  margin: 0;
+}
+
+.profile-menu li {
+  padding: 10px 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.profile-menu li i {
+  color: #3C87C4;
+  font-size: 16px;
+}
+
+.profile-menu li:hover {
+  background: #f1f1f1;
+}
+
+.profile-menu a {
+  text-decoration: none;
+  color: inherit; 
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%; 
 }
 
 /* === Notification === */
@@ -1133,21 +1218,12 @@ body {
 }
 
 
-
-
-
-
-
 /* Responsive */
 
 @media (max-width: 1024px) {
   .row {
     grid-template-columns: 1fr; 
     gap: 1rem;
-  }
-
-  .search-box {
-    width: 100%; 
   }
 
   .topbar {
@@ -1262,30 +1338,8 @@ body {
   border-radius: 50%;
 }
 
-/* Search box nasa gitna */
-.search-box {
-  flex: 1;
-  max-width: 160px;
-  margin: 0 auto;                
-  padding: .25rem .5rem;
-  border-radius: 30px;
-  display: flex;
-  align-items: center;
-  gap: .3rem;
-}
 
-.search-box input {
-  font-size: 12px;
-  width: 100%;
-}
-
-/* Hide logo sa mobile */
-.logo { display: none !important; }
-
-/* Hide extra search icon */
-.topbar-right i.fa-search { display: none; }
-
-
+  .logo { display: none !important; }
 
   .main {
     padding: 1rem;
@@ -1444,10 +1498,6 @@ body {
 @media (max-width: 480px) {
   .topbar-right .time {
     font-size: 11px;
-  }
-
-  .search-box {
-    max-width: 120px; 
   }
 
   .avatar {

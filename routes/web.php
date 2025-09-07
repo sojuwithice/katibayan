@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\DashboardController;
 
 Route::get('/', function () {
     return view('landingpage');
@@ -25,3 +27,12 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 });
 
+Route::get('/profilepage', function () {
+    return view('profilepage');
+});
+
+Route::get('/profile', [ProfileController::class, 'index'])->name('profilepage');
+
+
+
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
