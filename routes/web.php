@@ -36,3 +36,9 @@ Route::get('/profile', [ProfileController::class, 'index'])->name('profilepage')
 
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
+
+// route for certificate page
+Route::get('/certificatepage', function () {
+    return view('certificatepage');
+})->name('certificatepage');
+

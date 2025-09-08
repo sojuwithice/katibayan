@@ -35,6 +35,7 @@ body {
 }
 
 .sidebar .menu-toggle {
+  align-self: center;
   margin-bottom: 0.rem; 
   background: transparent;
   color: #fff;
@@ -107,22 +108,71 @@ body {
   transform: translateX(3px);
 }
 
-/* Active state */
+
 .sidebar nav a.active {
   background: #fff;
   color: #1C6DD0;
   border-radius: 50px;
-  padding: 0.5rem;
-}
-.sidebar.open nav a.active {
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 0.8rem; 
+  margin-bottom: 0.2rem; 
 }
 
-/* Menu toggle */
-.sidebar .menu-toggle {
-  align-self: center;  
-  margin-bottom: 1rem;
+/* Submenu base styles */
+.submenu {
+  display: none;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-left: 2rem; 
 }
+
+.sidebar .submenu a {
+  font-size: 0.9rem !important; 
+  color: #fff;
+  text-decoration: none;
+  padding: 0.3rem 1.5rem; 
+  border-radius: 6px;
+  display: block;
+}
+
+/* active submenu link */
+.submenu a.active {
+  background: #fff;
+  color: #1C6DD0;
+}
+
+/* hover effect */
+.submenu a:hover {
+  color: #FFB703;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+
+.sidebar.open .profile-item.open .submenu {
+  display: flex;
+}
+
+
+.sidebar:not(.open) .submenu {
+  display: none !important;
+}
+
+
+.sidebar .submenu-arrow {
+  display: none;
+  margin-left: auto;
+  transition: transform 0.3s ease;
+}
+
+
+.sidebar.open .submenu-arrow {
+  display: inline-block;
+}
+
+
+.sidebar.open .nav-item.open .submenu-arrow {
+  transform: rotate(180deg);
+}
+
 
 .menu-toggle {
   background: #fff;

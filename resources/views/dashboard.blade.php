@@ -16,14 +16,21 @@
     <button class="menu-toggle">Menu</button>
     <div class="divider"></div>
     <nav class="nav">
-      <a href="#" data-target="dashboard-page" class="active">
+      <a href="{{ route('dashboard.index') }}" class="active">
         <i data-lucide="layout-dashboard"></i>
         <span class="label">Dashboard</span>
       </a>
-      <a href="{{ route('profilepage') }}">
+      <div class="profile-item nav-item">
+        <a href="#" class="profile-link">
           <i data-lucide="circle-user"></i>
           <span class="label">Profile</span>
-      </a>
+          <i data-lucide="chevron-down" class="submenu-arrow"></i>
+        </a>
+        <div class="submenu">
+          <a href="{{ route('profilepage') }}">My Profile</a>
+          <a href="{{ route('certificatepage') }}">Certificates</a>
+        </div>
+      </div>
 
       <a href="#">
         <i data-lucide="calendar"></i>
@@ -47,6 +54,7 @@
       </a>
     </nav>
   </aside>
+
 
   <!-- Main -->
   <div class="main">
@@ -332,8 +340,25 @@ document.addEventListener("DOMContentLoaded", () => {
   const menuToggle = document.querySelector('.menu-toggle');
   const sidebar = document.querySelector('.sidebar');
   if (menuToggle && sidebar) {
-    menuToggle.addEventListener('click', () => {
+    menuToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
       sidebar.classList.toggle('open');
+
+      if (!sidebar.classList.contains('open')) {
+        profileItem?.classList.remove('open'); // close submenu kung sidebar closed
+      }
+    });
+  }
+
+  // === Profile submenu ===
+  const profileItem = document.querySelector('.profile-item');
+  const profileLink = document.querySelector('.profile-link');
+  if (profileItem && profileLink) {
+    profileLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (sidebar.classList.contains('open')) {
+        profileItem.classList.toggle('open');
+      }
     });
   }
 
@@ -344,7 +369,6 @@ document.addEventListener("DOMContentLoaded", () => {
   let today = new Date();
   let currentView = new Date();
 
-  // Philippine Holidays 2025 (YYYY-MM-DD)
   const holidays = [
     "2025-01-01", "2025-04-09", "2025-04-17", "2025-04-18",
     "2025-05-01", "2025-06-06", "2025-06-12", "2025-08-25",
@@ -433,21 +457,21 @@ document.addEventListener("DOMContentLoaded", () => {
   setInterval(updateTime, 60000);
 
   // === Notifications dropdown ===
-  const wrapper = document.querySelector(".notification-wrapper");
-  if (wrapper) {
-    const bell = wrapper.querySelector(".fa-bell");
+  const notifWrapper = document.querySelector(".notification-wrapper");
+  if (notifWrapper) {
+    const bell = notifWrapper.querySelector(".fa-bell");
     if (bell) {
       bell.addEventListener("click", (e) => {
         e.stopPropagation();
-        wrapper.classList.toggle("active");
-        profileWrapper?.classList.remove("active"); // close profile if open
+        notifWrapper.classList.toggle("active");
+        profileWrapper?.classList.remove("active");
       });
     }
-    const dropdown = wrapper.querySelector(".notif-dropdown");
+    const dropdown = notifWrapper.querySelector(".notif-dropdown");
     if (dropdown) dropdown.addEventListener("click", (e) => e.stopPropagation());
   }
 
-  // === Profile dropdown ===
+  // === Profile dropdown (topbar) ===
   const profileWrapper = document.querySelector(".profile-wrapper");
   const profileToggle = document.getElementById("profileToggle");
   const profileDropdown = document.querySelector(".profile-dropdown");
@@ -456,18 +480,24 @@ document.addEventListener("DOMContentLoaded", () => {
     profileToggle.addEventListener("click", (e) => {
       e.stopPropagation();
       profileWrapper.classList.toggle("active");
-
-      // close notif if open
-      wrapper?.classList.remove("active");
+      notifWrapper?.classList.remove("active");
     });
 
     profileDropdown.addEventListener("click", (e) => e.stopPropagation());
   }
 
   // === Close dropdowns when clicking outside ===
-  document.addEventListener("click", () => {
-    wrapper?.classList.remove("active");
-    profileWrapper?.classList.remove("active");
+  document.addEventListener("click", (e) => {
+    if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+      sidebar.classList.remove('open');
+      profileItem?.classList.remove('open');
+    }
+    if (profileWrapper && !profileWrapper.contains(e.target)) {
+      profileWrapper.classList.remove('active');
+    }
+    if (notifWrapper && !notifWrapper.contains(e.target)) {
+      notifWrapper.classList.remove('active');
+    }
   });
 
   // === Highlight Holidays in Events ===
@@ -499,7 +529,6 @@ document.addEventListener("DOMContentLoaded", () => {
   let autoPlay;
 
   if (welcomeSection && slideTrack && slides.length > 0 && dotsContainer) {
-    // Create dots
     slides.forEach((_, i) => {
       const dot = document.createElement("button");
       if (i === 0) dot.classList.add("active");
@@ -512,7 +541,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     const dots = dotsContainer.querySelectorAll("button");
 
-    // Update slide position
     function updateSlide() {
       const containerWidth = welcomeSection.getBoundingClientRect().width;
       slideTrack.style.transform = `translateX(-${currentIndex * containerWidth}px)`;
@@ -520,7 +548,6 @@ document.addEventListener("DOMContentLoaded", () => {
       dots[currentIndex].classList.add("active");
     }
 
-    // Auto slide
     function nextSlide() {
       currentIndex = (currentIndex + 1) % slides.length;
       updateSlide();
@@ -536,20 +563,18 @@ document.addEventListener("DOMContentLoaded", () => {
       startAuto();
     }
 
-    // Init
     updateSlide();
     startAuto();
 
-    // Pause on hover
     welcomeSection.addEventListener("mouseenter", stopAuto);
     welcomeSection.addEventListener("mouseleave", startAuto);
-
-    // Responsive resize
     window.addEventListener("resize", updateSlide);
   }
-
 });
 </script>
+
+
+
 
 
 </body>

@@ -27,8 +27,8 @@
           <i data-lucide="chevron-down" class="submenu-arrow"></i>
         </a>
         <div class="submenu">
-          <a href="#">My Profile</a>
-          <a href="#">Certificates</a>
+          <a href="#" class="active">My Profile</a>
+          <a href="{{ route('certificatepage') }}">Certificate</a>
         </div>
       </div>
 
@@ -220,7 +220,56 @@
                 </div>
             </div>
         </div>
+
+        <!-- Modal -->
+        <div class="modal-overlay" id="passwordModal">
+          <div class="modal">
+            <span class="close-btn" id="closeModal">&times;</span>
+            <h2>Manage Account Password</h2>
+            <p class="info-text">
+              <i class="fas fa-circle-info info-icon"></i>
+              Ensure your account’s security by following the required password format when changing your KK password
+            </p>
+
+            <label class="required">Current Password </label>
+            <input type="password" id="currentPassword">
+
+            <label class="required">New Password </label>
+            <input type="password" id="newPassword">
+
+            <label class="required">Confirm Password </label>
+            <input type="password" id="confirmPassword">
+
+            <div class="show-pass">
+              <input type="checkbox" id="showPass"> <label for="showPass">Show Password</label>
+            </div>
+
+      <p class="req-heading">Required Password Format:</p>
+      <div class="requirements">
+        <p id="req-length" class="invalid"> Must be 8 characters or more</p>
+        <p id="req-upper" class="invalid"> At least one uppercase letter</p>
+        <p id="req-lower" class="invalid"> At least one lowercase letter</p>
+        <p id="req-number" class="invalid"> At least one number</p>
+        <p id="req-symbol" class="invalid"> At least one symbol</p>
+        <p id="req-match" class="invalid"> Passwords must match</p>
+      </div>
+
+      <button class="save-btn">Save Changes</button>
     </div>
+</div>
+    </div>
+          <!-- Success Modal -->
+      <div class="success-overlay" id="successModal">
+        <div class="modal success-modal">
+          <h2>Your password has been changed successfully</h2>
+          <p class="subtitle">Please don't forget your password</p>
+          <button class="ok-btn" id="okBtn">OK</button>
+        </div>
+      </div>
+
+
+
+    
 
     <!-- Right Column -->
     <div class="right-column">
@@ -273,81 +322,50 @@ document.addEventListener("DOMContentLoaded", () => {
   // === Lucide icons ===
   lucide.createIcons();
 
-  // === Elements ===
+  // === Sidebar & Profile Dropdowns ===
   const menuToggle = document.querySelector('.menu-toggle');
   const sidebar = document.querySelector('.sidebar');
   const profileItem = document.querySelector('.profile-item');
-  const profileLink = profileItem.querySelector('.profile-link');
-
+  const profileLink = profileItem?.querySelector('.profile-link');
   const profileWrapper = document.querySelector('.profile-wrapper');
   const profileToggle = document.getElementById('profileToggle');
   const profileDropdown = document.querySelector('.profile-dropdown');
-
   const notifWrapper = document.querySelector(".notification-wrapper");
   const notifBell = notifWrapper?.querySelector(".fa-bell");
   const notifDropdown = notifWrapper?.querySelector(".notif-dropdown");
 
-  // === Sidebar toggle ===
-  menuToggle.addEventListener('click', (e) => {
+  menuToggle?.addEventListener('click', (e) => {
     e.stopPropagation();
     sidebar.classList.toggle('open');
-
-    if (!sidebar.classList.contains('open')) {
-      profileItem.classList.remove('open'); // close submenu
-    }
+    if (!sidebar.classList.contains('open')) profileItem?.classList.remove('open');
   });
 
-  // === Profile submenu toggle ===
-  profileLink.addEventListener('click', (e) => {
+  profileLink?.addEventListener('click', (e) => {
     e.preventDefault();
-    if (sidebar.classList.contains('open')) {
-      profileItem.classList.toggle('open');
-    }
+    if (sidebar.classList.contains('open')) profileItem.classList.toggle('open');
   });
 
-  // === Close sidebar when clicking outside ===
   document.addEventListener('click', (e) => {
     if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
       sidebar.classList.remove('open');
-      profileItem.classList.remove('open');
+      profileItem?.classList.remove('open');
     }
-
-    // Close profile dropdown if clicked outside
-    if (!profileWrapper.contains(e.target)) {
-      profileWrapper.classList.remove('active');
-    }
-
-    // Close notifications dropdown if clicked outside
-    if (notifWrapper && !notifWrapper.contains(e.target)) {
-      notifWrapper.classList.remove('active');
-    }
+    if (!profileWrapper.contains(e.target)) profileWrapper?.classList.remove('active');
+    if (notifWrapper && !notifWrapper.contains(e.target)) notifWrapper.classList.remove('active');
   });
 
-  // === Profile dropdown toggle ===
-  if (profileToggle) {
-    profileToggle.addEventListener('click', (e) => {
-      e.stopPropagation();
-      profileWrapper.classList.toggle('active');
-      notifWrapper?.classList.remove('active'); // close notif if open
-    });
-  }
-
-  if (profileDropdown) {
-    profileDropdown.addEventListener('click', e => e.stopPropagation());
-  }
-
-  // === Notifications dropdown toggle ===
-  if (notifBell) {
-    notifBell.addEventListener('click', (e) => {
-      e.stopPropagation();
-      notifWrapper.classList.toggle('active');
-      profileWrapper?.classList.remove('active'); // close profile if open
-    });
-  }
-
-  if (notifDropdown) {
-    notifDropdown.addEventListener('click', e => e.stopPropagation());
-  }
+  profileToggle?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    profileWrapper.classList.toggle('active');
+    notifWrapper?.classList.remove('active');
+  });
+  profileDropdown?.addEventListener('click', e => e.stopPropagation());
+  notifBell?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    notifWrapper.classList.toggle('active');
+    profileWrapper?.classList.remove('active');
+  });
+  notifDropdown?.addEventListener('click', e => e.stopPropagation());
 
   // === Calendar ===
   const weekdays = ["MON","TUE","WED","THU","FRI","SAT","SUN"];
@@ -355,69 +373,40 @@ document.addEventListener("DOMContentLoaded", () => {
   const header = document.querySelector(".calendar header h3");
   let today = new Date();
   let currentView = new Date();
-
-  const holidays = [
-    "2025-01-01", "2025-04-09", "2025-04-17", "2025-04-18",
-    "2025-05-01", "2025-06-06", "2025-06-12", "2025-08-25",
-    "2025-11-30", "2025-12-25", "2025-12-30"
-  ];
+  const holidays = ["2025-01-01","2025-04-09","2025-04-17","2025-04-18","2025-05-01","2025-06-06","2025-06-12","2025-08-25","2025-11-30","2025-12-25","2025-12-30"];
 
   function renderCalendar(baseDate) {
     if (!daysContainer || !header) return;
     daysContainer.innerHTML = "";
-
     const startOfWeek = new Date(baseDate);
     startOfWeek.setDate(baseDate.getDate() - (baseDate.getDay() === 0 ? 6 : baseDate.getDay() - 1));
-
     const middleDay = new Date(startOfWeek);
     middleDay.setDate(startOfWeek.getDate() + 3);
     header.textContent = middleDay.toLocaleDateString("en-US", { month: "long", year: "numeric" });
-
     for (let i = 0; i < 7; i++) {
       const thisDay = new Date(startOfWeek);
       thisDay.setDate(startOfWeek.getDate() + i);
-
       const dayEl = document.createElement("div");
       dayEl.classList.add("day");
-
       const weekdayEl = document.createElement("span");
       weekdayEl.classList.add("weekday");
       weekdayEl.textContent = weekdays[i];
-
       const dateEl = document.createElement("span");
       dateEl.classList.add("date");
       dateEl.textContent = thisDay.getDate();
-
-      const month = (thisDay.getMonth() + 1).toString().padStart(2,'0');
+      const month = (thisDay.getMonth()+1).toString().padStart(2,'0');
       const day = thisDay.getDate().toString().padStart(2,'0');
       const dateStr = `${thisDay.getFullYear()}-${month}-${day}`;
-
       if (holidays.includes(dateStr)) dateEl.classList.add('holiday');
-
-      if (
-        thisDay.getDate() === today.getDate() &&
-        thisDay.getMonth() === today.getMonth() &&
-        thisDay.getFullYear() === today.getFullYear()
-      ) dayEl.classList.add("active");
-
+      if (thisDay.getDate()===today.getDate() && thisDay.getMonth()===today.getMonth() && thisDay.getFullYear()===today.getFullYear()) dayEl.classList.add("active");
       dayEl.appendChild(weekdayEl);
       dayEl.appendChild(dateEl);
       daysContainer.appendChild(dayEl);
     }
   }
-
   renderCalendar(currentView);
-
-  const prevBtn = document.querySelector(".calendar .prev");
-  const nextBtn = document.querySelector(".calendar .next");
-  prevBtn?.addEventListener("click", () => {
-    currentView.setDate(currentView.getDate() - 7);
-    renderCalendar(currentView);
-  });
-  nextBtn?.addEventListener("click", () => {
-    currentView.setDate(currentView.getDate() + 7);
-    renderCalendar(currentView);
-  });
+  document.querySelector(".calendar .prev")?.addEventListener("click", () => { currentView.setDate(currentView.getDate()-7); renderCalendar(currentView); });
+  document.querySelector(".calendar .next")?.addEventListener("click", () => { currentView.setDate(currentView.getDate()+7); renderCalendar(currentView); });
 
   // === Time auto-update ===
   const timeEl = document.querySelector(".time");
@@ -427,34 +416,101 @@ document.addEventListener("DOMContentLoaded", () => {
     const shortWeekdays = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
     const weekday = shortWeekdays[now.getDay()];
     let hours = now.getHours();
-    const minutes = now.getMinutes().toString().padStart(2, "0");
-    const ampm = hours >= 12 ? "PM" : "AM";
-    hours = hours % 12 || 12;
+    const minutes = now.getMinutes().toString().padStart(2,"0");
+    const ampm = hours >= 12 ? "PM":"AM";
+    hours = hours%12 || 12;
     timeEl.innerHTML = `${weekday} ${hours}:${minutes} <span>${ampm}</span>`;
   }
-  updateTime();
-  setInterval(updateTime, 60000);
+  updateTime(); setInterval(updateTime,60000);
 
-  // === Password toggle ===
-  const tempPassword = document.getElementById('tempPassword');
-  const toggleIcon = document.querySelector('.toggle-password');
-  if (tempPassword && toggleIcon) {
-    let hidden = true;
-    const realPassword = "marijoy";
-    toggleIcon.addEventListener('click', () => {
-      if (hidden) {
-        tempPassword.textContent = realPassword;
-        toggleIcon.classList.remove('fa-eye-slash');
-        toggleIcon.classList.add('fa-eye');
-        hidden = false;
-      } else {
-        tempPassword.textContent = "•••••";
-        toggleIcon.classList.remove('fa-eye');
-        toggleIcon.classList.add('fa-eye-slash');
-        hidden = true;
-      }
-    });
-  }
+// === Password toggle & modal logic ===
+const modalOverlay = document.getElementById("passwordModal");
+const successModal = document.getElementById("successModal");
+const closeModal = document.getElementById("closeModal");
+const closeSuccess = document.getElementById("closeSuccess");
+const okBtn = document.getElementById("okBtn");
+const saveBtn = document.querySelector(".save-btn");
+const openModalBtn = document.querySelector(".settings-btn");
+
+const currentPass = document.getElementById("currentPassword");
+const newPass = document.getElementById("newPassword");
+const confirmPass = document.getElementById("confirmPassword");
+const showPass = document.getElementById("showPass");
+
+const reqs = {
+  length: document.getElementById("req-length"),
+  upper: document.getElementById("req-upper"),
+  lower: document.getElementById("req-lower"),
+  number: document.getElementById("req-number"),
+  symbol: document.getElementById("req-symbol"),
+  match: document.getElementById("req-match")
+};
+
+function validatePassword() {
+  const pass = newPass.value;
+  const confirm = confirmPass.value;
+  reqs.length.classList.toggle("valid", pass.length >= 8);
+  reqs.length.classList.toggle("invalid", pass.length < 8);
+  reqs.upper.classList.toggle("valid", /[A-Z]/.test(pass));
+  reqs.upper.classList.toggle("invalid", !/[A-Z]/.test(pass));
+  reqs.lower.classList.toggle("valid", /[a-z]/.test(pass));
+  reqs.lower.classList.toggle("invalid", !/[a-z]/.test(pass));
+  reqs.number.classList.toggle("valid", /[0-9]/.test(pass));
+  reqs.number.classList.toggle("invalid", !/[0-9]/.test(pass));
+  reqs.symbol.classList.toggle("valid", /[^A-Za-z0-9]/.test(pass));
+  reqs.symbol.classList.toggle("invalid", !/[^A-Za-z0-9]/.test(pass));
+  reqs.match.classList.toggle("valid", pass && pass === confirm);
+  reqs.match.classList.toggle("invalid", pass !== confirm);
+
+  const allValid = Object.values(reqs).every(r => r.classList.contains("valid"));
+  saveBtn.disabled = !allValid;
+  saveBtn.style.opacity = allValid ? "1" : "0.6";
+  saveBtn.style.cursor = allValid ? "pointer" : "not-allowed";
+}
+
+newPass?.addEventListener("input", validatePassword);
+confirmPass?.addEventListener("input", validatePassword);
+
+showPass?.addEventListener("change", () => {
+  const type = showPass.checked ? "text" : "password";
+  [currentPass, newPass, confirmPass].forEach(input => { if(input) input.type = type; });
 });
 
+// === Open Password Modal with Reset ===
+openModalBtn?.addEventListener("click", () => {
+  modalOverlay.classList.add("show");
+  successModal.classList.remove("show"); // hide success modal
+
+  // Reset input fields
+  currentPass.value = "";
+  newPass.value = "";
+  confirmPass.value = "";
+  showPass.checked = false;
+  [currentPass, newPass, confirmPass].forEach(input => input.type = "password");
+
+  // Reset requirements and save button
+  Object.values(reqs).forEach(r => r.classList.remove("valid"));
+  Object.values(reqs).forEach(r => r.classList.add("invalid"));
+  saveBtn.disabled = true;
+  saveBtn.style.opacity = "0.6";
+  saveBtn.style.cursor = "not-allowed";
+});
+
+closeModal?.addEventListener("click", () => modalOverlay.classList.remove("show"));
+modalOverlay?.addEventListener("click", e => { if(e.target === modalOverlay) modalOverlay.classList.remove("show"); });
+
+saveBtn?.addEventListener("click", () => {
+  modalOverlay.classList.remove("show");
+  successModal.classList.add("show");
+});
+
+
+
+// === Close Success Modal ===
+closeSuccess?.addEventListener("click", () => successModal.classList.remove("show"));
+okBtn?.addEventListener("click", () => successModal.classList.remove("show"));
+successModal?.addEventListener("click", e => { if(e.target === successModal) successModal.classList.remove("show"); });
+
+});
 </script>
+

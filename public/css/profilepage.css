@@ -35,6 +35,7 @@ body {
 }
 
 .sidebar .menu-toggle {
+  align-self: center;
   margin-bottom: 0.rem; 
   background: transparent;
   color: #fff;
@@ -107,22 +108,54 @@ body {
   transform: translateX(3px);
 }
 
-/* Active state */
+/* Active state - dagdag padding at spacing */
 .sidebar nav a.active {
   background: #fff;
   color: #1C6DD0;
   border-radius: 50px;
-  padding: 0.5rem;
-}
-.sidebar.open nav a.active {
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 0.8rem; 
+  margin-bottom: 0.2rem; 
 }
 
-/* Menu toggle */
-.sidebar .menu-toggle {
-  align-self: center;  
-  margin-bottom: 1rem;
+/* Submenu base styles */
+.submenu {
+  display: none;
+  flex-direction: column;
+  gap: 0.5rem;
 }
+
+.submenu a {
+  font-size: 0.9rem;
+  color: #fff;
+  white-space: nowrap;
+  text-decoration: none;
+  padding: 0.3rem 0.5rem;
+  border-radius: 6px;
+}
+
+/* active submenu link */
+.submenu a.active {
+  background: #fff;
+  color: #1C6DD0;
+}
+
+/* hover effect */
+.submenu a:hover {
+  color: #FFB703;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* kapag sidebar open at naka-expand yung profile item */
+.sidebar.open .profile-item.open .submenu {
+  display: flex;
+}
+
+/* kapag sidebar closed, hindi na lalabas ang submenu */
+.sidebar:not(.open) .submenu {
+  display: none !important;
+}
+
+
 
 
 .menu-toggle {
@@ -801,7 +834,7 @@ body {
   background: #fff;
   border-radius: 12px;
   padding: 1rem;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  box-shadow: 4px 4px 12px rgba(60, 135, 196, 0.8);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -988,6 +1021,264 @@ body {
 .password-wrapper .toggle-password:hover {
     color: #FFB703;
 }
+
+/* ===== Modal Overlay ===== */
+.modal-overlay {
+  display: none;       /* hide modal initially */
+  opacity: 0;
+  pointer-events: none;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background: rgba(0,0,0,0.5);
+  transition: opacity 0.3s ease;
+  z-index: 9999;
+}
+
+/* Show modal when .show is added */
+.modal-overlay.show {
+  display: flex;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+
+
+/* ===== Modal Box ===== */
+.modal {
+  background: #fff;
+  border-radius: 12px;
+  max-width: 550px;
+  width: 100%;
+  padding: 2rem;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+  position: relative;
+  animation: fadeIn 0.25s ease;
+}
+
+/* ===== Header ===== */
+.modal h2 {
+  color: #3C87C4;
+  font-size: 1.7rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+/* ===== Close Button ===== */
+.modal .close-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: 18px;
+  cursor: pointer;
+  color: #fff; /* icon color */
+  background-color: #3C87C4; /* circle background */
+  width: 30px;
+  height: 30px;
+  border-radius: 50%; /* makes it a circle */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.modal .close-btn:hover {
+  background-color: #2e6ba3;
+  color: #fff;
+}
+
+
+/* ===== Labels & Inputs ===== */
+.modal label {
+  font-weight: 600;
+  display: block;
+  margin: 0.6rem 0 0.3rem;
+  color: #333;
+  font-size: 15px; /* adjust as needed */
+}
+
+.modal label.required::after {
+  content: " *";
+  color: red;
+}
+
+
+.modal input[type="password"],
+.modal input[type="text"] {
+  width: 100%;
+  padding: 0.7rem 0.9rem;
+  margin-bottom: .5rem;
+  border-radius: 50px;
+  border: 1px solid #0C4B92;
+  font-size: 14px;
+  transition: border 0.2s;
+}
+.modal input:focus {
+  border-color: #3C87C4;
+  outline: none;
+}
+
+/* ===== Show password option ===== */
+.show-pass {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: -4px;
+  font-size: 12px;
+  color: #444;
+}
+
+.show-pass input[type="checkbox"] {
+  transform: translateY(2.5px); 
+  accent-color: #3C87C4;
+}
+
+.info-text {
+  display: flex;
+  align-items: center;
+  gap: 8px; 
+  padding: 10px 12px;
+  border: 1px solid #3C87C4; 
+  border-radius: 8px;
+  background-color: #f0f8ff; 
+  font-size: 13px;
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+.info-text .info-icon {
+  font-size: 16px;
+  color: #3C87C4; 
+  flex-shrink: 0; 
+}
+
+
+/* ===== Requirements list ===== */
+.req-heading {
+  font-weight: 600;
+  margin: 1rem 0 0.5rem;
+  font-size: 14px;
+  color: #3C87C4;
+}
+
+.requirements p {
+  font-size: 14px;
+  margin: 4px 0;
+  display: flex;
+  align-items: center;
+  color: #ff4d4d; 
+}
+
+.requirements p.valid {
+  color: #2ecc71; 
+}
+
+.requirements p::before {
+  content: "✗"; 
+  margin-right: 8px;
+}
+
+.requirements p.valid::before {
+  content: "✓"; 
+}
+
+
+
+/* ===== Save Button ===== */
+.modal .save-btn {
+  background: #3C87C4;
+  color: #fff;
+  border: none;
+  padding: 0.9rem;
+  border-radius: 50px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 15px;
+  width: 30%;
+  transition: background 0.3s;
+  display: block;      
+  margin-left: auto; 
+}
+.modal .save-btn:hover {
+  background: #2e6ba3;
+}
+
+.valid { color: green; }
+.invalid { color: red; }
+
+/* ===== Fade-in Animation ===== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== Success Modal ===== */
+.success-modal {
+  text-align: center;
+  max-width: 500px;
+}
+
+.success-modal h2 {
+  color: #000; 
+  font-size: 1rem;
+  margin-bottom: 0.3rem;
+  text-align: left;
+  font-weight: 200;
+}
+
+.success-modal .subtitle {
+  font-size: 14px;
+  color: #3C87C4;
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+
+.success-modal .ok-btn {
+  background: #3C87C4;
+  color: #fff;
+  border: none;
+  padding: 0.7rem 1.5rem;
+  border-radius: 50px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: background 0.3s;
+  display: block;
+  margin-left: auto;
+}
+
+.success-modal .ok-btn:hover {
+  background: #2e6ba3;
+}
+
+/* Success Modal Overlay */
+.success-overlay {
+  display: none;
+  opacity: 0;
+  pointer-events: none;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background: rgba(0,0,0,0.5);
+  transition: opacity 0.3s ease;
+  z-index: 9999;
+}
+
+.success-overlay.show {
+  display: flex;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+
+
+
+
 
 /* === Right Column === */
 
@@ -1375,6 +1666,59 @@ body {
     font-size: 18px;
     padding: 4px 6px;
   }
+
+  .modal,
+  .success-modal {
+    max-width: 450px;   /* smaller than default 550px */
+    padding: 1.5rem;
+  }
+
+  .modal h2 {
+    font-size: 1.5rem;
+  }
+
+  .success-modal h2 {
+    font-size: 0.95rem;
+  }
+
+  .success-modal .subtitle {
+    font-size: 13px;
+  }
+
+  .modal input[type="password"],
+  .modal input[type="text"] {
+    font-size: 13px;
+    padding: 0.65rem 0.8rem;
+  }
+
+  .modal label {
+    font-size: 14px;
+  }
+
+  .modal .save-btn,
+  .success-modal .ok-btn {
+    width: 30%;
+    font-size: 14px;
+    padding: 0.8rem;
+  }
+
+  .requirements p {
+    font-size: 13px;
+  }
+
+  .info-text {
+    font-size: 13px;
+    padding: 8px 10px;
+  }
+
+  .modal .close-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 16px;
+    top: 0.7rem;
+    right: 0.7rem;
+  }
+
 }  
     
 /* Extra small (<= 480px) */
@@ -1409,4 +1753,58 @@ body {
     width: 70px;
     height: 70px;
   }
+
+  .modal,
+  .success-modal {
+    max-width: 350px;   /* smaller than tablet */
+    padding: 1rem;
+  }
+
+  .modal h2 {
+    font-size: 1.3rem;
+    margin-top: 1.5rem;
+  }
+
+  .success-modal h2 {
+    font-size: 0.9rem;
+  }
+
+  .success-modal .subtitle {
+    font-size: 12px;
+  }
+
+  .modal input[type="password"],
+  .modal input[type="text"] {
+    font-size: 12px;
+    padding: 0.55rem 0.7rem;
+  }
+
+  .modal label {
+    font-size: 13px;
+  }
+
+  .modal .save-btn,
+  .success-modal .ok-btn {
+    width: 40%;
+    font-size: 13px;
+    padding: 0.7rem;
+  }
+
+  .requirements p {
+    font-size: 12px;
+  }
+
+  .info-text {
+    font-size: 12px;
+    padding: 6px 8px;
+  }
+
+  .modal .close-btn {
+    width: 26px;
+    height: 26px;
+    font-size: 15px;
+    top: 0.5rem;
+    right: 0.5rem;
+  }
+
 }
