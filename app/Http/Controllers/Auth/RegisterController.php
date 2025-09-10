@@ -28,7 +28,7 @@ class RegisterController extends Controller
                 ->withInput();
         }
 
-        // Create user
+        // Create user with default status = pending
         $user = $this->create($request->all());
 
         // Handle file uploads based on role
@@ -38,7 +38,8 @@ class RegisterController extends Controller
             $this->createKkOfficial($user, $request);
         }
 
-        return redirect()->route('registration.success');
+        return redirect()->route('registration.success')
+            ->with('success', 'Registration submitted. Your account is pending approval.');
     }
 
     protected function validator(array $data)
@@ -63,9 +64,9 @@ class RegisterController extends Controller
         ];
 
         // Add file validation based on role
-        if ($data['role'] === 'sk') {
+        if (isset($data['role']) && $data['role'] === 'sk') {
             $rules['oath_certificate'] = 'required|file|mimes:pdf|max:5120';
-        } elseif ($data['role'] === 'kk') {
+        } elseif (isset($data['role']) && $data['role'] === 'kk') {
             $rules['barangay_indigency'] = 'required|file|mimes:pdf|max:5120';
         }
 
@@ -90,27 +91,28 @@ class RegisterController extends Controller
             'work_status' => $data['work_status'],
             'youth_classification' => $data['youth_classification'],
             'sk_voter' => $data['sk_voter'],
-            'password' => Hash::make('defaultPassword123'), // default since admin assigns later
+            'account_status' => 'pending', // ✅ default status
+            'password' => Hash::make('defaultPassword123'), // default password
         ]);
     }
 
     protected function createSkOfficial(User $user, Request $request)
     {
-        $oathCertificatePath = $request->file('oath_certificate')->store('documents/sk');
+        $oathCertificatePath = $request->file('oath_certificate')->store('documents/sk', 'public');
 
         SkOfficial::create([
             'user_id' => $user->id,
-            'oath_certificate_path' => $oathCertificatePath, // fixed column name
+            'oath_certificate_path' => $oathCertificatePath,
         ]);
     }
 
     protected function createKkOfficial(User $user, Request $request)
     {
-        $barangayIndigencyPath = $request->file('barangay_indigency')->store('documents/kk');
+        $barangayIndigencyPath = $request->file('barangay_indigency')->store('documents/kk', 'public');
 
         KKMember::create([
             'user_id' => $user->id,
-            'barangay_indigency_path' => $barangayIndigencyPath, // fixed column name
+            'barangay_indigency_path' => $barangayIndigencyPath,
         ]);
     }
 }
