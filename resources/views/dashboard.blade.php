@@ -32,26 +32,27 @@
         </div>
       </div>
 
-      <a href="#">
+      <a href="{{ route('eventpage') }}" class="events-link">
         <i data-lucide="calendar"></i>
-        <span class="label">Calendar</span>
+        <span class="label">Events and Programs</span>
       </a>
+
       <a href="#">
         <i data-lucide="megaphone"></i>
         <span class="label">Announcements</span>
       </a>
-      <a href="#">
-        <i data-lucide="settings"></i>
-        <span class="label">Settings</span>
+
+      <a href="{{ route('evaluation') }}">
+          <i data-lucide="user-star"></i>
+          <span class="label">Evaluation</span>
       </a>
-      <a href="#">
-        <i data-lucide="user-star"></i>
-        <span class="label">Evaluation</span>
-      </a>
-      <a href="#">
-        <i data-lucide="hand-heart"></i>
-        <span class="label">Service Offer</span>
-      </a>
+
+        
+        <a href="{{ route('serviceoffers') }}">
+          <i data-lucide="hand-heart"></i>
+          <span class="label">Service Offer</span>
+        </a>
+
     </nav>
   </aside>
 
@@ -131,7 +132,11 @@
                 </a>
               </li>
               <li><i class="fas fa-cog"></i> Manage Password</li>
-              <li><i class="fas fa-question-circle"></i> FAQs</li>
+              <li>
+                <a href="{{ route('faqspage') }}">
+                  <i class="fas fa-question-circle"></i> FAQs
+                </a>
+              </li>
               <li><i class="fas fa-star"></i> Send Feedback to Katibayan</li>
             </ul>
           </div>
@@ -197,7 +202,10 @@
                 <button class="prev"><i class="fas fa-chevron-left"></i></button>
                 <h3></h3>
                 <button class="next"><i class="fas fa-chevron-right"></i></button>
-                <i class="fas fa-calendar calendar-toggle" title="View full month"></i>
+                <a href="{{ route('eventpage') }}" title="View full month">
+                  <i class="fas fa-calendar calendar-toggle"></i>
+                </a>
+
               </header>
               <div class="days"></div>
             </div>
@@ -249,7 +257,8 @@
                       <i data-lucide="bar-chart-3"></i>
                     </div>
                   </div>
-                  <a href="#">Join the poll →</a>
+                  <a href="{{ route('polls.page') }}">Join the poll →</a>
+
                 </div>
 
               </div>
@@ -324,7 +333,10 @@
             <div class="suggestion-box">
               <h2>Suggestion Box</h2>
               <p class="subtitle">You matter. Your voice counts.</p>
-              <a href="#" class="suggestion-btn">Share with us <i class="fas fa-paper-plane"></i></a>
+              <a href="{{ route('suggestionbox') }}" class="suggestion-btn">
+  Share with us <i class="fas fa-paper-plane"></i>
+</a>
+
               <p class="note">Everyone is encouraged to share their ideas and suggestions — we’re glad to hear from you!</p>
             </div>
           </div>
@@ -351,16 +363,40 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // === Profile submenu ===
-  const profileItem = document.querySelector('.profile-item');
-  const profileLink = document.querySelector('.profile-link');
-  if (profileItem && profileLink) {
-    profileLink.addEventListener('click', (e) => {
-      e.preventDefault();
-      if (sidebar.classList.contains('open')) {
-        profileItem.classList.toggle('open');
-      }
-    });
-  }
+const profileItem = document.querySelector('.profile-item');
+const profileLink = document.querySelector('.profile-link');
+
+// === Events submenu ===
+const eventsItem = document.querySelector('.events-item');
+const eventsLink = document.querySelector('.events-link');
+
+function closeAllSubmenus() {
+  profileItem?.classList.remove('open');
+  eventsItem?.classList.remove('open');
+}
+
+if (profileItem && profileLink) {
+  profileLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (sidebar.classList.contains('open')) {
+      const isOpen = profileItem.classList.contains('open');
+      closeAllSubmenus();
+      if (!isOpen) profileItem.classList.add('open');
+    }
+  });
+}
+
+if (eventsItem && eventsLink) {
+  eventsLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (sidebar.classList.contains('open')) {
+      const isOpen = eventsItem.classList.contains('open');
+      closeAllSubmenus();
+      if (!isOpen) eventsItem.classList.add('open');
+    }
+  });
+}
+
 
   // === Calendar Functionality ===
   const weekdays = ["MON","TUE","WED","THU","FRI","SAT","SUN"];
@@ -441,20 +477,29 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // === Time auto-update ===
-  const timeEl = document.querySelector(".time");
-  function updateTime() {
-    if (!timeEl) return;
-    const now = new Date();
-    const shortWeekdays = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
-    const weekday = shortWeekdays[now.getDay()];
-    let hours = now.getHours();
-    const minutes = now.getMinutes().toString().padStart(2, "0");
-    const ampm = hours >= 12 ? "PM" : "AM";
-    hours = hours % 12 || 12;
-    timeEl.innerHTML = `${weekday} ${hours}:${minutes} <span>${ampm}</span>`;
-  }
-  updateTime();
-  setInterval(updateTime, 60000);
+const timeEl = document.querySelector(".time");
+function updateTime() {
+  if (!timeEl) return;
+  const now = new Date();
+
+  const shortWeekdays = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
+  const shortMonths = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+
+  const weekday = shortWeekdays[now.getDay()];
+  const month = shortMonths[now.getMonth()];
+  const day = now.getDate();
+
+  let hours = now.getHours();
+  const minutes = now.getMinutes().toString().padStart(2, "0");
+  const ampm = hours >= 12 ? "PM" : "AM";
+  hours = hours % 12 || 12;
+
+  // Example: MON, AUG 8 10:00 AM
+  timeEl.innerHTML = `${weekday}, ${month} ${day} ${hours}:${minutes} <span>${ampm}</span>`;
+}
+updateTime();
+setInterval(updateTime, 60000);
+
 
   // === Notifications dropdown ===
   const notifWrapper = document.querySelector(".notification-wrapper");

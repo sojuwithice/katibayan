@@ -16,42 +16,42 @@
     <button class="menu-toggle">Menu</button>
     <div class="divider"></div>
     <nav class="nav">
-      <a href="{{ route('dashboard.index') }}">
+      <a href="{{ route('dashboard.index') }}" class="active">
         <i data-lucide="layout-dashboard"></i>
         <span class="label">Dashboard</span>
       </a>
       <div class="profile-item nav-item">
-        <a href="#" class="profile-link active">
+        <a href="#" class="profile-link">
           <i data-lucide="circle-user"></i>
           <span class="label">Profile</span>
           <i data-lucide="chevron-down" class="submenu-arrow"></i>
         </a>
         <div class="submenu">
-          <a href="#" class="active">My Profile</a>
-          <a href="{{ route('certificatepage') }}">Certificate</a>
+          <a href="{{ route('profilepage') }}">My Profile</a>
+          <a href="{{ route('certificatepage') }}">Certificates</a>
         </div>
       </div>
 
-      <a href="#">
+      <a href="{{ route('eventpage') }}" class="events-link">
         <i data-lucide="calendar"></i>
-        <span class="label">Calendar</span>
+        <span class="label">Events and Programs</span>
       </a>
+
       <a href="#">
         <i data-lucide="megaphone"></i>
         <span class="label">Announcements</span>
       </a>
-      <a href="#">
-        <i data-lucide="settings"></i>
-        <span class="label">Settings</span>
+
+      <a href="{{ route('evaluation') }}">
+          <i data-lucide="user-star"></i>
+          <span class="label">Evaluation</span>
       </a>
-      <a href="#">
-        <i data-lucide="user-star"></i>
-        <span class="label">Evaluation</span>
-      </a>
-      <a href="#">
-        <i data-lucide="hand-heart"></i>
-        <span class="label">Service Offer</span>
-      </a>
+
+        <a href="{{ route('serviceoffers') }}">
+          <i data-lucide="hand-heart"></i>
+          <span class="label">Service Offer</span>
+        </a>
+
     </nav>
   </aside>
 
@@ -130,7 +130,11 @@
                 </a>
               </li>
               <li><i class="fas fa-cog"></i> Manage Password</li>
-              <li><i class="fas fa-question-circle"></i> FAQs</li>
+              <li>
+                <a href="{{ route('faqspage') }}">
+                  <i class="fas fa-question-circle"></i> FAQs
+                </a>
+              </li>
               <li><i class="fas fa-star"></i> Send Feedback to Katibayan</li>
             </ul>
           </div>
@@ -322,44 +326,76 @@ document.addEventListener("DOMContentLoaded", () => {
   // === Lucide icons ===
   lucide.createIcons();
 
-  // === Sidebar & Profile Dropdowns ===
+  // === Sidebar & Profile/Events Dropdowns ===
   const menuToggle = document.querySelector('.menu-toggle');
   const sidebar = document.querySelector('.sidebar');
+
   const profileItem = document.querySelector('.profile-item');
   const profileLink = profileItem?.querySelector('.profile-link');
+
+  const eventsItem = document.querySelector('.events-item');
+  const eventsLink = eventsItem?.querySelector('.events-link');
+
   const profileWrapper = document.querySelector('.profile-wrapper');
   const profileToggle = document.getElementById('profileToggle');
   const profileDropdown = document.querySelector('.profile-dropdown');
+
   const notifWrapper = document.querySelector(".notification-wrapper");
   const notifBell = notifWrapper?.querySelector(".fa-bell");
   const notifDropdown = notifWrapper?.querySelector(".notif-dropdown");
 
+  // Helper function to close all submenus
+  function closeAllSubmenus() {
+    profileItem?.classList.remove('open');
+    eventsItem?.classList.remove('open');
+  }
+
+  // === Sidebar toggle ===
   menuToggle?.addEventListener('click', (e) => {
     e.stopPropagation();
     sidebar.classList.toggle('open');
-    if (!sidebar.classList.contains('open')) profileItem?.classList.remove('open');
+    if (!sidebar.classList.contains('open')) closeAllSubmenus();
   });
 
+  // === Profile submenu toggle ===
   profileLink?.addEventListener('click', (e) => {
     e.preventDefault();
-    if (sidebar.classList.contains('open')) profileItem.classList.toggle('open');
+    if (sidebar.classList.contains('open')) {
+      const isOpen = profileItem.classList.contains('open');
+      closeAllSubmenus();
+      if (!isOpen) profileItem.classList.add('open');
+    }
   });
 
+  // === Events submenu toggle ===
+  eventsLink?.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (sidebar.classList.contains('open')) {
+      const isOpen = eventsItem.classList.contains('open');
+      closeAllSubmenus();
+      if (!isOpen) eventsItem.classList.add('open');
+    }
+  });
+
+  // === Close sidebar & submenus when clicking outside ===
   document.addEventListener('click', (e) => {
     if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
       sidebar.classList.remove('open');
-      profileItem?.classList.remove('open');
+      closeAllSubmenus();
     }
-    if (!profileWrapper.contains(e.target)) profileWrapper?.classList.remove('active');
+    if (!profileWrapper?.contains(e.target)) profileWrapper?.classList.remove('active');
     if (notifWrapper && !notifWrapper.contains(e.target)) notifWrapper.classList.remove('active');
   });
 
+  // === Profile dropdown toggle ===
   profileToggle?.addEventListener('click', (e) => {
     e.stopPropagation();
     profileWrapper.classList.toggle('active');
     notifWrapper?.classList.remove('active');
   });
   profileDropdown?.addEventListener('click', e => e.stopPropagation());
+
+  // === Notifications dropdown toggle ===
   notifBell?.addEventListener('click', (e) => {
     e.stopPropagation();
     notifWrapper.classList.toggle('active');
@@ -409,108 +445,110 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelector(".calendar .next")?.addEventListener("click", () => { currentView.setDate(currentView.getDate()+7); renderCalendar(currentView); });
 
   // === Time auto-update ===
-  const timeEl = document.querySelector(".time");
-  function updateTime() {
-    if (!timeEl) return;
-    const now = new Date();
-    const shortWeekdays = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
-    const weekday = shortWeekdays[now.getDay()];
-    let hours = now.getHours();
-    const minutes = now.getMinutes().toString().padStart(2,"0");
-    const ampm = hours >= 12 ? "PM":"AM";
-    hours = hours%12 || 12;
-    timeEl.innerHTML = `${weekday} ${hours}:${minutes} <span>${ampm}</span>`;
-  }
-  updateTime(); setInterval(updateTime,60000);
+const timeEl = document.querySelector(".time");
+function updateTime() {
+  if (!timeEl) return;
+  const now = new Date();
 
-// === Password toggle & modal logic ===
-const modalOverlay = document.getElementById("passwordModal");
-const successModal = document.getElementById("successModal");
-const closeModal = document.getElementById("closeModal");
-const closeSuccess = document.getElementById("closeSuccess");
-const okBtn = document.getElementById("okBtn");
-const saveBtn = document.querySelector(".save-btn");
-const openModalBtn = document.querySelector(".settings-btn");
+  const shortWeekdays = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
+  const shortMonths = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
 
-const currentPass = document.getElementById("currentPassword");
-const newPass = document.getElementById("newPassword");
-const confirmPass = document.getElementById("confirmPassword");
-const showPass = document.getElementById("showPass");
+  const weekday = shortWeekdays[now.getDay()];
+  const month = shortMonths[now.getMonth()];
+  const day = now.getDate();
 
-const reqs = {
-  length: document.getElementById("req-length"),
-  upper: document.getElementById("req-upper"),
-  lower: document.getElementById("req-lower"),
-  number: document.getElementById("req-number"),
-  symbol: document.getElementById("req-symbol"),
-  match: document.getElementById("req-match")
-};
+  let hours = now.getHours();
+  const minutes = now.getMinutes().toString().padStart(2, "0");
+  const ampm = hours >= 12 ? "PM" : "AM";
+  hours = hours % 12 || 12;
 
-function validatePassword() {
-  const pass = newPass.value;
-  const confirm = confirmPass.value;
-  reqs.length.classList.toggle("valid", pass.length >= 8);
-  reqs.length.classList.toggle("invalid", pass.length < 8);
-  reqs.upper.classList.toggle("valid", /[A-Z]/.test(pass));
-  reqs.upper.classList.toggle("invalid", !/[A-Z]/.test(pass));
-  reqs.lower.classList.toggle("valid", /[a-z]/.test(pass));
-  reqs.lower.classList.toggle("invalid", !/[a-z]/.test(pass));
-  reqs.number.classList.toggle("valid", /[0-9]/.test(pass));
-  reqs.number.classList.toggle("invalid", !/[0-9]/.test(pass));
-  reqs.symbol.classList.toggle("valid", /[^A-Za-z0-9]/.test(pass));
-  reqs.symbol.classList.toggle("invalid", !/[^A-Za-z0-9]/.test(pass));
-  reqs.match.classList.toggle("valid", pass && pass === confirm);
-  reqs.match.classList.toggle("invalid", pass !== confirm);
-
-  const allValid = Object.values(reqs).every(r => r.classList.contains("valid"));
-  saveBtn.disabled = !allValid;
-  saveBtn.style.opacity = allValid ? "1" : "0.6";
-  saveBtn.style.cursor = allValid ? "pointer" : "not-allowed";
+  // Example: MON, AUG 8 10:00 AM
+  timeEl.innerHTML = `${weekday}, ${month} ${day} ${hours}:${minutes} <span>${ampm}</span>`;
 }
-
-newPass?.addEventListener("input", validatePassword);
-confirmPass?.addEventListener("input", validatePassword);
-
-showPass?.addEventListener("change", () => {
-  const type = showPass.checked ? "text" : "password";
-  [currentPass, newPass, confirmPass].forEach(input => { if(input) input.type = type; });
-});
-
-// === Open Password Modal with Reset ===
-openModalBtn?.addEventListener("click", () => {
-  modalOverlay.classList.add("show");
-  successModal.classList.remove("show"); // hide success modal
-
-  // Reset input fields
-  currentPass.value = "";
-  newPass.value = "";
-  confirmPass.value = "";
-  showPass.checked = false;
-  [currentPass, newPass, confirmPass].forEach(input => input.type = "password");
-
-  // Reset requirements and save button
-  Object.values(reqs).forEach(r => r.classList.remove("valid"));
-  Object.values(reqs).forEach(r => r.classList.add("invalid"));
-  saveBtn.disabled = true;
-  saveBtn.style.opacity = "0.6";
-  saveBtn.style.cursor = "not-allowed";
-});
-
-closeModal?.addEventListener("click", () => modalOverlay.classList.remove("show"));
-modalOverlay?.addEventListener("click", e => { if(e.target === modalOverlay) modalOverlay.classList.remove("show"); });
-
-saveBtn?.addEventListener("click", () => {
-  modalOverlay.classList.remove("show");
-  successModal.classList.add("show");
-});
+updateTime();
+setInterval(updateTime, 60000);
 
 
+  // === Password toggle & modal logic ===
+  const modalOverlay = document.getElementById("passwordModal");
+  const successModal = document.getElementById("successModal");
+  const closeModal = document.getElementById("closeModal");
+  const closeSuccess = document.getElementById("closeSuccess");
+  const okBtn = document.getElementById("okBtn");
+  const saveBtn = document.querySelector(".save-btn");
+  const openModalBtn = document.querySelector(".settings-btn");
 
-// === Close Success Modal ===
-closeSuccess?.addEventListener("click", () => successModal.classList.remove("show"));
-okBtn?.addEventListener("click", () => successModal.classList.remove("show"));
-successModal?.addEventListener("click", e => { if(e.target === successModal) successModal.classList.remove("show"); });
+  const currentPass = document.getElementById("currentPassword");
+  const newPass = document.getElementById("newPassword");
+  const confirmPass = document.getElementById("confirmPassword");
+  const showPass = document.getElementById("showPass");
+
+  const reqs = {
+    length: document.getElementById("req-length"),
+    upper: document.getElementById("req-upper"),
+    lower: document.getElementById("req-lower"),
+    number: document.getElementById("req-number"),
+    symbol: document.getElementById("req-symbol"),
+    match: document.getElementById("req-match")
+  };
+
+  function validatePassword() {
+    const pass = newPass.value;
+    const confirm = confirmPass.value;
+    reqs.length.classList.toggle("valid", pass.length >= 8);
+    reqs.length.classList.toggle("invalid", pass.length < 8);
+    reqs.upper.classList.toggle("valid", /[A-Z]/.test(pass));
+    reqs.upper.classList.toggle("invalid", !/[A-Z]/.test(pass));
+    reqs.lower.classList.toggle("valid", /[a-z]/.test(pass));
+    reqs.lower.classList.toggle("invalid", !/[a-z]/.test(pass));
+    reqs.number.classList.toggle("valid", /[0-9]/.test(pass));
+    reqs.number.classList.toggle("invalid", !/[0-9]/.test(pass));
+    reqs.symbol.classList.toggle("valid", /[^A-Za-z0-9]/.test(pass));
+    reqs.symbol.classList.toggle("invalid", !/[^A-Za-z0-9]/.test(pass));
+    reqs.match.classList.toggle("valid", pass && pass === confirm);
+    reqs.match.classList.toggle("invalid", pass !== confirm);
+
+    const allValid = Object.values(reqs).every(r => r.classList.contains("valid"));
+    saveBtn.disabled = !allValid;
+    saveBtn.style.opacity = allValid ? "1" : "0.6";
+    saveBtn.style.cursor = allValid ? "pointer" : "not-allowed";
+  }
+
+  newPass?.addEventListener("input", validatePassword);
+  confirmPass?.addEventListener("input", validatePassword);
+
+  showPass?.addEventListener("change", () => {
+    const type = showPass.checked ? "text" : "password";
+    [currentPass, newPass, confirmPass].forEach(input => { if(input) input.type = type; });
+  });
+
+  // Open/Close Password Modal
+  openModalBtn?.addEventListener("click", () => {
+    modalOverlay.classList.add("show");
+    successModal.classList.remove("show");
+    currentPass.value = newPass.value = confirmPass.value = "";
+    showPass.checked = false;
+    [currentPass, newPass, confirmPass].forEach(input => input.type = "password");
+    Object.values(reqs).forEach(r => r.classList.remove("valid"));
+    Object.values(reqs).forEach(r => r.classList.add("invalid"));
+    saveBtn.disabled = true;
+    saveBtn.style.opacity = "0.6";
+    saveBtn.style.cursor = "not-allowed";
+  });
+
+  closeModal?.addEventListener("click", () => modalOverlay.classList.remove("show"));
+  modalOverlay?.addEventListener("click", e => { if(e.target === modalOverlay) modalOverlay.classList.remove("show"); });
+
+  saveBtn?.addEventListener("click", () => {
+    modalOverlay.classList.remove("show");
+    successModal.classList.add("show");
+  });
+
+  closeSuccess?.addEventListener("click", () => successModal.classList.remove("show"));
+  okBtn?.addEventListener("click", () => successModal.classList.remove("show"));
+  successModal?.addEventListener("click", e => { if(e.target === successModal) successModal.classList.remove("show"); });
 
 });
 </script>
+
 

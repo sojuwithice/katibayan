@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KatiBayan - Profile Page</title>
-  <link rel="stylesheet" href="{{ asset('css/certificatepage.css') }}">
+  <link rel="stylesheet" href="{{ asset('css/eventpage.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -142,108 +142,260 @@
       </div>
     </header>
 
-   <!-- Certificates Section -->
-<section class="certificates">
+    <!-- Events and Programs -->
+      <section class="events-section">
+        <!-- LEFT -->
+        <div class="events-left">
+          <h2>Events and Programs</h2>
+          <p>This page serves as your guide to upcoming events designed to empower the youth, foster engagement, and build stronger communities.</p>
+        </div>
 
-  <!-- Header box with border -->
-  <div class="certificates-header">
-  <h2 id="certHeader">Your Certificates</h2>
-  <p>You have a total of 0 certificates.</p>
+        <!-- RIGHT -->
+        <div class="events-right">
+          <h3>Today's Agenda 
+        <i class="fa-solid fa-thumbtack"></i>
+      </h3>
+
+          <div class="agenda-card">
+            <div class="agenda-banner">
+              <div class="agenda-date">
+                <span class="month">SEP.</span>
+                <span class="day">15</span>
+                <span class="year">2025</span>
+              </div>
+              <img src="{{ asset('images/drugs.jpeg') }}" alt="Event Banner">
+            </div>
+            <div class="agenda-actions">
+            <a href="#" class="details-btn">
+                See full details 
+                <span class="icon-circle">
+                  <i class="fa-solid fa-chevron-right"></i>
+                </span>
+              </a>
+
+              <a href="{{ route('attendancepage') }}" class="attend-btn">Attend Now</a>
+
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- Upcoming Activities -->
+      <section class="upcoming-section">
+        <h2>UPCOMING ACTIVITIES</h2>
+        
+        <div class="committee-bar">
+          <h3>Committee</h3>
+          <div class="committee-tabs">
+            <button class="active">All</button>
+            <button>Active Citizenship</button>
+            <button>Economic Empowerment</button>
+            <button>Education</button>
+            <button>Health</button>
+            <button>Sports</button>
+          </div>
+        </div>
+      </section>
+
+
+<section class="programs-section">
+  <!-- Programs bar -->
+  <div class="programs-bar">
+    <h3>Programs for you</h3>
+    <a href="#" class="see-all">See All</a>
+  </div>
+
+  <!-- Scrollable cards row -->
+   <div class="programs-scroll">
+    <div class="programs-container">
+    <!-- Program card 1 -->
+    <article class="program-card">
+  <div class="program-media">
+    <img src="{{ asset('images/drugs.jpeg') }}" alt="Program 1">
+    <button class="register-btn">REGISTER NOW!</button>
+  </div>
+  <div class="program-body">
+    <p class="program-title">Available Testing for TESDA Courses</p>
+    <p class="program-desc">This program short summary is najbabxicaba anuwcbibxciabxka nquvuabx</p>
+    <div class="program-actions">
+      <a class="read-more" href="#">
+        READ MORE 
+        <span class="circle-btn">
+          <i class="fas fa-chevron-right"></i>
+        </span>
+      </a>
+    </div>
+  </div>
+</article>
+
+
+    <!-- Program card 2 -->
+    <article class="program-card">
+  <div class="program-media">
+    <img src="{{ asset('images/linggo.jpeg') }}" alt="Program 1">
+    <button class="register-btn">REGISTER NOW!</button>
+  </div>
+  <div class="program-body">
+    <p class="program-title">Linggo ng Kabataan</p>
+    <p class="program-desc">This program short summary is najbabxicaba anuwcbibxciabxka nquvuabx</p>
+    <div class="program-actions">
+      <a class="read-more" href="#">
+        READ MORE 
+        <span class="circle-btn">
+          <i class="fas fa-chevron-right"></i>
+        </span>
+      </a>
+    </div>
+  </div>
+</article>
+
+    <!-- Program card 3 -->
+    <article class="program-card">
+  <div class="program-media">
+    <img src="{{ asset('images/basketball.jpg') }}" alt="Program 1">
+    <button class="register-btn">REGISTER NOW!</button>
+  </div>
+  <div class="program-body">
+    <p class="program-title">Basketball Tournament</p>
+    <p class="program-desc">This program short summary is najbabxicaba anuwcbibxciabxka nquvuabx</p>
+    <div class="program-actions">
+      <a class="read-more" href="#">
+        READ MORE 
+        <span class="circle-btn">
+          <i class="fas fa-chevron-right"></i>
+        </span>
+      </a>
+    </div>
+  </div>
+</article>
+
+    <article class="program-card">
+  <div class="program-media">
+    <img src="{{ asset('images/drugs.jpeg') }}" alt="Program 1">
+    <button class="register-btn">REGISTER NOW!</button>
+  </div>
+  <div class="program-body">
+    <p class="program-title">Available Testing for TESDA Courses</p>
+    <p class="program-desc">This program short summary is najbabxicaba anuwcbibxciabxka nquvuabx</p>
+    <div class="program-actions">
+      <a class="read-more" href="#">
+        READ MORE 
+        <span class="circle-btn">
+          <i class="fas fa-chevron-right"></i>
+        </span>
+      </a>
+    </div>
+  </div>
+</article>
+
+    <article class="program-card">
+  <div class="program-media">
+    <img src="{{ asset('images/drugs.jpeg') }}" alt="Program 1">
+    <button class="register-btn">REGISTER NOW!</button>
+  </div>
+  <div class="program-body">
+    <p class="program-title">Available Testing for TESDA Courses</p>
+    <p class="program-desc">This program short summary is najbabxicaba anuwcbibxciabxka nquvuabx</p>
+    <div class="program-actions">
+      <a class="read-more" href="#">
+        READ MORE 
+        <span class="circle-btn">
+          <i class="fas fa-chevron-right"></i>
+        </span>
+      </a>
+    </div>
+  </div>
+</article>
+  </div>
 </div>
+</section>
 
 
-  <!-- This Month -->
-  <div class="certificates-group">
-    <h3>This Month</h3>
-    <div class="cert-grid">
-      <div class="cert-card">
-        <img src="{{ asset('images/certificate.png') }}" alt="Certificate">
-        <div class="cert-info">
-          <p class="cert-title">Certificate completed in:</p>
-          <p class="cert-desc">International Day Against Drug Abuse and Illicit Trafficking</p>
-          <button class="print-btn">Print with SK</button>
-        </div>
-      </div>
-
-      <div class="cert-card">
-        <img src="{{ asset('images/certificate.png') }}" alt="Certificate">
-        <div class="cert-info">
-          <p class="cert-title">Certificate completed in:</p>
-          <p class="cert-desc">International Day Against Drug Abuse and Illicit Trafficking</p>
-          <button class="print-btn">Print with SK</button>
-        </div>
-      </div>
-
-      <div class="cert-card">
-        <img src="{{ asset('images/certificate.png') }}" alt="Certificate">
-        <div class="cert-info">
-          <p class="cert-title">Certificate completed in:</p>
-          <p class="cert-desc">International Day Against Drug Abuse and Illicit Trafficking</p>
-          <button class="print-btn">Print with SK</button>
-        </div>
-      </div>
-    </div>
+<!-- === List of Events (stacked) === -->
+<section class="events-list-section">
+  <div class="section-header">
+    <h3>List of Events</h3>
+    <a href="#" class="see-all">See All</a>
   </div>
 
-  <!-- Last Month -->
-  <div class="certificates-group">
-    <h3>Last Month</h3>
-    <div class="cert-grid">
-        <div class="cert-card">
-    <div class="cert-img">
-        <img src="{{ asset('images/certificate.png') }}" alt="Certificate">
-    </div>
-    <div class="cert-info">
-        <div class="cert-text">
-        <p class="cert-title">Certificate completed in:</p>
-        <p class="cert-desc">International Day Against Drug Abuse and Illicit Trafficking</p>
-        </div>
-        <button class="print-btn">Print with SK</button>
-    </div>
-    </div>
-
-
-      <div class="cert-card">
-        <img src="{{ asset('images/certificate.png') }}" alt="Certificate">
-        <div class="cert-info">
-          <p class="cert-title">Certificate completed in:</p>
-          <p class="cert-desc">International Day Against Drug Abuse and Illicit Trafficking</p>
-          <button class="print-btn">Print with SK</button>
+  <div class="events-wrapper">
+    <!-- Event row 1 -->
+    <article class="event-card">
+      <div class="event-left">
+        <div class="event-thumb upcoming">
+          <!-- placeholder image -->
+          <img src="{{ asset('images/linis.jpg') }}" alt="Event banner">
         </div>
       </div>
 
-      <div class="cert-card">
-        <img src="{{ asset('images/certificate.png') }}" alt="Certificate">
-        <div class="cert-info">
-          <p class="cert-title">Certificate completed in:</p>
-          <p class="cert-desc">International Day Against Drug Abuse and Illicit Trafficking</p>
-          <button class="print-btn">Print with SK</button>
+      <div class="event-right">
+        <a class="view-details" href="#">View more details</a>
+        <h4 class="event-title">Kalinsan sa bagong Pilipinas Program</h4>
+        <div class="event-meta">
+          <p><i class="fas fa-location-dot"></i> Barangay Hall (Starting Point)</p>
+          <p><i class="fas fa-users"></i> Committee on Active Citizenship</p>
+        </div>
+
+        <div class="event-footer">
+          <div class="event-when">
+            <div class="when-label">WHEN</div>
+            <div class="event-date">SEPTEMBER 22, 2025 | 9:00 AM</div>
+          </div>
+        </div>
+
+      </div>
+    </article>
+
+    <!-- Event row 2 -->
+    <article class="event-card">
+      <div class="event-left">
+        <div class="event-thumb upcoming">
+          <img src="{{ asset('images/linis.jpg') }}" alt="Event banner">
         </div>
       </div>
-    </div>
-  </div>
 
-  <!-- Empty state -->
-<div class="empty-state" id="emptyState" style="display:none;">
-  <div class="empty-box">
-    <div class="empty-icon">⌀</div>
-    <p>You don’t have any certificate earn yet</p>
-  </div>
+      <div class="event-right">
+        <a class="view-details" href="#">View more details</a>
+        <h4 class="event-title">Kalinsan sa bagong Pilipinas Program</h4>
+        <div class="event-meta">
+          <p><i class="fas fa-location-dot"></i> Barangay Hall (Starting Point)</p>
+          <p><i class="fas fa-users"></i> Committee on Active Citizenship</p>
+        </div>
+        <div class="event-footer">
+          <div class="event-when">
+          <span class="when-label">WHEN</span>
+          <span class="event-date">SEPTEMBER 22, 2025 | 9:00 AM</span>
+        </div>
 </div>
+      </div>
+    </article>
 
+    <article class="event-card">
+      <div class="event-left">
+        <div class="event-thumb">
+          <img src="{{ asset('images/drugs.jpeg') }}" alt="Event banner">
+        </div>
+      </div>
 
-  <!-- Modal -->
-<div class="modal-overlay" id="modalOverlay">
-  <div class="modal-box">
-    <div class="modal-icon">
-      <i class="fa-solid fa-check"></i>
-    </div>
-    <h2>Request Submitted!</h2>
-    <p>You’ll be notified once your certificate is ready for claiming.</p>
-    <button id="closeModal">OK</button>
-  </div>
+      <div class="event-right">
+        <a class="view-details" href="#">View more details</a>
+        <h4 class="event-title">Kontra Droga</h4>
+        <div class="event-meta">
+          <p><i class="fas fa-location-dot"></i> Barangay Hall (Starting Point)</p>
+          <p><i class="fas fa-users"></i> Committee on Active Citizenship</p>
+        </div>
+        <div class="event-footer">
+          <div class="event-when">
+          <span class="when-label">WHEN</span>
+          <span class="event-date">SEPTEMBER 22, 2025 | 9:00 AM</span>
+        </div>
 </div>
+      </div>
+    </article>
 
+    
+  </div>
 </section>
 
 
@@ -263,14 +415,7 @@
 
 
 
-
-
-
-
-
-
-
-<script>
+    <script>
 document.addEventListener("DOMContentLoaded", () => {
   // === Lucide icons ===
   lucide.createIcons();
@@ -489,34 +634,6 @@ setInterval(updateTime, 60000);
     });
   }
 
-    // === Certificates auto-update ===
-  function updateCertificates() {
-    const certCards = document.querySelectorAll(".cert-card");
-    const emptyState = document.getElementById("emptyState");
-    const header = document.getElementById("certHeader");
-    const totalText = document.querySelector(".certificates-header p");
-
-    // Update header count
-    if (header) {
-      header.textContent = `Your Certificates`;
-    }
-
-    // Update subtext
-    if (totalText) {
-      totalText.textContent = `You have a total of ${certCards.length} certificate${certCards.length !== 1 ? 's' : ''}.`;
-    }
-
-    // Toggle empty state
-    if (emptyState) {
-      emptyState.style.display = certCards.length === 0 ? "flex" : "none";
-    }
-  }
-
-  // 🔥 Call it right after DOM load
-  updateCertificates();
-
-
-
   // === Modal ===
   const modalOverlay = document.getElementById('modalOverlay');
   const closeModal = document.getElementById('closeModal');
@@ -537,5 +654,14 @@ setInterval(updateTime, 60000);
       modalOverlay.style.display = 'none';
     }
   });
+
+
+  document.querySelectorAll('.program-desc').forEach(el => {
+  let text = el.textContent.trim().split(" ");
+  if (text.length > 100) {
+    el.textContent = text.slice(0, 100).join(" ") + "...";
+  }
+});
+
 });
 </script>

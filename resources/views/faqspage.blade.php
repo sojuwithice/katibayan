@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KatiBayan - Profile Page</title>
-  <link rel="stylesheet" href="{{ asset('css/certificatepage.css') }}">
+  <title>KatiBayan - FAQs Page</title>
+  <link rel="stylesheet" href="{{ asset('css/faqspage.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -142,108 +142,115 @@
       </div>
     </header>
 
-   <!-- Certificates Section -->
-<section class="certificates">
-
-  <!-- Header box with border -->
-  <div class="certificates-header">
-  <h2 id="certHeader">Your Certificates</h2>
-  <p>You have a total of 0 certificates.</p>
-</div>
-
-
-  <!-- This Month -->
-  <div class="certificates-group">
-    <h3>This Month</h3>
-    <div class="cert-grid">
-      <div class="cert-card">
-        <img src="{{ asset('images/certificate.png') }}" alt="Certificate">
-        <div class="cert-info">
-          <p class="cert-title">Certificate completed in:</p>
-          <p class="cert-desc">International Day Against Drug Abuse and Illicit Trafficking</p>
-          <button class="print-btn">Print with SK</button>
-        </div>
+    <!-- FAQs Section -->
+<section class="faqs-wrapper">
+  <div class="faqs-container">
+    <!-- LEFT SIDE -->
+    <div class="faqs-left">
+      <div class="faqs-badge">
+        <h1>FAQs</h1>
       </div>
-
-      <div class="cert-card">
-        <img src="{{ asset('images/certificate.png') }}" alt="Certificate">
-        <div class="cert-info">
-          <p class="cert-title">Certificate completed in:</p>
-          <p class="cert-desc">International Day Against Drug Abuse and Illicit Trafficking</p>
-          <button class="print-btn">Print with SK</button>
-        </div>
+      <div class="faqs-header">
+        <h2>Frequently asked <span>Questions</span></h2>
+        <p>about KatiBayan</p>
       </div>
+    </div>
 
-      <div class="cert-card">
-        <img src="{{ asset('images/certificate.png') }}" alt="Certificate">
-        <div class="cert-info">
-          <p class="cert-title">Certificate completed in:</p>
-          <p class="cert-desc">International Day Against Drug Abuse and Illicit Trafficking</p>
-          <button class="print-btn">Print with SK</button>
-        </div>
-      </div>
+    <!-- RIGHT SIDE -->
+    <div class="faqs-right">
+  <div class="faq-item">
+    <button class="faq-question">
+      What is KatiBayan Web Portal?
+      <span class="arrow">&#9662;</span>
+    </button>
+    <div class="faq-answer">
+      <p>
+        The KatiBayan Web Portal is a digital platform developed to support
+        Sangguniang Kabataan (SK) officials in streamlining youth profiling,
+        managing events and programs, monitoring participation, sending
+        announcements, and enabling data-driven decision-making through
+        automated reporting and analytics.
+      </p>
     </div>
   </div>
 
-  <!-- Last Month -->
-  <div class="certificates-group">
-    <h3>Last Month</h3>
-    <div class="cert-grid">
-        <div class="cert-card">
-    <div class="cert-img">
-        <img src="{{ asset('images/certificate.png') }}" alt="Certificate">
-    </div>
-    <div class="cert-info">
-        <div class="cert-text">
-        <p class="cert-title">Certificate completed in:</p>
-        <p class="cert-desc">International Day Against Drug Abuse and Illicit Trafficking</p>
-        </div>
-        <button class="print-btn">Print with SK</button>
-    </div>
-    </div>
-
-
-      <div class="cert-card">
-        <img src="{{ asset('images/certificate.png') }}" alt="Certificate">
-        <div class="cert-info">
-          <p class="cert-title">Certificate completed in:</p>
-          <p class="cert-desc">International Day Against Drug Abuse and Illicit Trafficking</p>
-          <button class="print-btn">Print with SK</button>
-        </div>
-      </div>
-
-      <div class="cert-card">
-        <img src="{{ asset('images/certificate.png') }}" alt="Certificate">
-        <div class="cert-info">
-          <p class="cert-title">Certificate completed in:</p>
-          <p class="cert-desc">International Day Against Drug Abuse and Illicit Trafficking</p>
-          <button class="print-btn">Print with SK</button>
-        </div>
-      </div>
+  <div class="faq-item">
+    <button class="faq-question">
+      Who can use this system?
+      <span class="arrow">&#9662;</span>
+    </button>
+    <div class="faq-answer">
+      <p>
+        The system can be used by SK officials, youth members, and administrators
+        for efficient coordination and communication.
+      </p>
     </div>
   </div>
 
-  <!-- Empty state -->
-<div class="empty-state" id="emptyState" style="display:none;">
-  <div class="empty-box">
-    <div class="empty-icon">⌀</div>
-    <p>You don’t have any certificate earn yet</p>
-  </div>
-</div>
-
-
-  <!-- Modal -->
-<div class="modal-overlay" id="modalOverlay">
-  <div class="modal-box">
-    <div class="modal-icon">
-      <i class="fa-solid fa-check"></i>
+  <div class="faq-item">
+    <button class="faq-question">
+      How is youth information protected in the system?
+      <span class="arrow">&#9662;</span>
+    </button>
+    <div class="faq-answer">
+      <p>
+        Data is protected through encryption, authentication, and secure access
+        levels to ensure youth information remains private.
+      </p>
     </div>
-    <h2>Request Submitted!</h2>
-    <p>You’ll be notified once your certificate is ready for claiming.</p>
-    <button id="closeModal">OK</button>
   </div>
-</div>
 
+  <div class="faq-item">
+    <button class="faq-question">
+      Can the system help track event attendance and feedback?
+      <span class="arrow">&#9662;</span>
+    </button>
+    <div class="faq-answer">
+      <p>
+        Yes, the portal provides attendance logs, feedback forms, and reports to
+        evaluate the success of youth programs and events.
+      </p>
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <button class="faq-question">
+      Can I use the system offline?
+      <span class="arrow">&#9662;</span>
+    </button>
+    <div class="faq-answer">
+      <p>
+        No, the portal requires an internet connection to ensure real-time data
+        access and synchronization.
+      </p>
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <button class="faq-question">
+      What if I forgot my password? What should I do?
+      <span class="arrow">&#9662;</span>
+    </button>
+    <div class="faq-answer">
+      <p>
+        Use the "Forgot Password" option on the login page to reset your password
+        via email verification.
+      </p>
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <button class="faq-question">
+      Where can I edit my personal information?
+      <span class="arrow">&#9662;</span>
+    </button>
+    <div class="faq-answer">
+      <p>
+        You can edit your personal information from your profile settings once you
+        are logged in to the system.
+      </p>
+    </div>
+  </div>
 </section>
 
 
@@ -259,18 +266,7 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-<script>
+    <script>
 document.addEventListener("DOMContentLoaded", () => {
   // === Lucide icons ===
   lucide.createIcons();
@@ -489,34 +485,6 @@ setInterval(updateTime, 60000);
     });
   }
 
-    // === Certificates auto-update ===
-  function updateCertificates() {
-    const certCards = document.querySelectorAll(".cert-card");
-    const emptyState = document.getElementById("emptyState");
-    const header = document.getElementById("certHeader");
-    const totalText = document.querySelector(".certificates-header p");
-
-    // Update header count
-    if (header) {
-      header.textContent = `Your Certificates`;
-    }
-
-    // Update subtext
-    if (totalText) {
-      totalText.textContent = `You have a total of ${certCards.length} certificate${certCards.length !== 1 ? 's' : ''}.`;
-    }
-
-    // Toggle empty state
-    if (emptyState) {
-      emptyState.style.display = certCards.length === 0 ? "flex" : "none";
-    }
-  }
-
-  // 🔥 Call it right after DOM load
-  updateCertificates();
-
-
-
   // === Modal ===
   const modalOverlay = document.getElementById('modalOverlay');
   const closeModal = document.getElementById('closeModal');
@@ -538,4 +506,22 @@ setInterval(updateTime, 60000);
     }
   });
 });
+
+document.querySelectorAll('.faq-question').forEach(button => {
+  button.addEventListener('click', () => {
+    const item = button.parentElement;
+    const faqItems = document.querySelectorAll('.faq-item');
+
+    // Close lahat muna
+    faqItems.forEach(faq => {
+      if (faq !== item) {
+        faq.classList.remove('active');
+      }
+    });
+
+    // Toggle yung current
+    item.classList.toggle('active');
+  });
+});
+
 </script>

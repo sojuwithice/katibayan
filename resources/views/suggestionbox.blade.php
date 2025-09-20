@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KatiBayan - Profile Page</title>
-  <link rel="stylesheet" href="{{ asset('css/certificatepage.css') }}">
+  <link rel="stylesheet" href="{{ asset('css/suggestionbox.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -55,7 +55,7 @@
     </nav>
   </aside>
 
-  <!-- Main -->
+  <!-- Main Content -->
   <div class="main">
 
     <!-- Topbar -->
@@ -142,109 +142,58 @@
       </div>
     </header>
 
-   <!-- Certificates Section -->
-<section class="certificates">
-
-  <!-- Header box with border -->
-  <div class="certificates-header">
-  <h2 id="certHeader">Your Certificates</h2>
-  <p>You have a total of 0 certificates.</p>
-</div>
-
-
-  <!-- This Month -->
-  <div class="certificates-group">
-    <h3>This Month</h3>
-    <div class="cert-grid">
-      <div class="cert-card">
-        <img src="{{ asset('images/certificate.png') }}" alt="Certificate">
-        <div class="cert-info">
-          <p class="cert-title">Certificate completed in:</p>
-          <p class="cert-desc">International Day Against Drug Abuse and Illicit Trafficking</p>
-          <button class="print-btn">Print with SK</button>
-        </div>
+    <!-- Suggestion Box -->
+    <div class="suggestion-container">
+      <div class="suggestion-header">
+        <button class="back-btn"><i class="fas fa-arrow-left"></i></button>
+        <h2>Suggestion Box</h2>
       </div>
+      <p class="subtitle">
+        Your insights matter. Sharing your ideas helps us build a stronger connection with you.
+      </p>
 
-      <div class="cert-card">
-        <img src="{{ asset('images/certificate.png') }}" alt="Certificate">
-        <div class="cert-info">
-          <p class="cert-title">Certificate completed in:</p>
-          <p class="cert-desc">International Day Against Drug Abuse and Illicit Trafficking</p>
-          <button class="print-btn">Print with SK</button>
+      <form class="suggestion-form">
+        <label for="committee">Select the committee for your suggested event or program.</label>
+        <div class="custom-select">
+          <div class="select-trigger">
+            <span class="selected-text">Committee:</span> 
+            <i class="fas fa-chevron-down"></i>
+          </div>
+          <ul class="select-options">
+            <li data-value="active">Active Citizenship</li>
+            <li data-value="economic">Economic Empowerment</li>
+            <li data-value="education">Education</li>
+            <li data-value="health">Health</li>
+            <li data-value="sports">Sports</li>
+          </ul>
         </div>
-      </div>
+        <input type="hidden" name="committee" id="committee">
 
-      <div class="cert-card">
-        <img src="{{ asset('images/certificate.png') }}" alt="Certificate">
-        <div class="cert-info">
-          <p class="cert-title">Certificate completed in:</p>
-          <p class="cert-desc">International Day Against Drug Abuse and Illicit Trafficking</p>
-          <button class="print-btn">Print with SK</button>
-        </div>
-      </div>
+        <label for="suggestions">Your suggestions and comments</label>
+        <textarea id="suggestions" name="suggestions" rows="6"></textarea>
+
+        <button type="submit" class="submit-btn">
+          Submit <i class="fas fa-paper-plane"></i>
+        </button>
+      </form>
+    </div>
+  </div> <!-- End Main -->
+
+  <!-- Success Modal (outside main, tabon lahat) -->
+  <div id="successModal" class="modal">
+    <div class="modal-box">
+      <div class="modal-icon"><i class="fas fa-check"></i></div>
+      <h3>Submitted</h3>
+      <p>Your suggestion has been submitted. <br>Thank you for sharing your ideas! This will help us a lot.</p>
+      <button id="closeModalBtn" class="close-btn">OK</button>
     </div>
   </div>
 
-  <!-- Last Month -->
-  <div class="certificates-group">
-    <h3>Last Month</h3>
-    <div class="cert-grid">
-        <div class="cert-card">
-    <div class="cert-img">
-        <img src="{{ asset('images/certificate.png') }}" alt="Certificate">
-    </div>
-    <div class="cert-info">
-        <div class="cert-text">
-        <p class="cert-title">Certificate completed in:</p>
-        <p class="cert-desc">International Day Against Drug Abuse and Illicit Trafficking</p>
-        </div>
-        <button class="print-btn">Print with SK</button>
-    </div>
-    </div>
+</body>
+</html>
 
 
-      <div class="cert-card">
-        <img src="{{ asset('images/certificate.png') }}" alt="Certificate">
-        <div class="cert-info">
-          <p class="cert-title">Certificate completed in:</p>
-          <p class="cert-desc">International Day Against Drug Abuse and Illicit Trafficking</p>
-          <button class="print-btn">Print with SK</button>
-        </div>
-      </div>
-
-      <div class="cert-card">
-        <img src="{{ asset('images/certificate.png') }}" alt="Certificate">
-        <div class="cert-info">
-          <p class="cert-title">Certificate completed in:</p>
-          <p class="cert-desc">International Day Against Drug Abuse and Illicit Trafficking</p>
-          <button class="print-btn">Print with SK</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Empty state -->
-<div class="empty-state" id="emptyState" style="display:none;">
-  <div class="empty-box">
-    <div class="empty-icon">⌀</div>
-    <p>You don’t have any certificate earn yet</p>
-  </div>
-</div>
-
-
-  <!-- Modal -->
-<div class="modal-overlay" id="modalOverlay">
-  <div class="modal-box">
-    <div class="modal-icon">
-      <i class="fa-solid fa-check"></i>
-    </div>
-    <h2>Request Submitted!</h2>
-    <p>You’ll be notified once your certificate is ready for claiming.</p>
-    <button id="closeModal">OK</button>
-  </div>
-</div>
-
-</section>
+        
 
 
 
@@ -256,21 +205,7 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<script>
+    <script>
 document.addEventListener("DOMContentLoaded", () => {
   // === Lucide icons ===
   lucide.createIcons();
@@ -489,34 +424,6 @@ setInterval(updateTime, 60000);
     });
   }
 
-    // === Certificates auto-update ===
-  function updateCertificates() {
-    const certCards = document.querySelectorAll(".cert-card");
-    const emptyState = document.getElementById("emptyState");
-    const header = document.getElementById("certHeader");
-    const totalText = document.querySelector(".certificates-header p");
-
-    // Update header count
-    if (header) {
-      header.textContent = `Your Certificates`;
-    }
-
-    // Update subtext
-    if (totalText) {
-      totalText.textContent = `You have a total of ${certCards.length} certificate${certCards.length !== 1 ? 's' : ''}.`;
-    }
-
-    // Toggle empty state
-    if (emptyState) {
-      emptyState.style.display = certCards.length === 0 ? "flex" : "none";
-    }
-  }
-
-  // 🔥 Call it right after DOM load
-  updateCertificates();
-
-
-
   // === Modal ===
   const modalOverlay = document.getElementById('modalOverlay');
   const closeModal = document.getElementById('closeModal');
@@ -537,5 +444,56 @@ setInterval(updateTime, 60000);
       modalOverlay.style.display = 'none';
     }
   });
-});
+
+    const customSelect = document.querySelector('.custom-select');
+    const trigger = customSelect.querySelector('.select-trigger');
+    const selectedText = trigger.querySelector('.selected-text'); // now exists
+    const options = customSelect.querySelector('.select-options');
+    const items = options.querySelectorAll('li');
+    const hiddenInput = document.querySelector('#committee');
+
+    trigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    options.style.display = options.style.display === 'block' ? 'none' : 'block';
+    trigger.querySelector('i').style.transform = options.style.display === 'block' ? 'rotate(180deg)' : 'rotate(0deg)';
+    });
+
+    items.forEach(item => {
+    item.addEventListener('click', (e) => {
+        selectedText.textContent = item.textContent;  // update visible text
+        hiddenInput.value = item.dataset.value;       // update hidden input
+        options.style.display = 'none';
+        trigger.querySelector('i').style.transform = 'rotate(0deg)';
+        e.stopPropagation();
+    });
+    });
+
+    document.addEventListener('click', () => {
+    options.style.display = 'none';
+    trigger.querySelector('i').style.transform = 'rotate(0deg)';
+    });
+
+
+    });
+
+    const submitBtn = document.querySelector('.submit-btn');
+  const modal = document.getElementById('successModal');
+  const closeBtn = document.getElementById('closeModalBtn');
+
+  submitBtn.addEventListener('click', function(e){
+    e.preventDefault(); // para hindi mag-reload page
+    modal.style.display = 'flex';
+  });
+
+  closeBtn.addEventListener('click', function(){
+    modal.style.display = 'none';
+  });
+
+  // Click outside modal to close
+  window.addEventListener('click', function(e){
+    if(e.target == modal){
+      modal.style.display = 'none';
+    }
+  });
+
 </script>

@@ -22,6 +22,7 @@ body {
   width: 90px;
   min-height: 400px; 
   border-radius: 25px; 
+  border: .2rem solid #fff;
   padding: 1rem 0;
   display: flex;
   flex-direction: column;
@@ -63,7 +64,7 @@ body {
 }
 
 .sidebar.open { 
-  width: 240px; 
+  width: 300px; 
   align-items: flex-start;
 }
 
@@ -147,9 +148,10 @@ body {
 }
 
 
-.sidebar.open .profile-item.open .submenu {
+.sidebar.open .nav-item.open .submenu {
   display: flex;
 }
+
 
 
 .sidebar:not(.open) .submenu {
@@ -270,6 +272,7 @@ body {
   color: #FFB703;
   font-weight: bold;
 }
+
 
 /* Bell + avatar */
 .topbar-right i {

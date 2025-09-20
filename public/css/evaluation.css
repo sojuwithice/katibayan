@@ -38,7 +38,7 @@ body {
   align-self: center;
   margin-bottom: 0.rem; 
   background: transparent;
-  color: #fff;
+  color: #fff !important;
   font-weight: bold;
   font-size: 1rem;
 }
@@ -528,225 +528,525 @@ body {
   pointer-events: auto;       
 }
 
-/* Certificates Section */
-.certificates {
-  margin-top: 1rem;
-  padding: 1rem;
+
+/* Programs Section */
+.programs-section {
+  margin-top: 2rem;
 }
 
-/* Header box with border only */
-.certificates-header {
-  display: flex;                     
-  justify-content: space-between;    
-  align-items: center;               
-  margin-bottom: 2rem;
-  padding: 1.2rem 1.5rem;
-  border: none;
-  border-radius: 15px;
+.programs-header {
   background: #fff;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.15);
-}
-
-.certificates-header h2 {
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: #3C87C4;
-  margin: 0; 
-}
-
-.certificates-header p {
-  color: #F9CD55;
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin: 0; 
-}
-
-
-/* Group Titles */
-.certificates-group {
-  margin-bottom: 2.5rem;
-}
-
-.certificates-group h3 {
+  padding: 1.5rem;
+  border-radius: 15px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
   margin-bottom: 1rem;
-  font-size: 1.5rem;
+}
+
+.programs-header h2 {
+  font-size:2rem;
+  font-weight: 700;
+  color: #114B8C;
+  margin-bottom: .3rem;
+}
+
+.programs-header p {
+  color: #555;
+  font-size: .95rem;
+}
+
+.programs-note {
+  font-size: .95rem;
+  color: #3C87C4;
+  margin-bottom: 1rem;
+  font-style: italic;
+}
+
+.programs-note span {
   font-weight: 600;
-  color: #070707;
-  padding-bottom: 0.4rem;
+  color: #114B8C;
 }
 
-/* Certificate Cards */
-.cert-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 1.5rem;
-}
-
-.cert-card {
-  background: #fafafa;
-  border-radius: 12px;
-  border: 1px solid #eee;
-  overflow: hidden;
+/* Program Cards */
+.program-list {
   display: flex;
   flex-direction: column;
+  gap: 1rem;
+}
+
+.program-card {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 15px;
+  padding: 1.2rem;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+  justify-content: space-between;
   transition: transform 0.2s ease;
-  box-shadow: 4px 4px 12px rgba(60, 135, 196, 0.8);
-}
-
-.cert-card:hover {
-  transform: translateY(-5px);
-}
-
-.cert-card img {
-  width: 90%;                  
-  height: auto;
-  display: block;
-  margin: 0 auto;              
-  border: 3px solid #3C87C4;   
-  border-radius: 8px;          
-  padding: 4px;                
-  background: #fff;  
-  margin-top: 1rem;          
+  min-height: 130px;
+  width: 100%;
+  position: relative; 
 }
 
 
-.cert-info {
-  padding: 1rem;
+.program-img-wrapper {
+  position: relative;
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  align-items: center;
 }
 
-.cert-title {
+
+.program-img {
+  width: 150px;   
+  height: 90px;   
+  border-radius: 10px;
+  object-fit: fill;
+  flex-shrink: 0;
+  border: 3px solid #3C87C4;
+  margin-left: 15px;
+}
+
+
+.status-dot {
+  position: absolute;
+  left: -7px;              
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  background: #3C87C4;      
+  border-radius: 50%;
+  box-shadow: 0 0 3px rgba(0,0,0,0.25);
+}
+
+.status-dot.hidden {
+  display: none;
+}
+
+
+.program-info {
+  flex: 1;
+  margin: 0 1rem;
+}
+
+.program-info h3 {
   font-size: 1rem;
   font-weight: 600;
-  color: #FFC62B;
+  color: #01214A;
+  margin-bottom: .3rem;
 }
 
-.cert-desc {
-  font-size: 0.95rem;
-  color: #333;
-  font-style: italic;
-  padding-bottom: 1rem;
+.program-info .date {
+  font-size: .9rem;
+  color: #777;
 }
 
-.print-btn {
-  padding: 0.4rem 0.8rem;     
-  font-size: 0.85rem;         
-  background: transparent;    
-  color: #3C87C4;             
-  border: 2px solid #3C87C4;  
-  border-radius: 6px;
-  cursor: pointer;
+/* Evaluate Button */
+.evaluate-btn {
+  background: transparent;
+  border: 2px solid #3C87C4;
+  color: #3C87C4;
+  padding: .4rem 1rem;
+  border-radius: 10px;
   font-weight: 600;
-  transition: all 0.2s ease;
-  margin-left: auto;          
-  display: inline-block;
-  margin-bottom: 1rem;
+  font-size: .9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
-.print-btn:hover {
-  background: #3C87C4;  
-  color: #fff;
-}
-
-.empty-state {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  text-align: center;
-  padding: 4rem 1rem;
-  color: #555;
-}
-
-.empty-state .empty-icon {
-  font-size: 20rem;
-  color: #9e9e9e;
-  line-height: 1;
-  margin-bottom: 1rem;
-}
-
-.empty-state p {
-  font-size: 2rem;
-  color: #222;
-  font-weight: 400;
-}
-
-
-/* Overlay (hidden by default) */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.8);
-  display: none;                  
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-  padding: 1rem;
-}
-
-/* Modal box */
-.modal-box {
-  background: #fff;
-  border-radius: 12px;
-  padding: 2rem 1.5rem;
-  max-width: 500px;
-  width: 100%;
-  text-align: center;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-}
-
-/* Check icon */
-.modal-icon {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
+.evaluate-btn:hover {
   background: #3C87C4;
   color: #fff;
-  font-size: 2.5rem;
-  font-weight: bold;
+}
+
+/* After submit state */
+.evaluate-btn.done {
+  background: #F5C33D; 
+  color: #fff;
+  cursor: default;
+  border: 2px solid #F5C33D;
+}
+.evaluate-btn.done i {
+  color: #fff;
+}
+
+/* Modal background */
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+  z-index: 9999;
+}
+
+.modal.open {
+  display: flex; 
+}
+
+
+
+/* Modal content */
+.modal-content {
+  background: #fff;
+  border-radius: 12px;
+  max-width: 750px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 2rem;
+  position: relative;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+
+
+/* Close button */
+.close-btn {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #777;
+  transition: color 0.2s ease;
+}
+.close-btn:hover {
+  color: #000;
+}
+
+.page hr {
+  border: none;
+  border-top: 1.5px solid #e0e0e0; /* kulay ng divider */
+  margin: 1rem -2rem; /* extend para sumagad */
+}
+
+h2 {
+  color: #3C87C4;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.3rem;
+}
+
+.subtitle {
+  color: #444;
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+}
+
+
+.programs-section .label,
+.modal .label {
+  display: block;
+  margin-top: 1.2rem;
+  font-weight: 600;
+  color: #3C87C4;
+  margin-bottom: .5rem;
+}
+
+
+.instruction {
+  font-size: 0.9rem;
+  color: #555;
+  margin: 0.5rem 0 1rem;
+  font-style: italic;
+}
+
+.event-input {
+  width: 100%;
+  padding: 0.6rem 1rem;
+  border-radius: 10px;
+  border: 1.5px solid #3C87C4;
+  margin-bottom: .3rem;
+  font-size: 0.95rem;
+  color: #01214A;
+}
+
+/* Questions */
+.question {
+  margin: 1.5rem 0;
+  
+}
+
+.question p {
+  font-weight: 500;
+  margin-bottom: 1.5rem;
+  color: #01214A;
+  margin-top: 2rem;
+}
+
+.required {
+  color: red;
+}
+
+/* Scale (1–5 choices) */
+.scale {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  
+}
+
+.scale label {
+  flex: 1;
+  text-align: center;
+  font-size: 0.8rem;
+  cursor: pointer;
+  margin-bottom: 1rem;
+}
+
+.scale input {
+  display: none;
+}
+
+.scale span {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 500;
+  color: #3C87C4;
+}
+
+/* Circle */
+.scale .circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border: 2px solid #3C87C4;
+  border-radius: 50%;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #3C87C4;
+  transition: all 0.2s ease;
+}
+
+.circle.active {
+  background: #3C87C4;
+  color: #fff;
+  border-color: #3C87C4;
+}
+
+
+/* When selected */
+.scale input:checked + span .circle {
+  background: #3C87C4;
+  color: #fff;
+  border-color: #3C87C4;
+}
+
+/* Text below circle */
+.scale .label-text {
+  font-size: 0.8rem;
+  color: #3C87C4;
+}
+
+
+/* Pagination dots */
+.pagination {
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  background: #ccc;
+  border-radius: 50%;
+  margin: 0 5px;
+}
+
+.dot.active {
+  background: #3C87C4;
+}
+
+/* Actions */
+.actions {
+  text-align: right;
+  margin-top: 1.5rem;
+}
+
+.next-btn {
+  background: #3C87C4;
+  color: #fff;
+  border: none;
+  padding: 0.7rem 1.6rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s ease;
+}
+
+.next-btn:hover {
+  background: #2d6ea4;
+}
+
+/* === Page 2: Comments === */
+#page2 {
+  display: none;
+  animation: fadeIn 0.3s ease;
+}
+
+
+#page2 h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.8rem;
+  color: #3C87C4; /* Blue */
+  text-align: left; /* Left aligned like in screenshot */
+}
+
+#page2 .instruction {
+  font-size: 0.95rem;
+  font-style: normal;
+  color: #333;
+  line-height: 1.5;
+  margin: 0.5rem 0 1rem;
+  text-align: left; /* Left aligned */
+}
+
+.comment-box {
+  width: 100%;
+  min-height: 150px;
+  padding: 1rem;
+  border: 1.5px solid #3C87C4;
+  border-radius: 10px;
+  font-size: 1rem;
+  color: #01214A;
+  resize: vertical;
+  outline: none;
+  margin: 1rem 0 1.5rem;
+  transition: border-color 0.2s ease;
+}
+
+
+
+.comment-box:focus {
+  border-color: #2b6ca3;
+}
+
+
+
+/* Pagination dots */
+#page2 .pagination {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 2rem 0 1.5rem;
+}
+
+#page2 .pagination .dot {
+  width: 10px;
+  height: 10px;
+  background: #ccc;
+  border-radius: 50%;
+  transition: background 0.3s ease;
+}
+
+#page2 .pagination .dot.active {
+  background: #3C87C4;
+}
+
+/* Actions (button at right side) */
+#page2 .actions {
+  display: flex;
+  justify-content: flex-end; /* Align to right */
+  margin-top: 1rem;
+}
+
+#page2 .submit-btn {
+  background: #3C87C4;
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+#page2 .submit-btn:hover {
+  background: #2b6ca3;
+}
+
+
+
+/* Success Modal */
+.success {
+  text-align: center;
+  padding: 2rem 1.5rem;
+}
+
+/* Circle with FA check */
+.success .check-circle {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: #3C87C4;
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0 auto 1rem auto;
 }
 
-/* Title */
-.modal-box h2 {
-  font-size: 1.5rem;
+.success .check-circle i {
+  font-size: 2.2rem;
+  color: #fff;
+}
+
+/* Submitted text */
+.success h2 {
   color: #3C87C4;
-  margin-bottom: 0.5rem;
+  font-size: 1.6rem;
   font-weight: 700;
+  margin-bottom: 0.6rem;
 }
 
 /* Message */
-.modal-box p {
-  font-size: .9rem;
+.success p {
+  font-size: 0.95rem;
   color: #333;
   margin-bottom: 1.5rem;
-  white-space: nowrap;
- 
+  line-height: 1.4;
 }
 
-/* OK button */
-.modal-box button {
+/* Ok button */
+.success .ok-btn {
   background: #3C87C4;
   color: #fff;
   border: none;
-  padding: 0.6rem 1.5rem;
-  border-radius: 25px;
+  padding: 0.6rem 1.4rem;
+  border-radius: 25px; /* pill-shaped */
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s ease;
 }
 
-.modal-box button:hover {
-  background: #2a6ca8;
+.success .ok-btn:hover {
+  background: #2b6ca3;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 /* Responsive */
@@ -873,82 +1173,55 @@ body {
     to { transform: translateY(0); opacity: 1; }
   }
 
-  .certificates-header {
-    padding: 1rem 1.2rem;
-    flex-wrap: nowrap;           /* stay in one line */
-    justify-content: space-between;
+  .program-card {
+    min-height: 150px; 
+    padding: 1rem;
   }
 
-  .certificates-header h2 {
-    font-size: 1.3rem; /* liit lang */
+  .programs-header h2 {
+    font-size: 1.5rem;
   }
 
-  .certificates-header p {
-    font-size: 1.1rem;
+  .program-img {
+    width: 120px;   
+    height: 80px;
   }
 
-  .certificates-group h3 {
-    font-size: 1.1rem;
+  .program-info h3 {
+    font-size: .80rem;
   }
 
-  .cert-grid {
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
+  .program-info .date {
+    font-size: .7rem;
   }
 
-  .cert-card {
-    max-width: 100%;
+  .evaluate-btn {
+    font-size: .80rem;
+    padding: .3rem .7rem;
+  }
+  
+  .modal-content {
+    padding: 1.2rem;
+  }
+  .scale {
+    gap: 0.8rem;
+  }
+  .scale span::before {
+    width: 36px;
+    height: 36px;
+    font-size: 0.85rem;
+  }
+  .scale label {
+    font-size: 0.75rem;
   }
 
 }
 
 @media (max-width: 480px) {
-  .certificates-header {
-    padding: 0.6rem 0.8rem;
-    flex-wrap: nowrap;              /* force single line */
-    justify-content: space-between; /* keep left-right */
-    gap: 0.5rem;                    /* para may pagitan */
-  }
-
-  .certificates-header h2 {
-    font-size: 1rem;   /* mas maliit pa */
-  }
-
-  .certificates-header p {
-    font-size: 0.9rem; /* mas maliit din */
-  }
-
-  .cert-grid {
-    grid-template-columns: 1fr;  /* single column on small screens */
-    gap: 1rem;
-  }
-
-  .cert-card img {
-    width: 95%;
-    margin-top: 0.5rem;
-  }
-
-  .print-btn {
-    font-size: 0.75rem;
-    padding: 0.35rem 0.7rem;
-  }
-
-  .modal-box {
-    padding: 1.5rem 1rem;
-  }
-  .modal-icon {
-    width: 65px;
-    height: 65px;
-    font-size: 2rem;
-  }
-  .modal-box h2 {
-    font-size: 1.2rem;
-  }
-  .modal-box p {
-    font-size: 0.9rem;
-  }
-  .modal-box button {
-    padding: 0.5rem 1.2rem;
-    font-size: 0.9rem;
-  }
+  
 }
+
+
+
+
+

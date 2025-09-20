@@ -37,8 +37,46 @@ Route::get('/profile', [ProfileController::class, 'index'])->name('profilepage')
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
 
-// route for certificate page
+
 Route::get('/certificatepage', function () {
     return view('certificatepage');
 })->name('certificatepage');
+
+
+
+// Events page route
+Route::get('/eventpage', function () {
+    return view('eventpage'); 
+})->name('eventpage');
+
+// routes/web.php
+Route::get('/faqspage', function () {
+    return view('faqspage'); 
+})->name('faqspage');
+
+Route::get('/suggestionbox', function () {
+    return view('suggestionbox'); 
+})->name('suggestionbox');
+
+Route::get('/attendance', function () {
+    return view('attendancepage');
+})->name('attendancepage');
+
+// routes/web.php
+Route::get('/serviceoffers', function () {
+    return view('serviceoffers');
+})->name('serviceoffers');
+
+// routes/web.php
+Route::get('/polls', function () {
+    return view('pollspage');
+})->name('polls.page');
+
+Route::get('/evaluation', function () {
+    return view('evaluationpage'); // loads evaluationpage.blade.php
+})->name('evaluation');
+
+Route::get('/extra', function () {
+    return view('extra'); // loads evaluationpage.blade.php
+})->name('extra');
 

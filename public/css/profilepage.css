@@ -63,7 +63,7 @@ body {
 }
 
 .sidebar.open { 
-  width: 240px; 
+  width: 300px; 
   align-items: flex-start;
 }
 
@@ -118,39 +118,38 @@ body {
 }
 
 /* Submenu base styles */
-.submenu {
+.nav-item .submenu {
   display: none;
   flex-direction: column;
   gap: 0.5rem;
 }
 
-.submenu a {
+.nav-item .submenu a {
   font-size: 0.9rem;
   color: #fff;
   white-space: nowrap;
   text-decoration: none;
-  padding: 0.3rem 0.5rem;
+  padding: 0.3rem 0.9rem;
   border-radius: 6px;
+
+  margin-left: 1.5rem;
 }
 
-/* active submenu link */
 .submenu a.active {
   background: #fff;
   color: #1C6DD0;
 }
 
-/* hover effect */
 .submenu a:hover {
   color: #FFB703;
   background: rgba(255, 255, 255, 0.2);
 }
 
-/* kapag sidebar open at naka-expand yung profile item */
-.sidebar.open .profile-item.open .submenu {
+.sidebar.open .nav-item.open .submenu {
   display: flex;
 }
 
-/* kapag sidebar closed, hindi na lalabas ang submenu */
+
 .sidebar:not(.open) .submenu {
   display: none !important;
 }

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KatiBayan - Profile Page</title>
-  <link rel="stylesheet" href="{{ asset('css/certificatepage.css') }}">
+  <link rel="stylesheet" href="{{ asset('css/attendance.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -142,109 +142,51 @@
       </div>
     </header>
 
-   <!-- Certificates Section -->
-<section class="certificates">
+    <!-- QR Scanner Section -->
+<div class="qr-container">
+  <button class="qr-close">&times;</button>
+  <div class="qr-header">
+    <h2>Scan QR Code</h2>
+    <p>Place the QR code properly inside the area. Scanning will start automatically.</p>
+  </div>
 
-  <!-- Header box with border -->
-  <div class="certificates-header">
-  <h2 id="certHeader">Your Certificates</h2>
-  <p>You have a total of 0 certificates.</p>
+  <!-- Scanner -->
+  <div id="reader" class="qr-reader"></div>
+
+  <!-- Manual Entry -->
+  <div class="manual-entry">
+    <p>Having trouble scanning the QR code?<br>Enter the code manually below.</p>
+    <input type="text" id="manualCode" placeholder="Enter the code">
+    <button id="submitCode">Enter</button>
+  </div>
+
+  <p class="note">This will mark your attendance in the program.</p>
 </div>
 
-
-  <!-- This Month -->
-  <div class="certificates-group">
-    <h3>This Month</h3>
-    <div class="cert-grid">
-      <div class="cert-card">
-        <img src="{{ asset('images/certificate.png') }}" alt="Certificate">
-        <div class="cert-info">
-          <p class="cert-title">Certificate completed in:</p>
-          <p class="cert-desc">International Day Against Drug Abuse and Illicit Trafficking</p>
-          <button class="print-btn">Print with SK</button>
-        </div>
-      </div>
-
-      <div class="cert-card">
-        <img src="{{ asset('images/certificate.png') }}" alt="Certificate">
-        <div class="cert-info">
-          <p class="cert-title">Certificate completed in:</p>
-          <p class="cert-desc">International Day Against Drug Abuse and Illicit Trafficking</p>
-          <button class="print-btn">Print with SK</button>
-        </div>
-      </div>
-
-      <div class="cert-card">
-        <img src="{{ asset('images/certificate.png') }}" alt="Certificate">
-        <div class="cert-info">
-          <p class="cert-title">Certificate completed in:</p>
-          <p class="cert-desc">International Day Against Drug Abuse and Illicit Trafficking</p>
-          <button class="print-btn">Print with SK</button>
-        </div>
-      </div>
-    </div>
+<!-- Success Modal -->
+<div id="successModal" class="modal">
+  <div class="modal-content">
+    <h2>Congratulations</h2>
+    <p>
+      You are accepted to attend the program! <br>
+      Please wait for the evaluation to be completed. Thank you!
+    </p>
+    <button class="ok-btn">OK</button>
   </div>
+</div>
 
-  <!-- Last Month -->
-  <div class="certificates-group">
-    <h3>Last Month</h3>
-    <div class="cert-grid">
-        <div class="cert-card">
-    <div class="cert-img">
-        <img src="{{ asset('images/certificate.png') }}" alt="Certificate">
+<!-- Quit Confirmation Modal -->
+<div id="quitModal" class="modal">
+  <div class="modal-content">
+    <p>Are you sure you don’t want to join this event?</p>
+    <div class="modal-actions">
+      <button class="cancel-btn">Cancel</button>
+      <button class="quit-btn">Quit</button>
     </div>
-    <div class="cert-info">
-        <div class="cert-text">
-        <p class="cert-title">Certificate completed in:</p>
-        <p class="cert-desc">International Day Against Drug Abuse and Illicit Trafficking</p>
-        </div>
-        <button class="print-btn">Print with SK</button>
-    </div>
-    </div>
-
-
-      <div class="cert-card">
-        <img src="{{ asset('images/certificate.png') }}" alt="Certificate">
-        <div class="cert-info">
-          <p class="cert-title">Certificate completed in:</p>
-          <p class="cert-desc">International Day Against Drug Abuse and Illicit Trafficking</p>
-          <button class="print-btn">Print with SK</button>
-        </div>
-      </div>
-
-      <div class="cert-card">
-        <img src="{{ asset('images/certificate.png') }}" alt="Certificate">
-        <div class="cert-info">
-          <p class="cert-title">Certificate completed in:</p>
-          <p class="cert-desc">International Day Against Drug Abuse and Illicit Trafficking</p>
-          <button class="print-btn">Print with SK</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Empty state -->
-<div class="empty-state" id="emptyState" style="display:none;">
-  <div class="empty-box">
-    <div class="empty-icon">⌀</div>
-    <p>You don’t have any certificate earn yet</p>
   </div>
 </div>
 
 
-  <!-- Modal -->
-<div class="modal-overlay" id="modalOverlay">
-  <div class="modal-box">
-    <div class="modal-icon">
-      <i class="fa-solid fa-check"></i>
-    </div>
-    <h2>Request Submitted!</h2>
-    <p>You’ll be notified once your certificate is ready for claiming.</p>
-    <button id="closeModal">OK</button>
-  </div>
-</div>
-
-</section>
 
 
 
@@ -254,26 +196,15 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
   // === Lucide icons ===
-  lucide.createIcons();
+  if (window.lucide) {
+    lucide.createIcons();
+  }
 
   // === Elements ===
   const menuToggle = document.querySelector('.menu-toggle');
@@ -295,15 +226,17 @@ document.addEventListener("DOMContentLoaded", () => {
   const notifDropdown = notifWrapper?.querySelector(".notif-dropdown");
 
   // === Sidebar toggle ===
-  menuToggle.addEventListener('click', (e) => {
-    e.stopPropagation();
-    sidebar.classList.toggle('open');
+  if (menuToggle && sidebar) {
+    menuToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      sidebar.classList.toggle('open');
 
-    if (!sidebar.classList.contains('open')) {
-      profileItem?.classList.remove('open');
-      eventsItem?.classList.remove('open');
-    }
-  });
+      if (!sidebar.classList.contains('open')) {
+        profileItem?.classList.remove('open');
+        eventsItem?.classList.remove('open');
+      }
+    });
+  }
 
   // Helper: close all submenus
   function closeAllSubmenus() {
@@ -315,7 +248,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (profileItem && profileLink) {
     profileLink.addEventListener('click', (e) => {
       e.preventDefault();
-      if (sidebar.classList.contains('open')) {
+      if (sidebar?.classList.contains('open')) {
         const isOpen = profileItem.classList.contains('open');
         closeAllSubmenus();
         if (!isOpen) profileItem.classList.add('open');
@@ -327,7 +260,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (eventsItem && eventsLink) {
     eventsLink.addEventListener('click', (e) => {
       e.preventDefault();
-      if (sidebar.classList.contains('open')) {
+      if (sidebar?.classList.contains('open')) {
         const isOpen = eventsItem.classList.contains('open');
         closeAllSubmenus();
         if (!isOpen) eventsItem.classList.add('open');
@@ -337,7 +270,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // === Close sidebar when clicking outside ===
   document.addEventListener('click', (e) => {
-    if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+    if (sidebar && menuToggle && !sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
       sidebar.classList.remove('open');
       closeAllSubmenus();
     }
@@ -355,7 +288,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (profileToggle) {
     profileToggle.addEventListener('click', (e) => {
       e.stopPropagation();
-      profileWrapper.classList.toggle('active');
+      profileWrapper?.classList.toggle('active');
       notifWrapper?.classList.remove('active');
     });
   }
@@ -366,7 +299,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (notifBell) {
     notifBell.addEventListener('click', (e) => {
       e.stopPropagation();
-      notifWrapper.classList.toggle('active');
+      notifWrapper?.classList.toggle('active');
       profileWrapper?.classList.remove('active');
     });
   }
@@ -489,34 +422,6 @@ setInterval(updateTime, 60000);
     });
   }
 
-    // === Certificates auto-update ===
-  function updateCertificates() {
-    const certCards = document.querySelectorAll(".cert-card");
-    const emptyState = document.getElementById("emptyState");
-    const header = document.getElementById("certHeader");
-    const totalText = document.querySelector(".certificates-header p");
-
-    // Update header count
-    if (header) {
-      header.textContent = `Your Certificates`;
-    }
-
-    // Update subtext
-    if (totalText) {
-      totalText.textContent = `You have a total of ${certCards.length} certificate${certCards.length !== 1 ? 's' : ''}.`;
-    }
-
-    // Toggle empty state
-    if (emptyState) {
-      emptyState.style.display = certCards.length === 0 ? "flex" : "none";
-    }
-  }
-
-  // 🔥 Call it right after DOM load
-  updateCertificates();
-
-
-
   // === Modal ===
   const modalOverlay = document.getElementById('modalOverlay');
   const closeModal = document.getElementById('closeModal');
@@ -524,17 +429,104 @@ setInterval(updateTime, 60000);
 
   printBtns.forEach(btn => {
     btn.addEventListener('click', () => {
-      modalOverlay.style.display = 'flex';
+      if (modalOverlay) modalOverlay.style.display = 'flex';
     });
   });
 
   closeModal?.addEventListener('click', () => {
-    modalOverlay.style.display = 'none';
+    if (modalOverlay) modalOverlay.style.display = 'none';
   });
 
   modalOverlay?.addEventListener('click', (e) => {
     if (e.target === modalOverlay) {
       modalOverlay.style.display = 'none';
+    }
+  });
+
+  // === Success Modal ===
+  const successModal = document.getElementById("successModal");
+  const okBtn = successModal?.querySelector(".ok-btn");
+
+  function showSuccessModal() {
+    successModal.style.display = "flex";
+  }
+  function closeSuccessModal() {
+    successModal.style.display = "none";
+  }
+
+  okBtn.addEventListener("click", () => {
+  window.location.href = "{{ route('eventpage') }}";
+});
+
+  // === Quit Modal ===
+  // === Quit Confirmation Modal ===
+const quitModal = document.getElementById("quitModal");
+const qrCloseBtn = document.querySelector(".qr-close");
+const cancelBtn = quitModal?.querySelector(".cancel-btn");
+const quitBtn = quitModal?.querySelector(".quit-btn");
+
+// Show quit modal when clicking the X
+qrCloseBtn?.addEventListener("click", () => {
+  quitModal.style.display = "flex";
+});
+
+// Close when clicking Cancel
+cancelBtn?.addEventListener("click", () => {
+  quitModal.style.display = "none";
+});
+
+// Close when clicking outside the modal box
+quitModal?.addEventListener("click", (e) => {
+  if (e.target === quitModal) {
+    quitModal.style.display = "none";
+  }
+});
+
+// Handle Quit button
+// Handle Quit button
+quitBtn?.addEventListener("click", () => {
+  quitModal.style.display = "none";
+  window.location.href = "{{ route('eventpage') }}"; 
+});
+
+
+
+  // === QR Scanner ===
+  const qrReaderEl = document.getElementById("reader");
+  if (qrReaderEl && window.Html5Qrcode) {
+    try {
+      let lastResult = null;
+      function onScanSuccess(decodedText) {
+        if (decodedText === lastResult) return;
+        lastResult = decodedText;
+
+        console.log("Scanned:", decodedText);
+        showSuccessModal();
+      }
+
+      const html5QrCode = new Html5Qrcode("reader");
+      html5QrCode.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        onScanSuccess,
+        (err) => console.warn("QR scan error", err)
+      );
+    } catch (err) {
+      console.error("QR Scanner init failed:", err);
+    }
+  }
+
+  // === Manual Entry ===
+  const submitCodeBtn = document.getElementById("submitCode");
+  const manualInput = document.getElementById("manualCode");
+
+  submitCodeBtn?.addEventListener("click", () => {
+    const code = manualInput?.value.trim();
+    if (code) {
+      console.log("Manual code entered:", code);
+      showSuccessModal();
+    } else {
+      alert("Please enter a code.");
     }
   });
 });

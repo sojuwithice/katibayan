@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KatiBayan - Profile Page</title>
-  <link rel="stylesheet" href="{{ asset('css/certificatepage.css') }}">
+  <link rel="stylesheet" href="{{ asset('css/serviceoffers.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -142,112 +142,121 @@
       </div>
     </header>
 
-   <!-- Certificates Section -->
-<section class="certificates">
+    <section class="service-offer">
+  <div class="service-offer-container">
+    <div class="section-header">
+      <h2>Service Offer</h2>
+    </div>
+    <p class="section-desc">
+      Discover the services offered by the SK. These are designed to make it easier for youth to participate in events,
+      receive recognition, and access opportunities for learning and engagement.
+    </p>
+  </div>
 
-  <!-- Header box with border -->
-  <div class="certificates-header">
-  <h2 id="certHeader">Your Certificates</h2>
-  <p>You have a total of 0 certificates.</p>
-</div>
-
-
-  <!-- This Month -->
-  <div class="certificates-group">
-    <h3>This Month</h3>
-    <div class="cert-grid">
-      <div class="cert-card">
-        <img src="{{ asset('images/certificate.png') }}" alt="Certificate">
-        <div class="cert-info">
-          <p class="cert-title">Certificate completed in:</p>
-          <p class="cert-desc">International Day Against Drug Abuse and Illicit Trafficking</p>
-          <button class="print-btn">Print with SK</button>
-        </div>
+  <div class="service-offer-scroll">
+    <div class="card-grid">
+      <div class="service-card">
+        <img src="{{ asset('images/print.jpeg') }}" alt="Free Printing">
+        <h3>Free Printing Services</h3>
+        <a href="#" class="btn print-btn">Read More</a>
       </div>
+      <div class="service-card">
+        <img src="{{ asset('images/print.jpeg') }}" alt="Free Printing">
+        <h3>Free Printing Services</h3>
+        <a href="#" class="btn print-btn">Read More</a>
 
-      <div class="cert-card">
-        <img src="{{ asset('images/certificate.png') }}" alt="Certificate">
-        <div class="cert-info">
-          <p class="cert-title">Certificate completed in:</p>
-          <p class="cert-desc">International Day Against Drug Abuse and Illicit Trafficking</p>
-          <button class="print-btn">Print with SK</button>
-        </div>
       </div>
+      <div class="service-card">
+        <img src="{{ asset('images/print.jpeg') }}" alt="Free Printing">
+        <h3>Free Printing Services</h3>
+        <a href="#" class="btn print-btn">Read More</a>
 
-      <div class="cert-card">
-        <img src="{{ asset('images/certificate.png') }}" alt="Certificate">
-        <div class="cert-info">
-          <p class="cert-title">Certificate completed in:</p>
-          <p class="cert-desc">International Day Against Drug Abuse and Illicit Trafficking</p>
-          <button class="print-btn">Print with SK</button>
-        </div>
+      </div>
+      <div class="service-card">
+        <img src="{{ asset('images/print.jpeg') }}" alt="Free Printing">
+        <h3>Free Printing Services</h3>
+        <a href="#" class="btn print-btn">Read More</a>
+
+      </div>
+      <div class="service-card">
+        <img src="{{ asset('images/print.jpeg') }}" alt="Free Printing">
+        <h3>Free Printing Services</h3>
+        <a href="#" class="btn print-btn">Read More</a>
+
       </div>
     </div>
   </div>
-
-  <!-- Last Month -->
-  <div class="certificates-group">
-    <h3>Last Month</h3>
-    <div class="cert-grid">
-        <div class="cert-card">
-    <div class="cert-img">
-        <img src="{{ asset('images/certificate.png') }}" alt="Certificate">
-    </div>
-    <div class="cert-info">
-        <div class="cert-text">
-        <p class="cert-title">Certificate completed in:</p>
-        <p class="cert-desc">International Day Against Drug Abuse and Illicit Trafficking</p>
-        </div>
-        <button class="print-btn">Print with SK</button>
-    </div>
-    </div>
-
-
-      <div class="cert-card">
-        <img src="{{ asset('images/certificate.png') }}" alt="Certificate">
-        <div class="cert-info">
-          <p class="cert-title">Certificate completed in:</p>
-          <p class="cert-desc">International Day Against Drug Abuse and Illicit Trafficking</p>
-          <button class="print-btn">Print with SK</button>
-        </div>
-      </div>
-
-      <div class="cert-card">
-        <img src="{{ asset('images/certificate.png') }}" alt="Certificate">
-        <div class="cert-info">
-          <p class="cert-title">Certificate completed in:</p>
-          <p class="cert-desc">International Day Against Drug Abuse and Illicit Trafficking</p>
-          <button class="print-btn">Print with SK</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Empty state -->
-<div class="empty-state" id="emptyState" style="display:none;">
-  <div class="empty-box">
-    <div class="empty-icon">⌀</div>
-    <p>You don’t have any certificate earn yet</p>
-  </div>
-</div>
-
-
-  <!-- Modal -->
-<div class="modal-overlay" id="modalOverlay">
-  <div class="modal-box">
-    <div class="modal-icon">
-      <i class="fa-solid fa-check"></i>
-    </div>
-    <h2>Request Submitted!</h2>
-    <p>You’ll be notified once your certificate is ready for claiming.</p>
-    <button id="closeModal">OK</button>
-  </div>
-</div>
-
 </section>
 
 
 
+    <!-- Organizational Chart -->
+<section class="org-chart">
+  <div class="org-chart-container">
+    <h2>Organizational Chart</h2>
+    <p class="section-desc">
+      The organizational chart of the Sangguniang Kabataan of Barangay 3 EM’s Barrio East illustrates the structure of its committees
+      and defines the roles and responsibilities of each official.
+    </p>
+  </div>
+
+  <!-- Org chart image outside the container -->
+  <div class="org-image">
+    <img src="{{ asset('images/ESKI .png') }}" alt="Organizational Chart">
+  </div>
+</section>
+
+<!-- Modal -->
+<div id="modalOverlay" class="modal">
+  <div class="modal-content">
+    <span id="closeModal" class="close">&times;</span>
+
+    
+
+    <div class="modal-body">
+      <img src="{{ asset('images/print.jpeg') }}" alt="Free Printing">
+  <h2>Free Printing Services</h2>
+  <p class="intro">
+    Supporting the youth and students of Barangay 3, EM’s Barrio East, Legazpi City. 
+    As part of our commitment to helping the youth in their education, the Sangguniang Kabataan 
+    of Barangay 3 is offering Free Printing Services. This program aims to ease the burden of 
+    school expenses by providing free printing, scanning, and copying of academic requirements.
+  </p>
+
+  <div>
+    <h3>Services Offered</h3>
+    <ul>
+      <li>Print, scan, and copy</li>
+      <li>Modules, assignments, handouts, and projects</li>
+    </ul>
+
+    <h3>Pick-Up Location</h3>
+    <p>2nd Floor SK Office, Brgy 3 Multi-Purpose Hall, EM’s Barrio East, Legazpi City</p>
+  </div>
+
+  <div>
+    <h3>How to Avail</h3>
+    <p>
+      Send your files through:<br>
+      • FB Messenger: SK Brgy 3 EM’s Barrio East Legazpi City<br>
+      • Email: skbrgy3embarrioeast@gmail.com
+    </p>
+
+    <h3>For Assistance</h3>
+    <p>
+      SK Chairperson: Lovella Mae C. Apuac<br>
+      SK Secretary: Ian G. Atienza
+    </p>
+  </div>
+
+  
+</div>
+
+    </div>
+  </div>
+</div>
+
+ 
 
 
 
@@ -261,16 +270,7 @@
 
 
 
-
-
-
-
-
-
-
-
-
-<script>
+    <script>
 document.addEventListener("DOMContentLoaded", () => {
   // === Lucide icons ===
   lucide.createIcons();
@@ -467,6 +467,7 @@ function updateTime() {
 updateTime();
 setInterval(updateTime, 60000);
 
+  setInterval(updateTime, 60000);
 
   // === Password toggle ===
   const tempPassword = document.getElementById('tempPassword');
@@ -489,53 +490,27 @@ setInterval(updateTime, 60000);
     });
   }
 
-    // === Certificates auto-update ===
-  function updateCertificates() {
-    const certCards = document.querySelectorAll(".cert-card");
-    const emptyState = document.getElementById("emptyState");
-    const header = document.getElementById("certHeader");
-    const totalText = document.querySelector(".certificates-header p");
-
-    // Update header count
-    if (header) {
-      header.textContent = `Your Certificates`;
-    }
-
-    // Update subtext
-    if (totalText) {
-      totalText.textContent = `You have a total of ${certCards.length} certificate${certCards.length !== 1 ? 's' : ''}.`;
-    }
-
-    // Toggle empty state
-    if (emptyState) {
-      emptyState.style.display = certCards.length === 0 ? "flex" : "none";
-    }
-  }
-
-  // 🔥 Call it right after DOM load
-  updateCertificates();
-
-
-
   // === Modal ===
-  const modalOverlay = document.getElementById('modalOverlay');
-  const closeModal = document.getElementById('closeModal');
-  const printBtns = document.querySelectorAll('.print-btn');
+const modalOverlay = document.getElementById('modalOverlay');
+const closeModal = document.getElementById('closeModal');
+const readMoreBtns = document.querySelectorAll('.print-btn');
 
-  printBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      modalOverlay.style.display = 'flex';
-    });
+readMoreBtns.forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    modalOverlay.style.display = 'flex';
   });
+});
 
-  closeModal?.addEventListener('click', () => {
+closeModal?.addEventListener('click', () => {
+  modalOverlay.style.display = 'none';
+});
+
+modalOverlay?.addEventListener('click', (e) => {
+  if (e.target === modalOverlay) {
     modalOverlay.style.display = 'none';
-  });
+  }
+});
 
-  modalOverlay?.addEventListener('click', (e) => {
-    if (e.target === modalOverlay) {
-      modalOverlay.style.display = 'none';
-    }
-  });
 });
 </script>
