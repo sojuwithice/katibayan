@@ -73,10 +73,11 @@ Route::get('/polls', function () {
 })->name('polls.page');
 
 Route::get('/evaluation', function () {
-    return view('evaluationpage'); // loads evaluationpage.blade.php
+    return view('evaluationpage'); 
 })->name('evaluation');
 
-Route::get('/extra', function () {
-    return view('extra'); // loads evaluationpage.blade.php
-})->name('extra');
+
+Route::get('/sk-dashboard', function () {
+    return view('sk-dashboard'); 
+})->name('sk.dashboard');
 
