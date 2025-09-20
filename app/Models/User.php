@@ -45,7 +45,7 @@ class User extends Authenticatable
         return $this->hasOne(SkOfficial::class);
     }
 
-    public function kkOfficial()
+    public function kkMember()
     {
         return $this->hasOne(KKMember::class);
     }
