@@ -107,9 +107,47 @@
           <input type="text" id="step1_suffix" name="suffix" placeholder="Suffix (optional)">
         </div>
 
-        <div class="select-wrapper full-width">
-          <input type="text" id="step1_address" name="address" placeholder="Enter your full address" required>
-        </div>
+      <div class="form-grid">
+  <!-- Region -->
+  <div class="select-wrapper">
+    <input type="text" id="regionInput" name="region_id" placeholder="-- Select Region --" readonly required>
+    <ul class="dropdown-options">
+      @foreach($regions as $region)
+        <li data-id="{{ $region->id }}">{{ $region->name }}</li>
+      @endforeach
+    </ul>
+    <span class="arrow"><i data-lucide="chevron-down"></i></span>
+  </div>
+
+  <!-- Province -->
+ <div class="select-wrapper">
+    <input type="text" id="provinceInput" name="province_id" placeholder="-- Select Province --" readonly disabled required>
+    <ul class="dropdown-options"></ul>
+    <span class="arrow"><i data-lucide="chevron-down"></i></span>
+  </div>
+  <!-- City/Municipality -->
+   <div class="select-wrapper">
+    <input type="text" id="cityInput" name="city_id" placeholder="-- Select City/Municipality --" readonly disabled required>
+    <ul class="dropdown-options"></ul>
+    <span class="arrow"><i data-lucide="chevron-down"></i></span>
+  </div>
+
+  <!-- Barangay -->
+  <div class="select-wrapper">
+    <input type="text" id="barangayInput" name="barangay_id" placeholder="-- Select Barangay --" readonly disabled required>
+    <ul class="dropdown-options"></ul>
+    <span class="arrow"><i data-lucide="chevron-down"></i></span>
+  </div>
+</div>
+
+<div class="form-grid">
+  <!-- Zip Code -->
+  <input type="text" id="step1_zip" name="zip_code" placeholder="Zip Code" required>
+
+  <!-- Purok/Zone -->
+  <input type="text" id="step1_purok" name="purok_zone" placeholder="Purok/Zone" required>
+</div>
+
 
         <div class="form-grid-4">
           <div class="input-icon">
@@ -299,7 +337,11 @@
           <p><strong>Given Name:</strong> <span id="review_givenname"></span></p>
           <p><strong>Middle Name:</strong> <span id="review_middlename"></span></p>
           <p><strong>Suffix:</strong> <span id="review_suffix"></span></p>
-          <p><strong>Address:</strong> <span id="review_address"></span></p>
+          <p><strong>Region:</strong> <span id="review_region"></span></p>
+          <p><strong>Province:</strong> <span id="review_province"></span></p>
+          <p><strong>City/Municipality:</strong> <span id="review_city"></span></p>
+          <p><strong>Zip Code:</strong> <span id="review_zip"></span></p>
+          <p><strong>Purok/Zone:</strong> <span id="review_purok"></span></p>
           <p><strong>Date of Birth:</strong> <span id="review_dob"></span></p>
           <p><strong>Sex:</strong> <span id="review_sex"></span></p>
           <p><strong>Email:</strong> <span id="review_email"></span></p>
@@ -386,6 +428,8 @@
 
 <script src="https://unpkg.com/lucide@latest"></script>
 <script>
+
+  
 lucide.createIcons();
 
 const themeToggle = document.getElementById("themeToggle");
@@ -613,8 +657,16 @@ function fillStep3() {
     document.getElementById("step1_middlename")?.value || "";
   document.getElementById("review_suffix").textContent =
     document.getElementById("step1_suffix")?.value || "";
-  document.getElementById("review_address").textContent =
-    document.getElementById("step1_address")?.value || "";
+  document.getElementById("review_region").textContent =
+    document.getElementById("regionInput")?.value || "";
+document.getElementById("review_province").textContent =
+    document.getElementById("provinceInput")?.value || "";
+document.getElementById("review_city").textContent =
+    document.getElementById("cityInput")?.value || "";
+document.getElementById("review_zip").textContent =
+    document.getElementById("step1_zip")?.value || "";
+document.getElementById("review_purok").textContent =
+    document.getElementById("step1_purok")?.value || "";
   document.getElementById("review_dob").textContent =
     document.getElementById("step1_dob")?.value || "";
   document.getElementById("review_sex").textContent =
@@ -649,7 +701,123 @@ function fillStep3() {
   
   document.getElementById("review_files").textContent =
     filesText || "No files uploaded";
+
 }
+document.addEventListener("DOMContentLoaded", () => {
+  const regionInput = document.getElementById("regionInput");
+  const provinceInput = document.getElementById("provinceInput");
+  const cityInput = document.getElementById("cityInput");
+  const barangayInput = document.getElementById("barangayInput");
+
+  const regionDropdown = regionInput.nextElementSibling;
+  const provinceDropdown = provinceInput.nextElementSibling;
+  const cityDropdown = cityInput.nextElementSibling;
+  const barangayDropdown = barangayInput.nextElementSibling;
+
+  function closeAllDropdowns() {
+    [regionDropdown, provinceDropdown, cityDropdown, barangayDropdown].forEach(dd => dd.style.display = "none");
+  }
+
+  function openDropdown(input, dropdown) {
+    closeAllDropdowns();
+    dropdown.style.display = "block";
+  }
+
+  // Show dropdown on input click
+  [regionInput, provinceInput, cityInput, barangayInput].forEach((input, i) => {
+    input.addEventListener("click", e => {
+      e.stopPropagation();
+      const dropdown = input.nextElementSibling;
+      if (!input.disabled) openDropdown(input, dropdown);
+    });
+  });
+
+  // Event delegation for dropdown items
+  function setupDropdownSelection(parentDropdown, input, fetchNext = null) {
+    parentDropdown.addEventListener("click", e => {
+      if (e.target.tagName === "LI") {
+        input.value = e.target.textContent;
+        input.dataset.id = e.target.dataset.id;
+
+        // Reset lower-level inputs
+        if (fetchNext) fetchNext(e.target.dataset.id);
+
+        closeAllDropdowns();
+      }
+    });
+  }
+
+  // Region → Province
+  setupDropdownSelection(regionDropdown, regionInput, regionId => {
+  provinceInput.value = "";
+  provinceInput.disabled = false;
+  provinceDropdown.innerHTML = "";
+  cityInput.value = "";
+  cityInput.disabled = true;
+  cityDropdown.innerHTML = "";
+  barangayInput.value = "";
+  barangayInput.disabled = true;
+  barangayDropdown.innerHTML = "";
+
+  fetch(`/get-provinces/${regionId}`)
+    .then(res => res.json())
+    .then(provinces => {
+      provinces.forEach(p => {
+        const li = document.createElement("li");
+        li.textContent = p.name;
+        li.dataset.id = p.id;
+        provinceDropdown.appendChild(li);
+        });
+      });
+  });
+
+  // Province → City
+  setupDropdownSelection(provinceDropdown, provinceInput, provinceId => {
+    cityInput.value = "";
+    cityInput.disabled = false;
+    cityDropdown.innerHTML = "";
+    barangayInput.value = "";
+    barangayInput.disabled = true;
+    barangayDropdown.innerHTML = "";
+
+    fetch(`/get-cities/${provinceId}`)
+      .then(res => res.json())
+      .then(cities => {
+        cities.forEach(c => {
+          const li = document.createElement("li");
+          li.textContent = c.name;
+          li.dataset.id = c.id;
+          cityDropdown.appendChild(li);
+        });
+      });
+  });
+
+  // City → Barangay
+  setupDropdownSelection(cityDropdown, cityInput, cityId => {
+    barangayInput.value = "";
+    barangayInput.disabled = false;
+    barangayDropdown.innerHTML = "";
+
+    fetch(`/get-barangays/${cityId}`)
+      .then(res => res.json())
+      .then(barangays => {
+        barangays.forEach(b => {
+          const li = document.createElement("li");
+          li.textContent = b.name;
+          li.dataset.id = b.id;
+          barangayDropdown.appendChild(li);
+        });
+      });
+  });
+
+  // Barangay selection
+  setupDropdownSelection(barangayDropdown, barangayInput);
+
+  // Close dropdowns on click outside
+  document.addEventListener("click", closeAllDropdowns);
+});
+
+
 </script>
 </body>
 </html>
