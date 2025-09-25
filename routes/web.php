@@ -5,6 +5,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\LocationController;
 
 Route::get('/', function () {
     return view('landingpage');
@@ -81,6 +82,7 @@ Route::get('/sk-dashboard', function () {
     return view('sk-dashboard'); 
 })->name('sk.dashboard');
 
+
 Route::get('/youth-profilepage', function () {
     return view('youth-profilepage'); 
 })->name('youth-profilepage');
@@ -117,4 +119,9 @@ Route::get('/list-of-attendees', function () {
     return view('list-of-attendees'); 
 })->name('attendees.index');
 
+
+Route::get('/get-provinces/{region_id}', [LocationController::class, 'getprovinces']);
+Route::get('/get-cities/{province_id}', [LocationController::class, 'getCities']);
+Route::get('/get-barangays/{city_id}', [LocationController::class, 'getBarangays']);
+Route::get('/get-puroks/{barangay}', [LocationController::class, 'getPuroks']);
 

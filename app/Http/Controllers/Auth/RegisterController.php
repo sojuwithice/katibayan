@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\KKMember;
 use App\Models\SkOfficial;
 use App\Models\User;
+use App\Models\Region; // ✅ import Region so we can fetch it
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -14,7 +15,9 @@ class RegisterController extends Controller
 {
     public function showRegistrationForm()
     {
-        return view('register'); // Points to resources/views/register.blade.php
+        // ✅ Pass regions to the register view
+        $regions = Region::all();
+        return view('register', compact('regions')); 
     }
 
     public function register(Request $request)
@@ -49,7 +52,15 @@ class RegisterController extends Controller
             'given_name' => 'required|string|max:100',
             'middle_name' => 'nullable|string|max:100',
             'suffix' => 'nullable|string|max:10',
-            'address' => 'required|string',
+            
+            // ✅ Replace address with location fields
+            'region_id' => 'required|exists:regions,id',
+            'province_id' => 'required|exists:provinces,id',
+            'city_id' => 'required|exists:cities,id',
+            'barangay_id' => 'required|exists:barangays,id',
+            'purok_zone' => 'required|string|max:100',
+            'zip_code' => 'required|string|max:10',
+
             'date_of_birth' => 'required|date',
             'sex' => 'required|in:male,female',
             'email' => 'required|string|email|max:255|unique:users',
@@ -63,7 +74,7 @@ class RegisterController extends Controller
             'password' => 'nullable',
         ];
 
-        // Add file validation based on role
+        // File rules by role
         if (isset($data['role']) && $data['role'] === 'sk') {
             $rules['oath_certificate'] = 'required|file|mimes:pdf|max:5120';
         } elseif (isset($data['role']) && $data['role'] === 'kk') {
@@ -81,7 +92,15 @@ class RegisterController extends Controller
             'given_name' => $data['given_name'],
             'middle_name' => $data['middle_name'] ?? null,
             'suffix' => $data['suffix'] ?? null,
-            'address' => $data['address'],
+
+            // ✅ Save new location fields
+            'region_id' => $data['region_id'],
+            'province_id' => $data['province_id'],
+            'city_id' => $data['city_id'],
+            'barangay_id' => $data['barangay_id'],
+            'purok_zone' => $data['purok_zone'],
+            'zip_code' => $data['zip_code'],
+
             'date_of_birth' => $data['date_of_birth'],
             'sex' => $data['sex'],
             'email' => $data['email'],
@@ -91,7 +110,7 @@ class RegisterController extends Controller
             'work_status' => $data['work_status'],
             'youth_classification' => $data['youth_classification'],
             'sk_voter' => $data['sk_voter'],
-            'account_status' => 'pending', // ✅ default status
+            'account_status' => 'pending',
             'password' => Hash::make('defaultPassword123'), // default password
         ]);
     }
