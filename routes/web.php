@@ -85,4 +85,4 @@ Route::get('/sk-dashboard', function () {
 Route::get('/get-provinces/{region_id}', [LocationController::class, 'getprovinces']);
 Route::get('/get-cities/{province_id}', [LocationController::class, 'getCities']);
 Route::get('/get-barangays/{city_id}', [LocationController::class, 'getBarangays']);
-Route::get('/get-puroks/{barangay}', [LocationController::class, 'getPuroks']);
+

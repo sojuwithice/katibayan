@@ -9,7 +9,7 @@ class Barangay extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'city_id', 'zipcode'];
+    protected $fillable = ['name', 'city_id'];
 
     public function city()
     {
