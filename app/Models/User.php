@@ -16,7 +16,12 @@ class User extends Authenticatable
         'given_name',
         'middle_name',
         'suffix',
-        'address',
+        'region_id',
+        'province_id',
+        'city_id',
+        'barangay_id',
+        'purok_zone',
+        'zip_code',
         'date_of_birth',
         'sex',
         'email',
@@ -49,4 +54,24 @@ class User extends Authenticatable
     {
         return $this->hasOne(KKMember::class);
     }
+    public function region()
+{
+    return $this->belongsTo(Region::class);
+}
+
+public function province()
+{
+    return $this->belongsTo(Province::class);
+}
+
+public function city()
+{
+    return $this->belongsTo(City::class);
+}
+
+public function barangay()
+{
+    return $this->belongsTo(Barangay::class);
+}
+
 }

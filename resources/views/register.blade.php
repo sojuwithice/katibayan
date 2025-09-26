@@ -84,6 +84,13 @@
   <!-- Form -->
   <form id="multiStepForm" class="register-form" action="{{ route('register') }}" method="POST" enctype="multipart/form-data">
     @csrf
+    
+    <!-- Hidden fields for storing location IDs -->
+    <input type="hidden" name="region_id" id="regionId">
+    <input type="hidden" name="province_id" id="provinceId">
+    <input type="hidden" name="city_id" id="cityId">
+    <input type="hidden" name="barangay_id" id="barangayId">
+    
     <input type="hidden" name="current_step" id="currentStep" value="1">
 
     <!-- STEP 1 -->
@@ -107,47 +114,47 @@
           <input type="text" id="step1_suffix" name="suffix" placeholder="Suffix (optional)">
         </div>
 
-      <div class="form-grid">
-  <!-- Region -->
-  <div class="select-wrapper">
-    <input type="text" id="regionInput" name="region_id" placeholder="-- Select Region --" readonly required>
-    <ul class="dropdown-options">
-      @foreach($regions as $region)
-        <li data-id="{{ $region->id }}">{{ $region->name }}</li>
-      @endforeach
-    </ul>
-    <span class="arrow"><i data-lucide="chevron-down"></i></span>
-  </div>
+        <div class="form-grid">
+          <!-- Region -->
+          <div class="select-wrapper">
+            <input type="text" id="regionInput" placeholder="-- Select Region --" readonly required>
+            <ul class="dropdown-options">
+              @foreach($regions as $region)
+                <li data-id="{{ $region->id }}">{{ $region->name }}</li>
+              @endforeach
+            </ul>
+            <span class="arrow"><i data-lucide="chevron-down"></i></span>
+          </div>
 
-  <!-- Province -->
- <div class="select-wrapper">
-    <input type="text" id="provinceInput" name="province_id" placeholder="-- Select Province --" readonly disabled required>
-    <ul class="dropdown-options"></ul>
-    <span class="arrow"><i data-lucide="chevron-down"></i></span>
-  </div>
-  <!-- City/Municipality -->
-   <div class="select-wrapper">
-    <input type="text" id="cityInput" name="city_id" placeholder="-- Select City/Municipality --" readonly disabled required>
-    <ul class="dropdown-options"></ul>
-    <span class="arrow"><i data-lucide="chevron-down"></i></span>
-  </div>
+          <!-- Province -->
+          <div class="select-wrapper">
+            <input type="text" id="provinceInput" placeholder="-- Select Province --" readonly disabled required>
+            <ul class="dropdown-options"></ul>
+            <span class="arrow"><i data-lucide="chevron-down"></i></span>
+          </div>
+          
+          <!-- City/Municipality -->
+          <div class="select-wrapper">
+            <input type="text" id="cityInput" placeholder="-- Select City/Municipality --" readonly disabled required>
+            <ul class="dropdown-options"></ul>
+            <span class="arrow"><i data-lucide="chevron-down"></i></span>
+          </div>
 
-  <!-- Barangay -->
-  <div class="select-wrapper">
-    <input type="text" id="barangayInput" name="barangay_id" placeholder="-- Select Barangay --" readonly disabled required>
-    <ul class="dropdown-options"></ul>
-    <span class="arrow"><i data-lucide="chevron-down"></i></span>
-  </div>
-</div>
+          <!-- Barangay -->
+          <div class="select-wrapper">
+            <input type="text" id="barangayInput" placeholder="-- Select Barangay --" readonly disabled required>
+            <ul class="dropdown-options"></ul>
+            <span class="arrow"><i data-lucide="chevron-down"></i></span>
+          </div>
+        </div>
 
-<div class="form-grid">
-  <!-- Zip Code -->
-  <input type="text" id="step1_zip" name="zip_code" placeholder="Zip Code" required>
+        <div class="form-grid">
+          <!-- Zip Code -->
+          <input type="text" id="step1_zip" name="zip_code" placeholder="Zip Code" required>
 
-  <!-- Purok/Zone -->
-  <input type="text" id="step1_purok" name="purok_zone" placeholder="Purok/Zone" required>
-</div>
-
+          <!-- Purok/Zone -->
+          <input type="text" id="step1_purok" name="purok_zone" placeholder="Purok/Zone" required>
+        </div>
 
         <div class="form-grid-4">
           <div class="input-icon">
@@ -280,45 +287,41 @@
         </div>
       </div>
 
-
-    
-
       <h2>IV. Account Setup & Verification</h2>
       <p>Confirmation of your account details.</p>
 
       <div class="form-grid">
          <div class="input-with-btn">
-      <input 
-        type="text" 
-        id="contactInput" 
-        placeholder="Please enter your recovery email or phone" 
-        readonly>
-      <button type="button" id="verifyBtn" class="verify-btn">Verify</button>
-    </div>
+          <input 
+            type="text" 
+            id="contactInput" 
+            placeholder="Please enter your recovery email or phone" 
+            readonly>
+          <button type="button" id="verifyBtn" class="verify-btn">Verify</button>
+        </div>
 
-    <!-- MODAL -->
-    <div class="modal-overlay" id="methodModal" style="display:none;">
-      <div class="method-modal">
-        <div class="method-header">
-          <h2>Choose a Recovery Method</h2>
-        </div>
-        <div class="method-body">
-          <div class="method-option" id="mobileOption">
-            <img src="https://img.icons8.com/ios-filled/50/3C87C4/smartphone.png" alt="Smartphone">
-            <span>Mobile Number</span>
+        <!-- MODAL -->
+        <div class="modal-overlay" id="methodModal" style="display:none;">
+          <div class="method-modal">
+            <div class="method-header">
+              <h2>Choose a Recovery Method</h2>
+            </div>
+            <div class="method-body">
+              <div class="method-option" id="mobileOption">
+                <img src="https://img.icons8.com/ios-filled/50/3C87C4/smartphone.png" alt="Smartphone">
+                <span>Mobile Number</span>
+              </div>
+              <div class="method-option" id="googleOption">
+                <img src="https://img.icons8.com/color/48/google-logo.png" alt="Google">
+                <span>Google Account</span>
+              </div>
+            </div>
+            <div class="method-footer">
+              <button id="closeModal">Close</button>
+            </div>
           </div>
-          <div class="method-option" id="googleOption">
-        <img src="https://img.icons8.com/color/48/google-logo.png" alt="Google">
-        <span>Google Account</span>
-      </div>
-      <divider>
-        </div>
-        <div class="method-footer">
-          <button id="closeModal">Close</button>
         </div>
       </div>
-    </div>
-  </div>
 
       <div class="checkbox-group">
         <label>
@@ -340,6 +343,7 @@
           <p><strong>Region:</strong> <span id="review_region"></span></p>
           <p><strong>Province:</strong> <span id="review_province"></span></p>
           <p><strong>City/Municipality:</strong> <span id="review_city"></span></p>
+          <p><strong>Barangay:</strong> <span id="review_barangay"></span></p>
           <p><strong>Zip Code:</strong> <span id="review_zip"></span></p>
           <p><strong>Purok/Zone:</strong> <span id="review_purok"></span></p>
           <p><strong>Date of Birth:</strong> <span id="review_dob"></span></p>
@@ -428,8 +432,6 @@
 
 <script src="https://unpkg.com/lucide@latest"></script>
 <script>
-
-  
 lucide.createIcons();
 
 const themeToggle = document.getElementById("themeToggle");
@@ -574,11 +576,19 @@ document.addEventListener("DOMContentLoaded", () => {
     if (step === steps.length) {
       nextBtn.innerText = "Submit";
       nextBtn.type = "button";
-      nextBtn.onclick = () => form.submit();
+      nextBtn.onclick = () => {
+        // Validate all required fields are filled
+        if (validateStep3()) {
+          form.submit();
+        }
+      };
     } else {
       nextBtn.innerText = "Next";
       nextBtn.type = "button";
       nextBtn.onclick = () => {
+        if (currentStep === 1 && !validateStep1()) {
+          return;
+        }
         if (currentStep === 2) {
           fillStep3();
         }
@@ -591,12 +601,33 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // NEXT BUTTON
-  
+  function validateStep1() {
+    const regionId = document.getElementById('regionId').value;
+    const provinceId = document.getElementById('provinceId').value;
+    const cityId = document.getElementById('cityId').value;
+    const barangayId = document.getElementById('barangayId').value;
+    
+    if (!regionId || !provinceId || !cityId || !barangayId) {
+      alert('Please complete all location fields (Region, Province, City, Barangay)');
+      return false;
+    }
+    return true;
+  }
 
+  function validateStep3() {
+    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+    for (let checkbox of checkboxes) {
+      if (checkbox.required && !checkbox.checked) {
+        alert('Please check all required checkboxes');
+        return false;
+      }
+    }
+    return true;
+  }
 
   showStep(currentStep);
 });
+
 // ---- VERIFY MODAL ----
 document.addEventListener("DOMContentLoaded", () => {
   const contactInput = document.getElementById("contactInput");
@@ -647,67 +678,18 @@ function setupFileUpload(inputId, fileTextId) {
 setupFileUpload("oath_certificate", "fileText1");
 setupFileUpload("barangay_indigency", "fileText3");
 
-// ---- STEP 3 REVIEW ----
-function fillStep3() {
-  document.getElementById("review_lastname").textContent =
-    document.getElementById("step1_lastname")?.value || "";
-  document.getElementById("review_givenname").textContent =
-    document.getElementById("step1_givenname")?.value || "";
-  document.getElementById("review_middlename").textContent =
-    document.getElementById("step1_middlename")?.value || "";
-  document.getElementById("review_suffix").textContent =
-    document.getElementById("step1_suffix")?.value || "";
-  document.getElementById("review_region").textContent =
-    document.getElementById("regionInput")?.value || "";
-document.getElementById("review_province").textContent =
-    document.getElementById("provinceInput")?.value || "";
-document.getElementById("review_city").textContent =
-    document.getElementById("cityInput")?.value || "";
-document.getElementById("review_zip").textContent =
-    document.getElementById("step1_zip")?.value || "";
-document.getElementById("review_purok").textContent =
-    document.getElementById("step1_purok")?.value || "";
-  document.getElementById("review_dob").textContent =
-    document.getElementById("step1_dob")?.value || "";
-  document.getElementById("review_sex").textContent =
-    document.getElementById("step1_sex")?.value || "";
-  document.getElementById("review_email").textContent =
-    document.getElementById("step1_email")?.value || "";
-  document.getElementById("review_contact").textContent =
-    document.querySelector("input[name='contact_no']")?.value || "";
-
-  document.getElementById("review_civil").textContent =
-    document.getElementById("step1_civil")?.value || "";
-  document.getElementById("review_education").textContent =
-    document.querySelector("input[name='education']")?.value || "";
-  document.getElementById("review_work").textContent =
-    document.querySelector("input[name='work_status']")?.value || "";
-  document.getElementById("review_youth").textContent =
-    document.querySelector("input[name='youth_classification']")?.value || "";
-  document.getElementById("review_sk").textContent =
-    document.querySelector("input[name='sk_voter']")?.value || "";
-
-  document.getElementById("review_role").textContent =
-    document.querySelector("input[name='role']")?.value || "";
-
-  const oathCert = document.getElementById("oath_certificate")?.files[0]?.name;
-  const barangayInd = document.getElementById("barangay_indigency")?.files[0]?.name;
-  const proofResidency = document.getElementById("proof_of_residency")?.files[0]?.name;
-  
-  let filesText = "";
-  if (oathCert) filesText += `Oath Certificate: ${oathCert} `;
-  if (barangayInd) filesText += `Barangay Indigency: ${barangayInd} `;
-  if (proofResidency) filesText += `Proof of Residency: ${proofResidency}`;
-  
-  document.getElementById("review_files").textContent =
-    filesText || "No files uploaded";
-
-}
+// ---- LOCATION DROPDOWNS WITH ID STORAGE ----
 document.addEventListener("DOMContentLoaded", () => {
   const regionInput = document.getElementById("regionInput");
   const provinceInput = document.getElementById("provinceInput");
   const cityInput = document.getElementById("cityInput");
   const barangayInput = document.getElementById("barangayInput");
+
+  // Hidden input fields for IDs
+  const regionIdInput = document.getElementById("regionId");
+  const provinceIdInput = document.getElementById("provinceId");
+  const cityIdInput = document.getElementById("cityId");
+  const barangayIdInput = document.getElementById("barangayId");
 
   const regionDropdown = regionInput.nextElementSibling;
   const provinceDropdown = provinceInput.nextElementSibling;
@@ -732,12 +714,16 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // Event delegation for dropdown items
-  function setupDropdownSelection(parentDropdown, input, fetchNext = null) {
+  // Event delegation for dropdown items with ID storage
+  function setupDropdownSelection(parentDropdown, input, hiddenInput, fetchNext = null) {
     parentDropdown.addEventListener("click", e => {
       if (e.target.tagName === "LI") {
         input.value = e.target.textContent;
-        input.dataset.id = e.target.dataset.id;
+        
+        // Store the ID in the hidden input field
+        if (hiddenInput) {
+          hiddenInput.value = e.target.dataset.id;
+        }
 
         // Reset lower-level inputs
         if (fetchNext) fetchNext(e.target.dataset.id);
@@ -748,37 +734,46 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Region → Province
-  setupDropdownSelection(regionDropdown, regionInput, regionId => {
-  provinceInput.value = "";
-  provinceInput.disabled = false;
-  provinceDropdown.innerHTML = "";
-  cityInput.value = "";
-  cityInput.disabled = true;
-  cityDropdown.innerHTML = "";
-  barangayInput.value = "";
-  barangayInput.disabled = true;
-  barangayDropdown.innerHTML = "";
-
-  fetch(`/get-provinces/${regionId}`)
-    .then(res => res.json())
-    .then(provinces => {
-      provinces.forEach(p => {
-        const li = document.createElement("li");
-        li.textContent = p.name;
-        li.dataset.id = p.id;
-        provinceDropdown.appendChild(li);
-        });
-      });
-  });
-
-  // Province → City
-  setupDropdownSelection(provinceDropdown, provinceInput, provinceId => {
+  setupDropdownSelection(regionDropdown, regionInput, regionIdInput, regionId => {
+    provinceInput.value = "";
+    provinceInput.disabled = false;
+    provinceDropdown.innerHTML = "";
+    provinceIdInput.value = "";
+    
     cityInput.value = "";
-    cityInput.disabled = false;
+    cityInput.disabled = true;
     cityDropdown.innerHTML = "";
+    cityIdInput.value = "";
+    
     barangayInput.value = "";
     barangayInput.disabled = true;
     barangayDropdown.innerHTML = "";
+    barangayIdInput.value = "";
+
+    fetch(`/get-provinces/${regionId}`)
+      .then(res => res.json())
+      .then(provinces => {
+        provinces.forEach(p => {
+          const li = document.createElement("li");
+          li.textContent = p.name;
+          li.dataset.id = p.id;
+          provinceDropdown.appendChild(li);
+        });
+      })
+      .catch(error => console.error('Error fetching provinces:', error));
+  });
+
+  // Province → City
+  setupDropdownSelection(provinceDropdown, provinceInput, provinceIdInput, provinceId => {
+    cityInput.value = "";
+    cityInput.disabled = false;
+    cityDropdown.innerHTML = "";
+    cityIdInput.value = "";
+    
+    barangayInput.value = "";
+    barangayInput.disabled = true;
+    barangayDropdown.innerHTML = "";
+    barangayIdInput.value = "";
 
     fetch(`/get-cities/${provinceId}`)
       .then(res => res.json())
@@ -789,14 +784,16 @@ document.addEventListener("DOMContentLoaded", () => {
           li.dataset.id = c.id;
           cityDropdown.appendChild(li);
         });
-      });
+      })
+      .catch(error => console.error('Error fetching cities:', error));
   });
 
   // City → Barangay
-  setupDropdownSelection(cityDropdown, cityInput, cityId => {
+  setupDropdownSelection(cityDropdown, cityInput, cityIdInput, cityId => {
     barangayInput.value = "";
     barangayInput.disabled = false;
     barangayDropdown.innerHTML = "";
+    barangayIdInput.value = "";
 
     fetch(`/get-barangays/${cityId}`)
       .then(res => res.json())
@@ -807,17 +804,79 @@ document.addEventListener("DOMContentLoaded", () => {
           li.dataset.id = b.id;
           barangayDropdown.appendChild(li);
         });
-      });
+      })
+      .catch(error => console.error('Error fetching barangays:', error));
   });
 
   // Barangay selection
-  setupDropdownSelection(barangayDropdown, barangayInput);
+  setupDropdownSelection(barangayDropdown, barangayInput, barangayIdInput);
 
   // Close dropdowns on click outside
   document.addEventListener("click", closeAllDropdowns);
 });
 
+// ---- STEP 3 REVIEW ----
+function fillStep3() {
+  // Personal Information
+  document.getElementById("review_lastname").textContent =
+    document.getElementById("step1_lastname")?.value || "";
+  document.getElementById("review_givenname").textContent =
+    document.getElementById("step1_givenname")?.value || "";
+  document.getElementById("review_middlename").textContent =
+    document.getElementById("step1_middlename")?.value || "";
+  document.getElementById("review_suffix").textContent =
+    document.getElementById("step1_suffix")?.value || "";
+  
+  // Location Information
+  document.getElementById("review_region").textContent =
+    document.getElementById("regionInput")?.value || "";
+  document.getElementById("review_province").textContent =
+    document.getElementById("provinceInput")?.value || "";
+  document.getElementById("review_city").textContent =
+    document.getElementById("cityInput")?.value || "";
+  document.getElementById("review_barangay").textContent =
+    document.getElementById("barangayInput")?.value || "";
+  document.getElementById("review_zip").textContent =
+    document.getElementById("step1_zip")?.value || "";
+  document.getElementById("review_purok").textContent =
+    document.getElementById("step1_purok")?.value || "";
+  
+  // Personal Details
+  document.getElementById("review_dob").textContent =
+    document.getElementById("step1_dob")?.value || "";
+  document.getElementById("review_sex").textContent =
+    document.getElementById("step1_sex")?.value || "";
+  document.getElementById("review_email").textContent =
+    document.getElementById("step1_email")?.value || "";
+  document.getElementById("review_contact").textContent =
+    document.querySelector("input[name='contact_no']")?.value || "";
 
+  // Demographics
+  document.getElementById("review_civil").textContent =
+    document.getElementById("step1_civil")?.value || "";
+  document.getElementById("review_education").textContent =
+    document.querySelector("input[name='education']")?.value || "";
+  document.getElementById("review_work").textContent =
+    document.querySelector("input[name='work_status']")?.value || "";
+  document.getElementById("review_youth").textContent =
+    document.querySelector("input[name='youth_classification']")?.value || "";
+  document.getElementById("review_sk").textContent =
+    document.querySelector("input[name='sk_voter']")?.value || "";
+
+  // Role and Documents
+  document.getElementById("review_role").textContent =
+    document.querySelector("input[name='role']")?.value || "";
+
+  const oathCert = document.getElementById("oath_certificate")?.files[0]?.name;
+  const barangayInd = document.getElementById("barangay_indigency")?.files[0]?.name;
+  
+  let filesText = "";
+  if (oathCert) filesText += `Oath Certificate: ${oathCert} `;
+  if (barangayInd) filesText += `Barangay Indigency: ${barangayInd}`;
+  
+  document.getElementById("review_files").textContent =
+    filesText || "No files uploaded";
+}
 </script>
 </body>
 </html>

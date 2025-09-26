@@ -1644,6 +1644,18 @@ body.dark-mode .input-with-btn .verify-btn:hover {
     padding: 6px 14px;
     font-size: 0.85rem;
   }
+/* Highlight empty required fields */
+input.error, select.error, .select-wrapper.error input {
+  border: 2px solid red !important;
+  background-color: #ffe6e6;
+}
+
+.error-message {
+  color: red;
+  font-size: 0.85em;
+  margin-top: 4px;
+  display: none;
+}
 
   .input-with-btn input {
     width: 100% !important;
