@@ -241,19 +241,26 @@ body {
 .logo {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  margin-left: -10px;       
+  gap: -0;         
 }
+
+.logo img {
+  height: 90px;         
+  width: auto;
+}
+
 .logo-text {
   display: flex;
   flex-direction: column;
   line-height: 1.2;
 }
+
 .logo-text .title {
   font-size: 18px;
   font-weight: 700;
   color: #01214A;
 }
+
 .logo-text .subtitle {
   font-size: 13px;
   font-weight: 500;
