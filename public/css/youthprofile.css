@@ -764,52 +764,47 @@ body {
 /* ===== Scrollable Table ===== */
 .table-wrapper {
   width: 100%;
-  overflow-x: auto;     /* scroll kapag masikip */
+  max-height: 400px;      
+  overflow-y: auto;       
+  overflow-x: auto;       
   border-radius: 12px;
   border: 1px solid #dce3eb;
   background: #fff;
 }
 
-/* Pantay ang columns pero responsive */
+/* Table */
 .youth-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 700px;     /* para hindi magsiksikan lahat sa maliit na screen */
-  table-layout: auto;   /* auto sizing para hindi maputol text */
+  min-width: 700px;       
+  table-layout: auto;
 }
 
+/* Table cells */
 .youth-table th,
 .youth-table td {
   padding: 10px 14px;
   border-bottom: 1px solid #eee;
   text-align: left;
-  white-space: nowrap;   /* iwas putol, scroll na lang */
+  white-space: nowrap;
 }
 
-/* Header */
+/* Sticky header */
 .youth-table thead th {
   position: sticky;
   top: 0;
   background: #f4f6f9;
   color: #114B8C;
   font-weight: 600;
-  padding: 10px 14px;
-  text-align: left;
-  white-space: nowrap;
-  border-bottom: 2px solid #dce3eb; /* makes it look separate */
-  z-index: 1;
+  border-bottom: 2px solid #dce3eb;
+  z-index: 10;   
 }
 
-/* Body rows */
-.youth-table tbody td {
-  padding: 10px 14px;
-  white-space: nowrap;
-  border-bottom: 1px solid #eee;
-}
-
+/* Hover effect */
 .youth-table tbody tr:hover {
   background: #f9fafc;
 }
+
 
 
 
