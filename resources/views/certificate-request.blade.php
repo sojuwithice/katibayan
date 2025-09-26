@@ -4,11 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KatiBayan - Dashboard</title>
-  <link rel="stylesheet" href="{{ asset('css/sk-dashboard.css') }}">
+  <link rel="stylesheet" href="{{ asset('css/certificate-request.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+
+
 
 </head>
 <body>
@@ -18,7 +25,7 @@
     <button class="menu-toggle">Menu</button>
     <div class="divider"></div>
     <nav class="nav">
-      <a href="{{ route('sk.dashboard') }}" class="active">
+      <a href="{{ route('sk.dashboard') }}">
         <i data-lucide="layout-dashboard"></i>
         <span class="label">Dashboard</span>
       </a>
@@ -28,12 +35,12 @@
         <span class="label">Analytics</span>
       </a>
 
-      <a href="{{ route('youth-profilepage') }}">
+      <a href="{{ route('youth-profilepage') }}" class="active">
         <i data-lucide="users"></i>
         <span class="label">Youth Profile</span>
       </a>
 
-      <a href="{{ route('eventpage') }}" class="events-link">
+      <a href="{{ route('sk-eventpage') }}" class="events-link">
         <i data-lucide="calendar"></i>
         <span class="label">Events and Programs</span>
       </a>
@@ -152,252 +159,73 @@
       </div>
     </header>
 
-    <!-- main content -->
-    <div class="welcome-card">
-  <h2>Welcome, Hon. Aika Barin!</h2>
+    <main class="container">
+  <!-- Header Title -->
+  <div class="welcome-card">
+    <h2>Youth Certificate Request</h2>
+  </div>
+
+  <!-- Section -->
+<section class="events-section">
+  <div class="events-header">
+    <h3>Events and Programs Attended by the Youth</h3>
+    <div class="dropdown">
+    <button class="filter-btn">
+        This Month 
+        <span class="circle-icon">
+        <i class="fas fa-chevron-down"></i>
+        </span>
+    </button>
+    <ul class="dropdown-menu">
+        <li><a href="#">This Week</a></li>
+        <li><a href="#">Last Week</a></li>
+        <li><a href="#">This Month</a></li>
+        <li><a href="#">Last Month</a></li>
+        <li><a href="#">This Year</a></li>
+        <li><a href="#">Last Year</a></li>
+        <li><a href="#">All Time</a></li>
+    </ul>
+    </div>
+  </div>
+
+    <!-- Event Card 1 -->
+<div class="event-card highlight" data-date="2025-09-09">
+  <div class="event-info">
+    <h4>Kalinisan sa Bagong Pilipinas Program</h4>
+    <p class="event-date">Held on September 9, 2025, at 1:00 PM.</p>
+    <p class="event-subtext">100 out of 190 youth are requesting for this program certificate</p>
+  </div>
+  <div class="event-action">
+  <span class="circle-badge">100</span>
+  <a href="{{ route('certificate-request-list') }}" class="arrow-btn">
+    <i class="fas fa-chevron-right"></i>
+  </a>
+</div>
 </div>
 
-<div class="dashboard-container">
-  <!-- LEFT PANEL -->
-  <div class="left-panel">
-    
-    <!-- Engagement (row1 col1) -->
-    <div class="card engagement-card">
-      <h3>Youth Engagement Level</h3>
-      <canvas id="engagementChart"></canvas>
-    </div>
-
-    <!-- Youth Age (row1+row2 col2) -->
-<div class="card youth-age-card">
-  
-  <!-- Card Header -->
-  <div class="card-header">
-    <h3>Youth Age Group</h3>
-    <button class="options-btn">⋯</button>
-    <!-- Dropdown -->
-    <div class="options-dropdown">
-      <ul>
-        <li>Purok 1</li>
-        <li>Purok 2</li>
-        <li>Purok 3</li>
-        <li>Purok 4</li>
-        <li>Purok 5</li>
-        <li>Purok 6</li>
-        <li>Purok 7</li>
-        <li>Purok 8</li>
-      </ul>
-    </div>
+<!-- Event Card 2 -->
+<div class="event-card" data-date="2025-09-09">
+  <div class="event-info">
+    <h4>International Day Against Drug Abuse and Illicit Trafficking</h4>
+    <p class="event-date">Held on September 9, 2025, at 1:00 PM.</p>
   </div>
-
-  <!-- Chart -->
-  <canvas id="ageChart"></canvas>
-
-  <!-- Custom Legend -->
-  <div class="legend">
-    <span><span class="dot child"></span> Child Youth 15-17</span>
-    <span><span class="dot core"></span> Core Youth 18-24</span>
-    <span><span class="dot adult"></span> Adult Youth 25-30</span>
-  </div>
-
-</div>
-
-
-    <!-- Demographics (row2 col1) -->
-    <div class="card demographics-card">
-      <h3>Youth Demographics by Classification</h3>
-      <canvas id="demographicsChart"></canvas>
-      <div class="legend">
-        <span><span class="dot male"></span> Male</span>
-        <span><span class="dot female"></span> Female</span>
-      </div>
-    </div>
-
-    <!-- Announcements -->
-<div class="announcements-section">
-  <div class="announcements-header">
-    <h3 class="announcements-title">Announcements</h3>
-    <button class="options-btn header-options">⋯</button>
-
-    <!-- Dropdown for header -->
-    <div class="options-dropdown">
-      <ul>
-        <li>All</li>
-        <li>Events</li>
-        <li>Programs</li>
-        <li>System Update</li>
-      </ul>
-    </div>
-  </div>
-
-  <div class="announcements">
-    <div class="card">
-      <div class="card-content">
-        <div class="icon"><i class="fas fa-info"></i></div>
-        <div class="text">
-          <strong>Important Announcement: No Office Today</strong>
-          <p>The office is closed today. We sincerely apologize for any inconvenience.</p>
-        </div>
-      </div>
-      <button class="options-btn">⋯</button>
-      <!-- Dropdown for this card -->
-      <div class="options-dropdown">
-        <ul>
-          <li>Edit</li>
-          <li>Delete</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-content">
-        <div class="icon"><i class="fas fa-print"></i></div>
-        <div class="text">
-          <strong>Notice: No Printing Service Today</strong>
-          <p>Please be informed that printing services are closed today.</p>
-        </div>
-      </div>
-      <button class="options-btn">⋯</button>
-      <div class="options-dropdown">
-        <ul>
-          <li>Edit</li>
-          <li>Delete</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-content">
-        <div class="icon"><i class="fas fa-print"></i></div>
-        <div class="text">
-          <strong>Notice: No Printing Service Today</strong>
-          <p>Please be informed that printing services are closed today.</p>
-        </div>
-      </div>
-      <button class="options-btn">⋯</button>
-      <div class="options-dropdown">
-        <ul>
-          <li>Edit</li>
-          <li>Delete</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-content">
-        <div class="icon"><i class="fas fa-print"></i></div>
-        <div class="text">
-          <strong>Notice: No Printing Service Today</strong>
-          <p>Please be informed that printing services are closed today.</p>
-        </div>
-      </div>
-      <button class="options-btn">⋯</button>
-      <div class="options-dropdown">
-        <ul>
-          <li>Edit</li>
-          <li>Delete</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-content">
-        <div class="icon"><i class="fas fa-print"></i></div>
-        <div class="text">
-          <strong>Notice: No Printing Service Today</strong>
-          <p>Please be informed that printing services are closed today.</p>
-        </div>
-      </div>
-      <button class="options-btn">⋯</button>
-      <div class="options-dropdown">
-        <ul>
-          <li>Edit</li>
-          <li>Delete</li>
-        </ul>
-      </div>
-    </div>
+  <div class="event-action">
+    <button class="arrow-btn"><i class="fas fa-chevron-right"></i></button>
   </div>
 </div>
 
-
-
-
-  </div>
-
-  <!-- RIGHT PANEL -->
-  <div class="right-panel">
-    <!-- Calendar -->
-    <div class="calendar card">
-      <header>
-        <button class="prev"><i class="fas fa-chevron-left"></i></button>
-        <h3></h3>
-        <button class="next"><i class="fas fa-chevron-right"></i></button>
-        <a href="{{ route('eventpage') }}" title="View full month">
-          <i class="fas fa-calendar calendar-toggle"></i>
-        </a>
-      </header>
-      <div class="days"></div>
-    </div>
-
-    <!-- Reminders -->
-<div class="reminders-card">
-  <h3 class="reminders-title">Reminders</h3>
-
-  <!-- Today Section -->
-  <div class="reminders-section">
-    <h4 class="section-label">Today</h4>
-    <div class="reminder-item">
-      <div class="reminder-date">08/09/2025</div>
-      <div class="reminder-text">
-        Event Today: International Day Against Drug Abuse and Illicit Trafficking
+    <!-- Event Card 3 -->
+    <div class="event-card" data-date="2025-08-09">
+      <div class="event-info">
+        <h4>International Day Against Drug Abuse and Illicit Trafficking</h4>
+        <p class="event-date">Held on August 9, 2025, at 1:00 PM.</p>
+      </div>
+      <div class="event-action">
+        <button class="arrow-btn"><i class="fas fa-chevron-right"></i></button>
       </div>
     </div>
-  </div>
-
-  <!-- Upcoming Section -->
-  <div class="reminders-section">
-    <h4 class="section-label">Upcoming</h4>
-    <div class="reminder-item">
-      <div class="reminder-date">08/09/2025</div>
-      <div class="reminder-text">
-        Event Today: International Day Against Drug Abuse and Illicit Trafficking
-      </div>
-  </div>
-</div>
-</div>
-<!-- Youth Population -->
-<div class="youth-population card">
-  <h3 class="population-title">Youth Population</h3>
-  <div class="population-chart">
-    <canvas id="populationChart"></canvas>
-    <div class="population-center">
-      <span class="population-total">600</span>
-      <p>Overall population of the barangay</p>
-    </div>
-  </div>
-
-  <div class="population-legend">
-    <div class="legend-item">
-      <span>Female</span>
-      <span>390</span>
-      <span class="dot female"></span>
-    </div>
-    <div class="legend-item">
-      <span>Male</span>
-      <span>200</span>
-      <span class="dot male"></span>
-    </div>
-  </div>
-</div>
-
-  </div>
-</div>
-
-
-
-
-
-
-
+  </section>
+</main>
 
 
 
@@ -589,165 +417,79 @@ evaluationLink?.addEventListener('click', (e) => {
     }
   });
 
-  // === Youth Engagement Chart ===
-  const engagementCtx = document.getElementById('engagementChart')?.getContext('2d');
-  if (engagementCtx) {
-    new Chart(engagementCtx, {
-      type: 'bar',
-      data: {
-        labels: ['Active', 'Less Active', 'Inactive'], 
-        datasets: [{
-          label: 'Youth Count',
-          data: [120, 80, 60],
-          backgroundColor: ['#3C87C6', '#7EE081', '#C3423F'],
-          borderRadius: 10
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: {
-            display: true,
-            position: 'right',
-            labels: {
-              boxWidth: 12,
-              boxHeight: 12,
-              padding: 10,
-              font: { size: 10 },
-              generateLabels: (chart) => {
-                const dataset = chart.data.datasets[0];
-                const customLabels = ['Active Youth', 'Less Active Youth', 'Inactive Youth']; 
-                return dataset.data.map((_, index) => ({
-                  text: customLabels[index],
-                  fillStyle: dataset.backgroundColor[index],
-                  strokeStyle: dataset.backgroundColor[index],
-                  index: index
-                }));
-              }
-            }
-          },
-          title: { display: false }
-        },
-        scales: {
-          x: {
-            ticks: { display: false },
-            grid: { drawTicks: false, drawBorder: false }
-          },
-          y: { beginAtZero: true }
-        }
+
+//filter dropdown
+const dropdown = document.querySelector(".dropdown");
+const btn = dropdown.querySelector(".filter-btn");
+const label = btn.childNodes[0]; 
+const options = dropdown.querySelectorAll(".dropdown-menu li a");
+
+
+btn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  dropdown.classList.toggle("open");
+});
+
+options.forEach(option => {
+  option.addEventListener("click", (e) => {
+    e.preventDefault();
+    label.textContent = option.textContent + " "; 
+    dropdown.classList.remove("open");
+
+    
+    const filter = option.textContent.trim();
+    const cards = document.querySelectorAll(".event-card");
+    const now = new Date();
+
+    cards.forEach(card => {
+      const dateStr = card.dataset.date; 
+      const cardDate = new Date(dateStr);
+      let show = true;
+
+      if (filter === "This Week") {
+        const startOfWeek = new Date(now);
+        startOfWeek.setDate(now.getDate() - now.getDay() + 1);
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6);
+        show = cardDate >= startOfWeek && cardDate <= endOfWeek;
       }
-    });
-  }
-
-  // === Youth Demographics Chart ===
-  const demoCtx = document.getElementById('demographicsChart')?.getContext('2d');
-  if (demoCtx) {
-    new Chart(demoCtx, {
-      type: 'bar',
-      data: {
-        labels: [
-          'In-school Youth',
-          'Out of school Youth',
-          'Working Youth',
-          'Person with disabilities',
-          'Indigenous'
-        ],
-        datasets: [
-          { label: 'Male', data: [200, 110, 50, 30, 10], backgroundColor: '#3C87C6' },
-          { label: 'Female', data: [170, 90, 40, 20, 15], backgroundColor: '#E96BA8' }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        indexAxis: 'y', 
-        scales: {
-          x: { beginAtZero: true, grid: { drawBorder: false } },
-          y: { ticks: { color: '#01214A', font: { weight: 600 } }, grid: { display: false } }
-        },
-        plugins: {
-          legend: { display: false },
-          title: { display: false }
-        }
+      else if (filter === "Last Week") {
+        const startOfLastWeek = new Date(now);
+        startOfLastWeek.setDate(now.getDate() - now.getDay() - 6);
+        const endOfLastWeek = new Date(startOfLastWeek);
+        endOfLastWeek.setDate(startOfLastWeek.getDate() + 6);
+        show = cardDate >= startOfLastWeek && cardDate <= endOfLastWeek;
       }
-    });
-  }
-
-  // === Youth Age Chart ===
-  const ageCtx = document.getElementById('ageChart')?.getContext('2d');
-  if (ageCtx) {
-    new Chart(ageCtx, {
-      type: 'pie',
-      data: {
-        labels: ["Child Youth 15-17", "Core Youth 18-24", "Adult Youth 25-30"],
-        datasets: [{
-          label: "Age Group",
-          data: [120, 250, 180], 
-          backgroundColor: ["#FFCA3A", "#3C87C6", "#8AC926"],
-          borderWidth: 1,
-          borderColor: "#fff"
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: { legend: { display: false } }
+      else if (filter === "This Month") {
+        show = cardDate.getMonth() === now.getMonth() &&
+               cardDate.getFullYear() === now.getFullYear();
       }
-    });
-  }
-
-  // === Youth Population Chart ===
-  const ctx = document.getElementById('populationChart').getContext('2d');
-  new Chart(ctx, {
-    type: 'doughnut',
-    data: {
-      labels: ['Female', 'Male'],
-      datasets: [{
-        data: [390, 200],
-        backgroundColor: ['#f48fb1', '#114B8C'],
-        borderWidth: 0,
-        cutout: '70%' 
-      }]
-    },
-    options: {
-      plugins: {
-        legend: { display: false }, 
-        tooltip: { enabled: true }
+      else if (filter === "Last Month") {
+        const lastMonth = new Date(now);
+        lastMonth.setMonth(now.getMonth() - 1);
+        show = cardDate.getMonth() === lastMonth.getMonth() &&
+               cardDate.getFullYear() === lastMonth.getFullYear();
       }
-    }
-  });
+      else if (filter === "This Year") {
+        show = cardDate.getFullYear() === now.getFullYear();
+      }
+      else if (filter === "Last Year") {
+        show = cardDate.getFullYear() === now.getFullYear() - 1;
+      }
+      else if (filter === "All Time") {
+        show = true;
+      }
 
-  // === Options dropdown toggle ===
-document.querySelectorAll('.options-btn, .header-options').forEach(btn => {
-  btn.addEventListener('click', (e) => {
-    e.stopPropagation();
-
-    // kunin yung dropdown kasunod ng button
-    const dropdown = btn.nextElementSibling;
-    if (!dropdown || !dropdown.classList.contains('options-dropdown')) return;
-
-    // isara muna lahat ng iba
-    document.querySelectorAll('.options-dropdown.show').forEach(d => {
-      if (d !== dropdown) d.classList.remove('show');
+      card.style.display = show ? "flex" : "none";
     });
-
-    // toggle ito
-    dropdown.classList.toggle('show');
   });
 });
 
-document.addEventListener('click', () => {
-  document.querySelectorAll('.options-dropdown.show').forEach(d => d.classList.remove('show'));
+document.addEventListener("click", () => {
+  dropdown.classList.remove("open");
 });
-
-
   
 });
 </script>
-
-
-
-
-
-
 </body>
 </html>

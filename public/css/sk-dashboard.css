@@ -15,14 +15,14 @@ body {
   min-height: 100vh;
 }
 
-/* Sidebar */
+/* Sidebar base */
 .sidebar {
   background: #3C87C4;
   color: #fff;
   width: 90px;
-  min-height: 400px; 
-  border-radius: 25px; 
-  border: .2rem solid #fff;
+  min-height: 400px;
+  border-radius: 25px;
+  border: 0.2rem solid #fff;
   padding: 1rem 0;
   display: flex;
   flex-direction: column;
@@ -32,25 +32,28 @@ body {
   top: 80px;
   bottom: 5px;
   transition: all 0.3s ease;
-  z-index: 9999;  
+  z-index: 9999;
 }
 
+/* Toggle button */
 .sidebar .menu-toggle {
   align-self: center;
-  margin-bottom: 0.rem; 
+  margin-bottom: 0.5rem;
   background: transparent;
   color: #fff;
   font-weight: bold;
   font-size: 1rem;
 }
 
+/* Divider */
 .sidebar .divider {
-  width: 100%;               
-  height: 2px;               
-  background: rgba(255,255,255,0.6); 
-  margin: 0.2rem 0 1rem 0;   
+  width: 100%;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.6);
+  margin: 0.2rem 0 1rem 0;
 }
 
+/* Navigation */
 .sidebar nav {
   display: flex;
   flex-direction: column;
@@ -58,90 +61,102 @@ body {
   align-items: center;
   margin-top: 0;
 }
+
+/* Expanded sidebar nav */
 .sidebar.open nav {
-  align-items: flex-start; 
-  padding-left: .5rem;      
+  align-items: flex-start;
+  padding-left: 0.5rem;
 }
 
-.sidebar.open { 
-  width: 300px; 
+.sidebar.open {
+  width: 300px;
   align-items: flex-start;
 }
 
-/* Default: icons centered, labels hidden */
+/* Nav link base */
 .sidebar nav a {
   display: flex;
-  align-items: left;
+  align-items: center; 
+  justify-content: center; 
   gap: 0.8rem;
   color: #fff;
   font-size: 1.5rem;
   text-decoration: none;
   position: relative;
+  width: 100%;
+  padding: 0.5rem 0;
 }
 
+
+/* Nav link label */
 .sidebar nav a .label {
-  display: none; 
+  display: none;
   white-space: nowrap;
   font-size: 1rem;
   font-weight: 600;
+  line-height: 1;
+  vertical-align: middle;
 }
 
+/* Expanded nav link */
 .sidebar.open nav a {
-  justify-content: flex-start; 
+  justify-content: flex-start;
   padding: 0.5rem 1rem;
 }
 
 .sidebar.open nav a .label {
-  display: inline; 
+  display: inline-block;
 }
 
-/* Hover effect */
+/* Active nav link */
+.sidebar nav a.active {
+  background: #fff;
+  color: #1C6DD0;
+  border-radius: 50px;
+  padding: 0.5rem 0.8rem;
+  margin-bottom: 0.2rem;
+}
+
+/* Hover nav link */
 .sidebar nav a:hover {
-  background: rgba(255, 255, 255, 0.2); 
+  background: rgba(255, 255, 255, 0.2);
   border-radius: 8px;
-  color: #FFB703; 
+  color: #FFB703;
   transition: all 0.3s ease;
 }
 
 .sidebar.open nav a:hover {
   background: rgba(255, 255, 255, 0.25);
-  padding-left: 1.2rem;   
+  padding-left: 1.2rem;
   transform: translateX(3px);
 }
 
-
-.sidebar nav a.active {
-  background: #fff;
-  color: #1C6DD0;
-  border-radius: 50px;
-  padding: 0.5rem 0.8rem; 
-  margin-bottom: 0.2rem; 
-}
-
-/* Submenu base styles */
+/* Submenu */
 .submenu {
   display: none;
   flex-direction: column;
   gap: 0.3rem;
-  margin-left: 2rem; 
+  margin-left: 2rem;
 }
 
 .sidebar .submenu a {
-  font-size: 0.9rem !important; 
+  font-size: 0.9rem !important;
   color: #fff;
   text-decoration: none;
-  padding: 0.3rem 1.5rem; 
+  padding: 0.3rem 1.5rem;
   border-radius: 6px;
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-/* active submenu link */
+
 .submenu a.active {
   background: #fff;
   color: #1C6DD0;
 }
 
-/* hover effect */
+
 .submenu a:hover {
   color: #FFB703;
   background: rgba(255, 255, 255, 0.2);
@@ -153,27 +168,26 @@ body {
 }
 
 
-
 .sidebar:not(.open) .submenu {
   display: none !important;
 }
 
-
+/* Submenu arrow */
 .sidebar .submenu-arrow {
   display: none;
   margin-left: auto;
   transition: transform 0.3s ease;
+  align-self: center; 
 }
-
 
 .sidebar.open .submenu-arrow {
-  display: inline-block;
+  display: inline-flex;
 }
-
 
 .sidebar.open .nav-item.open .submenu-arrow {
   transform: rotate(180deg);
 }
+
 
 
 .menu-toggle {
@@ -1032,7 +1046,7 @@ body {
   margin-bottom: 1rem;
   padding-bottom: 0.75rem;
   border-bottom: 1px solid #E5E5E5;
-  position: relative; /* para dropdown sa header */
+  position: relative; 
 }
 
 .announcements-title {
@@ -1072,7 +1086,7 @@ body {
   box-shadow: none;
   padding: 0.75rem 0;
   border-bottom: 1px solid #E5E5E5;
-  position: relative; /* para dropdown sa bawat card */
+  position: relative; 
 }
 
 .announcements .card:last-child {
@@ -1084,7 +1098,7 @@ body {
   align-items: flex-start;
   gap: 1rem;
   flex: 1;
-  min-width: 0; /* fix text overflow */
+  min-width: 0; 
 }
 
 /* Blue circular icon */
@@ -1179,14 +1193,6 @@ body {
 .options-dropdown li:hover {
   background: #f6f8fb;
 }
-
-
-
-
-
-
-
-
 
 
 /* Calendar */
@@ -1304,31 +1310,59 @@ body {
 
 
 
-/* Responsive */
+/* =============================
+   Mobile Responsive Layout
+============================= */
 
+/* Tablets / smaller screens <= 1024px */
 @media (max-width: 1024px) {
-  .row {
-    grid-template-columns: 1fr; 
-    gap: 1rem;
+  .dashboard {
+    flex-direction: column;
   }
 
+  .dashboard-container,
+  .left-panel,
+  .right-panel,
+  .engagement-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+  }
+
+  .main {
+    margin-left: 0;
+    padding: 2rem 1rem;
+  }
+
+  .engagement-card,
+  .demographics-card,
+  .youth-age-card,
+  .welcome-card,
+  .youth-population,
+  .calendar,
+  .reminders-card,
+  .announcements-section {
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+  }
+
+  .demographics-card .legend,
+  .population-legend {
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Topbar adjustments */
   .topbar {
     padding: 0.5rem 1rem;
   }
-
-  .welcome, .calendar {
-    width: 100%;
-    padding: 2rem;
-  }
-
-  .calendar {
-    padding: 1.5rem;
-  }
 }
 
-/* Mobile (<= 768px) */
+/* Mobile devices <= 768px */
 @media (max-width: 768px) {
-
   .row {
     grid-template-columns: 1fr;   
     gap: 1rem;
@@ -1403,6 +1437,8 @@ body {
     z-index: 1000;        
   }
 
+  .logo { display: none !important; }
+  
 /* Left group = time, bell, avatar */
 .topbar-left {
   display: flex;
@@ -1424,26 +1460,7 @@ body {
   border-radius: 50%;
 }
 
-.calendar .days, 
-  .weekdays-row, 
-  .dates-grid {
-    width: 100%;
-    grid-template-columns: repeat(7, 1fr); 
-    gap: 0.3rem;
-  }
-
-  .calendar .day {
-    width: 100%;                  
-    max-width: 50px;              
-    height: 60px;
-    font-size: 12px;
-  }
-
-  .weekdays-row div {
-    font-size: 12px;
-  }
-
-  .notif-dropdown {
+.notif-dropdown {
     position: fixed;
     top: 60px;              
     left: 10px;             
@@ -1473,27 +1490,57 @@ body {
     }
   }
 
-  .engagement-card {
-    width: 100%;           /* Full width pag mobile */
-    float: none;
+  /* Main content */
+  .main {
+    margin-left: 0;
+    padding: 1rem;
   }
 
-   .demographics-card {
-    padding: 15px;
-  }
-
-  .demographics-card h3 {
-    font-size: 1.1rem;
-  }
-
-  .demographics-card .legend {
+  .left-panel,
+  .right-panel,
+  .engagement-wrapper {
     flex-direction: column;
-    align-items: center;
-    gap: 8px;
+    width: 100%;
+    gap: 20px;
   }
-}  
 
+  .engagement-card,
+  .demographics-card,
+  .youth-age-card,
+  .welcome-card,
+  .youth-population,
+  .calendar,
+  .reminders-card,
+  .announcements-section {
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+    margin-bottom: 1rem;
+  }
+
+  .calendar .days,
+  .weekdays-row,
+  .dates-grid {
+    width: 100%;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.3rem;
+  }
+
+  .calendar .day {
+    width: 100%;
+    max-width: 50px;
+    height: 60px;
+    font-size: 12px;
+  }
+
+  .weekdays-row div {
+    font-size: 12px;
+  }
+}
+
+/* Extra small devices <= 480px */
 @media (max-width: 480px) {
+
   .topbar-right .time {
     font-size: 11px;
   }
@@ -1503,16 +1550,32 @@ body {
     height: 34px;
   }
 
-  .welcome, .calendar {
-    padding: 1rem;
+  .left-panel,
+  .right-panel,
+  .engagement-wrapper {
+    gap: 15px;
+  }
+
+  .engagement-card,
+  .demographics-card,
+  .youth-age-card,
+  .welcome-card,
+  .youth-population,
+  .calendar,
+  .reminders-card,
+  .announcements-section {
+    padding: 15px;
   }
 
   .welcome h2 {
     font-size: 28px;
   }
 
-  .welcome h3 {
-    font-size: 16px;
+  .welcome h3,
+  .demographics-card h3,
+  .engagement-card h3,
+  .youth-age-card h3 {
+    font-size: 1rem;
   }
 
   .calendar .day {
@@ -1524,13 +1587,15 @@ body {
     font-size: 11px;
   }
 
-  .announcements-section {
-  margin-top: 0px;
-  
-  
-}
-.calendar header i.fas.fa-calendar {
+  .population-legend,
+  .demographics-card .legend {
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .calendar header i.fas.fa-calendar {
     font-size: 20px;
     margin-left: -5px;
-}
+  }
 }

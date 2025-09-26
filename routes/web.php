@@ -82,7 +82,45 @@ Route::get('/sk-dashboard', function () {
     return view('sk-dashboard'); 
 })->name('sk.dashboard');
 
+
+Route::get('/youth-profilepage', function () {
+    return view('youth-profilepage'); 
+})->name('youth-profilepage');
+
+Route::get('/sk-eventpage', function () {
+    return view('sk-eventpage'); 
+})->name('sk-eventpage');
+
+Route::get('/create-event', function () {
+    return view('create-event'); 
+})->name('create-event');
+
+Route::get('/create-program', function () {
+    return view('create-program'); 
+})->name('create-program');
+
+Route::get('/edit-event', function () {
+    return view('edit-event'); 
+})->name('edit-event');
+
+Route::get('/certificate-request', function () {
+    return view('certificate-request'); 
+})->name('certificate-request');
+
+Route::get('/certificate-request-list', function () {
+    return view('certificate-request-list'); 
+})->name('certificate-request-list');
+
+Route::get('/youth-participation', function () {
+    return view('youth-participation'); 
+})->name('youth-participation');
+
+Route::get('/list-of-attendees', function () {
+    return view('list-of-attendees'); 
+})->name('attendees.index');
+
+
 Route::get('/get-provinces/{region_id}', [LocationController::class, 'getprovinces']);
 Route::get('/get-cities/{province_id}', [LocationController::class, 'getCities']);
 Route::get('/get-barangays/{city_id}', [LocationController::class, 'getBarangays']);
-
+Route::get('/get-puroks/{barangay}', [LocationController::class, 'getPuroks']);
