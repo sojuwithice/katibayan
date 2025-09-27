@@ -16,7 +16,7 @@
     <button class="menu-toggle">Menu</button>
     <div class="divider"></div>
     <nav class="nav">
-      <a href="{{ route('dashboard.index') }}" class="active">
+      <a href="{{ route('dashboard.index') }}">
         <i data-lucide="layout-dashboard"></i>
         <span class="label">Dashboard</span>
       </a>
@@ -27,7 +27,7 @@
           <i data-lucide="chevron-down" class="submenu-arrow"></i>
         </a>
         <div class="submenu">
-          <a href="{{ route('profilepage') }}">My Profile</a>
+          <a href="{{ route('profilepage') }}" class="active">My Profile</a>
           <a href="{{ route('certificatepage') }}">Certificates</a>
         </div>
       </div>
@@ -69,7 +69,7 @@
       </div>
 
       <div class="topbar-right">
-        <div class="time">MON 10:00 <span>AM</span></div>
+        <div class="time" id="currentTime">Loading...</div>
 
         <!-- Notifications -->
         <div class="notification-wrapper">
@@ -115,10 +115,10 @@
             <div class="profile-header">
               <img src="https://i.pravatar.cc/80" alt="User" class="profile-avatar">
               <div class="profile-info">
-                <h4>Marijoy S. Novora</h4>
+                <h4>{{ $user ? $user->given_name . ' ' . ($user->middle_name ? $user->middle_name . ' ' : '') . $user->last_name . ' ' . ($user->suffix ? $user->suffix : '') : 'Guest User' }}</h4>
                 <div class="profile-badge">
-                    <span>KK-Member</span>
-                    <span>19 yrs old</span>
+                  <span class="badge">{{ $roleBadge }}</span>
+                  <span class="badge">{{ $age }} yrs old</span>
                 </div>
               </div>
             </div>
@@ -136,6 +136,16 @@
                 </a>
               </li>
               <li><i class="fas fa-star"></i> Send Feedback to Katibayan</li>
+              <li class="logout-item">
+                <a href="loginpage" onclick="confirmLogout(event)">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </li>
+        </ul>
+        
+        <!-- Hidden Logout Form -->
+        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+            @csrf
             </ul>
           </div>
         </div>
@@ -152,17 +162,32 @@
           </button>
         </div>
         <div class="profile-info">
-          <h2>Marijoy S. Novora <span>|</span> <span class="age">21</span> <span class="years">years old</span></h2>
+          <h2>
+            {{ $user ? $user->given_name . ' ' . ($user->middle_name ? $user->middle_name . ' ' : '') . $user->last_name . ' ' . ($user->suffix ? $user->suffix : '') : 'Guest User' }} 
+            <span>|</span> 
+            <span class="age">{{ $age }}</span> 
+            <span class="years">years old</span>
+          </h2>
           
           <!-- badges row -->
           <div class="badges-row">
-            <span class="badge blue">KK Member</span>
-            <span class="status">Registered Voter</span>
+            <span class="badge blue">{{ $roleBadge }}</span>
+            <span class="status">{{ $user && $user->sk_voter === 'Yes' ? 'Registered Voter' : 'Not Registered' }}</span>
           </div>
 
           <!-- address row -->
           <div class="address">
-            <i class="fas fa-location-dot"></i> Purok 3, EM’s Barrio East Legazpi City
+            <i class="fas fa-location-dot"></i> 
+            @if($user && $user->purok_zone)
+              {{ $user->purok_zone }}, 
+              @if($user->barangay){{ $user->barangay->name }}, @endif
+              @if($user->city){{ $user->city->name }}, @endif
+              @if($user->province){{ $user->province->name }}, @endif
+              @if($user->region){{ $user->region->name }} @endif
+              {{ $user->zip_code }}
+            @else
+              Address not available
+            @endif
           </div>
         </div>
         <button class="edit-btn"><i class="fas fa-pen-to-square"></i></button>
@@ -181,152 +206,164 @@
     </div> 
 
     <div class="main-content">
-  <div class="content-grid">
-    
-    <!-- Left Column -->
-    <div class="left-column">
-      <!-- Progress + Evaluation -->
-        <div class="progress-eval-row">
-        <div class="progress-card">
-            <h3>Progress</h3>
-            <div class="progress-circle">75%</div>
-            <p>Still a long journey ahead!<p>
-        </div>
-        <div class="evaluation-card">
-          <h3>Evaluated Programs</h3>
-          <div class="progress-wrapper">
-            <span class="progress-number">3</span> <!-- number ABOVE -->
-            <div class="progress-bar">
-              <div class="progress-fill" style="width: 60%;"></div>
+      <div class="content-grid">
+        
+        <!-- Left Column -->
+        <div class="left-column">
+          <!-- Progress + Evaluation -->
+          <div class="progress-eval-row">
+            <div class="progress-card">
+                <h3>Progress</h3>
+                <div class="progress-circle">75%</div>
+                <p>Still a long journey ahead!<p>
             </div>
-          </div>
-          <p>You have 3 events/programs to evaluate</p>
-
-        </div>
-
-        </div>
-
-        <!-- Email + Password -->
-        <div class="credentials-card">
-          <button class="settings-btn"><i class="fas fa-gear"></i></button>
-          <h3>Email Address
-            <i class="fas fa-envelope email-icon"></i>
-          </h3>
-          <div class="field">
-              <label>KK-Email</label>
-              <p>kkmarijoysn2025118@gmail.com</p>
-          </div>
-          <div class="field password-field">
-                <label>Temporary Password</label>
-                <div class="password-wrapper">
-                    <p id="tempPassword">marijoy</p>
-                    <i class="fas fa-eye toggle-password" onclick="togglePassword()"></i>
+            <div class="evaluation-card">
+              <h3>Evaluated Programs</h3>
+              <div class="progress-wrapper">
+                <span class="progress-number">3</span>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 60%;"></div>
                 </div>
+              </div>
+              <p>You have 3 events/programs to evaluate</p>
             </div>
-        </div>
+          </div>
 
-        <!-- Modal -->
-        <div class="modal-overlay" id="passwordModal">
-          <div class="modal">
-            <span class="close-btn" id="closeModal">&times;</span>
-            <h2>Manage Account Password</h2>
-            <p class="info-text">
-              <i class="fas fa-circle-info info-icon"></i>
-              Ensure your account’s security by following the required password format when changing your KK password
-            </p>
-
-            <label class="required">Current Password </label>
-            <input type="password" id="currentPassword">
-
-            <label class="required">New Password </label>
-            <input type="password" id="newPassword">
-
-            <label class="required">Confirm Password </label>
-            <input type="password" id="confirmPassword">
-
-            <div class="show-pass">
-              <input type="checkbox" id="showPass"> <label for="showPass">Show Password</label>
+          <!-- Email + Password -->
+          <div class="credentials-card">
+            <button class="settings-btn"><i class="fas fa-gear"></i></button>
+            <h3>Email Address
+              <i class="fas fa-envelope email-icon"></i>
+            </h3>
+            <div class="field">
+                <label>Email</label>
+                <p>{{ $user ? $user->email : 'No email available' }}</p>
             </div>
+            <div class="field password-field">
+                  <label>Temporary Password</label>
+                  <div class="password-wrapper">
+                      <p id="tempPassword">••••••••</p>
+                      <i class="fas fa-eye toggle-password" onclick="togglePassword()"></i>
+                  </div>
+              </div>
+          </div>
 
-      <p class="req-heading">Required Password Format:</p>
-      <div class="requirements">
-        <p id="req-length" class="invalid"> Must be 8 characters or more</p>
-        <p id="req-upper" class="invalid"> At least one uppercase letter</p>
-        <p id="req-lower" class="invalid"> At least one lowercase letter</p>
-        <p id="req-number" class="invalid"> At least one number</p>
-        <p id="req-symbol" class="invalid"> At least one symbol</p>
-        <p id="req-match" class="invalid"> Passwords must match</p>
-      </div>
+          <!-- Modal -->
+          <div class="modal-overlay" id="passwordModal">
+            <div class="modal">
+              <span class="close-btn" id="closeModal">&times;</span>
+              <h2>Manage Account Password</h2>
+              <p class="info-text">
+                <i class="fas fa-circle-info info-icon"></i>
+                Ensure your account's security by following the required password format when changing your password
+              </p>
 
-      <button class="save-btn">Save Changes</button>
-    </div>
-</div>
-    </div>
+              <label class="required">Current Password </label>
+              <input type="password" id="currentPassword">
+
+              <label class="required">New Password </label>
+              <input type="password" id="newPassword">
+
+              <label class="required">Confirm Password </label>
+              <input type="password" id="confirmPassword">
+
+              <div class="show-pass">
+                <input type="checkbox" id="showPass"> <label for="showPass">Show Password</label>
+              </div>
+
+              <p class="req-heading">Required Password Format:</p>
+              <div class="requirements">
+                <p id="req-length" class="invalid"> Must be 8 characters or more</p>
+                <p id="req-upper" class="invalid"> At least one uppercase letter</p>
+                <p id="req-lower" class="invalid"> At least one lowercase letter</p>
+                <p id="req-number" class="invalid"> At least one number</p>
+                <p id="req-symbol" class="invalid"> At least one symbol</p>
+                <p id="req-match" class="invalid"> Passwords must match</p>
+              </div>
+
+              <button class="save-btn">Save Changes</button>
+            </div>
+          </div>
+
           <!-- Success Modal -->
-      <div class="success-overlay" id="successModal">
-        <div class="modal success-modal">
-          <h2>Your password has been changed successfully</h2>
-          <p class="subtitle">Please don't forget your password</p>
-          <button class="ok-btn" id="okBtn">OK</button>
+          <div class="success-overlay" id="successModal">
+            <div class="modal success-modal">
+              <h2>Your password has been changed successfully</h2>
+              <p class="subtitle">Please don't forget your password</p>
+              <button class="ok-btn" id="okBtn">OK</button>
+            </div>
+          </div>
         </div>
-      </div>
 
-
-
-    
-
-    <!-- Right Column -->
-    <div class="right-column">
-      <div class="kk-profile card">
-        <h3>KK Profile</h3>
-        <p class="subtitle">
-          The KK profiling is an organized summary of the demographic information of the Katipunan ng Kabataan members.
-          This provides a clear basis for developing programs and policies that respond to the needs of the youth sector.
-        </p>
-        <hr>
-        <div class="profile-details">
-          <button class="edit-btn"><i class="fas fa-pen-to-square"></i></button>
-          <div class="details-scroll">
-          <h4>I. Profile</h4>
-          <h3>Name of Respondent</h3>
-            <p><strong>Last Name:</strong> Novora</p>
-            <p><strong>First Name:</strong> Marijoy</p>
-            <p><strong>Middle Name:</strong> Satonia</p>
-            <p><strong>Age:</strong> 21</p>
-            <p><strong>Address:</strong> Purok 3, EM’s Barrio East Legazpi City</p>
-            <p><strong>Date of Birth:</strong> November 9, 2003</p>
-            <p><strong>Sex:</strong> Female</p>
-            <p><strong>Contact Number:</strong> 0920384****</p>
-            <p><strong>Personal Email:</strong> Marijoyr42@gmail.com</p>
-          <h4>II. Demographics</h4>
-          <h3>Please provide your demographic details as accurately as possible</h3>
-            <p><strong>Civil Status:</strong> Single</p>
-            <p><strong>Educational Background:</strong> College Level</p>
-            <p><strong>Age Group:</strong> Young Adult 15-30 years old</p>
-            <p><strong>Work Status:</strong>Employed</p>
-            <p><strong>Youth Classification:</strong> In school youth</p>
-            <p><strong>Registered Voter:</strong>Yes</p>
+        <!-- Right Column -->
+        <div class="right-column">
+          <div class="kk-profile card">
+            <h3>KK Profile</h3>
+            <p class="subtitle">
+              The KK profiling is an organized summary of the demographic information of the Katipunan ng Kabataan members.
+              This provides a clear basis for developing programs and policies that respond to the needs of the youth sector.
+            </p>
+            <hr>
+            <div class="profile-details">
+              <button class="edit-btn"><i class="fas fa-pen-to-square"></i></button>
+              <div class="details-scroll">
+                <h4>I. Profile</h4>
+                <h3>Name of Respondent</h3>
+                <p><strong>Last Name:</strong> {{ $user ? $user->last_name : 'N/A' }}</p>
+                <p><strong>First Name:</strong> {{ $user ? $user->given_name : 'N/A' }}</p>
+                <p><strong>Middle Name:</strong> {{ $user && $user->middle_name ? $user->middle_name : 'N/A' }}</p>
+                <p><strong>Age:</strong> {{ $age }}</p>
+                <p><strong>Address:</strong> 
+                  @if($user && $user->purok_zone)
+                    {{ $user->purok_zone }}, 
+                    @if($user->barangay){{ $user->barangay->name }}, @endif
+                    @if($user->city){{ $user->city->name }}, @endif
+                    @if($user->province){{ $user->province->name }}, @endif
+                    @if($user->region){{ $user->region->name }} @endif
+                    {{ $user->zip_code }}
+                  @else
+                    Address not available
+                  @endif
+                </p>
+                <p><strong>Date of Birth:</strong> {{ $user && $user->date_of_birth ? \Carbon\Carbon::parse($user->date_of_birth)->format('F j, Y') : 'N/A' }}</p>
+                <p><strong>Sex:</strong> {{ $user ? ucfirst($user->sex) : 'N/A' }}</p>
+                <p><strong>Contact Number:</strong> {{ $user ? $user->contact_no : 'N/A' }}</p>
+                <p><strong>Email:</strong> {{ $user ? $user->email : 'N/A' }}</p>
+                
+                <h4>II. Demographics</h4>
+                <h3>Please provide your demographic details as accurately as possible</h3>
+                <p><strong>Civil Status:</strong> {{ $user ? $user->civil_status : 'N/A' }}</p>
+                <p><strong>Educational Background:</strong> {{ $user ? $user->education : 'N/A' }}</p>
+                <p><strong>Work Status:</strong> {{ $user ? $user->work_status : 'N/A' }}</p>
+                <p><strong>Youth Classification:</strong> {{ $user ? $user->youth_classification : 'N/A' }}</p>
+                <p><strong>Registered Voter:</strong> {{ $user ? $user->sk_voter : 'N/A' }}</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
-
-  </div>
-</div>
-
-
   </div> <!-- END Main -->
 
-  <script src="{{ asset('js/profilepage.js') }}"></script>
-</body>
-</html>
+  <script>
+    // Password toggle function
+    function togglePassword() {
+        const tempPassword = document.getElementById('tempPassword');
+        const icon = document.querySelector('.toggle-password');
+        
+        if (tempPassword.textContent === '••••••••') {
+            tempPassword.textContent = '{{ $user ? "Hidden for security" : "No user" }}';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            tempPassword.textContent = '••••••••';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
 
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-  // === Lucide icons ===
-  lucide.createIcons();
-
-  // === Sidebar & Profile/Events Dropdowns ===
+    document.addEventListener("DOMContentLoaded", () => {
+       // === Sidebar & Profile/Events Dropdowns ===
   const menuToggle = document.querySelector('.menu-toggle');
   const sidebar = document.querySelector('.sidebar');
 
@@ -548,7 +585,37 @@ setInterval(updateTime, 60000);
   okBtn?.addEventListener("click", () => successModal.classList.remove("show"));
   successModal?.addEventListener("click", e => { if(e.target === successModal) successModal.classList.remove("show"); });
 
-});
-</script>
 
+        // Initialize the password as hidden by default
+        document.getElementById('tempPassword').textContent = '••••••••';
+        
+        // Update time function
+        function updateTime() {
+            const now = new Date();
+            const shortWeekdays = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
+            const shortMonths = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
 
+            const weekday = shortWeekdays[now.getDay()];
+            const month = shortMonths[now.getMonth()];
+            const day = now.getDate();
+
+            let hours = now.getHours();
+            const minutes = now.getMinutes().toString().padStart(2, "0");
+            const ampm = hours >= 12 ? "PM" : "AM";
+            hours = hours % 12 || 12;
+
+            document.getElementById('currentTime').innerHTML = `${weekday}, ${month} ${day} ${hours}:${minutes} <span>${ampm}</span>`;
+        }
+
+        updateTime();
+        setInterval(updateTime, 60000);
+
+        // Lucide icons
+        lucide.createIcons();
+
+        // Your existing JavaScript functionality here...
+        // ... (sidebar, calendar, modals, etc.)
+    });
+  </script>
+</body>
+</html>
