@@ -33,6 +33,8 @@ class User extends Authenticatable
         'sk_voter',
         'account_status',
         'password',
+        'account_number',
+
     ];
 
     protected $hidden = [

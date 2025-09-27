@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LocationController;
+use App\Http\Controllers\Auth\LoginController;
 
 Route::get('/', function () {
     return view('landingpage');
@@ -124,3 +125,15 @@ Route::get('/get-provinces/{region_id}', [LocationController::class, 'getprovinc
 Route::get('/get-cities/{province_id}', [LocationController::class, 'getCities']);
 Route::get('/get-barangays/{city_id}', [LocationController::class, 'getBarangays']);
 
+Route::get('/kk/create-account/{id}', [KkMemberController::class, 'createAccount'])->name('kk.createAccount');
+
+Route::get('/registration-success', function () {
+    return view('registration-success');
+})->name('registration.success');
+
+
+
+
+Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
+Route::post('/logout', [LoginController::class, 'logout'])->name('logout');

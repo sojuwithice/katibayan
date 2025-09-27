@@ -1,3 +1,12 @@
+@php
+use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
+
+$user = Auth::user();
+$age = $user->date_of_birth ? Carbon::parse($user->date_of_birth)->age : 'N/A';
+$roleBadge = strtoupper($user->role) . '-Member';
+@endphp
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,7 +18,10 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
+
+
 <body>
+
   
   <!-- Sidebar -->
   <aside class="sidebar">
@@ -117,10 +129,10 @@
             <div class="profile-header">
               <img src="https://i.pravatar.cc/80" alt="User" class="profile-avatar">
               <div class="profile-info">
-                <h4>Marijoy S. Novora</h4>
+                <h4>{{ $user->given_name }} {{ $user->middle_name }} {{ $user->last_name }} {{ $user->suffix }}</h4>
                 <div class="profile-badge">
-                  <span class="badge">KK- Member</span>
-                  <span class="badge">19 yrs old</span>
+                  <span class="badge">{{ $roleBadge }}</span>
+                  <span class="badge">{{ $age }} yrs old</span>
                 </div>
               </div>
             </div>
@@ -154,7 +166,7 @@
 
                 <!-- Slide 1: Welcome -->
                 <div class="slide">
-                  <h2>Welcome, Marijoy!</h2>
+                  <h2>Welcome, {{ $user->given_name }}!</h2>
                   <h3>Have a nice day!</h3><br>
                   <p>
                     <span>KatiBayan</span> provides a platform for the youth to stay updated on SK events 

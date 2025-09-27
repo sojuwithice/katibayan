@@ -10,6 +10,7 @@
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
   <!-- CSRF Token -->
   <meta name="csrf-token" content="{{ csrf_token() }}">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 
@@ -291,37 +292,57 @@
       <p>Confirmation of your account details.</p>
 
       <div class="form-grid">
-         <div class="input-with-btn">
-          <input 
-            type="text" 
-            id="contactInput" 
-            placeholder="Please enter your recovery email or phone" 
-            readonly>
-          <button type="button" id="verifyBtn" class="verify-btn">Verify</button>
-        </div>
+  <div class="input-with-btn">
+    <input 
+      type="text" 
+      id="contactInput" 
+      placeholder="Please enter your recovery email or phone" 
+      readonly>
+    <button type="button" id="openMethodBtn" class="verify-btn">Verify</button>
+  </div>
+</div>
 
-        <!-- MODAL -->
-        <div class="modal-overlay" id="methodModal" style="display:none;">
-          <div class="method-modal">
-            <div class="method-header">
-              <h2>Choose a Recovery Method</h2>
-            </div>
-            <div class="method-body">
-              <div class="method-option" id="mobileOption">
-                <img src="https://img.icons8.com/ios-filled/50/3C87C4/smartphone.png" alt="Smartphone">
-                <span>Mobile Number</span>
-              </div>
-              <div class="method-option" id="googleOption">
-                <img src="https://img.icons8.com/color/48/google-logo.png" alt="Google">
-                <span>Google Account</span>
-              </div>
-            </div>
-            <div class="method-footer">
-              <button id="closeModal">Close</button>
-            </div>
-          </div>
-        </div>
+<!-- MODAL: Choose Method -->
+<div class="modal-overlay" id="methodModal" style="display:none;">
+  <div class="method-modal">
+    <div class="method-header">
+      <h2>Choose a Recovery Method</h2>
+    </div>
+    <div class="method-body">
+      <div class="method-option" id="mobileOption">
+        <img src="https://img.icons8.com/ios-filled/50/3C87C4/smartphone.png" alt="Smartphone">
+        <span>Mobile Number</span>
       </div>
+      <div class="method-option" id="googleOption">
+        <img src="https://img.icons8.com/color/48/google-logo.png" alt="Google">
+        <span>Google Account</span>
+      </div>
+    </div>
+    <div class="method-footer">
+      <button id="closeModal">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ENTER CODE MODAL -->
+<div class="modal-overlay" id="codeModal" style="display:none;">
+  <div class="code-modal">
+    <h2>Enter the code</h2>
+    <p id="codeMessage"></p>
+    <div class="code-inputs">
+      <input type="text" maxlength="1" class="code-box" />
+      <input type="text" maxlength="1" class="code-box" />
+      <input type="text" maxlength="1" class="code-box" />
+      <input type="text" maxlength="1" class="code-box" />
+      <input type="text" maxlength="1" class="code-box" />
+      <input type="text" maxlength="1" class="code-box" />
+    </div>
+    <p class="resend">Didn’t get the code? Tap <a href="#" id="resendLink">Resend</a></p>
+    <a href="#" id="chooseMethod">choose another method</a>
+    <button id="codeVerifyBtn">Verify</button>
+  </div>
+</div>
+
 
       <div class="checkbox-group">
         <label>
@@ -877,6 +898,156 @@ function fillStep3() {
   document.getElementById("review_files").textContent =
     filesText || "No files uploaded";
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+  const methodModal = document.getElementById("methodModal");
+  const codeModal = document.getElementById("codeModal");
+  const contactInput = document.getElementById("contactInput");
+  const openMethodBtn = document.getElementById("openMethodBtn");
+  const closeModal = document.getElementById("closeModal");
+  const mobileOption = document.getElementById("mobileOption");
+  const googleOption = document.getElementById("googleOption");
+  const codeMessage = document.getElementById("codeMessage");
+  const chooseMethod = document.getElementById("chooseMethod");
+  const codeVerifyBtn = document.getElementById("codeVerifyBtn");
+  const resendLink = document.getElementById("resendLink");
+  const codeBoxes = document.querySelectorAll(".code-box");
+
+  let selectedMethod = null;
+  let currentMobile = "";
+
+  // === Move focus between OTP boxes ===
+  codeBoxes.forEach((box, index) => {
+    box.addEventListener("input", (e) => {
+      if (e.target.value.length === 1 && index < codeBoxes.length - 1) {
+        codeBoxes[index + 1].focus();
+      }
+    });
+
+    box.addEventListener("keydown", (e) => {
+      if (e.key === "Backspace" && !e.target.value && index > 0) {
+        codeBoxes[index - 1].focus();
+      }
+    });
+  });
+
+  // === Verify Button (open method or send OTP) ===
+  openMethodBtn.addEventListener("click", () => {
+    if (!selectedMethod) {
+      methodModal.style.display = "flex";
+    } else if (selectedMethod === "mobile") {
+      if (contactInput.value.trim() === "") {
+        alert("Please enter your mobile number first.");
+        return;
+      }
+      currentMobile = contactInput.value.trim();
+
+      // Call backend to send OTP
+      sendOtp(currentMobile).then((res) => {
+        if (res.message) {
+          codeMessage.innerHTML = `We sent a code to your mobile <b>${currentMobile}</b>`;
+          codeBoxes.forEach((b) => (b.value = "")); // clear old inputs
+          codeBoxes[0].focus();
+          codeModal.style.display = "flex";
+        }
+      }).catch(() => alert("Failed to send OTP."));
+    }
+  });
+
+  // === Close Method Modal ===
+  closeModal.addEventListener("click", () => {
+    methodModal.style.display = "none";
+  });
+
+  // === Mobile Option ===
+  mobileOption.addEventListener("click", () => {
+    methodModal.style.display = "none";
+    contactInput.removeAttribute("readonly");
+    contactInput.type = "tel";
+    contactInput.placeholder = "+63 9XX XXX XXXX";
+    contactInput.value = "";
+    contactInput.focus();
+    selectedMethod = "mobile";
+  });
+
+  // === Google Option (dummy for now) ===
+  googleOption.addEventListener("click", () => {
+    methodModal.style.display = "none";
+    contactInput.setAttribute("readonly", true);
+
+    const accounts = ["m****n673@gmail.com", "demo.account@gmail.com"];
+    let account = prompt("Choose Google Account:\n" + accounts.join("\n"));
+
+    if (account && accounts.includes(account)) {
+      contactInput.value = account;
+      selectedMethod = "google";
+
+      codeMessage.innerHTML = `We sent a code to your email <b>${account}</b>`;
+      codeBoxes.forEach((b) => (b.value = ""));
+      codeBoxes[0].focus();
+      codeModal.style.display = "flex";
+    } else {
+      alert("Please select a valid account.");
+    }
+  });
+
+  // === Choose Another Method ===
+  chooseMethod.addEventListener("click", (e) => {
+    e.preventDefault();
+    codeModal.style.display = "none";
+    methodModal.style.display = "flex";
+    selectedMethod = null;
+    contactInput.value = "";
+    contactInput.setAttribute("readonly", true);
+    contactInput.type = "text";
+    contactInput.placeholder = "Please enter your recovery email or phone";
+  });
+
+  // === Resend OTP ===
+  resendLink.addEventListener("click", (e) => {
+    e.preventDefault();
+    if (selectedMethod === "mobile" && currentMobile) {
+      sendOtp(currentMobile).then((res) => {
+        if (res.message) {
+          alert("OTP resent!");
+          codeBoxes.forEach((b) => (b.value = ""));
+          codeBoxes[0].focus();
+        }
+      });
+    }
+  });
+
+  // === Code Verify Button ===
+  codeVerifyBtn.addEventListener("click", () => {
+  if (selectedMethod === "mobile") {
+    const otp = Array.from(codeBoxes).map((b) => b.value).join("");
+    if (otp.length < 6) {
+      alert("Enter the 6-digit code.");
+      return;
+    }
+    verifyOtp(currentMobile, otp)
+      .then((res) => {
+        if (res.status === "approved") {
+          alert("OTP verified!");
+          codeModal.style.display = "none";
+        } else {
+          alert("Invalid OTP, try again.");
+        }
+      })
+      .catch(() => {
+        alert("OTP verification failed.");
+      });
+  }
+});
+
+
+
+});
+
+  
+
+
+
 </script>
 </body>
 </html>

@@ -138,6 +138,116 @@ body {
   scrollbar-color: #3C87C4 #ffffff;
 }
 
+/* === Overlay === */
+.code-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2100;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.code-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* === Modal Box === */
+.code-modal {
+  background: #fff;
+  width: 90%;
+  max-width: 420px;
+  border-radius: 14px;
+  padding: 26px 24px;
+  text-align: center;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+  transform: translateY(-40px);
+  transition: transform 0.3s ease;
+}
+
+.code-overlay.active .code-modal {
+  transform: translateY(0);
+}
+
+/* === Title & Description === */
+.code-modal h2 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: #01214A;
+}
+
+.code-modal p {
+  font-size: 0.95rem;
+  color: #444;
+  margin-bottom: 20px;
+  line-height: 1.4;
+}
+
+/* === Code Input Boxes === */
+.code-inputs {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.code-box {
+  width: 42px;
+  height: 50px;
+  text-align: center;
+  font-size: 1.2rem;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  outline: none;
+  transition: border 0.25s ease, box-shadow 0.25s ease;
+}
+
+.code-box:focus {
+  border-color: #3C87C4;
+  box-shadow: 0 0 0 2px rgba(60,135,196,0.3);
+}
+
+/* === Resend & Choose Method === */
+.resend {
+  font-size: 0.9rem;
+  color: #555;
+  margin-bottom: 8px;
+}
+
+.resend a {
+  color: #3C87C4;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.resend a:hover {
+  text-decoration: underline;
+}
+
+#chooseMethod {
+  display: block;
+  font-size: 0.9rem;
+  margin-bottom: 18px;
+  color: #3C87C4;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+#chooseMethod:hover {
+  text-decoration: underline;
+}
+
+
+
 
 
 
@@ -1673,4 +1783,5 @@ input.error, select.error, .select-wrapper.error input {
 
   .checkbox-group label {
     font-size: 0.8rem;
+}
 }

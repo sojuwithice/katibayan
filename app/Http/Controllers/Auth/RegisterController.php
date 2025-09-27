@@ -11,6 +11,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
+use App\Mail\AccountCredentialsMail;
+use Illuminate\Support\Facades\Mail;
+use App\Models\City;
+use App\Models\Barangay;
+
+
 class RegisterController extends Controller
 {
     public function showRegistrationForm()
@@ -85,35 +91,57 @@ class RegisterController extends Controller
     }
 
     protected function create(array $data)
-    {
-        return User::create([
-            'role' => $data['role'],
-            'last_name' => $data['last_name'],
-            'given_name' => $data['given_name'],
-            'middle_name' => $data['middle_name'] ?? null,
-            'suffix' => $data['suffix'] ?? null,
+{
+    // 1️⃣ Generate account number: ROLE + BIRTHDATE (YYYYMMDD)
+    $prefix = strtoupper($data['role']); // SK or KK
+    $birthdate = date('Ymd', strtotime($data['date_of_birth']));
+    $accountNumber = $prefix . $birthdate;
 
-            // ✅ Save new location fields
-            'region_id' => $data['region_id'],
-            'province_id' => $data['province_id'],
-            'city_id' => $data['city_id'],
-            'barangay_id' => $data['barangay_id'],
-            'purok_zone' => $data['purok_zone'],
-            'zip_code' => $data['zip_code'],
+    // 2️⃣ Generate password: ROLE + 4 random digits
+    $plainPassword = $prefix . rand(1000, 9999);
 
-            'date_of_birth' => $data['date_of_birth'],
-            'sex' => $data['sex'],
-            'email' => $data['email'],
-            'contact_no' => $data['contact_no'],
-            'civil_status' => $data['civil_status'],
-            'education' => $data['education'],
-            'work_status' => $data['work_status'],
-            'youth_classification' => $data['youth_classification'],
-            'sk_voter' => $data['sk_voter'],
-            'account_status' => 'pending',
-            'password' => Hash::make('defaultPassword123'), // default password
-        ]);
-    }
+    // 3️⃣ Create user in DB
+    $user = User::create([
+        'role' => $data['role'],
+        'account_number' => $accountNumber,
+        'last_name' => $data['last_name'],
+        'given_name' => $data['given_name'],
+        'middle_name' => $data['middle_name'] ?? null,
+        'suffix' => $data['suffix'] ?? null,
+
+        // Location
+        'region_id' => $data['region_id'],
+        'province_id' => $data['province_id'],
+        'city_id' => $data['city_id'],
+        'barangay_id' => $data['barangay_id'],
+        'purok_zone' => $data['purok_zone'],
+        'zip_code' => $data['zip_code'],
+
+        // Personal
+        'date_of_birth' => $data['date_of_birth'],
+        'sex' => $data['sex'],
+        'email' => $data['email'],
+        'contact_no' => $data['contact_no'],
+        'civil_status' => $data['civil_status'],
+        'education' => $data['education'],
+        'work_status' => $data['work_status'],
+        'youth_classification' => $data['youth_classification'],
+        'sk_voter' => $data['sk_voter'],
+
+        // Account status & password
+        'account_status' => $data['role'] === 'kk' ? 'approved' : 'pending',
+        'password' => Hash::make($plainPassword),
+    ]);
+
+    // 4️⃣ Send email with credentials **after saving user**
+    // Send email sa email na nilagay ng user
+    Mail::to($user->email)->send(new AccountCredentialsMail($user, $accountNumber, $plainPassword));
+
+
+    return $user;
+}
+
+
 
     protected function createSkOfficial(User $user, Request $request)
     {

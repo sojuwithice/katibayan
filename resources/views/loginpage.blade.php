@@ -10,7 +10,6 @@
 </head>
 <body>
 
-
   <div class="container">
     <!-- Left side -->
     <div class="left-panel">
@@ -29,27 +28,49 @@
         <h2 class="login-title">LOGIN</h2>
         <p class="login-subtitle">Please login to your account</p>
 
-        <form action="login.php" method="POST">
-          <div class="form-group">
-            <input type="text" id="kk-number" name="kk_number" placeholder="Enter your KK Number" required>
-          </div>
+        <!-- Display errors -->
+        @if ($errors->any())
+        <div class="error-messages">
+            @foreach ($errors->all() as $error)
+                <p style="color:red; font-size:0.9rem;">{{ $error }}</p>
+            @endforeach
+        </div>
+        @endif
 
-          <div class="form-group password-group">
-            <input type="password" id="password" name="password" placeholder="Password" required>
-            <span class="toggle-password" onclick="togglePassword()">
-              <i id="eyeIcon" class="fa fa-eye-slash"></i>
-            </span>
-          </div>
+        <form action="{{ route('login.submit') }}" method="POST">
+    @csrf
 
-          <div class="remember-forgot">
-            <label>
-              <input type="checkbox" name="remember"> Remember me in 7 days
-            </label>
-            <a href="#" class="forgot-password">Forgot Password?</a>
-          </div>
+    <!-- Account Number -->
+    <div class="form-group">
+        <input type="text" id="account_number" name="account_number" placeholder="Enter your KK Number" value="{{ old('account_number') }}" required>
+        @error('account_number')
+            <span class="error-message">{{ $message }}</span>
+        @enderror
+    </div>
 
-          <button type="submit" class="login-button">Login</button>
-        </form>
+    <!-- Password -->
+    <div class="form-group password-group">
+        <input type="password" id="password" name="password" placeholder="Password" required>
+        <span class="toggle-password" onclick="togglePassword()">
+            <i id="eyeIcon" class="fa fa-eye-slash"></i>
+        </span>
+        @error('password')
+            <span class="error-message">{{ $message }}</span>
+        @enderror
+    </div>
+
+    <!-- Remember me / Forgot password -->
+    <div class="remember-forgot">
+        <label>
+            <input type="checkbox" name="remember" {{ old('remember') ? 'checked' : '' }}> Remember me in 7 days
+        </label>
+        <a href="#" class="forgot-password">Forgot Password?</a>
+    </div>
+
+    <!-- Submit Button -->
+    <button type="submit" class="login-button">Login</button>
+</form>
+
 
         <div class="register-section">
           <p>Don’t have an account? Please register first. 
@@ -59,58 +80,55 @@
 
         <button type="button" class="back-button" id="backButton">
           <a href="{{ url('/') }}" class="back-button">
-  <i data-lucide="arrow-left"></i>
-  Back
-</a>
+            <i data-lucide="arrow-left"></i> Back
+          </a>
+        </button>
       </div>
     </div>
   </div>
 
   <!-- JS -->
   <script src="https://unpkg.com/lucide@latest"></script>
-
   <script>
-  // Show/Hide password
-  function togglePassword() {
-    const passwordField = document.getElementById("password");
-    const eyeIcon = document.getElementById("eyeIcon");
+    // Show/Hide password
+    function togglePassword() {
+      const passwordField = document.getElementById("password");
+      const eyeIcon = document.getElementById("eyeIcon");
 
-    if (passwordField.type === "password") {
-      passwordField.type = "text";
-      eyeIcon.classList.remove("fa-eye-slash");
-      eyeIcon.classList.add("fa-eye");
-    } else {
-      passwordField.type = "password";
-      eyeIcon.classList.remove("fa-eye");
-      eyeIcon.classList.add("fa-eye-slash");
+      if (passwordField.type === "password") {
+        passwordField.type = "text";
+        eyeIcon.classList.remove("fa-eye-slash");
+        eyeIcon.classList.add("fa-eye");
+      } else {
+        passwordField.type = "password";
+        eyeIcon.classList.remove("fa-eye");
+        eyeIcon.classList.add("fa-eye-slash");
+      }
     }
-  }
 
-  // Init Lucide icons
-  lucide.createIcons();
+    // Init Lucide icons
+    lucide.createIcons();
 
-  // Theme Toggle with Lucide
-  const themeToggle = document.getElementById("themeToggle");
-  const htmlTag = document.documentElement;
+    // Theme Toggle
+    const themeToggle = document.getElementById("themeToggle");
+    const htmlTag = document.documentElement;
+    const savedTheme = localStorage.getItem("theme") || "light";
+    htmlTag.setAttribute("data-theme", savedTheme);
+    updateIcon(savedTheme);
 
-  // Load saved theme
-  const savedTheme = localStorage.getItem("theme") || "light";
-  htmlTag.setAttribute("data-theme", savedTheme);
-  updateIcon(savedTheme);
+    themeToggle.addEventListener("click", () => {
+      const currentTheme = htmlTag.getAttribute("data-theme");
+      const newTheme = currentTheme === "light" ? "dark" : "light";
+      htmlTag.setAttribute("data-theme", newTheme);
+      localStorage.setItem("theme", newTheme);
+      updateIcon(newTheme);
+    });
 
-  themeToggle.addEventListener("click", () => {
-    const currentTheme = htmlTag.getAttribute("data-theme");
-    const newTheme = currentTheme === "light" ? "dark" : "light";
-    htmlTag.setAttribute("data-theme", newTheme);
-    localStorage.setItem("theme", newTheme);
-    updateIcon(newTheme);
-  });
-
-  function updateIcon(theme) {
-    const icon = theme === "dark" ? "sun" : "moon";
-    themeToggle.innerHTML = `<i data-lucide="${icon}"></i>`;
-    lucide.createIcons(); 
-  }
+    function updateIcon(theme) {
+      const icon = theme === "dark" ? "sun" : "moon";
+      themeToggle.innerHTML = `<i data-lucide="${icon}"></i>`;
+      lucide.createIcons(); 
+    }
   </script>
 
 </body>

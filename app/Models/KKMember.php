@@ -9,15 +9,14 @@ class KKMember extends Model
 {
     use HasFactory;
 
+    protected $table = 'kk_members'; 
+
     protected $fillable = [
         'user_id',
         'position',
         'appointment_date',
-        'barangay_indigency_path', // Changed from appointment_letter_path
-    
+        'barangay_indigency_path',
     ];
-
-    
 
     public function user()
     {
