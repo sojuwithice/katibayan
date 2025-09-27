@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KatiBayan - Dashboard</title>
+  <title>KatiBayan - SK Dashboard</title>
   <link rel="stylesheet" href="{{ asset('css/sk-dashboard.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -125,11 +125,22 @@
             <div class="profile-header">
               <img src="https://i.pravatar.cc/80" alt="User" class="profile-avatar">
               <div class="profile-info">
-                <h4>Marijoy S. Novora</h4>
-                <div class="profile-badge">
-                  <span class="badge">KK- Member</span>
-                  <span class="badge">19 yrs old</span>
-                </div>
+                <h4>
+                {{ Auth::user()->given_name ?? '' }}
+                {{ Auth::user()->middle_name ?? '' }}
+                {{ Auth::user()->last_name ?? '' }}
+                {{ Auth::user()->suffix ?? '' }}
+              </h4>
+
+              <div class="profile-badge">
+                <span class="badge">
+                  {{ Auth::user()->role === 'sk' ? 'SK Official' : (Auth::user()->role === 'kk' ? 'KK Member' : ucfirst(Auth::user()->role)) }}
+                </span>
+                <span class="badge">
+                  {{ Auth::user()->date_of_birth ? \Carbon\Carbon::parse(Auth::user()->date_of_birth)->age : 'N/A' }} yrs old
+                </span>
+              </div>
+
               </div>
             </div>
             <hr>
@@ -146,6 +157,18 @@
                 </a>
               </li>
               <li><i class="fas fa-star"></i> Send Feedback to Katibayan</li>
+              <li class="logout-item">
+                <a href="loginpage" onclick="confirmLogout(event)">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </li>
+        </ul>
+        
+        <!-- Hidden Logout Form -->
+        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+            @csrf
+        </form>
+            </li>
             </ul>
           </div>
         </div>
@@ -154,8 +177,9 @@
 
     <!-- main content -->
     <div class="welcome-card">
-  <h2>Welcome, Hon. Aika Barin!</h2>
-</div>
+    <h2>Welcome, SK Chair {{ Auth::user()->given_name ?? 'User' }}!</h2>
+    </div>
+
 
 <div class="dashboard-container">
   <!-- LEFT PANEL -->
