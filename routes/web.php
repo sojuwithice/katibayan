@@ -7,6 +7,8 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\AdminController;
+
 
 Route::get('/', function () {
     return view('landingpage');
@@ -131,6 +133,10 @@ Route::get('/registration-success', function () {
     return view('registration-success');
 })->name('registration.success');
 
+// Admin dashboard and actions
+Route::get('/admin-dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+Route::patch('/admin/users/{id}/approve', [AdminController::class, 'approve'])->name('admin.users.approve');
+Route::patch('/admin/users/{id}/reject', [AdminController::class, 'reject'])->name('admin.users.reject');
 
 
 
@@ -143,4 +149,4 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
     Route::get('/profile/check-session', [ProfileController::class, 'checkSession'])->name('profile.checkSession');
     Route::get('/profile/user-data', [ProfileController::class, 'getUserData'])->name('profile.userData');
-});
+    });

@@ -133,13 +133,16 @@ class RegisterController extends Controller
         'password' => Hash::make($plainPassword),
     ]);
 
-    // 4️⃣ Send email with credentials **after saving user**
-    // Send email sa email na nilagay ng user
-    Mail::to($user->email)->send(new AccountCredentialsMail($user, $accountNumber, $plainPassword));
-
+    // 4️⃣ Send email only for KK (auto-approved)
+    if ($data['role'] === 'kk') {
+        Mail::to($user->email)->send(
+            new AccountCredentialsMail($user, $accountNumber, $plainPassword)
+        );
+    }
 
     return $user;
 }
+
 
 
 
