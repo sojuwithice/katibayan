@@ -131,6 +131,8 @@ Route::get('/sk-eval-review', function () {
 
 
 
+
+
 //CONTROLLER ROUTES
 
 // Remove the duplicate route definition and use the controller
@@ -147,10 +149,10 @@ Route::get('/get-barangays/{city_id}', [LocationController::class, 'getBarangays
 
 Route::get('/kk/create-account/{id}', [KkMemberController::class, 'createAccount'])->name('kk.createAccount');
 
-
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+
 
 // Admin dashboard and actions
 Route::get('/admin-dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
@@ -158,3 +160,20 @@ Route::patch('/admin/users/{id}/approve', [AdminController::class, 'approve'])->
 Route::patch('/admin/users/{id}/reject', [AdminController::class, 'reject'])->name('admin.users.reject');
 
 
+Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
+Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+Route::middleware(['auth'])->group(function () {
+
+// Profile routes
+Route::get('/profile', [ProfileController::class, 'index'])->name('profilepage');
+Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
+Route::get('/profile/check-session', [ProfileController::class, 'checkSession'])->name('profile.checkSession');
+Route::get('/profile/user-data', [ProfileController::class, 'getUserData'])->name('profile.userData');
+});
+
+Route::post('/profile/change-password', [ProfileController::class, 'changePassword'])->name('profile.change-password');
+// Avatar routes
+Route::post('/profile/avatar/update', [ProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
+Route::post('/profile/avatar/remove', [ProfileController::class, 'removeAvatar'])->name('profile.avatar.remove');
+Route::get('/profile/data', [ProfileController::class, 'getProfileData'])->name('profile.data');
