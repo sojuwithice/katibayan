@@ -612,13 +612,120 @@ body {
   margin-left: 0; 
 }
 
-
-
 .event-form .note {
   font-size: 0.85rem;
   color: #3C87C4;
   margin-top: -0.5rem;
 }
+
+/* Hide by default */
+.option-field.hidden {
+  display: none;
+}
+
+/* Radio options */
+.registration-options {
+  margin-top: 0;     
+  margin-bottom: 0;  
+  display: flex;
+  gap: 2rem; 
+  font-weight: 100;
+  color: #01214A;
+}
+
+/* Each option (radio + label text) */
+.registration-options label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px; 
+  cursor: pointer;
+  font-size: 14px;
+}
+
+/* Radio button size tweak */
+.registration-options input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #3C87C4; 
+  cursor: pointer;
+}
+
+
+/* Fields style (match sa form design) */
+.option-field {
+  margin-top: .15rem; 
+}
+
+.option-field label {
+  display: block;
+  font-weight: 100;
+  margin-bottom: 0.35rem; 
+  color: #01214A;
+}
+
+.option-field > input {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #ccc;
+  color: #999595;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  margin-bottom: 1rem;
+  transition: border 0.2s ease;
+}
+
+.option-field > input:focus {
+  border-color: #3C87C4;
+  box-shadow: 0 0 0 2px rgba(60, 135, 196, 0.2);
+}
+
+.input-with-icon {
+  display: flex;
+  align-items: center;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 0 0.75rem;
+  background: #fff;
+  margin-bottom: 1rem; 
+}
+
+.input-with-icon input {
+  border: none;          
+  outline: none;
+  margin-bottom: 0;
+  padding: 0.6rem 0;     
+  flex: 1;
+  background: transparent;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.input-with-icon:focus-within {
+  border-color: #3C87C4;
+  box-shadow: 0 0 0 2px rgba(60, 135, 196, 0.2);
+}
+
+/* Icon */
+.input-with-icon i {
+  color: #999595;
+  font-size: 15px;
+  margin-right: 8px;
+}
+
+/* 🔧 Force spacing fix */
+.form-group {
+  margin-bottom: 0 !important;
+}
+.form-group > label {
+  margin-bottom: 0.6rem !important; 
+}
+.form-group + .option-field {
+  margin-top: 0.15rem !important;
+}
+
+
 
 /* Upload Box */
 .upload-box {

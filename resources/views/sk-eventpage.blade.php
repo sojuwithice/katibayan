@@ -50,7 +50,7 @@
       </a>
 
       <div class="evaluation-item nav-item">
-        <a href="#" class="evaluation-link nav-link">
+        <a href="{{ route('sk-evaluation-feedback') }}" class="evaluation-link nav-link">
           <i data-lucide="user-star"></i>
           <span class="label">Evaluation</span>
           <i data-lucide="chevron-down" class="submenu-arrow"></i>
@@ -655,6 +655,25 @@ document.querySelector("#passcodeModal button").addEventListener("click", () => 
 document.querySelector(".qr-close").addEventListener("click", () => {
   document.getElementById("qrModal").style.display = "none";
 });
+
+// === Create Activity dropdown toggle ===
+const createActivityDropdown = document.querySelector(".create-activity-dropdown");
+const createActivityBtn = createActivityDropdown?.querySelector(".create-activity");
+
+if (createActivityDropdown && createActivityBtn) {
+  createActivityBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    createActivityDropdown.classList.toggle("active");
+  });
+
+  // Close kapag nag-click sa labas
+  document.addEventListener("click", (e) => {
+    if (!createActivityDropdown.contains(e.target)) {
+      createActivityDropdown.classList.remove("active");
+    }
+  });
+}
 
 
 

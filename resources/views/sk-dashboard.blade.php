@@ -33,19 +33,19 @@
         <span class="label">Youth Profile</span>
       </a>
 
-      <a href="{{ route('eventpage') }}" class="events-link">
+      <a href="{{ route('sk-eventpage') }}" class="events-link">
         <i data-lucide="calendar"></i>
         <span class="label">Events and Programs</span>
       </a>
 
       <div class="evaluation-item nav-item">
-        <a href="#" class="evaluation-link nav-link">
+        <a href="{{ route('sk-evaluation-feedback') }}" class="evaluation-link nav-link">
           <i data-lucide="user-star"></i>
           <span class="label">Evaluation</span>
           <i data-lucide="chevron-down" class="submenu-arrow"></i>
         </a>
         <div class="submenu">
-          <a href="#">Feedbacks</a>
+          <a href="{{ route('sk-evaluation-feedback') }}">Feedbacks</a>
           <a href="#">Polls</a>
           <a href="#">Suggestion Box</a>
         </div>
@@ -191,6 +191,14 @@
       <canvas id="engagementChart"></canvas>
     </div>
 
+    <!-- Youth Engagement in Activities (row1 col1) -->
+<div class="card activities-card">
+  <div class="card-header">
+    <h3>Youth Engagement in Activities</h3>
+  </div>
+  <canvas id="activitiesChart"></canvas>
+</div>
+
     <!-- Youth Age (row1+row2 col2) -->
 <div class="card youth-age-card">
   
@@ -213,17 +221,27 @@
     </div>
   </div>
 
+  <div class="chart-container">
   <!-- Chart -->
   <canvas id="ageChart"></canvas>
 
   <!-- Custom Legend -->
   <div class="legend">
-    <span><span class="dot child"></span> Child Youth 15-17</span>
-    <span><span class="dot core"></span> Core Youth 18-24</span>
-    <span><span class="dot adult"></span> Adult Youth 25-30</span>
+    <div class="legend-item">
+      <span class="dot child"></span> Child Youth 15-17
+    </div>
+    <div class="legend-item">
+      <span class="dot core"></span> Core Youth 18-24
+    </div>
+    <div class="legend-item">
+      <span class="dot adult"></span> Adult Youth 25-30
+    </div>
   </div>
+</div>
+
 
 </div>
+
 
 
     <!-- Demographics (row2 col1) -->
@@ -663,6 +681,31 @@ evaluationLink?.addEventListener('click', (e) => {
     });
   }
 
+  // === Youth Engagement in Activities Chart ===
+const activitiesCtx = document.getElementById('activitiesChart')?.getContext('2d');
+if (activitiesCtx) {
+  new Chart(activitiesCtx, {
+    type: 'bar',
+    data: {
+      labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug"],
+      datasets: [{
+        label: "Participants",
+        data: [45, 60, 40, 80, 70, 55, 90, 65],
+        backgroundColor: "#3C87C6",
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true }
+      }
+    }
+  });
+}
+
+
   // === Youth Demographics Chart ===
   const demoCtx = document.getElementById('demographicsChart')?.getContext('2d');
   if (demoCtx) {
@@ -740,21 +783,18 @@ evaluationLink?.addEventListener('click', (e) => {
     }
   });
 
-  // === Options dropdown toggle ===
 document.querySelectorAll('.options-btn, .header-options').forEach(btn => {
   btn.addEventListener('click', (e) => {
     e.stopPropagation();
 
-    // kunin yung dropdown kasunod ng button
     const dropdown = btn.nextElementSibling;
     if (!dropdown || !dropdown.classList.contains('options-dropdown')) return;
 
-    // isara muna lahat ng iba
     document.querySelectorAll('.options-dropdown.show').forEach(d => {
       if (d !== dropdown) d.classList.remove('show');
     });
 
-    // toggle ito
+    
     dropdown.classList.toggle('show');
   });
 });

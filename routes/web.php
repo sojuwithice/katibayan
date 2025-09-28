@@ -18,9 +18,7 @@ Route::get('loginpage', function () {
     return view('loginpage');
 })->name('loginpage');
 
-// Remove the duplicate route definition and use the controller
-Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
-Route::post('/register', [RegisterController::class, 'register']);
+
 
 Route::get('/registration/success', function () {
     return view('registration-success'); 
@@ -35,17 +33,10 @@ Route::get('/profilepage', function () {
     return view('profilepage');
 });
 
-Route::get('/profile', [ProfileController::class, 'index'])->name('profilepage');
-
-
-
-Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
-
 
 Route::get('/certificatepage', function () {
     return view('certificatepage');
 })->name('certificatepage');
-
 
 
 // Events page route
@@ -122,6 +113,33 @@ Route::get('/list-of-attendees', function () {
     return view('list-of-attendees'); 
 })->name('attendees.index');
 
+Route::get('/youth-status', function () {
+    return view('youth-statuspage');
+})->name('youth-statuspage');
+
+Route::get('/registration-success', function () {
+    return view('registration-success');
+})->name('registration.success');
+
+Route::get('/sk-evaluation-feedback', function () {
+    return view('sk-evaluation-feedback');
+})->name('sk-evaluation-feedback');
+
+Route::get('/sk-eval-review', function () {
+    return view('sk-eval-review');
+})->name('sk-eval-review');
+
+
+
+//CONTROLLER ROUTES
+
+// Remove the duplicate route definition and use the controller
+Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
+Route::post('/register', [RegisterController::class, 'register']);
+
+Route::get('/profile', [ProfileController::class, 'index'])->name('profilepage');
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
+
 
 Route::get('/get-provinces/{region_id}', [LocationController::class, 'getprovinces']);
 Route::get('/get-cities/{province_id}', [LocationController::class, 'getCities']);
@@ -129,19 +147,10 @@ Route::get('/get-barangays/{city_id}', [LocationController::class, 'getBarangays
 
 Route::get('/kk/create-account/{id}', [KkMemberController::class, 'createAccount'])->name('kk.createAccount');
 
-Route::get('/registration-success', function () {
-    return view('registration-success');
-})->name('registration.success');
-
-
-
 
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
-
-
-
 
 // Admin dashboard and actions
 Route::get('/admin-dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');

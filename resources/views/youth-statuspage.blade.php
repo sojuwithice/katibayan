@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KatiBayan - Dashboard</title>
-  <link rel="stylesheet" href="{{ asset('css/youth-participation.css') }}">
+  <link rel="stylesheet" href="{{ asset('css/youth-statuspage.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -167,154 +167,110 @@
 </div>
 
 
-  <!-- Youth Participation Record Section -->
-<section class="participation-section">
-  <!-- Left Card -->
-  <div class="card participation-card">
-    <div class="committee-filter">
-      <label for="committee">Committee</label>
-      <input type="text" id="committee" placeholder="">
-    </div>
 
-    <table class="participation-table">
+  <div class="youth-status-list">
+
+  <!-- Header Controls -->
+  <div class="list-header">
+    <h2>List of Youths</h2>
+
+    <div class="table-controls">
+      <div class="filter">
+        <i class="fas fa-filter"></i>
+        <span>Filter</span>
+      </div>
+      <div class="status-filter">
+        <span>Status</span>
+        <input type="text" value="Active" readonly>
+      </div>
+    </div>
+  </div>
+
+  <!-- Divider -->
+  <div class="divider"></div>
+
+  <!-- Table -->
+  <div class="youth-table">
+    <table>
       <thead>
         <tr>
-          <th>Date</th>
-          <th>Event Name</th>
-          <th>Action</th>
+          <th>Image</th>
+          <th>Name</th>
+          <th>Number of Events and Program Attended</th>
+          <th>Status</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td><em>September 9, 2025</em></td>
-          <td>Kalinisan sa bagong Pilipinas Program <br>
-            <small>(Kalinga at Inisyatiba para sa malinis na bayan)</small>
-          </td>
-          <td>
-            <a href="{{ route('attendees.index') }}" class="btn-view">View Attendees</a>
-          </td>
+          <td><img src="https://i.pravatar.cc/40?img=1" alt="Youth" class="youth-img"></td>
+          <td>Alvin N. Dchipmunks</td>
+          <td><a href="#">7 Events and Programs Attended</a></td>
+          <td>Active Youth</td>
         </tr>
         <tr>
-          <td><em>September 9, 2025</em></td>
-          <td>Kalinisan sa bagong Pilipinas Program <br>
-            <small>(Kalinga at Inisyatiba para sa malinis na bayan)</small>
-          </td>
-          <td><a href="{{ route('attendees.index') }}" class="btn-view">View Attendees</a></td>
+          <td><img src="https://i.pravatar.cc/40?img=1" alt="Youth" class="youth-img"></td>
+          <td>Ammara L. Jomabel</td>
+          <td><a href="#">5 Events and Programs Attended</a></td>
+          <td>Active Youth</td>
         </tr>
         <tr>
-          <td><em>September 9, 2025</em></td>
-          <td>Kalinisan sa bagong Pilipinas Program <br>
-            <small>(Kalinga at Inisyatiba para sa malinis na bayan)</small>
-          </td>
-          <td><a href="{{ route('attendees.index') }}" class="btn-view">View Attendees</a></td>
+          <td><img src="https://i.pravatar.cc/40?img=1" alt="Youth" class="youth-img"></td>
+          <td>Ammara L. Jomabel</td>
+          <td><a href="#">5 Events and Programs Attended</a></td>
+          <td>Active Youth</td>
         </tr>
         <tr>
-          <td><em>September 9, 2025</em></td>
-          <td>Kalinisan sa bagong Pilipinas Program <br>
-            <small>(Kalinga at Inisyatiba para sa malinis na bayan)</small>
-          </td>
-          <td><a href="{{ route('attendees.index') }}" class="btn-view">View Attendees</a></td>
+          <td><img src="https://i.pravatar.cc/40?img=1" alt="Youth" class="youth-img"></td>
+          <td>Ammara L. Jomabel</td>
+          <td><a href="#">5 Events and Programs Attended</a></td>
+          <td>Active Youth</td>
         </tr>
         <tr>
-          <td><em>September 9, 2025</em></td>
-          <td>Kalinisan sa bagong Pilipinas Program <br>
-            <small>(Kalinga at Inisyatiba para sa malinis na bayan)</small>
-          </td>
-          <td><a href="{{ route('attendees.index') }}" class="btn-view">View Attendees</a></td>
+          <td><img src="https://i.pravatar.cc/40?img=1" alt="Youth" class="youth-img"></td>
+          <td>Ammara L. Jomabel</td>
+          <td><a href="#">5 Events and Programs Attended</a></td>
+          <td>Active Youth</td>
+        </tr>
+        <tr>
+          <td><img src="https://i.pravatar.cc/40?img=1" alt="Youth" class="youth-img"></td>
+          <td>Ammara L. Jomabel</td>
+          <td><a href="#">5 Events and Programs Attended</a></td>
+          <td>Active Youth</td>
+        </tr>
+        <tr>
+          <td><img src="https://i.pravatar.cc/40?img=1" alt="Youth" class="youth-img"></td>
+          <td>Ammara L. Jomabel</td>
+          <td><a href="#">5 Events and Programs Attended</a></td>
+          <td>Active Youth</td>
+        </tr>
+        <tr>
+          <td><img src="https://i.pravatar.cc/40?img=1" alt="Youth" class="youth-img"></td>
+          <td>Ammara L. Jomabel</td>
+          <td><a href="#">5 Events and Programs Attended</a></td>
+          <td>Active Youth</td>
+        </tr>
+        <tr>
+          <td><img src="https://i.pravatar.cc/40?img=1" alt="Youth" class="youth-img"></td>
+          <td>Ammara L. Jomabel</td>
+          <td><a href="#">5 Events and Programs Attended</a></td>
+          <td>Active Youth</td>
+        </tr>
+        <tr>
+          <td><img src="https://i.pravatar.cc/40?img=1" alt="Youth" class="youth-img"></td>
+          <td>Ammara L. Jomabel</td>
+          <td><a href="#">5 Events and Programs Attended</a></td>
+          <td>Active Youth</td>
         </tr>
       </tbody>
     </table>
   </div>
+</div>
 
+
+
+  
  
-  <!-- Right Card -->
-<aside class="card top-youth-card">
-  <!-- Header (may divider lang para sa title) -->
-  <div class="card-header">
-    <h3>Top Active Youth</h3>
-  </div>
-
-  <!-- See All (hiwalay sa header/divider) -->
-  <div class="see-all">
-  <a href="{{ route('youth-statuspage') }}">See All</a>
-  </div>
-
-  <!-- Youth List -->
-  <ul class="youth-list">
-      <li>
-        <img src="https://i.pravatar.cc/40?img=1" alt="">
-        <div>
-          <strong>Alvin N. Dchipmunks</strong><br>
-          <a href="#">7 Events and Programs Attended</a>
-        </div>
-      </li>
-      <li>
-        <img src="https://i.pravatar.cc/40?img=2" alt="">
-        <div>
-          <strong>Ammara L. Jo</strong><br>
-          <a href="#">7 Events and Programs Attended</a>
-        </div>
-      </li>
-      <li>
-        <img src="https://i.pravatar.cc/40?img=3" alt="">
-        <div>
-          <strong>Ammiel N. Lim</strong><br>
-          <a href="#">7 Events and Programs Attended</a>
-        </div>
-      </li>
-      <li>
-        <img src="https://i.pravatar.cc/40?img=4" alt="">
-        <div>
-          <strong>Beverly M. Aios</strong><br>
-          <a href="#">7 Events and Programs Attended</a>
-        </div>
-      </li>
-      <li>
-        <img src="https://i.pravatar.cc/40?img=5" alt="">
-        <div>
-          <strong>Barbara K. Abios</strong><br>
-          <a href="#">7 Events and Programs Attended</a>
-        </div>
-      </li>
-      <li>
-        <img src="https://i.pravatar.cc/40?img=6" alt="">
-        <div>
-          <strong>Christian A. Sy</strong><br>
-          <a href="#">7 Events and Programs Attended</a>
-        </div>
-      </li>
-      <li>
-        <img src="https://i.pravatar.cc/40?img=7" alt="">
-        <div>
-          <strong>Cristian A. Jon</strong><br>
-          <a href="#">6 Events and Programs Attended</a>
-        </div>
-      </li>
-      <li>
-        <img src="https://i.pravatar.cc/40?img=8" alt="">
-        <div>
-          <strong>Czarina A. Sy</strong><br>
-          <a href="#">6 Events and Programs Attended</a>
-        </div>
-      </li>
-      <li>
-        <img src="https://i.pravatar.cc/40?img=9" alt="">
-        <div>
-          <strong>Dane J. Cheese</strong><br>
-          <a href="#">6 Events and Programs Attended</a>
-        </div>
-      </li>
-      <li>
-        <img src="https://i.pravatar.cc/40?img=10" alt="">
-        <div>
-          <strong>Dennise L. Laurel</strong><br>
-          <a href="#">6 Events and Programs Attended</a>
-        </div>
-      </li>
-    </ul>
-  </aside>
-</section>
-
+  
 
 
 

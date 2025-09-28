@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KatiBayan - Dashboard</title>
-  <link rel="stylesheet" href="{{ asset('css/youth-participation.css') }}">
+  <link rel="stylesheet" href="{{ asset('css/sk-eval.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -35,7 +35,7 @@
         <span class="label">Analytics</span>
       </a>
 
-      <a href="{{ route('youth-profilepage') }}" class="active">
+      <a href="{{ route('youth-profilepage') }}">
         <i data-lucide="users"></i>
         <span class="label">Youth Profile</span>
       </a>
@@ -46,13 +46,13 @@
       </a>
 
       <div class="evaluation-item nav-item">
-        <a href="{{ route('sk-evaluation-feedback') }}" class="evaluation-link nav-link">
+        <a href="{{ route('sk-evaluation-feedback') }}" class="evaluation-link nav-link active">
           <i data-lucide="user-star"></i>
           <span class="label">Evaluation</span>
           <i data-lucide="chevron-down" class="submenu-arrow"></i>
         </a>
         <div class="submenu">
-          <a href="#">Feedbacks</a>
+          <a href="{{ route('sk-evaluation-feedback') }}">Feedbacks</a>
           <a href="#">Polls</a>
           <a href="#">Suggestion Box</a>
         </div>
@@ -160,160 +160,100 @@
     </header>
 
     <main class="container">
-  <!-- Header Title -->
-  <div class="welcome-card">
-  <h2>Youth Participation Record</h2>
-  <span class="year-badge">2025</span>
+  <!-- Evaluation Section -->
+  <section class="evaluation-section">
+    <div class="evaluation-header">
+      <h2>Evaluation and Feedback</h2>
+      <p>The evaluation and feedback of the youth in accomplished events and programs will help you improve and generate new ideas for future activities.</p>
+    </div>
+
+
+   <div class="accomplished-events">
+  <h3>Accomplished Events and Program</h3>
+  <p class="subtitle">Choose an accomplished event or program to see the results.</p>
+
+  <div class="accomplishment-list">
+    <!-- Accomplishment Card -->
+    <div class="accomplishment-card">
+      <!-- Date -->
+      <div class="accomplishment-date">
+        <span class="day">September</span>
+        <span class="num">09</span>
+      </div>
+
+      <!-- Details -->
+      <div class="accomplishment-details">
+        <h3>Tree Planting Program</h3>
+        <p><i class="fas fa-map-marker-alt"></i> Barangay Covered Court</p>
+        <p><i class="fas fa-users"></i> Committee on Environment</p>
+
+        <!-- Date & Time -->
+        <div class="accomplishment-datetime">
+          <span class="datetime-label">DATE AND TIME</span>
+          <span class="datetime-value">SEPTEMBER 22, 2025 | 9:00 AM</span>
+        </div>
+      </div>
+
+      <!-- Action -->
+      <div class="accomplishment-action">
+        <a href="{{ route('sk-eval-review') }}" class="view-btn">
+          View Evaluation <i class="fa-solid fa-arrow-up-right"></i>
+        </a>
+      </div>
+    </div>
+
+    <!-- Another Accomplishment Card -->
+    <div class="accomplishment-card">
+      <div class="accomplishment-date">
+        <span class="day">September</span>
+        <span class="num">09</span>
+      </div>
+      <div class="accomplishment-details">
+        <h3>Youth Leadership Seminar</h3>
+        <p><i class="fas fa-map-marker-alt"></i> Municipal Hall</p>
+        <p><i class="fas fa-users"></i> Committee on Education</p>
+        <div class="accomplishment-datetime">
+          <span class="datetime-label">DATE AND TIME</span>
+          <span class="datetime-value">SEPTEMBER 22, 2025 | 9:00 AM</span>
+        </div>
+      </div>
+      <!-- Action -->
+      <div class="accomplishment-action">
+        <a href="{{ route('sk-eval-review') }}" class="view-btn">
+          View Evaluation <i class="fa-solid fa-arrow-up-right"></i>
+        </a>
+      </div>
+    </div>
+
+    <div class="accomplishment-card">
+      <div class="accomplishment-date">
+        <span class="day">September</span>
+        <span class="num">09</span>
+      </div>
+      <div class="accomplishment-details">
+        <h3>Youth Leadership Seminar</h3>
+        <p><i class="fas fa-map-marker-alt"></i> Municipal Hall</p>
+        <p><i class="fas fa-users"></i> Committee on Education</p>
+        <div class="accomplishment-datetime">
+          <span class="datetime-label">DATE AND TIME</span>
+          <span class="datetime-value">SEPTEMBER 22, 2025 | 9:00 AM</span>
+        </div>
+      </div>
+      <!-- Action -->
+      <div class="accomplishment-action">
+        <a href="{{ route('sk-eval-review') }}" class="view-btn">
+          View Evaluation <i class="fa-solid fa-arrow-up-right"></i>
+        </a>
+      </div>
+    </div>
+  </div>
 </div>
 
 
-  <!-- Youth Participation Record Section -->
-<section class="participation-section">
-  <!-- Left Card -->
-  <div class="card participation-card">
-    <div class="committee-filter">
-      <label for="committee">Committee</label>
-      <input type="text" id="committee" placeholder="">
-    </div>
 
-    <table class="participation-table">
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Event Name</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><em>September 9, 2025</em></td>
-          <td>Kalinisan sa bagong Pilipinas Program <br>
-            <small>(Kalinga at Inisyatiba para sa malinis na bayan)</small>
-          </td>
-          <td>
-            <a href="{{ route('attendees.index') }}" class="btn-view">View Attendees</a>
-          </td>
-        </tr>
-        <tr>
-          <td><em>September 9, 2025</em></td>
-          <td>Kalinisan sa bagong Pilipinas Program <br>
-            <small>(Kalinga at Inisyatiba para sa malinis na bayan)</small>
-          </td>
-          <td><a href="{{ route('attendees.index') }}" class="btn-view">View Attendees</a></td>
-        </tr>
-        <tr>
-          <td><em>September 9, 2025</em></td>
-          <td>Kalinisan sa bagong Pilipinas Program <br>
-            <small>(Kalinga at Inisyatiba para sa malinis na bayan)</small>
-          </td>
-          <td><a href="{{ route('attendees.index') }}" class="btn-view">View Attendees</a></td>
-        </tr>
-        <tr>
-          <td><em>September 9, 2025</em></td>
-          <td>Kalinisan sa bagong Pilipinas Program <br>
-            <small>(Kalinga at Inisyatiba para sa malinis na bayan)</small>
-          </td>
-          <td><a href="{{ route('attendees.index') }}" class="btn-view">View Attendees</a></td>
-        </tr>
-        <tr>
-          <td><em>September 9, 2025</em></td>
-          <td>Kalinisan sa bagong Pilipinas Program <br>
-            <small>(Kalinga at Inisyatiba para sa malinis na bayan)</small>
-          </td>
-          <td><a href="{{ route('attendees.index') }}" class="btn-view">View Attendees</a></td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+  </section>
+</main>
 
- 
-  <!-- Right Card -->
-<aside class="card top-youth-card">
-  <!-- Header (may divider lang para sa title) -->
-  <div class="card-header">
-    <h3>Top Active Youth</h3>
-  </div>
-
-  <!-- See All (hiwalay sa header/divider) -->
-  <div class="see-all">
-  <a href="{{ route('youth-statuspage') }}">See All</a>
-  </div>
-
-  <!-- Youth List -->
-  <ul class="youth-list">
-      <li>
-        <img src="https://i.pravatar.cc/40?img=1" alt="">
-        <div>
-          <strong>Alvin N. Dchipmunks</strong><br>
-          <a href="#">7 Events and Programs Attended</a>
-        </div>
-      </li>
-      <li>
-        <img src="https://i.pravatar.cc/40?img=2" alt="">
-        <div>
-          <strong>Ammara L. Jo</strong><br>
-          <a href="#">7 Events and Programs Attended</a>
-        </div>
-      </li>
-      <li>
-        <img src="https://i.pravatar.cc/40?img=3" alt="">
-        <div>
-          <strong>Ammiel N. Lim</strong><br>
-          <a href="#">7 Events and Programs Attended</a>
-        </div>
-      </li>
-      <li>
-        <img src="https://i.pravatar.cc/40?img=4" alt="">
-        <div>
-          <strong>Beverly M. Aios</strong><br>
-          <a href="#">7 Events and Programs Attended</a>
-        </div>
-      </li>
-      <li>
-        <img src="https://i.pravatar.cc/40?img=5" alt="">
-        <div>
-          <strong>Barbara K. Abios</strong><br>
-          <a href="#">7 Events and Programs Attended</a>
-        </div>
-      </li>
-      <li>
-        <img src="https://i.pravatar.cc/40?img=6" alt="">
-        <div>
-          <strong>Christian A. Sy</strong><br>
-          <a href="#">7 Events and Programs Attended</a>
-        </div>
-      </li>
-      <li>
-        <img src="https://i.pravatar.cc/40?img=7" alt="">
-        <div>
-          <strong>Cristian A. Jon</strong><br>
-          <a href="#">6 Events and Programs Attended</a>
-        </div>
-      </li>
-      <li>
-        <img src="https://i.pravatar.cc/40?img=8" alt="">
-        <div>
-          <strong>Czarina A. Sy</strong><br>
-          <a href="#">6 Events and Programs Attended</a>
-        </div>
-      </li>
-      <li>
-        <img src="https://i.pravatar.cc/40?img=9" alt="">
-        <div>
-          <strong>Dane J. Cheese</strong><br>
-          <a href="#">6 Events and Programs Attended</a>
-        </div>
-      </li>
-      <li>
-        <img src="https://i.pravatar.cc/40?img=10" alt="">
-        <div>
-          <strong>Dennise L. Laurel</strong><br>
-          <a href="#">6 Events and Programs Attended</a>
-        </div>
-      </li>
-    </ul>
-  </aside>
-</section>
 
 
 

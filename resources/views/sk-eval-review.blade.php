@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KatiBayan - Dashboard</title>
-  <link rel="stylesheet" href="{{ asset('css/youth-participation.css') }}">
+  <link rel="stylesheet" href="{{ asset('css/sk-eval-review.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -35,7 +35,7 @@
         <span class="label">Analytics</span>
       </a>
 
-      <a href="{{ route('youth-profilepage') }}" class="active">
+      <a href="{{ route('youth-profilepage') }}">
         <i data-lucide="users"></i>
         <span class="label">Youth Profile</span>
       </a>
@@ -46,13 +46,13 @@
       </a>
 
       <div class="evaluation-item nav-item">
-        <a href="{{ route('sk-evaluation-feedback') }}" class="evaluation-link nav-link">
+        <a href="{{ route('sk-evaluation-feedback') }}" class="evaluation-link nav-link active">
           <i data-lucide="user-star"></i>
           <span class="label">Evaluation</span>
           <i data-lucide="chevron-down" class="submenu-arrow"></i>
         </a>
         <div class="submenu">
-          <a href="#">Feedbacks</a>
+          <a href="{{ route('sk-evaluation-feedback') }}">Feedbacks</a>
           <a href="#">Polls</a>
           <a href="#">Suggestion Box</a>
         </div>
@@ -160,160 +160,171 @@
     </header>
 
     <main class="container">
-  <!-- Header Title -->
-  <div class="welcome-card">
-  <h2>Youth Participation Record</h2>
-  <span class="year-badge">2025</span>
+  <div class="evaluation-container">
+
+    <!-- Header -->
+<div class="evaluation-header">
+  <button class="back-btn"><i class="fas fa-arrow-left"></i></button>
+  <div>
+    <h2>Kalinisan sa bagong Pilipinas Program</h2>
+    <p class="event-details">Date: 2025-09-20 | Venue: Barangay Hall</p>
+  </div>
+</div>
+
+<!-- Tabs -->
+<div class="tab-buttons">
+  <button class="tab-btn active" data-tab="rating">Rating</button>
+  <button class="tab-btn" data-tab="comments">Comments</button>
+</div>
+
+<!-- ================== RATING TAB ================== -->
+<div id="rating" class="tab-content active">
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat-card">
+      <h3>Average Rating of this Event</h3>
+      <div class="rating-score">4.5 / 5</div>
+      <small>Based on the <b class="highlight">100 responses</b></small>
+    </div>
+    <div class="stat-card">
+      <h3>Rating Distribution</h3>
+      <canvas id="ratingChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Question Breakdown -->
+  <div class="question-section">
+    <h3>
+      Question Breakdown
+      <span class="see-respondents">See Respondents</span>
+    </h3>
+
+    <div class="question-card">
+      <div class="question-text">Question 1: Was the purpose of the program/event explained clearly?</div>
+      <div class="rating">Rating: 5/5</div>
+    </div>
+
+    <div class="question-card">
+      <div class="question-text">Question 2: Was the time given for the program/event enough?</div>
+      <div class="rating">Rating: 4/5</div>
+    </div>
+
+    <div class="question-card">
+      <div class="question-text">Question 3: Were you able to join and participate in the activities?</div>
+      <div class="rating">Rating: 5/5</div>
+    </div>
+
+    <div class="question-card">
+      <div class="question-text">Question 4: Did you learn something new from this program/event?</div>
+      <div class="rating">Rating: 5/5</div>
+    </div>
+
+    <div class="question-card">
+      <div class="question-text">Question 5: Did the SK officials/facilitators treat all participants fairly and equally?</div>
+      <div class="rating">Rating: 5/5</div>
+    </div>
+
+    <div class="question-card">
+      <div class="question-text">Question 6: Did the SK officials/facilitators show enthusiasm and commitment in leading the program/event?</div>
+      <div class="rating">Rating: 5/5</div>
+    </div>
+
+    <div class="question-card">
+      <div class="question-text">Question 7: Overall, are you satisfied with this program/event?</div>
+      <div class="rating">Rating: 5/5</div>
+    </div>
+  </div>
+</div>
+
+<!-- ================== COMMENTS TAB ================== -->
+<!-- Feedback Section -->
+<div id="comments" class="tab-content">
+  
+  <!-- Filters inside comments -->
+  <div class="feedback-filters">
+    <button class="active">All</button>
+    <button>5 - Strongly Agree</button>
+    <button>4 - Agree</button>
+    <button>3 - Neutral</button>
+    <button>2 - Disagree</button>
+    <button>1 - Strongly Disagree</button>
+  </div>
+
+  <!-- Section Title -->
+  <h3>Feedback from participants</h3>
+
+  <!-- Comment Card -->
+  <div class="feedback-card">
+    <div class="feedback-left">
+      <img src="https://i.pravatar.cc/60?img=1" alt="profile" />
+      <div>
+        <div class="name-stars">
+          <h4>Beverly J. Hills</h4>
+          <div class="stars">★★★★★ <span>5</span></div>
+        </div>
+        <p>I gained a lot of knowledge</p>
+      </div>
+    </div>
+    <div class="feedback-right">
+      <span>09/09/2025&nbsp;&nbsp;6:00 PM</span>
+    </div>
+  </div>
+
+  <div class="feedback-card">
+    <div class="feedback-left">
+      <img src="https://i.pravatar.cc/60?img=2" alt="profile" />
+      <div>
+        <div class="name-stars">
+          <h4>Beverly J. Hills</h4>
+          <div class="stars">★★★★★ <span>5</span></div>
+        </div>
+        <p>Goods and foods. Yess!</p>
+      </div>
+    </div>
+    <div class="feedback-right">
+      <span>09/09/2025&nbsp;&nbsp;6:00 PM</span>
+    </div>
+  </div>
+
+  <div class="feedback-card">
+    <div class="feedback-left">
+      <img src="https://i.pravatar.cc/60?img=3" alt="profile" />
+      <div>
+        <div class="name-stars">
+          <h4>Joey Y. Yes</h4>
+          <div class="stars">★★★★☆ <span>4</span></div>
+        </div>
+        <p>
+          The program is great I hope sa sunod mas mahaba ang time pero overall it’s good
+        </p>
+      </div>
+    </div>
+    <div class="feedback-right">
+      <span>09/09/2025&nbsp;&nbsp;6:00 PM</span>
+    </div>
+  </div>
+
+  <div class="feedback-card">
+    <div class="feedback-left">
+      <img src="https://i.pravatar.cc/60?img=4" alt="profile" />
+      <div>
+        <div class="name-stars">
+          <h4>Jay Park</h4>
+          <div class="stars">★★★★★ <span>5</span></div>
+        </div>
+        <p>I gained a lot of knowledge</p>
+      </div>
+    </div>
+    <div class="feedback-right">
+      <span>09/09/2025&nbsp;&nbsp;6:00 PM</span>
+    </div>
+  </div>
 </div>
 
 
-  <!-- Youth Participation Record Section -->
-<section class="participation-section">
-  <!-- Left Card -->
-  <div class="card participation-card">
-    <div class="committee-filter">
-      <label for="committee">Committee</label>
-      <input type="text" id="committee" placeholder="">
-    </div>
+</main>
 
-    <table class="participation-table">
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Event Name</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><em>September 9, 2025</em></td>
-          <td>Kalinisan sa bagong Pilipinas Program <br>
-            <small>(Kalinga at Inisyatiba para sa malinis na bayan)</small>
-          </td>
-          <td>
-            <a href="{{ route('attendees.index') }}" class="btn-view">View Attendees</a>
-          </td>
-        </tr>
-        <tr>
-          <td><em>September 9, 2025</em></td>
-          <td>Kalinisan sa bagong Pilipinas Program <br>
-            <small>(Kalinga at Inisyatiba para sa malinis na bayan)</small>
-          </td>
-          <td><a href="{{ route('attendees.index') }}" class="btn-view">View Attendees</a></td>
-        </tr>
-        <tr>
-          <td><em>September 9, 2025</em></td>
-          <td>Kalinisan sa bagong Pilipinas Program <br>
-            <small>(Kalinga at Inisyatiba para sa malinis na bayan)</small>
-          </td>
-          <td><a href="{{ route('attendees.index') }}" class="btn-view">View Attendees</a></td>
-        </tr>
-        <tr>
-          <td><em>September 9, 2025</em></td>
-          <td>Kalinisan sa bagong Pilipinas Program <br>
-            <small>(Kalinga at Inisyatiba para sa malinis na bayan)</small>
-          </td>
-          <td><a href="{{ route('attendees.index') }}" class="btn-view">View Attendees</a></td>
-        </tr>
-        <tr>
-          <td><em>September 9, 2025</em></td>
-          <td>Kalinisan sa bagong Pilipinas Program <br>
-            <small>(Kalinga at Inisyatiba para sa malinis na bayan)</small>
-          </td>
-          <td><a href="{{ route('attendees.index') }}" class="btn-view">View Attendees</a></td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
- 
-  <!-- Right Card -->
-<aside class="card top-youth-card">
-  <!-- Header (may divider lang para sa title) -->
-  <div class="card-header">
-    <h3>Top Active Youth</h3>
-  </div>
-
-  <!-- See All (hiwalay sa header/divider) -->
-  <div class="see-all">
-  <a href="{{ route('youth-statuspage') }}">See All</a>
-  </div>
-
-  <!-- Youth List -->
-  <ul class="youth-list">
-      <li>
-        <img src="https://i.pravatar.cc/40?img=1" alt="">
-        <div>
-          <strong>Alvin N. Dchipmunks</strong><br>
-          <a href="#">7 Events and Programs Attended</a>
-        </div>
-      </li>
-      <li>
-        <img src="https://i.pravatar.cc/40?img=2" alt="">
-        <div>
-          <strong>Ammara L. Jo</strong><br>
-          <a href="#">7 Events and Programs Attended</a>
-        </div>
-      </li>
-      <li>
-        <img src="https://i.pravatar.cc/40?img=3" alt="">
-        <div>
-          <strong>Ammiel N. Lim</strong><br>
-          <a href="#">7 Events and Programs Attended</a>
-        </div>
-      </li>
-      <li>
-        <img src="https://i.pravatar.cc/40?img=4" alt="">
-        <div>
-          <strong>Beverly M. Aios</strong><br>
-          <a href="#">7 Events and Programs Attended</a>
-        </div>
-      </li>
-      <li>
-        <img src="https://i.pravatar.cc/40?img=5" alt="">
-        <div>
-          <strong>Barbara K. Abios</strong><br>
-          <a href="#">7 Events and Programs Attended</a>
-        </div>
-      </li>
-      <li>
-        <img src="https://i.pravatar.cc/40?img=6" alt="">
-        <div>
-          <strong>Christian A. Sy</strong><br>
-          <a href="#">7 Events and Programs Attended</a>
-        </div>
-      </li>
-      <li>
-        <img src="https://i.pravatar.cc/40?img=7" alt="">
-        <div>
-          <strong>Cristian A. Jon</strong><br>
-          <a href="#">6 Events and Programs Attended</a>
-        </div>
-      </li>
-      <li>
-        <img src="https://i.pravatar.cc/40?img=8" alt="">
-        <div>
-          <strong>Czarina A. Sy</strong><br>
-          <a href="#">6 Events and Programs Attended</a>
-        </div>
-      </li>
-      <li>
-        <img src="https://i.pravatar.cc/40?img=9" alt="">
-        <div>
-          <strong>Dane J. Cheese</strong><br>
-          <a href="#">6 Events and Programs Attended</a>
-        </div>
-      </li>
-      <li>
-        <img src="https://i.pravatar.cc/40?img=10" alt="">
-        <div>
-          <strong>Dennise L. Laurel</strong><br>
-          <a href="#">6 Events and Programs Attended</a>
-        </div>
-      </li>
-    </ul>
-  </aside>
-</section>
 
 
 
@@ -505,6 +516,47 @@ evaluationLink?.addEventListener('click', (e) => {
       eventItem.querySelector('.date').classList.add('holiday');
     }
   });
+
+// Rating Distribution Chart
+const ctx = document.getElementById('ratingChart').getContext('2d');
+new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: ['1: Strongly Disagree', '2: Disagree', '3: Neutral', '4: Agree', '5: Strongly Agree'],
+    datasets: [{
+      label: 'Responses',
+      data: [0, 2, 5, 15, 78], // sample data
+      backgroundColor: '#0C4B92',
+      borderRadius: 6,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { display: true, labels: { color: "#01214A" } }
+    },
+    scales: {
+      x: { ticks: { color: "#4b5c77", font: { size: 12 } } },
+      y: { beginAtZero: true, ticks: { stepSize: 25, color: "#4b5c77" } }
+    }
+  }
+});
+
+// === Tabs Switching ===
+const tabButtons = document.querySelectorAll(".tab-btn");
+const tabContents = document.querySelectorAll(".tab-content");
+
+tabButtons.forEach(btn => {
+  btn.addEventListener("click", () => {
+
+    tabButtons.forEach(b => b.classList.remove("active"));
+    tabContents.forEach(c => c.classList.remove("active"));
+
+    btn.classList.add("active");
+    const tabId = btn.getAttribute("data-tab");
+    document.getElementById(tabId).classList.add("active");
+  });
+});
 
   
 });

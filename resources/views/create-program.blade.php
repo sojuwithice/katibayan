@@ -46,7 +46,7 @@
       </a>
 
       <div class="evaluation-item nav-item">
-        <a href="#" class="evaluation-link nav-link">
+        <a href="{{ route('sk-evaluation-feedback') }}" class="evaluation-link nav-link">
           <i data-lucide="user-star"></i>
           <span class="label">Evaluation</span>
           <i data-lucide="chevron-down" class="submenu-arrow"></i>
@@ -233,6 +233,8 @@
   <textarea id="description" rows="4"></textarea>
 </div>
 
+    
+
     <!-- Upload -->
     <label>Upload Display</label>
     <div class="upload-box" id="uploadBox">
@@ -256,6 +258,40 @@
   <label for="publisher" style="display:block; font-weight:700; margin-bottom:0.5rem;">Published By:</label>
   <input type="text" id="publisher">
 </div>
+
+<!-- Youth Registration Option -->
+    <div class="form-group">
+      <label style="display:block; font-weight:100; margin-bottom:0.7rem;">
+        Choose an option (for youth registration)
+      </label>
+      <div class="registration-options">
+        <label>
+          <input type="radio" name="registrationOption" value="create">
+          Create Registration
+        </label>
+        <label style="margin-left: 1rem;">
+          <input type="radio" name="registrationOption" value="link">
+          Add link source
+        </label>
+      </div>
+    </div>
+
+    <!-- Create Registration Fields -->
+    <div id="createRegistrationFields" class="option-field hidden">
+      <label for="maxParticipants">Max Participants</label>
+      <input type="number" id="maxParticipants" placeholder="Enter max participants">
+
+      <label for="extraNotes">Additional Notes</label>
+      <input type="text" id="extraNotes" placeholder="Optional notes">
+    </div>
+
+    <!-- Link Source Field -->
+    <div id="linkSourceField" class="option-field hidden">
+      <div class="input-with-icon">
+        <i class="fas fa-link"></i>
+        <input type="url" id="linkSource" placeholder="Link Source">
+      </div>
+    </div>
 
     <!-- Submit -->
     <button type="submit" class="btn-submit">Post Event</button>
@@ -620,6 +656,25 @@ document.addEventListener("keydown", (e) => {
     timeModal.style.display = "none";
   }
 });
+
+    // === YOUTH REGISTRATION OPTION TOGGLE ===
+  const radios = document.querySelectorAll('input[name="registrationOption"]');
+  const createFields = document.getElementById("createRegistrationFields");
+  const linkField = document.getElementById("linkSourceField");
+
+  radios.forEach(radio => {
+    radio.addEventListener("change", () => {
+      if (radio.value === "create") {
+        createFields.classList.remove("hidden");
+        linkField.classList.add("hidden");
+      } else if (radio.value === "link") {
+        linkField.classList.remove("hidden");
+        createFields.classList.add("hidden");
+      }
+    });
+  });
+
+
 
 
 });
