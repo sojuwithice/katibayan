@@ -137,3 +137,10 @@ Route::get('/registration-success', function () {
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+Route::middleware(['auth'])->group(function () {
+    // Profile routes
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profilepage');
+    Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
+    Route::get('/profile/check-session', [ProfileController::class, 'checkSession'])->name('profile.checkSession');
+    Route::get('/profile/user-data', [ProfileController::class, 'getUserData'])->name('profile.userData');
+});
