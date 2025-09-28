@@ -111,10 +111,12 @@
 
         <!-- Profile Avatar -->
         <div class="profile-wrapper">
-          <img src="https://i.pravatar.cc/80" alt="User" class="avatar" id="profileToggle">
+          <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+               alt="User" class="avatar" id="profileToggle">
           <div class="profile-dropdown">
             <div class="profile-header">
-              <img src="https://i.pravatar.cc/80" alt="User" class="profile-avatar">
+              <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+                   alt="User" class="profile-avatar">
               <div class="profile-info">
                 <h4>{{ $user ? $user->given_name . ' ' . ($user->middle_name ? $user->middle_name . ' ' : '') . $user->last_name . ' ' . ($user->suffix ? $user->suffix : '') : 'Guest User' }}</h4>
                 <div class="profile-badge">
@@ -156,10 +158,11 @@
       <!-- Profile Card -->
       <div class="profile-card">
         <div class="avatar-wrapper">
-          <img src="https://i.pravatar.cc/80" alt="User" class="profile-avatar">
-          <button class="avatar-camera">
+          <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+               alt="User" class="profile-avatar" id="profileAvatar">
+          <div class="avatar-overlay" id="avatarOverlay">
             <i class="fas fa-camera"></i>
-          </button>
+          </div>
         </div>
         <div class="profile-info">
           <h2>
@@ -235,8 +238,8 @@
           <!-- Email + Password -->
           <div class="credentials-card">
             <button class="settings-btn"><i class="fas fa-gear"></i></button>
-            <h3>Email Address
-              <i class="fas fa-envelope email-icon"></i>
+            <h3>KatiBayan Account
+              <i class="fas fa-key key-icon"></i>
             </h3>
             <div class="field">
                 <label>Email</label>
@@ -246,12 +249,12 @@
                   <label>Default Password</label>
                   <div class="password-wrapper">
                       <p id="tempPassword">••••••••</p>
-                      <i class="fas fa-eye toggle-password" onclick="togglePassword()"></i>
+                     <i class="fas fa-eye toggle-password" onclick="togglePassword('{{ $defaultPassword }}')"></i>
                   </div>
               </div>
           </div>
 
-          <!-- Modal -->
+          <!-- Password Modal -->
           <div class="modal-overlay" id="passwordModal">
             <div class="modal">
               <span class="close-btn" id="closeModal">&times;</span>
@@ -261,30 +264,33 @@
                 Ensure your account's security by following the required password format when changing your password
               </p>
 
-              <label class="required">Current Password </label>
-              <input type="password" id="currentPassword">
+              <form id="changePasswordForm">
+                @csrf
+                <label class="required">Current Password</label>
+                <input type="password" id="currentPassword" name="current_password" required>
 
-              <label class="required">New Password </label>
-              <input type="password" id="newPassword">
+                <label class="required">New Password</label>
+                <input type="password" id="newPassword" name="new_password" required>
 
-              <label class="required">Confirm Password </label>
-              <input type="password" id="confirmPassword">
+                <label class="required">Confirm Password</label>
+                <input type="password" id="confirmPassword" name="new_password_confirmation" required>
 
-              <div class="show-pass">
-                <input type="checkbox" id="showPass"> <label for="showPass">Show Password</label>
-              </div>
+                <div class="show-pass">
+                  <input type="checkbox" id="showPass"> <label for="showPass">Show Password</label>
+                </div>
 
-              <p class="req-heading">Required Password Format:</p>
-              <div class="requirements">
-                <p id="req-length" class="invalid"> Must be 8 characters or more</p>
-                <p id="req-upper" class="invalid"> At least one uppercase letter</p>
-                <p id="req-lower" class="invalid"> At least one lowercase letter</p>
-                <p id="req-number" class="invalid"> At least one number</p>
-                <p id="req-symbol" class="invalid"> At least one symbol</p>
-                <p id="req-match" class="invalid"> Passwords must match</p>
-              </div>
+                <p class="req-heading">Required Password Format:</p>
+                <div class="requirements">
+                  <p id="req-length" class="invalid"> Must be 8 characters or more</p>
+                  <p id="req-upper" class="invalid"> At least one uppercase letter</p>
+                  <p id="req-lower" class="invalid"> At least one lowercase letter</p>
+                  <p id="req-number" class="invalid"> At least one number</p>
+                  <p id="req-symbol" class="invalid"> At least one symbol</p>
+                  <p id="req-match" class="invalid"> Passwords must match</p>
+                </div>
 
-              <button class="save-btn">Save Changes</button>
+                <button type="submit" class="save-btn" id="savePasswordBtn">Save Changes</button>
+              </form>
             </div>
           </div>
 
@@ -484,18 +490,226 @@
     </div>
   </div> <!-- END Main -->
 
+  <!-- Avatar Modal -->
+  <div class="avatar-modal" id="avatarModal">
+    <div class="avatar-modal-content">
+      <h2>Change Profile Picture</h2>
+      <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+           alt="Avatar Preview" class="avatar-preview" id="avatarPreview">
+      
+      <div class="avatar-options">
+        <button class="avatar-option-btn avatar-upload-btn" id="uploadAvatarBtn">Upload Photo</button>
+        <button class="avatar-option-btn avatar-remove-btn" id="removeAvatarBtn">Remove Photo</button>
+        <button class="avatar-option-btn avatar-cancel-btn" id="cancelAvatarBtn">Cancel</button>
+      </div>
+      
+      <input type="file" id="avatarFileInput" class="avatar-file-input" accept="image/*">
+    </div>
+  </div>
+
   <script>
+    // Avatar Manager Class
+    class AvatarManager {
+      constructor() {
+        this.avatarModal = document.getElementById('avatarModal');
+        this.avatarPreview = document.getElementById('avatarPreview');
+        this.avatarOverlay = document.getElementById('avatarOverlay');
+        this.profileAvatar = document.getElementById('profileAvatar');
+        this.uploadAvatarBtn = document.getElementById('uploadAvatarBtn');
+        this.removeAvatarBtn = document.getElementById('removeAvatarBtn');
+        this.cancelAvatarBtn = document.getElementById('cancelAvatarBtn');
+        this.avatarFileInput = document.getElementById('avatarFileInput');
+        
+        this.init();
+      }
+
+      init() {
+        this.bindEvents();
+      }
+
+      bindEvents() {
+        // Open avatar modal when clicking on avatar overlay
+        this.avatarOverlay?.addEventListener('click', () => {
+          this.openAvatarModal();
+        });
+
+        // Upload avatar button
+        this.uploadAvatarBtn?.addEventListener('click', () => {
+          this.avatarFileInput.click();
+        });
+
+        // Remove avatar button
+        this.removeAvatarBtn?.addEventListener('click', () => {
+          this.removeAvatar();
+        });
+
+        // Cancel avatar modal
+        this.cancelAvatarBtn?.addEventListener('click', () => {
+          this.closeAvatarModal();
+        });
+
+        // File input change
+        this.avatarFileInput?.addEventListener('change', (e) => {
+          this.handleFileSelect(e);
+        });
+
+        // Close modal when clicking outside
+        this.avatarModal?.addEventListener('click', (e) => {
+          if (e.target === this.avatarModal) {
+            this.closeAvatarModal();
+          }
+        });
+      }
+
+      openAvatarModal() {
+        this.avatarModal.classList.add('show');
+      }
+
+      closeAvatarModal() {
+        this.avatarModal.classList.remove('show');
+      }
+
+      handleFileSelect(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        // Validate file type
+        if (!file.type.match('image.*')) {
+          this.showMessage('Please select a valid image file.', 'profile-error');
+          return;
+        }
+
+        // Validate file size (max 2MB)
+        if (file.size > 2 * 1024 * 1024) {
+          this.showMessage('Image size should be less than 2MB.', 'profile-error');
+          return;
+        }
+
+        // Preview the image
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          this.avatarPreview.src = e.target.result;
+          this.uploadAvatar(file);
+        };
+        reader.readAsDataURL(file);
+      }
+
+      async uploadAvatar(file) {
+        try {
+          const formData = new FormData();
+          formData.append('avatar', file);
+          
+          // Get CSRF token
+          const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+          formData.append('_token', csrfToken);
+
+          const response = await fetch('{{ route("profile.avatar.update") }}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+              'X-Requested-With': 'XMLHttpRequest',
+              'X-CSRF-TOKEN': csrfToken
+            }
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            // Update all avatar images on the page
+            this.updateAllAvatars(result.avatar_url);
+            this.showMessage('Profile picture updated successfully!', 'profile-success');
+            this.closeAvatarModal();
+          } else {
+            this.showMessage(result.message, 'profile-error');
+          }
+        } catch (error) {
+          this.showMessage('Error uploading avatar: ' + error.message, 'profile-error');
+        }
+      }
+
+      async removeAvatar() {
+        try {
+          const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+          
+          const response = await fetch('{{ route("profile.avatar.remove") }}', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest',
+              'X-CSRF-TOKEN': csrfToken
+            },
+            body: JSON.stringify({
+              _token: csrfToken
+            })
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            // Reset to default avatar
+            this.updateAllAvatars('{{ asset("images/default-avatar.png") }}');
+            this.showMessage('Profile picture removed successfully!', 'profile-success');
+            this.closeAvatarModal();
+          } else {
+            this.showMessage(result.message, 'profile-error');
+          }
+        } catch (error) {
+          this.showMessage('Error removing avatar: ' + error.message, 'profile-error');
+        }
+      }
+
+      updateAllAvatars(avatarUrl) {
+        // Update profile card avatar
+        this.profileAvatar.src = avatarUrl;
+        
+        // Update topbar avatar
+        const topbarAvatar = document.querySelector('.profile-wrapper .avatar');
+        if (topbarAvatar) topbarAvatar.src = avatarUrl;
+        
+        // Update profile dropdown avatar
+        const profileDropdownAvatar = document.querySelector('.profile-dropdown .profile-avatar');
+        if (profileDropdownAvatar) profileDropdownAvatar.src = avatarUrl;
+        
+        // Update avatar preview in modal
+        this.avatarPreview.src = avatarUrl;
+      }
+
+      showMessage(message, type) {
+        const messageEl = document.getElementById('profileMessage');
+        messageEl.textContent = message;
+        messageEl.className = `profile-message ${type}`;
+        messageEl.style.display = 'block';
+        
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+          messageEl.style.display = 'none';
+        }, 5000);
+      }
+    }
+
     // Password toggle function - Show actual default password
-    function togglePassword() {
+    function togglePassword(actualPassword) {
         const tempPassword = document.getElementById('tempPassword');
         const icon = document.querySelector('.toggle-password');
         
         if (tempPassword.textContent === '••••••••') {
-            tempPassword.textContent = 'Katibayan2025!'; // Default password
+            // Show the actual password
+            tempPassword.textContent = actualPassword;
             tempPassword.classList.add('password-visible');
             icon.classList.remove('fa-eye');
             icon.classList.add('fa-eye-slash');
+            
+            // Auto-hide after 10 seconds
+            setTimeout(() => {
+                if (tempPassword.textContent === actualPassword) {
+                    tempPassword.textContent = '••••••••';
+                    tempPassword.classList.remove('password-visible');
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
+            }, 10000);
         } else {
+            // Hide the password
             tempPassword.textContent = '••••••••';
             tempPassword.classList.remove('password-visible');
             icon.classList.remove('fa-eye-slash');
@@ -594,83 +808,84 @@
             
             this.hideMessage();
         }
-async saveProfile() {
-    const saveBtn = document.getElementById('saveProfileBtn');
-    const originalText = saveBtn.innerHTML;
-    
-    try {
-        // Show loading state
-        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-        saveBtn.disabled = true;
-        
-        // Collect form data - ONLY CHANGED FIELDS
-        const formData = new FormData();
-        const fields = [
-            'last_name', 'given_name', 'middle_name', 'suffix', 
-            'date_of_birth', 'sex', 'contact_no', 'civil_status',
-            'education', 'work_status', 'youth_classification', 'sk_voter',
-            'purok_zone', 'zip_code'
-        ];
 
-        // Only include fields that have changed
-        let hasChanges = false;
-        fields.forEach(field => {
-            const input = document.querySelector(`[name="${field}"]`);
-            if (input && input.value !== this.originalData[field]) {
-                formData.append(field, input.value);
-                hasChanges = true;
+        async saveProfile() {
+            const saveBtn = document.getElementById('saveProfileBtn');
+            const originalText = saveBtn.innerHTML;
+            
+            try {
+                // Show loading state
+                saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+                saveBtn.disabled = true;
+                
+                // Collect form data - ONLY CHANGED FIELDS
+                const formData = new FormData();
+                const fields = [
+                    'last_name', 'given_name', 'middle_name', 'suffix', 
+                    'date_of_birth', 'sex', 'contact_no', 'civil_status',
+                    'education', 'work_status', 'youth_classification', 'sk_voter',
+                    'purok_zone', 'zip_code'
+                ];
+
+                // Only include fields that have changed
+                let hasChanges = false;
+                fields.forEach(field => {
+                    const input = document.querySelector(`[name="${field}"]`);
+                    if (input && input.value !== this.originalData[field]) {
+                        formData.append(field, input.value);
+                        hasChanges = true;
+                    }
+                });
+
+                // If no changes, show message and exit
+                if (!hasChanges) {
+                    this.showMessage('No changes detected.', 'profile-info');
+                    this.exitEditMode();
+                    saveBtn.innerHTML = originalText;
+                    saveBtn.disabled = false;
+                    return;
+                }
+
+                // Get CSRF token from meta tag
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                formData.append('_token', csrfToken);
+
+                // Send AJAX request
+                const response = await fetch('{{ route("profile.update") }}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': csrfToken
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    this.showMessage(result.message, 'profile-success');
+                    
+                    // Update view texts with new values
+                    this.updateViewTexts();
+                    
+                    // Exit edit mode after successful save
+                    setTimeout(() => {
+                        this.exitEditMode();
+                        this.storeOriginalData(); // Store new values as original
+                    }, 2000);
+                    
+                } else {
+                    this.showMessage(result.message, 'profile-error');
+                }
+
+            } catch (error) {
+                this.showMessage('Error saving profile: ' + error.message, 'profile-error');
+            } finally {
+                // Restore button state
+                saveBtn.innerHTML = originalText;
+                saveBtn.disabled = false;
             }
-        });
-
-        // If no changes, show message and exit
-        if (!hasChanges) {
-            this.showMessage('No changes detected.', 'profile-info');
-            this.exitEditMode();
-            saveBtn.innerHTML = originalText;
-            saveBtn.disabled = false;
-            return;
         }
-
-        // Get CSRF token from meta tag
-        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-        formData.append('_token', csrfToken);
-
-        // Send AJAX request
-        const response = await fetch('{{ route("profile.update") }}', {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': csrfToken
-            }
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            this.showMessage(result.message, 'profile-success');
-            
-            // Update view texts with new values
-            this.updateViewTexts();
-            
-            // Exit edit mode after successful save
-            setTimeout(() => {
-                this.exitEditMode();
-                this.storeOriginalData(); // Store new values as original
-            }, 2000);
-            
-        } else {
-            this.showMessage(result.message, 'profile-error');
-        }
-
-    } catch (error) {
-        this.showMessage('Error saving profile: ' + error.message, 'profile-error');
-    } finally {
-        // Restore button state
-        saveBtn.innerHTML = originalText;
-        saveBtn.disabled = false;
-    }
-}
 
         updateViewTexts() {
             const fields = [
@@ -732,10 +947,306 @@ async saveProfile() {
         }
     }
 
+    // Password Modal Functionality
+    class PasswordManager {
+        constructor() {
+            this.settingsBtn = document.querySelector('.settings-btn');
+            this.passwordModal = document.getElementById('passwordModal');
+            this.closeModal = document.getElementById('closeModal');
+            this.okBtn = document.getElementById('okBtn');
+            this.showPassCheckbox = document.getElementById('showPass');
+            this.changePasswordForm = document.getElementById('changePasswordForm');
+            this.savePasswordBtn = document.getElementById('savePasswordBtn');
+            
+            // Password validation elements
+            this.currentPasswordInput = document.getElementById('currentPassword');
+            this.newPasswordInput = document.getElementById('newPassword');
+            this.confirmPasswordInput = document.getElementById('confirmPassword');
+            
+            // Requirement elements
+            this.reqLength = document.getElementById('req-length');
+            this.reqUpper = document.getElementById('req-upper');
+            this.reqLower = document.getElementById('req-lower');
+            this.reqNumber = document.getElementById('req-number');
+            this.reqSymbol = document.getElementById('req-symbol');
+            this.reqMatch = document.getElementById('req-match');
+            
+            // Requirements container
+            this.requirementsContainer = document.querySelector('.requirements');
+            this.reqHeading = document.querySelector('.req-heading');
+            
+            this.hasValidationStarted = false;
+            this.init();
+        }
+
+        init() {
+            this.bindEvents();
+            this.hideRequirements(); // Hide requirements initially
+        }
+
+        bindEvents() {
+            // Open modal when settings button is clicked
+            this.settingsBtn?.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.passwordModal.classList.add('show');
+                this.resetPasswordForm();
+            });
+
+            // Close modal when X button is clicked
+            this.closeModal?.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.passwordModal.classList.remove('show');
+                this.resetPasswordForm();
+            });
+
+            // Close modal when OK button is clicked (in success modal)
+            this.okBtn?.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const successModal = document.getElementById('successModal');
+                successModal.classList.remove('show');
+                this.passwordModal.classList.remove('show');
+                this.resetPasswordForm();
+            });
+
+            // Close modal when clicking outside the modal
+            this.passwordModal?.addEventListener('click', (e) => {
+                if (e.target === this.passwordModal) {
+                    this.passwordModal.classList.remove('show');
+                    this.resetPasswordForm();
+                }
+            });
+
+            // Close modal with Escape key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && this.passwordModal.classList.contains('show')) {
+                    this.passwordModal.classList.remove('show');
+                    this.resetPasswordForm();
+                }
+            });
+
+            // Show/hide password functionality
+            this.showPassCheckbox?.addEventListener('change', () => {
+                const type = this.showPassCheckbox.checked ? 'text' : 'password';
+                this.currentPasswordInput.type = type;
+                this.newPasswordInput.type = type;
+                this.confirmPasswordInput.type = type;
+            });
+
+            // Real-time password validation - only show when user starts typing
+            this.newPasswordInput?.addEventListener('input', () => {
+                if (!this.hasValidationStarted && this.newPasswordInput.value.length > 0) {
+                    this.hasValidationStarted = true;
+                    this.showRequirements();
+                }
+                this.validatePassword();
+            });
+
+            this.confirmPasswordInput?.addEventListener('input', () => {
+                if (!this.hasValidationStarted && this.confirmPasswordInput.value.length > 0) {
+                    this.hasValidationStarted = true;
+                    this.showRequirements();
+                }
+                this.validatePassword();
+            });
+
+            // Hide requirements when both fields are empty
+            this.newPasswordInput?.addEventListener('blur', () => {
+                this.checkIfShouldHideRequirements();
+            });
+
+            this.confirmPasswordInput?.addEventListener('blur', () => {
+                this.checkIfShouldHideRequirements();
+            });
+
+            // Form submission
+            this.changePasswordForm?.addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                // Show requirements if they're not visible but validation fails
+                if (!this.hasValidationStarted) {
+                    this.hasValidationStarted = true;
+                    this.showRequirements();
+                }
+                
+                this.submitPasswordChange();
+            });
+        }
+
+        showRequirements() {
+            this.requirementsContainer.style.display = 'block';
+            this.reqHeading.style.display = 'block';
+        }
+
+        hideRequirements() {
+            this.requirementsContainer.style.display = 'none';
+            this.reqHeading.style.display = 'none';
+        }
+
+        checkIfShouldHideRequirements() {
+            // Hide requirements if both password fields are empty and no validation has started
+            if (this.hasValidationStarted && 
+                this.newPasswordInput.value === '' && 
+                this.confirmPasswordInput.value === '') {
+                this.hasValidationStarted = false;
+                this.hideRequirements();
+            }
+        }
+
+        validatePassword() {
+            const password = this.newPasswordInput.value;
+            const confirmPassword = this.confirmPasswordInput.value;
+            
+            let allValid = true;
+
+            // Check length
+            if (password.length >= 8) {
+                this.reqLength.style.display = 'none';
+            } else {
+                this.reqLength.style.display = 'block';
+                allValid = false;
+            }
+
+            // Check uppercase
+            if (/[A-Z]/.test(password)) {
+                this.reqUpper.style.display = 'none';
+            } else {
+                this.reqUpper.style.display = 'block';
+                allValid = false;
+            }
+
+            // Check lowercase
+            if (/[a-z]/.test(password)) {
+                this.reqLower.style.display = 'none';
+            } else {
+                this.reqLower.style.display = 'block';
+                allValid = false;
+            }
+
+            // Check number
+            if (/[0-9]/.test(password)) {
+                this.reqNumber.style.display = 'none';
+            } else {
+                this.reqNumber.style.display = 'block';
+                allValid = false;
+            }
+
+            // Check symbol
+            if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+                this.reqSymbol.style.display = 'none';
+            } else {
+                this.reqSymbol.style.display = 'block';
+                allValid = false;
+            }
+
+            // Check match - only show if confirm password has content
+            if (confirmPassword === '') {
+                this.reqMatch.style.display = 'none';
+            } else if (password === confirmPassword) {
+                this.reqMatch.style.display = 'none';
+            } else {
+                this.reqMatch.style.display = 'block';
+                allValid = false;
+            }
+
+            // Hide entire requirements section if all requirements are met
+            if (allValid && password !== '' && confirmPassword !== '' && password === confirmPassword) {
+                this.requirementsContainer.style.display = 'none';
+                this.reqHeading.style.display = 'none';
+            } else if (this.hasValidationStarted) {
+                // Show requirements if any are not met
+                this.showRequirements();
+            }
+
+            return allValid;
+        }
+
+        async submitPasswordChange() {
+            const saveBtn = this.savePasswordBtn;
+            const originalText = saveBtn.innerHTML;
+            
+            if (!this.validatePassword()) {
+                this.showMessage('Please fix the password requirements before submitting.', 'profile-error');
+                return;
+            }
+
+            try {
+                // Show loading state
+                saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Changing Password...';
+                saveBtn.disabled = true;
+
+                const formData = new FormData(this.changePasswordForm);
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+                const response = await fetch('{{ route("profile.change-password") }}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': csrfToken
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Show success modal
+                    const successModal = document.getElementById('successModal');
+                    successModal.classList.add('show');
+                    
+                    // Reset form
+                    this.resetPasswordForm();
+                } else {
+                    this.showMessage(result.message, 'profile-error');
+                }
+
+            } catch (error) {
+                this.showMessage('Error changing password: ' + error.message, 'profile-error');
+            } finally {
+                // Restore button state
+                saveBtn.innerHTML = originalText;
+                saveBtn.disabled = false;
+            }
+        }
+
+        resetPasswordForm() {
+            this.changePasswordForm.reset();
+            this.hasValidationStarted = false;
+            this.hideRequirements();
+            
+            // Reset all requirement displays
+            [this.reqLength, this.reqUpper, this.reqLower, this.reqNumber, this.reqSymbol, this.reqMatch].forEach(el => {
+                el.style.display = 'none';
+                el.classList.remove('valid');
+                el.classList.add('invalid');
+            });
+        }
+
+        showMessage(message, type) {
+            const messageEl = document.getElementById('profileMessage');
+            messageEl.textContent = message;
+            messageEl.className = `profile-message ${type}`;
+            messageEl.style.display = 'block';
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                messageEl.style.display = 'none';
+            }, 5000);
+        }
+    }
+
     // Initialize when DOM is loaded
     document.addEventListener("DOMContentLoaded", () => {
         // Initialize profile editor
         const profileEditor = new ProfileEditor();
+
+        // Initialize password manager
+        const passwordManager = new PasswordManager();
+
+        // Initialize avatar manager
+        const avatarManager = new AvatarManager();
 
         // === Sidebar & Profile/Events Dropdowns ===
         const menuToggle = document.querySelector('.menu-toggle');

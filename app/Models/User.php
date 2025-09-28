@@ -33,7 +33,9 @@ class User extends Authenticatable
         'sk_voter',
         'account_status',
         'password',
+        'default_password',
         'account_number',
+        'avatar',
 
     ];
 
@@ -75,5 +77,12 @@ public function barangay()
 {
     return $this->belongsTo(Barangay::class);
 }
-
+ public function getAvatarUrlAttribute()
+    {
+        if ($this->avatar) {
+            return asset('storage/' . $this->avatar);
+        }
+        
+        return asset('images/default-avatar.png');
+    }
 }

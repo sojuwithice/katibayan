@@ -150,3 +150,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/profile/check-session', [ProfileController::class, 'checkSession'])->name('profile.checkSession');
     Route::get('/profile/user-data', [ProfileController::class, 'getUserData'])->name('profile.userData');
     });
+
+Route::post('/profile/change-password', [ProfileController::class, 'changePassword'])->name('profile.change-password');
+// Avatar routes
+Route::post('/profile/avatar/update', [ProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
+Route::post('/profile/avatar/remove', [ProfileController::class, 'removeAvatar'])->name('profile.avatar.remove');
+Route::get('/profile/data', [ProfileController::class, 'getProfileData'])->name('profile.data');
