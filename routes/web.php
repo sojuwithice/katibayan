@@ -8,7 +8,8 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\AdminController;
-
+use App\Http\Controllers\PollsController;
+use App\Http\Controllers\EventController;
 
 Route::get('/', function () {
     return view('landingpage');
@@ -18,12 +19,9 @@ Route::get('loginpage', function () {
     return view('loginpage');
 })->name('loginpage');
 
-
-
 Route::get('/registration/success', function () {
     return view('registration-success'); 
 })->name('registration.success');
-
 
 Route::get('/dashboard', function () {
     return view('dashboard');
@@ -33,16 +31,20 @@ Route::get('/profilepage', function () {
     return view('profilepage');
 });
 
-
 Route::get('/certificatepage', function () {
     return view('certificatepage');
 })->name('certificatepage');
 
+// ========== EVENT ROUTES ==========
+Route::get('/events', [EventController::class, 'index'])->name('sk-eventpage');
+Route::get('/events/create', [EventController::class, 'create'])->name('create-event');
+Route::post('/events', [EventController::class, 'store'])->name('events.store');
+Route::get('/events/{id}', [EventController::class, 'show']); // ADDED THIS
+Route::post('/events/{id}/launch', [EventController::class, 'launchEvent']);
+Route::post('/events/{id}/generate-passcode', [EventController::class, 'generatePasscode']);
+Route::delete('/events/{id}', [EventController::class, 'destroy'])->name('events.destroy');
+Route::view('/eventpage', 'eventpage')->name('eventpage');
 
-// Events page route
-Route::get('/eventpage', function () {
-    return view('eventpage'); 
-})->name('eventpage');
 
 // routes/web.php
 Route::get('/faqspage', function () {
@@ -62,32 +64,19 @@ Route::get('/serviceoffers', function () {
     return view('serviceoffers');
 })->name('serviceoffers');
 
-// routes/web.php
-Route::get('/polls', function () {
-    return view('pollspage');
-})->name('polls.page');
+Route::get('/polls', [PollsController::class, 'index'])->name('polls.page');
 
 Route::get('/evaluation', function () {
     return view('evaluationpage'); 
 })->name('evaluation');
 
-
 Route::get('/sk-dashboard', function () {
     return view('sk-dashboard'); 
 })->name('sk.dashboard');
 
-
 Route::get('/youth-profilepage', function () {
     return view('youth-profilepage'); 
 })->name('youth-profilepage');
-
-Route::get('/sk-eventpage', function () {
-    return view('sk-eventpage'); 
-})->name('sk-eventpage');
-
-Route::get('/create-event', function () {
-    return view('create-event'); 
-})->name('create-event');
 
 Route::get('/create-program', function () {
     return view('create-program'); 
@@ -129,10 +118,6 @@ Route::get('/sk-eval-review', function () {
     return view('sk-eval-review');
 })->name('sk-eval-review');
 
-
-
-
-
 //CONTROLLER ROUTES
 
 // Remove the duplicate route definition and use the controller
@@ -142,34 +127,27 @@ Route::post('/register', [RegisterController::class, 'register']);
 Route::get('/profile', [ProfileController::class, 'index'])->name('profilepage');
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
 
-
 Route::get('/get-provinces/{region_id}', [LocationController::class, 'getprovinces']);
 Route::get('/get-cities/{province_id}', [LocationController::class, 'getCities']);
 Route::get('/get-barangays/{city_id}', [LocationController::class, 'getBarangays']);
 
-Route::get('/kk/create-account/{id}', [KkMemberController::class, 'createAccount'])->name('kk.createAccount');
-
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
-
 
 // Admin dashboard and actions
 Route::get('/admin-dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
 Route::patch('/admin/users/{id}/approve', [AdminController::class, 'approve'])->name('admin.users.approve');
 Route::patch('/admin/users/{id}/reject', [AdminController::class, 'reject'])->name('admin.users.reject');
 
-
-Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
-Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 Route::middleware(['auth'])->group(function () {
+    // Profile routes
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profilepage');
+    Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
+    Route::get('/profile/check-session', [ProfileController::class, 'checkSession'])->name('profile.checkSession');
+    Route::get('/profile/user-data', [ProfileController::class, 'getUserData'])->name('profile.userData');
+    
 
-// Profile routes
-Route::get('/profile', [ProfileController::class, 'index'])->name('profilepage');
-Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
-Route::get('/profile/check-session', [ProfileController::class, 'checkSession'])->name('profile.checkSession');
-Route::get('/profile/user-data', [ProfileController::class, 'getUserData'])->name('profile.userData');
 });
 
 Route::post('/profile/change-password', [ProfileController::class, 'changePassword'])->name('profile.change-password');
