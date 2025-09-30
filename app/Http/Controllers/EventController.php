@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
+use App\Models\Attendance;
+use App\Models\Evaluation;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -10,6 +12,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class EventController extends Controller
 {
@@ -44,6 +47,7 @@ class EventController extends Controller
                 'groupedEvents' => collect(),
                 'todayEvents' => collect(),
                 'events' => collect(),
+               
             ]);
         }
     }
@@ -296,39 +300,41 @@ class EventController extends Controller
     public function userEvents(): View
     {
         try {
-            // Get today's date
+            $user = Auth::user();
             $today = now()->format('Y-m-d');
-            
-            // Get ALL launched events
+
             $events = Event::where('is_launched', true)
                 ->orderBy('event_date', 'asc')
                 ->orderBy('event_time', 'asc')
                 ->get();
 
-            // Get events that are launched and happening today
-            $todayEvents = $events->filter(function($event) use ($today) {
-                return $event->event_date->format('Y-m-d') === $today;
-            });
+            $todayEvents = $events->filter(fn($event) => $event->event_date->format('Y-m-d') === $today);
+            $upcomingEvents = $events->filter(fn($event) => $event->event_date->format('Y-m-d') > $today);
 
-            // Get upcoming launched events (future dates)
-            $upcomingEvents = $events->filter(function($event) use ($today) {
-                return $event->event_date->format('Y-m-d') > $today;
-            });
+            // ✅ Compute role badge & age
+            $roleBadge = $user && $user->role ? strtoupper($user->role) . '-Member' : 'GUEST';
+            $age = $user && $user->date_of_birth 
+                ? Carbon::parse($user->date_of_birth)->age 
+                : 'N/A';
 
-            Log::info('User events page loaded', [
-                'all_events' => $events->count(),
-                'today_events' => $todayEvents->count(),
-                'upcoming_events' => $upcomingEvents->count()
-            ]);
-
-            return view('eventpage', compact('events', 'todayEvents', 'upcomingEvents'));
-
+            return view('eventpage', compact(
+                'events', 
+                'todayEvents', 
+                'upcomingEvents', 
+                'user', 
+                'roleBadge', 
+                'age' // ✅ pass age
+            ));
         } catch (\Exception $e) {
             Log::error('Error loading user events: ' . $e->getMessage());
+
             return view('eventpage', [
                 'events' => collect(),
                 'todayEvents' => collect(),
-                'upcomingEvents' => collect()
+                'upcomingEvents' => collect(),
+                'user' => Auth::user(),
+                'roleBadge' => 'GUEST',
+                'age' => 'N/A', // ✅ provide fallback
             ]);
         }
     }
@@ -362,38 +368,103 @@ class EventController extends Controller
         return strtoupper(substr(md5(uniqid()), 0, 8));
     }
 
+    /**
+     * Generate QR Code for event
+     */
     public function generateQRCode($id): JsonResponse
-{
-    try {
-        $eventId = (int)$id;
-        $event = Event::find($eventId);
-        
-        if (!$event) {
-            return response()->json(['success' => false, 'error' => 'Event not found'], 404);
+    {
+        try {
+            $eventId = (int)$id;
+            $event = Event::find($eventId);
+            
+            if (!$event) {
+                return response()->json(['success' => false, 'error' => 'Event not found'], 404);
+            }
+
+            // Generate passcode if not exists
+            if (!$event->passcode) {
+                $event->passcode = $this->generateRandomPasscode();
+                $event->save();
+            }
+
+            // QR code data - this will be scanned and sent to attendance endpoint
+            $qrData = json_encode([
+                'event_id' => $event->id,
+                'passcode' => $event->passcode,
+                'type' => 'attendance'
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'qr_data' => $qrData,
+                'passcode' => $event->passcode
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error generating QR code: ' . $e->getMessage());
+            return response()->json(['success' => false, 'error' => 'Failed to generate QR code'], 500);
+        }
+    }
+
+    /**
+     * Get events attended by user for evaluation
+     */public function getAttendedEvents(): View|RedirectResponse
+
+    {
+        try {
+            $user = Auth::user();
+            
+            if (!$user) {
+                return redirect()->route('login');
+            }
+
+           Log::info("Getting attended events for user: {$user->id}");
+
+        // Get events that user has attended but not yet evaluated
+        $attendedEvents = Event::whereHas('attendances', function($query) use ($user) {
+            $query->where('user_id', $user->id)
+                  ->whereNotNull('attended_at');
+        })
+        ->with(['attendances' => function($query) use ($user) {
+            $query->where('user_id', $user->id);
+        }])
+        ->with(['evaluations' => function($query) use ($user) {
+            $query->where('user_id', $user->id);
+        }])
+        ->where('is_launched', true)
+        ->orderBy('event_date', 'desc')
+        ->get();
+
+        Log::info("Found {$attendedEvents->count()} attended events for user {$user->id}");
+
+        // Debug: Log each attended event
+        foreach ($attendedEvents as $event) {
+            Log::info("Attended event: {$event->id} - {$event->title} - {$event->event_date}");
         }
 
-        // Generate passcode if not exists
-        if (!$event->passcode) {
-            $event->passcode = $this->generateRandomPasscode();
-            $event->save();
-        }
+        // Compute role badge & age
+        $roleBadge = $user && $user->role ? strtoupper($user->role) . '-Member' : 'GUEST';
+        $age = $user && $user->date_of_birth 
+            ? Carbon::parse($user->date_of_birth)->age 
+            : 'N/A';
 
-        // QR code data - this will be scanned and sent to attendance endpoint
-        $qrData = json_encode([
-            'event_id' => $event->id,
-            'passcode' => $event->passcode,
-            'type' => 'attendance'
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'qr_data' => $qrData,
-            'passcode' => $event->passcode
-        ]);
+        return view('evaluationpage', compact(
+            'attendedEvents',
+            'user', 
+            'roleBadge', 
+            'age'
+        ));
 
     } catch (\Exception $e) {
-        Log::error('Error generating QR code: ' . $e->getMessage());
-        return response()->json(['success' => false, 'error' => 'Failed to generate QR code'], 500);
+        Log::error('Error loading attended events: ' . $e->getMessage());
+
+        // Return with empty collection instead of null
+        return view('evaluationpage', [
+            'attendedEvents' => collect(), // Ensure it's always a collection
+            'user' => Auth::user(),
+            'roleBadge' => 'GUEST',
+            'age' => 'N/A',
+        ]);
     }
 }
 }

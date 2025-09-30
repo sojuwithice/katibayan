@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany; // Add this import
 use Carbon\Carbon;
 
 /**
@@ -114,9 +115,20 @@ class Event extends Model
 
         $this->save();
     }
-    public function attendances()
-{
-    return $this->hasMany(Attendance::class);
-}
+   
+    /**
+     * Get the evaluations for this event
+     */
+    public function evaluations(): HasMany
+    {
+        return $this->hasMany(Evaluation::class, 'event_id');
+    }
 
+    /**
+     * Get the attendances for this event
+     */
+    public function attendances(): HasMany
+    {
+        return $this->hasMany(Attendance::class, 'event_id');
+    }
 }
