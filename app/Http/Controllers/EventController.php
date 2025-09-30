@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
+use Illuminate\Support\Carbon;
 
 class EventController extends Controller
 {
@@ -58,15 +59,17 @@ class EventController extends Controller
     /**
      * Display the specified event.
      */
-    public function show(int $id): JsonResponse
+    public function show($id): JsonResponse
     {
         try {
-            Log::info("Fetching event with ID: {$id}");
+            // Convert to integer to ensure type consistency
+            $eventId = (int)$id;
+            Log::info("Fetching event with ID: {$eventId}");
 
-            $event = Event::find($id);
+            $event = Event::find($eventId);
             
             if (!$event) {
-                Log::warning("Event not found with ID: {$id}");
+                Log::warning("Event not found with ID: {$eventId}");
                 return response()->json(['error' => 'Event not found'], 404);
             }
 
@@ -128,7 +131,7 @@ class EventController extends Controller
                 $responseData['event_date_time'] = 'Date format error';
             }
 
-            Log::info("Successfully prepared event data for ID: {$id}");
+            Log::info("Successfully prepared event data for ID: {$eventId}");
             
             return response()->json($responseData);
             
@@ -190,10 +193,12 @@ class EventController extends Controller
     /**
      * Launch the specified event.
      */
-    public function launchEvent(int $id): JsonResponse
+    public function launchEvent($id): JsonResponse
     {
         try {
-            $event = Event::find($id);
+            // Convert to integer to ensure type consistency
+            $eventId = (int)$id;
+            $event = Event::find($eventId);
             
             if (!$event) {
                 return response()->json(['success' => false, 'error' => 'Event not found'], 404);
@@ -204,7 +209,7 @@ class EventController extends Controller
                 'status' => 'ongoing',
             ]);
 
-            Log::info('Event launched: ' . $id);
+            Log::info('Event launched: ' . $eventId);
             return response()->json(['success' => true]);
         } catch (\Exception $e) {
             Log::error('Error launching event: ' . $e->getMessage());
@@ -215,16 +220,18 @@ class EventController extends Controller
     /**
      * Generate passcode for the specified event.
      */
-    public function generatePasscode(int $id, Request $request): JsonResponse
+    public function generatePasscode($id, Request $request): JsonResponse
     {
         try {
-            Log::info("Generating passcode for event ID: {$id}");
+            // Convert to integer to ensure type consistency
+            $eventId = (int)$id;
+            Log::info("Generating passcode for event ID: {$eventId}");
             Log::info("Request data: ", $request->all());
 
-            $event = Event::find($id);
+            $event = Event::find($eventId);
             
             if (!$event) {
-                Log::error("Event not found with ID: {$id}");
+                Log::error("Event not found with ID: {$eventId}");
                 return response()->json([
                     'success' => false, 
                     'error' => 'Event not found'
@@ -238,7 +245,7 @@ class EventController extends Controller
             $event->passcode = $passcode;
             $event->save();
 
-            Log::info("Passcode saved successfully for event: {$id}");
+            Log::info("Passcode saved successfully for event: {$eventId}");
 
             return response()->json([
                 'success' => true, 
@@ -258,10 +265,12 @@ class EventController extends Controller
     /**
      * Remove the specified event from storage.
      */
-    public function destroy(int $id): JsonResponse
+    public function destroy($id): JsonResponse
     {
         try {
-            $event = Event::find($id);
+            // Convert to integer to ensure type consistency
+            $eventId = (int)$id;
+            $event = Event::find($eventId);
             
             if (!$event) {
                 return response()->json(['success' => false, 'error' => 'Event not found'], 404);
@@ -273,11 +282,75 @@ class EventController extends Controller
 
             $event->delete();
 
-            Log::info('Event deleted: ' . $id);
+            Log::info('Event deleted: ' . $eventId);
             return response()->json(['success' => true]);
         } catch (\Exception $e) {
             Log::error('Error deleting event: ' . $e->getMessage());
             return response()->json(['success' => false, 'error' => 'Failed to delete event'], 500);
+        }
+    }
+
+    /**
+     * Display events page for regular users
+     */
+    public function userEvents(): View
+    {
+        try {
+            // Get today's date
+            $today = now()->format('Y-m-d');
+            
+            // Get ALL launched events
+            $events = Event::where('is_launched', true)
+                ->orderBy('event_date', 'asc')
+                ->orderBy('event_time', 'asc')
+                ->get();
+
+            // Get events that are launched and happening today
+            $todayEvents = $events->filter(function($event) use ($today) {
+                return $event->event_date->format('Y-m-d') === $today;
+            });
+
+            // Get upcoming launched events (future dates)
+            $upcomingEvents = $events->filter(function($event) use ($today) {
+                return $event->event_date->format('Y-m-d') > $today;
+            });
+
+            Log::info('User events page loaded', [
+                'all_events' => $events->count(),
+                'today_events' => $todayEvents->count(),
+                'upcoming_events' => $upcomingEvents->count()
+            ]);
+
+            return view('eventpage', compact('events', 'todayEvents', 'upcomingEvents'));
+
+        } catch (\Exception $e) {
+            Log::error('Error loading user events: ' . $e->getMessage());
+            return view('eventpage', [
+                'events' => collect(),
+                'todayEvents' => collect(),
+                'upcomingEvents' => collect()
+            ]);
+        }
+    }
+
+    /**
+     * Display events for public viewing (launched events only)
+     */
+    public function publicIndex(): View
+    {
+        try {
+            $today = now()->format('Y-m-d');
+            
+            $events = Event::where('is_launched', true)
+                ->where('event_date', '>=', $today)
+                ->orderBy('event_date', 'asc')
+                ->orderBy('event_time', 'asc')
+                ->get();
+
+            return view('eventpage', compact('events'));
+        } catch (\Exception $e) {
+            Log::error('Error in events public index: ' . $e->getMessage());
+            return view('eventpage', ['events' => collect()]);
         }
     }
 
@@ -289,5 +362,38 @@ class EventController extends Controller
         return strtoupper(substr(md5(uniqid()), 0, 8));
     }
 
-    
+    public function generateQRCode($id): JsonResponse
+{
+    try {
+        $eventId = (int)$id;
+        $event = Event::find($eventId);
+        
+        if (!$event) {
+            return response()->json(['success' => false, 'error' => 'Event not found'], 404);
+        }
+
+        // Generate passcode if not exists
+        if (!$event->passcode) {
+            $event->passcode = $this->generateRandomPasscode();
+            $event->save();
+        }
+
+        // QR code data - this will be scanned and sent to attendance endpoint
+        $qrData = json_encode([
+            'event_id' => $event->id,
+            'passcode' => $event->passcode,
+            'type' => 'attendance'
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'qr_data' => $qrData,
+            'passcode' => $event->passcode
+        ]);
+
+    } catch (\Exception $e) {
+        Log::error('Error generating QR code: ' . $e->getMessage());
+        return response()->json(['success' => false, 'error' => 'Failed to generate QR code'], 500);
+    }
+}
 }

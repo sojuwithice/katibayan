@@ -85,4 +85,9 @@ public function barangay()
         
         return asset('images/default-avatar.png');
     }
+      public function attendances()
+    {
+        return $this->hasMany(Attendance::class);
+    }
+
 }

@@ -10,6 +10,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\PollsController;
 use App\Http\Controllers\EventController;
+use App\Http\Controllers\AttendanceController;
 
 Route::get('/', function () {
     return view('landingpage');
@@ -39,12 +40,11 @@ Route::get('/certificatepage', function () {
 Route::get('/events', [EventController::class, 'index'])->name('sk-eventpage');
 Route::get('/events/create', [EventController::class, 'create'])->name('create-event');
 Route::post('/events', [EventController::class, 'store'])->name('events.store');
-Route::get('/events/{id}', [EventController::class, 'show']); // ADDED THIS
+Route::get('/events/{id}', [EventController::class, 'show'])->name('events.show'); // ADDED NAME
 Route::post('/events/{id}/launch', [EventController::class, 'launchEvent']);
 Route::post('/events/{id}/generate-passcode', [EventController::class, 'generatePasscode']);
 Route::delete('/events/{id}', [EventController::class, 'destroy'])->name('events.destroy');
-Route::view('/eventpage', 'eventpage')->name('eventpage');
-
+Route::get('/eventpage', [EventController::class, 'userEvents'])->name('eventpage');
 
 // routes/web.php
 Route::get('/faqspage', function () {
@@ -55,11 +55,8 @@ Route::get('/suggestionbox', function () {
     return view('suggestionbox'); 
 })->name('suggestionbox');
 
-Route::get('/attendance', function () {
-    return view('attendancepage');
-})->name('attendancepage');
+Route::view('/attendance', 'attendancepage')->name('attendancepage');
 
-// routes/web.php
 Route::get('/serviceoffers', function () {
     return view('serviceoffers');
 })->name('serviceoffers');
@@ -146,8 +143,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
     Route::get('/profile/check-session', [ProfileController::class, 'checkSession'])->name('profile.checkSession');
     Route::get('/profile/user-data', [ProfileController::class, 'getUserData'])->name('profile.userData');
-    
-
 });
 
 Route::post('/profile/change-password', [ProfileController::class, 'changePassword'])->name('profile.change-password');
@@ -155,3 +150,7 @@ Route::post('/profile/change-password', [ProfileController::class, 'changePasswo
 Route::post('/profile/avatar/update', [ProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
 Route::post('/profile/avatar/remove', [ProfileController::class, 'removeAvatar'])->name('profile.avatar.remove');
 Route::get('/profile/data', [ProfileController::class, 'getProfileData'])->name('profile.data');
+
+// Attendance routes
+Route::post('/attendance/mark', [AttendanceController::class, 'markAttendance'])->name('attendance.mark');
+Route::get('/attendance/my-attendances', [AttendanceController::class, 'getUserAttendances'])->name('attendance.my');

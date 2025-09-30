@@ -114,4 +114,9 @@ class Event extends Model
 
         $this->save();
     }
+    public function attendances()
+{
+    return $this->hasMany(Attendance::class);
+}
+
 }
