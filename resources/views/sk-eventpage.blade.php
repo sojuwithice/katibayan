@@ -238,7 +238,26 @@
           <div class="event-category happening" data-status="ongoing">
             <span class="tag">Happening Today</span>
             @foreach($todayEvents as $event)
-              <div class="event-card" data-event-id="{{ $event->id }}" data-status="{{ $event->status }}" data-category="{{ $event->category }}">
+              @php
+                // CORRECTED: Determine current status based on date, time, and launch status
+                $currentDateTime = now();
+                $eventDateTime = \Carbon\Carbon::parse($event->event_date->format('Y-m-d') . ' ' . $event->event_time);
+                
+                if ($eventDateTime->isPast()) {
+                    // Event date/time has passed - it's completed
+                    $currentStatus = 'completed';
+                } elseif ($event->is_launched && $eventDateTime->isToday()) {
+                    // Event is launched AND happening today - it's ongoing
+                    $currentStatus = 'ongoing';
+                } elseif ($event->is_launched && $eventDateTime->isFuture()) {
+                    // Event is launched but date is in future - it should still be upcoming
+                    $currentStatus = 'upcoming';
+                } else {
+                    // Event is not launched and date is in future - it's upcoming
+                    $currentStatus = 'upcoming';
+                }
+              @endphp
+              <div class="event-card" data-event-id="{{ $event->id }}" data-status="{{ $currentStatus }}" data-category="{{ $event->category }}">
                 <div class="event-date">
                   <span class="day">{{ $event->event_date->format('D') }}</span>
                   <span class="num">{{ $event->event_date->format('d') }}</span>
@@ -259,11 +278,22 @@
                   </div>
                 </div>
                 <div class="event-action">
-                  @if(!$event->is_launched)
+                  @if(!$event->is_launched && $currentStatus === 'upcoming')
                     <button class="launch-btn" data-event-id="{{ $event->id }}">Launch Event</button>
-                  @else
+                  @elseif($event->is_launched && $currentStatus === 'ongoing')
                     <span class="launched-badge">Launched</span>
+                  @elseif($event->is_launched && $currentStatus === 'upcoming')
+                    <span class="launched-badge">Launched</span>
+                  @elseif($currentStatus === 'completed')
+                    <span class="completed-badge">Completed</span>
                   @endif
+                  
+                  @if($currentStatus !== 'completed')
+                    <a href="{{ route('edit-event', $event->id) }}" class="edit-btn">
+                      Edit <i class="fa-solid fa-pen"></i>
+                    </a>
+                  @endif
+                  
                   <button class="delete-btn" data-event-id="{{ $event->id }}">
                     <i class="fas fa-trash"></i>
                   </button>
@@ -278,7 +308,26 @@
           <div class="event-category">
             <h4>{{ $month }}</h4>
             @foreach($eventsInMonth as $event)
-              <div class="event-card" data-event-id="{{ $event->id }}" data-status="{{ $event->status }}" data-category="{{ $event->category }}">
+              @php
+                // CORRECTED: Determine current status based on date, time, and launch status
+                $currentDateTime = now();
+                $eventDateTime = \Carbon\Carbon::parse($event->event_date->format('Y-m-d') . ' ' . $event->event_time);
+                
+                if ($eventDateTime->isPast()) {
+                    // Event date/time has passed - it's completed
+                    $currentStatus = 'completed';
+                } elseif ($event->is_launched && $eventDateTime->isToday()) {
+                    // Event is launched AND happening today - it's ongoing
+                    $currentStatus = 'ongoing';
+                } elseif ($event->is_launched && $eventDateTime->isFuture()) {
+                    // Event is launched but date is in future - it should still be upcoming
+                    $currentStatus = 'upcoming';
+                } else {
+                    // Event is not launched and date is in future - it's upcoming
+                    $currentStatus = 'upcoming';
+                }
+              @endphp
+              <div class="event-card" data-event-id="{{ $event->id }}" data-status="{{ $currentStatus }}" data-category="{{ $event->category }}">
                 <div class="event-date">
                   <span class="day">{{ $event->event_date->format('D') }}</span>
                   <span class="num">{{ $event->event_date->format('d') }}</span>
@@ -299,14 +348,22 @@
                   </div>
                 </div>
                 <div class="event-action">
-                  @if(!$event->is_launched)
+                  @if(!$event->is_launched && $currentStatus === 'upcoming')
                     <button class="launch-btn" data-event-id="{{ $event->id }}">Launch Event</button>
-                  @else
+                  @elseif($event->is_launched && $currentStatus === 'ongoing')
                     <span class="launched-badge">Launched</span>
+                  @elseif($event->is_launched && $currentStatus === 'upcoming')
+                    <span class="launched-badge">Launched</span>
+                  @elseif($currentStatus === 'completed')
+                    <span class="completed-badge">Completed</span>
                   @endif
-                  <a href="{{ route('edit-event', $event->id) }}" class="edit-btn">
-                    Edit <i class="fa-solid fa-pen"></i>
-                  </a>
+                  
+                  @if($currentStatus !== 'completed')
+                    <a href="{{ route('edit-event', $event->id) }}" class="edit-btn">
+                      Edit <i class="fa-solid fa-pen"></i>
+                    </a>
+                  @endif
+                  
                   <button class="delete-btn" data-event-id="{{ $event->id }}">
                     <i class="fas fa-trash"></i>
                   </button>
@@ -775,6 +832,7 @@
           if (eventCard) {
             const launchBtn = eventCard.querySelector('.launch-btn');
             const actionDiv = eventCard.querySelector('.event-action');
+            
             if (launchBtn && actionDiv) {
               launchBtn.remove();
               const launchedBadge = document.createElement('span');
@@ -782,8 +840,16 @@
               launchedBadge.textContent = 'Launched';
               actionDiv.prepend(launchedBadge);
               
-              // Update data-status for filtering
-              eventCard.setAttribute('data-status', 'ongoing');
+              // Update data-status for filtering - but only if it's today's event
+              // For future events, keep status as 'upcoming'
+              const eventDate = new Date(eventCard.querySelector('.event-datetime .value').textContent);
+              const today = new Date();
+              if (eventDate.toDateString() === today.toDateString()) {
+                eventCard.setAttribute('data-status', 'ongoing');
+              } else {
+                // Keep as upcoming for future dates
+                eventCard.setAttribute('data-status', 'upcoming');
+              }
             }
           }
 
@@ -972,6 +1038,22 @@
           `;
         }
       }
+
+      // Auto-update event statuses every minute
+      setInterval(() => {
+        const eventCards = document.querySelectorAll('.event-card');
+        eventCards.forEach(card => {
+          const eventId = card.getAttribute('data-event-id');
+          const currentStatus = card.getAttribute('data-status');
+          
+          // Only check events that are not completed
+          if (currentStatus !== 'completed') {
+            // This would ideally make an API call to check status
+            // For now, we'll just re-apply filters
+            applyFilters();
+          }
+        });
+      }, 60000); // Check every minute
     });
   </script>
 </body>

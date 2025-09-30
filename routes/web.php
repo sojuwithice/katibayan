@@ -11,6 +11,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\PollsController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\EvaluationController;
 
 Route::get('/', function () {
     return view('landingpage');
@@ -62,11 +63,9 @@ Route::get('/serviceoffers', function () {
 })->name('serviceoffers');
 
 Route::get('/polls', [PollsController::class, 'index'])->name('polls.page');
-
-Route::get('/evaluation', function () {
-    return view('evaluationpage'); 
-})->name('evaluation');
-
+Route::get('/evaluation', [EvaluationController::class, 'index'])->name('evaluation');
+Route::post('/evaluation', [EvaluationController::class, 'store']);
+Route::get('/evaluation/check/{eventId}', [EvaluationController::class, 'checkEvaluation']);
 Route::get('/sk-dashboard', function () {
     return view('sk-dashboard'); 
 })->name('sk.dashboard');

@@ -252,10 +252,12 @@ $roleBadge = strtoupper($user->role) . '-Member';
                       <i data-lucide="users"></i>
                     </div>
                   </div>
-                  <div class="progress-footer">
-                    <div class="bar"><span style="width:5%"></span></div>
-                    <small>5/100</small>
-                  </div>
+                 <div class="progress-footer" style="--progress: {{ $attendancePercentage }}%">
+                <div class="bar">
+                <span style="width: var(--progress)"></span>
+                </div>
+                <small>{{ $attendedCount }}/{{ $totalEvents }}</small>
+                </div>
                 </div>
 
                 <!-- Evaluation -->
