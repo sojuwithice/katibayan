@@ -89,5 +89,8 @@ public function barangay()
     {
         return $this->hasMany(Attendance::class);
     }
-
+ public function events()
+    {
+        return $this->hasMany(Event::class);
+    }
 }

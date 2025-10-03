@@ -12,6 +12,7 @@ use App\Http\Controllers\PollsController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\EvaluationController;
+use App\Http\Controllers\SKEvaluationController;
 
 Route::get('/', function () {
     return view('landingpage');
@@ -153,3 +154,5 @@ Route::get('/profile/data', [ProfileController::class, 'getProfileData'])->name(
 // Attendance routes
 Route::post('/attendance/mark', [AttendanceController::class, 'markAttendance'])->name('attendance.mark');
 Route::get('/attendance/my-attendances', [AttendanceController::class, 'getUserAttendances'])->name('attendance.my');
+
+Route::get('/sk/evaluation/review/{event_id}', [App\Http\Controllers\SKEvaluationController::class, 'showReview'])->name('sk-eval-review');

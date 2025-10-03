@@ -1,10 +1,22 @@
 @php
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use App\Models\Attendance;
+use App\Models\Evaluation;
 
 $user = Auth::user();
 $age = $user->date_of_birth ? Carbon::parse($user->date_of_birth)->age : 'N/A';
 $roleBadge = strtoupper($user->role) . '-Member';
+
+// Calculate evaluation progress
+$attendedEvents = Attendance::where('user_id', $user->id)
+    ->whereNotNull('attended_at')
+    ->count();
+
+$evaluatedEvents = Evaluation::where('user_id', $user->id)
+    ->count();
+
+$eventsToEvaluate = $attendedEvents - $evaluatedEvents;
 @endphp
 
 <!DOCTYPE html>
@@ -196,7 +208,7 @@ $roleBadge = strtoupper($user->role) . '-Member';
                   </div>
                   <div class="event-info">
                     <p><strong>UPCOMING!</strong> Anti-Rabies Vaccination</p>
-                    <small>Please, Don’t Forget to Participate</small>
+                    <small>Please, Don't Forget to Participate</small>
                     <span class="desc">KatiBayan provides a platform for the youth to stay updated on SK events and 
                       programs while fostering active participation in community development</span>
                   </div>
@@ -265,13 +277,24 @@ $roleBadge = strtoupper($user->role) . '-Member';
                   <div class="card-content">
                     <div class="text">
                       <h4>Evaluation</h4>
-                      <p>You have 1 program to evaluate.</p>
+                      <p>
+                        @if($eventsToEvaluate > 0)
+                          You have {{ $eventsToEvaluate }} program{{ $eventsToEvaluate > 1 ? 's' : '' }} to evaluate.
+                        @else
+                          All evaluations completed!
+                        @endif
+                      </p>
                     </div>
                     <div class="icon">
                       <i data-lucide="thumbs-up"></i>
                     </div>
                   </div>
-                  <small>0/1</small>
+                  <div class="progress-footer" style="--progress: {{ $attendedEvents > 0 ? ($evaluatedEvents / $attendedEvents * 100) : 0 }}%">
+                    <div class="bar">
+                      <span style="width: var(--progress)"></span>
+                    </div>
+                    <small>{{ $evaluatedEvents }}/{{ $attendedEvents }}</small>
+                  </div>
                 </div>
 
                 <!-- Poll -->
@@ -365,7 +388,7 @@ $roleBadge = strtoupper($user->role) . '-Member';
   Share with us <i class="fas fa-paper-plane"></i>
 </a>
 
-              <p class="note">Everyone is encouraged to share their ideas and suggestions — we’re glad to hear from you!</p>
+              <p class="note">Everyone is encouraged to share their ideas and suggestions — we're glad to hear from you!</p>
             </div>
           </div>
         </div>

@@ -42,6 +42,7 @@ class Event extends Model
         'status',
         'is_launched',
         'passcode',
+        'user_id'
     ];
 
     protected $casts = [
@@ -130,5 +131,17 @@ class Event extends Model
     public function attendances(): HasMany
     {
         return $this->hasMany(Attendance::class, 'event_id');
+    }
+     public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Get the barangay through the user
+     */
+    public function barangay()
+    {
+        return $this->hasOneThrough(Barangay::class, User::class, 'id', 'id', 'user_id', 'barangay_id');
     }
 }
