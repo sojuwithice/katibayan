@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KatiBayan - Profile Page</title>
+  <title>KatiBayan - Suggestion Box</title>
   <link rel="stylesheet" href="{{ asset('css/suggestionbox.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
+  <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 <body>
   
@@ -16,7 +17,7 @@
     <button class="menu-toggle">Menu</button>
     <div class="divider"></div>
     <nav class="nav">
-      <a href="{{ route('dashboard.index') }}" class="active">
+      <a href="{{ route('dashboard.index') }}">
         <i data-lucide="layout-dashboard"></i>
         <span class="label">Dashboard</span>
       </a>
@@ -37,20 +38,15 @@
         <span class="label">Events and Programs</span>
       </a>
 
-      <a href="#">
-        <i data-lucide="megaphone"></i>
-        <span class="label">Announcements</span>
-      </a>
-
       <a href="{{ route('evaluation') }}">
           <i data-lucide="user-star"></i>
           <span class="label">Evaluation</span>
       </a>
 
-        <a href="{{ route('serviceoffers') }}">
-          <i data-lucide="hand-heart"></i>
-          <span class="label">Service Offer</span>
-        </a>
+      <a href="{{ route('serviceoffers') }}">
+        <i data-lucide="hand-heart"></i>
+        <span class="label">Service Offer</span>
+      </a>
 
     </nav>
   </aside>
@@ -110,15 +106,17 @@
 
         <!-- Profile Avatar -->
         <div class="profile-wrapper">
-          <img src="https://i.pravatar.cc/80" alt="User" class="avatar" id="profileToggle">
+          <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+               alt="User" class="avatar" id="profileToggle">
           <div class="profile-dropdown">
             <div class="profile-header">
-              <img src="https://i.pravatar.cc/80" alt="User" class="profile-avatar">
+              <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+                   alt="User" class="profile-avatar">
               <div class="profile-info">
-                <h4>Marijoy S. Novora</h4>
+                <h4>{{ $user->given_name }} {{ $user->middle_name }} {{ $user->last_name }} {{ $user->suffix }}</h4>
                 <div class="profile-badge">
-                  <span class="badge">KK- Member</span>
-                  <span class="badge">19 yrs old</span>
+                  <span class="badge">{{ $roleBadge }}</span>
+                  <span class="badge">{{ $age }} yrs old</span>
                 </div>
               </div>
             </div>
@@ -136,7 +134,17 @@
                 </a>
               </li>
               <li><i class="fas fa-star"></i> Send Feedback to Katibayan</li>
+              <li class="logout-item">
+                <a href="#" onclick="confirmLogout(event)">
+                  <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+              </li>
             </ul>
+            
+            <!-- Hidden Logout Form -->
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+              @csrf
+            </form>
           </div>
         </div>
       </div>
@@ -145,18 +153,19 @@
     <!-- Suggestion Box -->
     <div class="suggestion-container">
       <div class="suggestion-header">
-        <button class="back-btn"><i class="fas fa-arrow-left"></i></button>
+        <button class="back-btn" onclick="window.history.back()"><i class="fas fa-arrow-left"></i></button>
         <h2>Suggestion Box</h2>
       </div>
       <p class="subtitle">
         Your insights matter. Sharing your ideas helps us build a stronger connection with you.
       </p>
 
-      <form class="suggestion-form">
+      <form class="suggestion-form" id="suggestionForm">
+        @csrf
         <label for="committee">Select the committee for your suggested event or program.</label>
         <div class="custom-select">
           <div class="select-trigger">
-            <span class="selected-text">Committee:</span> 
+            <span class="selected-text">Select Committee</span> 
             <i class="fas fa-chevron-down"></i>
           </div>
           <ul class="select-options">
@@ -167,10 +176,10 @@
             <li data-value="sports">Sports</li>
           </ul>
         </div>
-        <input type="hidden" name="committee" id="committee">
+        <input type="hidden" name="committee" id="committee" required>
 
         <label for="suggestions">Your suggestions and comments</label>
-        <textarea id="suggestions" name="suggestions" rows="6"></textarea>
+        <textarea id="suggestions" name="suggestions" rows="6" required minlength="10" maxlength="1000" placeholder="Please share your suggestions here..."></textarea>
 
         <button type="submit" class="submit-btn">
           Submit <i class="fas fa-paper-plane"></i>
@@ -179,7 +188,7 @@
     </div>
   </div> <!-- End Main -->
 
-  <!-- Success Modal (outside main, tabon lahat) -->
+  <!-- Success Modal -->
   <div id="successModal" class="modal">
     <div class="modal-box">
       <div class="modal-icon"><i class="fas fa-check"></i></div>
@@ -189,311 +198,227 @@
     </div>
   </div>
 
-</body>
-</html>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // === Lucide icons ===
+      lucide.createIcons();
 
+      // === Elements ===
+      const menuToggle = document.querySelector('.menu-toggle');
+      const sidebar = document.querySelector('.sidebar');
 
-        
+      // Submenus
+      const profileItem = document.querySelector('.profile-item');
+      const profileLink = profileItem?.querySelector('.profile-link');
 
+      // Profile & notifications dropdown (topbar)
+      const profileWrapper = document.querySelector('.profile-wrapper');
+      const profileToggle = document.getElementById('profileToggle');
+      const profileDropdown = document.querySelector('.profile-dropdown');
 
+      const notifWrapper = document.querySelector(".notification-wrapper");
+      const notifBell = notifWrapper?.querySelector(".fa-bell");
+      const notifDropdown = notifWrapper?.querySelector(".notif-dropdown");
 
+      // === Sidebar toggle ===
+      menuToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        sidebar.classList.toggle('open');
 
+        if (!sidebar.classList.contains('open')) {
+          profileItem?.classList.remove('open');
+        }
+      });
 
-
-
-
-
-
-
-    <script>
-document.addEventListener("DOMContentLoaded", () => {
-  // === Lucide icons ===
-  lucide.createIcons();
-
-  // === Elements ===
-  const menuToggle = document.querySelector('.menu-toggle');
-  const sidebar = document.querySelector('.sidebar');
-
-  // Submenus
-  const profileItem = document.querySelector('.profile-item');
-  const profileLink = profileItem?.querySelector('.profile-link');
-  const eventsItem = document.querySelector('.events-item');
-  const eventsLink = eventsItem?.querySelector('.events-link');
-
-  // Profile & notifications dropdown (topbar)
-  const profileWrapper = document.querySelector('.profile-wrapper');
-  const profileToggle = document.getElementById('profileToggle');
-  const profileDropdown = document.querySelector('.profile-dropdown');
-
-  const notifWrapper = document.querySelector(".notification-wrapper");
-  const notifBell = notifWrapper?.querySelector(".fa-bell");
-  const notifDropdown = notifWrapper?.querySelector(".notif-dropdown");
-
-  // === Sidebar toggle ===
-  menuToggle.addEventListener('click', (e) => {
-    e.stopPropagation();
-    sidebar.classList.toggle('open');
-
-    if (!sidebar.classList.contains('open')) {
-      profileItem?.classList.remove('open');
-      eventsItem?.classList.remove('open');
-    }
-  });
-
-  // Helper: close all submenus
-  function closeAllSubmenus() {
-    profileItem?.classList.remove('open');
-    eventsItem?.classList.remove('open');
-  }
-
-  // === Profile submenu toggle ===
-  if (profileItem && profileLink) {
-    profileLink.addEventListener('click', (e) => {
-      e.preventDefault();
-      if (sidebar.classList.contains('open')) {
-        const isOpen = profileItem.classList.contains('open');
-        closeAllSubmenus();
-        if (!isOpen) profileItem.classList.add('open');
+      // Helper: close all submenus
+      function closeAllSubmenus() {
+        profileItem?.classList.remove('open');
       }
-    });
-  }
 
-  // === Events submenu toggle ===
-  if (eventsItem && eventsLink) {
-    eventsLink.addEventListener('click', (e) => {
-      e.preventDefault();
-      if (sidebar.classList.contains('open')) {
-        const isOpen = eventsItem.classList.contains('open');
-        closeAllSubmenus();
-        if (!isOpen) eventsItem.classList.add('open');
+      // === Profile submenu toggle ===
+      if (profileItem && profileLink) {
+        profileLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          if (sidebar.classList.contains('open')) {
+            const isOpen = profileItem.classList.contains('open');
+            closeAllSubmenus();
+            if (!isOpen) profileItem.classList.add('open');
+          }
+        });
       }
-    });
-  }
 
-  // === Close sidebar when clicking outside ===
-  document.addEventListener('click', (e) => {
-    if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
-      sidebar.classList.remove('open');
-      closeAllSubmenus();
-    }
+      // === Close sidebar when clicking outside ===
+      document.addEventListener('click', (e) => {
+        if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+          sidebar.classList.remove('open');
+          closeAllSubmenus();
+        }
 
-    if (profileWrapper && !profileWrapper.contains(e.target)) {
-      profileWrapper.classList.remove('active');
-    }
+        if (profileWrapper && !profileWrapper.contains(e.target)) {
+          profileWrapper.classList.remove('active');
+        }
 
-    if (notifWrapper && !notifWrapper.contains(e.target)) {
-      notifWrapper.classList.remove('active');
-    }
-  });
+        if (notifWrapper && !notifWrapper.contains(e.target)) {
+          notifWrapper.classList.remove('active');
+        }
+      });
 
-  // === Profile dropdown toggle (topbar) ===
-  if (profileToggle) {
-    profileToggle.addEventListener('click', (e) => {
-      e.stopPropagation();
-      profileWrapper.classList.toggle('active');
-      notifWrapper?.classList.remove('active');
-    });
-  }
-
-  profileDropdown?.addEventListener('click', e => e.stopPropagation());
-
-  // === Notifications dropdown toggle ===
-  if (notifBell) {
-    notifBell.addEventListener('click', (e) => {
-      e.stopPropagation();
-      notifWrapper.classList.toggle('active');
-      profileWrapper?.classList.remove('active');
-    });
-  }
-
-  notifDropdown?.addEventListener('click', e => e.stopPropagation());
-
-  // === Calendar ===
-  const weekdays = ["MON","TUE","WED","THU","FRI","SAT","SUN"];
-  const daysContainer = document.querySelector(".calendar .days");
-  const header = document.querySelector(".calendar header h3");
-  let today = new Date();
-  let currentView = new Date();
-
-  const holidays = [
-    "2025-01-01", "2025-04-09", "2025-04-17", "2025-04-18",
-    "2025-05-01", "2025-06-06", "2025-06-12", "2025-08-25",
-    "2025-11-30", "2025-12-25", "2025-12-30"
-  ];
-
-  function renderCalendar(baseDate) {
-    if (!daysContainer || !header) return;
-    daysContainer.innerHTML = "";
-
-    const startOfWeek = new Date(baseDate);
-    startOfWeek.setDate(baseDate.getDate() - (baseDate.getDay() === 0 ? 6 : baseDate.getDay() - 1));
-
-    const middleDay = new Date(startOfWeek);
-    middleDay.setDate(startOfWeek.getDate() + 3);
-    header.textContent = middleDay.toLocaleDateString("en-US", { month: "long", year: "numeric" });
-
-    for (let i = 0; i < 7; i++) {
-      const thisDay = new Date(startOfWeek);
-      thisDay.setDate(startOfWeek.getDate() + i);
-
-      const dayEl = document.createElement("div");
-      dayEl.classList.add("day");
-
-      const weekdayEl = document.createElement("span");
-      weekdayEl.classList.add("weekday");
-      weekdayEl.textContent = weekdays[i];
-
-      const dateEl = document.createElement("span");
-      dateEl.classList.add("date");
-      dateEl.textContent = thisDay.getDate();
-
-      const month = (thisDay.getMonth() + 1).toString().padStart(2,'0');
-      const day = thisDay.getDate().toString().padStart(2,'0');
-      const dateStr = `${thisDay.getFullYear()}-${month}-${day}`;
-
-      if (holidays.includes(dateStr)) dateEl.classList.add('holiday');
-
-      if (
-        thisDay.getDate() === today.getDate() &&
-        thisDay.getMonth() === today.getMonth() &&
-        thisDay.getFullYear() === today.getFullYear()
-      ) dayEl.classList.add("active");
-
-      dayEl.appendChild(weekdayEl);
-      dayEl.appendChild(dateEl);
-      daysContainer.appendChild(dayEl);
-    }
-  }
-
-  renderCalendar(currentView);
-
-  const prevBtn = document.querySelector(".calendar .prev");
-  const nextBtn = document.querySelector(".calendar .next");
-  prevBtn?.addEventListener("click", () => {
-    currentView.setDate(currentView.getDate() - 7);
-    renderCalendar(currentView);
-  });
-  nextBtn?.addEventListener("click", () => {
-    currentView.setDate(currentView.getDate() + 7);
-    renderCalendar(currentView);
-  });
-
-  // === Time auto-update ===
-const timeEl = document.querySelector(".time");
-function updateTime() {
-  if (!timeEl) return;
-  const now = new Date();
-
-  const shortWeekdays = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
-  const shortMonths = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
-
-  const weekday = shortWeekdays[now.getDay()];
-  const month = shortMonths[now.getMonth()];
-  const day = now.getDate();
-
-  let hours = now.getHours();
-  const minutes = now.getMinutes().toString().padStart(2, "0");
-  const ampm = hours >= 12 ? "PM" : "AM";
-  hours = hours % 12 || 12;
-
-  // Example: MON, AUG 8 10:00 AM
-  timeEl.innerHTML = `${weekday}, ${month} ${day} ${hours}:${minutes} <span>${ampm}</span>`;
-}
-updateTime();
-setInterval(updateTime, 60000);
-
-
-  // === Password toggle ===
-  const tempPassword = document.getElementById('tempPassword');
-  const toggleIcon = document.querySelector('.toggle-password');
-  if (tempPassword && toggleIcon) {
-    let hidden = true;
-    const realPassword = "marijoy";
-    toggleIcon.addEventListener('click', () => {
-      if (hidden) {
-        tempPassword.textContent = realPassword;
-        toggleIcon.classList.remove('fa-eye-slash');
-        toggleIcon.classList.add('fa-eye');
-        hidden = false;
-      } else {
-        tempPassword.textContent = "•••••";
-        toggleIcon.classList.remove('fa-eye');
-        toggleIcon.classList.add('fa-eye-slash');
-        hidden = true;
+      // === Profile dropdown toggle (topbar) ===
+      if (profileToggle) {
+        profileToggle.addEventListener('click', (e) => {
+          e.stopPropagation();
+          profileWrapper.classList.toggle('active');
+          notifWrapper?.classList.remove('active');
+        });
       }
-    });
-  }
 
-  // === Modal ===
-  const modalOverlay = document.getElementById('modalOverlay');
-  const closeModal = document.getElementById('closeModal');
-  const printBtns = document.querySelectorAll('.print-btn');
+      profileDropdown?.addEventListener('click', e => e.stopPropagation());
 
-  printBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      modalOverlay.style.display = 'flex';
-    });
-  });
+      // === Notifications dropdown toggle ===
+      if (notifBell) {
+        notifBell.addEventListener('click', (e) => {
+          e.stopPropagation();
+          notifWrapper.classList.toggle('active');
+          profileWrapper?.classList.remove('active');
+        });
+      }
 
-  closeModal?.addEventListener('click', () => {
-    modalOverlay.style.display = 'none';
-  });
+      notifDropdown?.addEventListener('click', e => e.stopPropagation());
 
-  modalOverlay?.addEventListener('click', (e) => {
-    if (e.target === modalOverlay) {
-      modalOverlay.style.display = 'none';
-    }
-  });
+      // === Time auto-update ===
+      const timeEl = document.querySelector(".time");
+      function updateTime() {
+        if (!timeEl) return;
+        const now = new Date();
 
-    const customSelect = document.querySelector('.custom-select');
-    const trigger = customSelect.querySelector('.select-trigger');
-    const selectedText = trigger.querySelector('.selected-text'); // now exists
-    const options = customSelect.querySelector('.select-options');
-    const items = options.querySelectorAll('li');
-    const hiddenInput = document.querySelector('#committee');
+        const shortWeekdays = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
+        const shortMonths = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
 
-    trigger.addEventListener('click', (e) => {
-    e.stopPropagation();
-    options.style.display = options.style.display === 'block' ? 'none' : 'block';
-    trigger.querySelector('i').style.transform = options.style.display === 'block' ? 'rotate(180deg)' : 'rotate(0deg)';
-    });
+        const weekday = shortWeekdays[now.getDay()];
+        const month = shortMonths[now.getMonth()];
+        const day = now.getDate();
 
-    items.forEach(item => {
-    item.addEventListener('click', (e) => {
-        selectedText.textContent = item.textContent;  // update visible text
-        hiddenInput.value = item.dataset.value;       // update hidden input
+        let hours = now.getHours();
+        const minutes = now.getMinutes().toString().padStart(2, "0");
+        const ampm = hours >= 12 ? "PM" : "AM";
+        hours = hours % 12 || 12;
+
+        timeEl.innerHTML = `${weekday}, ${month} ${day} ${hours}:${minutes} <span>${ampm}</span>`;
+      }
+      updateTime();
+      setInterval(updateTime, 60000);
+
+      // === Custom Select Functionality ===
+      const customSelect = document.querySelector('.custom-select');
+      const trigger = customSelect.querySelector('.select-trigger');
+      const selectedText = trigger.querySelector('.selected-text');
+      const options = customSelect.querySelector('.select-options');
+      const items = options.querySelectorAll('li');
+      const hiddenInput = document.getElementById('committee');
+
+      trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        options.style.display = options.style.display === 'block' ? 'none' : 'block';
+        trigger.querySelector('i').style.transform = options.style.display === 'block' ? 'rotate(180deg)' : 'rotate(0deg)';
+      });
+
+      items.forEach(item => {
+        item.addEventListener('click', (e) => {
+          selectedText.textContent = item.textContent;
+          hiddenInput.value = item.dataset.value;
+          options.style.display = 'none';
+          trigger.querySelector('i').style.transform = 'rotate(0deg)';
+          e.stopPropagation();
+        });
+      });
+
+      document.addEventListener('click', () => {
         options.style.display = 'none';
         trigger.querySelector('i').style.transform = 'rotate(0deg)';
-        e.stopPropagation();
+      });
+
+      // === Suggestion Form Submission ===
+      const suggestionForm = document.getElementById('suggestionForm');
+      const submitBtn = document.querySelector('.submit-btn');
+      const modal = document.getElementById('successModal');
+      const closeBtn = document.getElementById('closeModalBtn');
+
+      suggestionForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        // Validate form
+        const committee = hiddenInput.value;
+        const suggestions = document.getElementById('suggestions').value;
+
+        if (!committee) {
+          alert('Please select a committee');
+          return;
+        }
+
+        if (suggestions.length < 10) {
+          alert('Please provide more detailed suggestions (at least 10 characters)');
+          return;
+        }
+
+        // Disable submit button and show loading
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = 'Submitting... <i class="fas fa-spinner fa-spin"></i>';
+
+        try {
+          const response = await fetch('/suggestions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({
+              committee: committee,
+              suggestions: suggestions
+            })
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            // Show success modal
+            modal.style.display = 'flex';
+            // Reset form
+            suggestionForm.reset();
+            selectedText.textContent = 'Select Committee';
+            hiddenInput.value = '';
+          } else {
+            alert('Failed to submit suggestion: ' + data.message);
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          alert('An error occurred while submitting your suggestion. Please try again.');
+        } finally {
+          // Re-enable submit button
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = 'Submit <i class="fas fa-paper-plane"></i>';
+        }
+      });
+
+      // Close modal
+      closeBtn.addEventListener('click', function() {
+        modal.style.display = 'none';
+      });
+
+      // Click outside modal to close
+      window.addEventListener('click', function(e) {
+        if (e.target == modal) {
+          modal.style.display = 'none';
+        }
+      });
+
+      // Logout functionality
+      window.confirmLogout = function(event) {
+        event.preventDefault();
+        if (confirm('Are you sure you want to logout?')) {
+          document.getElementById('logout-form').submit();
+        }
+      };
     });
-    });
-
-    document.addEventListener('click', () => {
-    options.style.display = 'none';
-    trigger.querySelector('i').style.transform = 'rotate(0deg)';
-    });
-
-
-    });
-
-    const submitBtn = document.querySelector('.submit-btn');
-  const modal = document.getElementById('successModal');
-  const closeBtn = document.getElementById('closeModalBtn');
-
-  submitBtn.addEventListener('click', function(e){
-    e.preventDefault(); // para hindi mag-reload page
-    modal.style.display = 'flex';
-  });
-
-  closeBtn.addEventListener('click', function(){
-    modal.style.display = 'none';
-  });
-
-  // Click outside modal to close
-  window.addEventListener('click', function(e){
-    if(e.target == modal){
-      modal.style.display = 'none';
-    }
-  });
-
-</script>
+  </script>
+</body>
+</html>

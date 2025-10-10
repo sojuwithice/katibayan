@@ -13,6 +13,8 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\EvaluationController;
 use App\Http\Controllers\SKEvaluationController;
+use App\Http\Controllers\ServicesController;
+use App\Http\Controllers\SuggestionController;
 
 Route::get('/', function () {
     return view('landingpage');
@@ -42,26 +44,24 @@ Route::get('/certificatepage', function () {
 Route::get('/events', [EventController::class, 'index'])->name('sk-eventpage');
 Route::get('/events/create', [EventController::class, 'create'])->name('create-event');
 Route::post('/events', [EventController::class, 'store'])->name('events.store');
-Route::get('/events/{id}', [EventController::class, 'show'])->name('events.show'); // ADDED NAME
+Route::get('/events/{id}', [EventController::class, 'show'])->name('events.show');
 Route::post('/events/{id}/launch', [EventController::class, 'launchEvent']);
 Route::post('/events/{id}/generate-passcode', [EventController::class, 'generatePasscode']);
 Route::delete('/events/{id}', [EventController::class, 'destroy'])->name('events.destroy');
 Route::get('/eventpage', [EventController::class, 'userEvents'])->name('eventpage');
 
-// routes/web.php
+
 Route::get('/faqspage', function () {
     return view('faqspage'); 
 })->name('faqspage');
 
-Route::get('/suggestionbox', function () {
-    return view('suggestionbox'); 
-})->name('suggestionbox');
+
+
+Route::get('/suggestionbox', [SuggestionController::class, 'index'])->name('suggestionbox');
+Route::post('/suggestions', [SuggestionController::class, 'store'])->name('suggestions.store');
 
 Route::view('/attendance', 'attendancepage')->name('attendancepage');
-
-Route::get('/serviceoffers', function () {
-    return view('serviceoffers');
-})->name('serviceoffers');
+Route::get('/serviceoffers', [ServicesController::class, 'index'])->name('serviceoffers');
 
 Route::get('/polls', [PollsController::class, 'index'])->name('polls.page');
 Route::get('/evaluation', [EvaluationController::class, 'index'])->name('evaluation');
@@ -115,44 +115,51 @@ Route::get('/sk-eval-review', function () {
     return view('sk-eval-review');
 })->name('sk-eval-review');
 
-//CONTROLLER ROUTES
-
-// Remove the duplicate route definition and use the controller
+// ========== REGISTRATION ROUTES (FIXED) ==========
+// Remove the old Route::post('/register') and use the new flow
 Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
-Route::post('/register', [RegisterController::class, 'register']);
+Route::post('/register/preview', [RegisterController::class, 'preview'])->name('register.preview');
+Route::get('/register/captcha', [RegisterController::class, 'showCaptcha'])->name('register.captcha');
+Route::post('/register/complete', [RegisterController::class, 'complete'])->name('register.complete');
 
-Route::get('/profile', [ProfileController::class, 'index'])->name('profilepage');
-Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
-
+// ========== LOCATION ROUTES ==========
 Route::get('/get-provinces/{region_id}', [LocationController::class, 'getprovinces']);
 Route::get('/get-cities/{province_id}', [LocationController::class, 'getCities']);
 Route::get('/get-barangays/{city_id}', [LocationController::class, 'getBarangays']);
 
+// ========== AUTH ROUTES ==========
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
-// Admin dashboard and actions
+// ========== ADMIN ROUTES ==========
 Route::get('/admin-dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
 Route::patch('/admin/users/{id}/approve', [AdminController::class, 'approve'])->name('admin.users.approve');
 Route::patch('/admin/users/{id}/reject', [AdminController::class, 'reject'])->name('admin.users.reject');
 
+// ========== PROTECTED ROUTES ==========
 Route::middleware(['auth'])->group(function () {
     // Profile routes
     Route::get('/profile', [ProfileController::class, 'index'])->name('profilepage');
     Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
     Route::get('/profile/check-session', [ProfileController::class, 'checkSession'])->name('profile.checkSession');
     Route::get('/profile/user-data', [ProfileController::class, 'getUserData'])->name('profile.userData');
+    
+    // Dashboard
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
+    
+    // Password routes
+    Route::post('/profile/change-password', [ProfileController::class, 'changePassword'])->name('profile.change-password');
+    
+    // Avatar routes
+    Route::post('/profile/avatar/update', [ProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
+    Route::post('/profile/avatar/remove', [ProfileController::class, 'removeAvatar'])->name('profile.avatar.remove');
+    Route::get('/profile/data', [ProfileController::class, 'getProfileData'])->name('profile.data');
+    
+    // Attendance routes
+    Route::post('/attendance/mark', [AttendanceController::class, 'markAttendance'])->name('attendance.mark');
+    Route::get('/attendance/my-attendances', [AttendanceController::class, 'getUserAttendances'])->name('attendance.my');
+    
+    // SK Evaluation
+    Route::get('/sk/evaluation/review/{event_id}', [App\Http\Controllers\SKEvaluationController::class, 'showReview'])->name('sk-eval-review');
 });
-
-Route::post('/profile/change-password', [ProfileController::class, 'changePassword'])->name('profile.change-password');
-// Avatar routes
-Route::post('/profile/avatar/update', [ProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
-Route::post('/profile/avatar/remove', [ProfileController::class, 'removeAvatar'])->name('profile.avatar.remove');
-Route::get('/profile/data', [ProfileController::class, 'getProfileData'])->name('profile.data');
-
-// Attendance routes
-Route::post('/attendance/mark', [AttendanceController::class, 'markAttendance'])->name('attendance.mark');
-Route::get('/attendance/my-attendances', [AttendanceController::class, 'getUserAttendances'])->name('attendance.my');
-
-Route::get('/sk/evaluation/review/{event_id}', [App\Http\Controllers\SKEvaluationController::class, 'showReview'])->name('sk-eval-review');

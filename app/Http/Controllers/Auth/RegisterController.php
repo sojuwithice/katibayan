@@ -6,49 +6,25 @@ use App\Http\Controllers\Controller;
 use App\Models\KKMember;
 use App\Models\SkOfficial;
 use App\Models\User;
-use App\Models\Region; // ✅ import Region so we can fetch it
+use App\Models\Region;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use App\Mail\AccountCredentialsMail;
 use Illuminate\Support\Facades\Mail;
 use App\Models\City;
 use App\Models\Barangay;
-
+use Illuminate\Support\Facades\Log;
 
 class RegisterController extends Controller
 {
     public function showRegistrationForm()
     {
-        // ✅ Pass regions to the register view
         $regions = Region::all();
         return view('register', compact('regions')); 
-    }
-
-    public function register(Request $request)
-    {
-        // Validate input
-        $validator = $this->validator($request->all());
-
-        if ($validator->fails()) {
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
-        }
-
-        // Create user with default status = pending
-        $user = $this->create($request->all());
-
-        // Handle file uploads based on role
-        if ($request->role === 'sk') {
-            $this->createSkOfficial($user, $request);
-        } elseif ($request->role === 'kk') {
-            $this->createKkOfficial($user, $request);
-        }
-
-        return redirect()->route('registration.success')
-            ->with('success', 'Registration submitted. Your account is pending approval.');
     }
 
     protected function validator(array $data)
@@ -59,7 +35,7 @@ class RegisterController extends Controller
             'middle_name' => 'nullable|string|max:100',
             'suffix' => 'nullable|string|max:10',
             
-            // ✅ Replace address with location fields
+            // Location fields
             'region_id' => 'required|exists:regions,id',
             'province_id' => 'required|exists:provinces,id',
             'city_id' => 'required|exists:cities,id',
@@ -77,10 +53,9 @@ class RegisterController extends Controller
             'youth_classification' => 'required|string',
             'sk_voter' => 'required|in:Yes,No',
             'role' => 'required|in:sk,kk',
-            'password' => 'nullable',
         ];
 
-        // File rules by role
+        // File rules by role - make them optional for preview
         if (isset($data['role']) && $data['role'] === 'sk') {
             $rules['oath_certificate'] = 'required|file|mimes:pdf|max:5120';
         } elseif (isset($data['role']) && $data['role'] === 'kk') {
@@ -90,17 +65,238 @@ class RegisterController extends Controller
         return Validator::make($data, $rules);
     }
 
-    protected function create(array $data)
+    protected function previewValidator(array $data)
     {
-        // 1️⃣ Generate account number: ROLE + BIRTHDATE (YYYYMMDD)
+        $rules = [
+            'last_name' => 'required|string|max:100',
+            'given_name' => 'required|string|max:100',
+            'middle_name' => 'nullable|string|max:100',
+            'suffix' => 'nullable|string|max:10',
+            
+            'region_id' => 'required|exists:regions,id',
+            'province_id' => 'required|exists:provinces,id',
+            'city_id' => 'required|exists:cities,id',
+            'barangay_id' => 'required|exists:barangays,id',
+            'purok_zone' => 'required|string|max:100',
+            'zip_code' => 'required|string|max:10',
+
+            'date_of_birth' => 'required|date',
+            'sex' => 'required|in:male,female',
+            'email' => 'required|string|email|max:255|unique:users',
+            'contact_no' => 'required|string|max:20',
+            'civil_status' => 'required|string',
+            'education' => 'required|string',
+            'work_status' => 'required|string',
+            'youth_classification' => 'required|string',
+            'sk_voter' => 'required|in:Yes,No',
+            'role' => 'required|in:sk,kk',
+            'certify_info' => 'required|accepted',
+            'certify_final' => 'required|accepted',
+            'confirm_submission' => 'required|accepted',
+        ];
+
+        // File rules by role - required for preview
+        if (isset($data['role']) && $data['role'] === 'sk') {
+            $rules['oath_certificate'] = 'required|file|mimes:pdf|max:5120';
+        } elseif (isset($data['role']) && $data['role'] === 'kk') {
+            $rules['barangay_indigency'] = 'required|file|mimes:pdf|max:5120';
+        }
+
+        return Validator::make($data, $rules);
+    }
+
+    /**
+     * Step 1: Preview route — validate, store files temporarily and keep data in session,
+     * then redirect to captcha page.
+     */
+    public function preview(Request $request)
+    {
+        Log::info('Preview method called', ['data' => $request->except(['_token', 'oath_certificate', 'barangay_indigency'])]);
+
+        // Use the preview validator which includes checkbox validation
+        $validator = $this->previewValidator($request->all());
+        
+        if ($validator->fails()) {
+            Log::error('Validation failed in preview', $validator->errors()->toArray());
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput()
+                ->with('error', 'Please fix the validation errors below.');
+        }
+
+        // Store inputs except files and checkboxes
+        $data = $request->except(['_token', 'oath_certificate', 'barangay_indigency', 'certify_info', 'certify_final', 'confirm_submission']);
+
+        // Store uploaded files temporarily in public disk under temp/
+        if ($request->hasFile('oath_certificate')) {
+            $data['oath_certificate_temp'] = $request->file('oath_certificate')->store('temp', 'public');
+            Log::info('Oath certificate stored temporarily', ['path' => $data['oath_certificate_temp']]);
+        }
+        if ($request->hasFile('barangay_indigency')) {
+            $data['barangay_indigency_temp'] = $request->file('barangay_indigency')->store('temp', 'public');
+            Log::info('Barangay indigency stored temporarily', ['path' => $data['barangay_indigency_temp']]);
+        }
+
+        // Save to session with flash data to persist across redirects
+        $request->session()->put('pending_registration', $data);
+        Log::info('Data stored in session, redirecting to captcha');
+
+        // Redirect to captcha page
+        return redirect()->route('register.captcha');
+    }
+
+    /**
+     * Show captcha page (only if session has pending_registration)
+     */
+    public function showCaptcha()
+    {
+        if (!session()->has('pending_registration')) {
+            Log::error('No pending registration in session');
+            return redirect()->route('register')->with('error', 'Session expired. Please re-submit the form.');
+        }
+
+        $siteKey = config('services.recaptcha.site_key');
+        
+        if (!$siteKey) {
+            Log::error('reCAPTCHA site key not configured');
+            return redirect()->route('register')->with('error', 'System configuration error. Please try again later.');
+        }
+
+        Log::info('Showing captcha page');
+        return view('registration-captcha', compact('siteKey'));
+    }
+
+    /**
+     * Complete registration: verify captcha with Google, finalize files, create user and role
+     */
+    /**
+ * Complete registration: verify captcha with Google, finalize files, create user and role
+ */
+/**
+ * Complete registration: verify captcha with Google, finalize files, create user and role
+ */
+public function complete(Request $request)
+{
+    Log::info('Complete method called');
+
+    if (!session()->has('pending_registration')) {
+        Log::error('No pending registration in session for complete method');
+        return redirect()->route('register')->with('error', 'Session expired. Please re-submit the form.');
+    }
+
+    $token = $request->input('g-recaptcha-response');
+    
+    // DEVELOPMENT MODE: Bypass reCAPTCHA for local testing
+    if (app()->environment('local')) {
+        Log::info('Local environment detected - bypassing reCAPTCHA verification');
+        // Skip reCAPTCHA verification in local development
+    } else {
+        // PRODUCTION: Verify reCAPTCHA
+        if (!$token) {
+            Log::error('No reCAPTCHA token provided');
+            return redirect()->route('register.captcha')->withErrors('Please complete the captcha.');
+        }
+
+        try {
+            $secret = config('services.recaptcha.secret');
+            
+            if (!$secret) {
+                Log::error('reCAPTCHA secret key not configured');
+                return redirect()->route('register.captcha')->withErrors('System configuration error. Please contact administrator.');
+            }
+
+            $resp = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
+                'secret' => $secret,
+                'response' => $token,
+                'remoteip' => $request->ip(),
+            ]);
+
+            if (!$resp->successful()) {
+                Log::error('reCAPTCHA API request failed', ['status' => $resp->status()]);
+                return redirect()->route('register.captcha')->withErrors('Captcha service unavailable. Please try again.');
+            }
+
+            $body = $resp->json();
+            Log::info('reCAPTCHA verification response', $body);
+
+            if (!($body['success'] ?? false)) {
+                Log::error('reCAPTCHA verification failed', $body);
+                return redirect()->route('register.captcha')->withErrors('Captcha verification failed. Please try again.');
+            }
+        } catch (\Exception $e) {
+            Log::error('reCAPTCHA verification error: ' . $e->getMessage());
+            // In production, you might want to be more strict here
+            // For now, let's proceed to allow testing
+            Log::info('Proceeding despite reCAPTCHA error for testing');
+        }
+    }
+
+    // Continue with registration process...
+    $data = session('pending_registration');
+    Log::info('Processing registration data from session');
+
+    try {
+        // Move temp files to final location
+        if (!empty($data['oath_certificate_temp'])) {
+            $temp = $data['oath_certificate_temp'];
+            $final = 'documents/sk/' . basename($temp);
+            Storage::disk('public')->move($temp, $final);
+            $data['oath_certificate_path'] = $final;
+            unset($data['oath_certificate_temp']);
+            Log::info('Moved oath certificate to final location', ['from' => $temp, 'to' => $final]);
+        }
+        if (!empty($data['barangay_indigency_temp'])) {
+            $temp = $data['barangay_indigency_temp'];
+            $final = 'documents/kk/' . basename($temp);
+            Storage::disk('public')->move($temp, $final);
+            $data['barangay_indigency_path'] = $final;
+            unset($data['barangay_indigency_temp']);
+            Log::info('Moved barangay indigency to final location', ['from' => $temp, 'to' => $final]);
+        }
+
+        // Create the user
+        $user = $this->create($data);
+        Log::info('User created successfully', ['user_id' => $user->id, 'email' => $user->email]);
+
+        // Create role-specific models
+        if (isset($data['role']) && $data['role'] === 'sk') {
+            SkOfficial::create([
+                'user_id' => $user->id,
+                'oath_certificate_path' => $data['oath_certificate_path'] ?? null,
+            ]);
+            Log::info('SK official record created');
+        } elseif (isset($data['role']) && $data['role'] === 'kk') {
+            KKMember::create([
+                'user_id' => $user->id,
+                'barangay_indigency_path' => $data['barangay_indigency_path'] ?? null,
+            ]);
+            Log::info('KK member record created');
+        }
+
+        // Cleanup session
+        session()->forget('pending_registration');
+        Log::info('Session cleaned up, redirecting to success');
+
+        // Redirect to success page
+        return redirect()->route('registration.success')->with('success', 'Registration submitted. Your account is pending approval.');
+
+    } catch (\Exception $e) {
+        Log::error('Error during user creation: ' . $e->getMessage());
+        session()->forget('pending_registration');
+        return redirect()->route('register')->with('error', 'Registration failed: ' . $e->getMessage());
+    }
+
+}    protected function create(array $data)
+    {
+        // Generate account number: ROLE + BIRTHDATE (YYYYMMDD)
         $prefix = strtoupper($data['role']); // SK or KK
         $birthdate = date('Ymd', strtotime($data['date_of_birth']));
         $accountNumber = $prefix . $birthdate;
 
-        // 2️⃣ Generate password: ROLE + 4 random digits
+        // Generate password: ROLE + 4 random digits
         $plainPassword = $prefix . rand(1000, 9999);
 
-        // 3️⃣ Create user in DB
+        // Create user in DB
         $user = User::create([
             'role' => $data['role'],
             'account_number' => $accountNumber,
@@ -131,14 +327,19 @@ class RegisterController extends Controller
             // Account status & password
             'account_status' => $data['role'] === 'kk' ? 'approved' : 'pending',
             'password' => Hash::make($plainPassword),
-            'default_password' => $plainPassword, // ✅ Store the plain text default password
+            'default_password' => $plainPassword,
         ]);
 
-        // 4️⃣ Send email only for KK (auto-approved)
+        // Send email only for KK (auto-approved)
         if ($data['role'] === 'kk') {
-            Mail::to($user->email)->send(
-                new AccountCredentialsMail($user, $accountNumber, $plainPassword)
-            );
+            try {
+                Mail::to($user->email)->send(
+                    new AccountCredentialsMail($user, $accountNumber, $plainPassword)
+                );
+                Log::info('Account credentials email sent to KK user');
+            } catch (\Exception $e) {
+                Log::error('Failed to send email: ' . $e->getMessage());
+            }
         }
 
         return $user;

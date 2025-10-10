@@ -458,9 +458,8 @@ class EventController extends Controller
     } catch (\Exception $e) {
         Log::error('Error loading attended events: ' . $e->getMessage());
 
-        // Return with empty collection instead of null
         return view('evaluationpage', [
-            'attendedEvents' => collect(), // Ensure it's always a collection
+            'attendedEvents' => collect(), 
             'user' => Auth::user(),
             'roleBadge' => 'GUEST',
             'age' => 'N/A',
