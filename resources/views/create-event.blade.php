@@ -339,114 +339,21 @@
     </div>
   </div>
 
-  
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // === Safe icon init ===
+      if (typeof lucide !== "undefined" && lucide.createIcons) lucide.createIcons();
 
-
-
-
-
-
-
-
-
-
-
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-  // === safe icon init ===
-  if (typeof lucide !== "undefined" && lucide.createIcons) lucide.createIcons();
-
-  // --- SIDEBAR / MENU ---
-  const menuToggle = document.querySelector(".menu-toggle");
-  const sidebar = document.querySelector(".sidebar");
-  const profileItem = document.querySelector(".profile-item");
-
-  if (menuToggle && sidebar) {
-    menuToggle.addEventListener("click", (e) => {
-      e.stopPropagation();
-      sidebar.classList.toggle("open");
-      if (!sidebar.classList.contains("open")) profileItem?.classList.remove("open");
-    });
-  }
-
-  // --- EVALUATION SUBMENU ---
-  const evaluationItem = document.querySelector(".evaluation-item");
-  const evaluationLink = document.querySelector(".evaluation-link");
-  evaluationLink?.addEventListener("click", (e) => {
-    e.preventDefault();
-    evaluationItem?.classList.toggle("open");
-  });
-
-  // === Calendar ===
-  const weekdays = ["MON","TUE","WED","THU","FRI","SAT","SUN"];
-  const daysContainer = document.querySelector(".calendar .days");
-  const header = document.querySelector(".calendar header h3");
-  let today = new Date();
-  let currentView = new Date();
-
-  const holidays = [
-    "2025-01-01","2025-04-09","2025-04-17","2025-04-18",
-    "2025-05-01","2025-06-06","2025-06-12","2025-08-25",
-    "2025-11-30","2025-12-25","2025-12-30"
-  ];
-
-  function renderCalendar(baseDate) {
-    if (!daysContainer || !header) return;
-    daysContainer.innerHTML = "";
-
-    const startOfWeek = new Date(baseDate);
-    startOfWeek.setDate(baseDate.getDate() - (baseDate.getDay() === 0 ? 6 : baseDate.getDay() - 1));
-
-    const middleDay = new Date(startOfWeek);
-    middleDay.setDate(startOfWeek.getDate() + 3);
-    header.textContent = middleDay.toLocaleDateString("en-US", { month: "long", year: "numeric" });
-
-    for (let i = 0; i < 7; i++) {
-      const thisDay = new Date(startOfWeek);
-      thisDay.setDate(startOfWeek.getDate() + i);
-
-      const dayEl = document.createElement("div");
-      dayEl.classList.add("day");
-
-      const weekdayEl = document.createElement("span");
-      weekdayEl.classList.add("weekday");
-      weekdayEl.textContent = weekdays[i];
-
-      const dateEl = document.createElement("span");
-      dateEl.classList.add("date");
-      dateEl.textContent = thisDay.getDate();
-
-      const month = (thisDay.getMonth() + 1).toString().padStart(2,'0');
-      const day = thisDay.getDate().toString().padStart(2,'0');
-      const dateStr = `${thisDay.getFullYear()}-${month}-${day}`;
-
-      if (holidays.includes(dateStr)) dateEl.classList.add('holiday');
-      if (
-        thisDay.getDate() === today.getDate() &&
-        thisDay.getMonth() === today.getMonth() &&
-        thisDay.getFullYear() === today.getFullYear()
-      ) {
-        dayEl.classList.add("active");
+      // --- SIDEBAR / MENU ---
+      const menuToggle = document.querySelector(".menu-toggle");
+      const sidebar = document.querySelector(".sidebar");
+      
+      if (menuToggle && sidebar) {
+        menuToggle.addEventListener("click", (e) => {
+          e.stopPropagation();
+          sidebar.classList.toggle("open");
+        });
       }
-
-      dayEl.appendChild(weekdayEl);
-      dayEl.appendChild(dateEl);
-      daysContainer.appendChild(dayEl);
-    }
-  }
-
-  renderCalendar(currentView);
-
-  const prevBtn = document.querySelector(".calendar .prev");
-  const nextBtn = document.querySelector(".calendar .next");
-  if (prevBtn) prevBtn.addEventListener("click", () => {
-    currentView.setDate(currentView.getDate() - 7);
-    renderCalendar(currentView);
-  });
-  if (nextBtn) nextBtn.addEventListener("click", () => {
-    currentView.setDate(currentView.getDate() + 7);
-    renderCalendar(currentView);
-  });
 
       // --- EVALUATION SUBMENU ---
       const evaluationItem = document.querySelector(".evaluation-item");
@@ -752,7 +659,6 @@ document.addEventListener("keydown", (e) => {
         timeModal.style.display = "none";
     }
 });
-
 
 // Initialize default time when page loads
 setDefaultTime();
