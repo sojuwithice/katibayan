@@ -11,8 +11,13 @@
   <!-- CSRF Token -->
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <!-- REMOVED: reCAPTCHA script from here -->
-
+  <style>
+    /* Remove asterisk from middle name and suffix fields */
+    .input-wrapper:has(#step1_middlename)::after,
+    .input-wrapper:has(#step1_suffix)::after {
+      content: none !important;
+    }
+  </style>
 </head>
 <body>
 
@@ -103,6 +108,12 @@
     {{ session('error') }}
 </div>
 @endif
+
+<!-- Real-time validation errors container -->
+<div id="stepErrors" class="error-container" style="display: none; background: #fee; border: 1px solid #f00; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
+    <h4 style="color: #d00; margin-top: 0;">Please fill out the required fields:</h4>
+    <ul id="stepErrorsList" style="margin: 0; padding-left: 20px;"></ul>
+</div>
     <!-- Hidden fields for storing location IDs -->
     <input type="hidden" name="region_id" id="regionId">
     <input type="hidden" name="province_id" id="provinceId">
@@ -124,12 +135,20 @@
         <div class="form-grid">
           <div class="input-wrapper">
             <input type="text" id="step1_lastname" name="last_name" placeholder="Last Name" required>
+            <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
           </div>
           <div class="input-wrapper">
             <input type="text" id="step1_givenname" name="given_name" placeholder="Given Name" required>
+            <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
           </div>
-          <input type="text" id="step1_middlename" name="middle_name" placeholder="Middle Name">
-          <input type="text" id="step1_suffix" name="suffix" placeholder="Suffix (optional)">
+          <div class="input-wrapper">
+            <input type="text" id="step1_middlename" name="middle_name" placeholder="Middle Name">
+            <!-- No error for optional field -->
+          </div>
+          <div class="input-wrapper">
+            <input type="text" id="step1_suffix" name="suffix" placeholder="Suffix (optional)">
+            <!-- No error for optional field -->
+          </div>
         </div>
 
         <div class="form-grid">
@@ -142,6 +161,7 @@
               @endforeach
             </ul>
             <span class="arrow"><i data-lucide="chevron-down"></i></span>
+            <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
           </div>
 
           <!-- Province -->
@@ -149,6 +169,7 @@
             <input type="text" id="provinceInput" placeholder="-- Select Province --" readonly disabled required>
             <ul class="dropdown-options"></ul>
             <span class="arrow"><i data-lucide="chevron-down"></i></span>
+            <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
           </div>
           
           <!-- City/Municipality -->
@@ -156,6 +177,7 @@
             <input type="text" id="cityInput" placeholder="-- Select City/Municipality --" readonly disabled required>
             <ul class="dropdown-options"></ul>
             <span class="arrow"><i data-lucide="chevron-down"></i></span>
+            <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
           </div>
 
           <!-- Barangay -->
@@ -163,21 +185,29 @@
             <input type="text" id="barangayInput" placeholder="-- Select Barangay --" readonly disabled required>
             <ul class="dropdown-options"></ul>
             <span class="arrow"><i data-lucide="chevron-down"></i></span>
+            <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
           </div>
         </div>
 
         <div class="form-grid">
           <!-- Zip Code -->
-          <input type="text" id="step1_zip" name="zip_code" placeholder="Zip Code" required>
+          <div class="input-wrapper">
+            <input type="text" id="step1_zip" name="zip_code" placeholder="Zip Code" required>
+            <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
+          </div>
 
           <!-- Purok/Zone -->
-          <input type="text" id="step1_purok" name="purok_zone" placeholder="Purok/Zone" required>
+          <div class="input-wrapper">
+            <input type="text" id="step1_purok" name="purok_zone" placeholder="Purok/Zone" required>
+            <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
+          </div>
         </div>
 
         <div class="form-grid-4">
-          <div class="input-icon">
+          <div class="input-icon input-wrapper">
             <input type="date" id="step1_dob" name="date_of_birth" placeholder="Date of Birth" required>
             <span class="icon" id="calendarIcon"><i data-lucide="calendar"></i></span>
+            <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
           </div>
 
           <div class="select-wrapper">
@@ -187,10 +217,18 @@
               <li data-value="male">Male</li>
               <li data-value="female">Female</li>
             </ul>
+            <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
           </div>
 
-          <input type="email" id="step1_email" name="email" placeholder="Email Address" required>
-          <input type="tel" name="contact_no" placeholder="Contact No." required>
+          <div class="input-wrapper">
+            <input type="email" id="step1_email" name="email" placeholder="Email Address" required>
+            <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
+          </div>
+
+          <div class="input-wrapper">
+            <input type="tel" name="contact_no" placeholder="Contact No." required>
+            <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
+          </div>
         </div>
       </div>
 
@@ -211,6 +249,7 @@
             <li data-value="Live-in">Live-in</li>
           </ul>
           <span class="arrow"><i data-lucide="chevron-down"></i></span>
+          <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
         </div>
         <div class="select-wrapper">
           <input type="text" name="education" placeholder="Educational Background" readonly required>
@@ -228,6 +267,7 @@
             <li data-value="Doctorate Graduate">Doctorate Graduate</li>
           </ul>
           <span class="arrow"><i data-lucide="chevron-down"></i></span>
+          <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
         </div>
         <div class="select-wrapper">
           <input type="text" name="work_status" placeholder="Work Status" readonly required>
@@ -240,6 +280,7 @@
             <li data-value="Not Interested Looking for a Job">Not Interested Looking for a Job</li>
           </ul>
           <span class="arrow"><i data-lucide="chevron-down"></i></span>
+          <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
         </div>
       </div>
 
@@ -256,6 +297,7 @@
             <li data-value="Indigenous People (IP)">Indigenous People (IP)</li>
           </ul>
           <span class="arrow"><i data-lucide="chevron-down"></i></span>
+          <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
         </div>
 
         <div class="select-wrapper">
@@ -265,6 +307,7 @@
             <li data-value="No">No</li>
           </ul>
           <span class="arrow"><i data-lucide="chevron-down"></i></span>
+          <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
         </div>
       </div>
     </section>
@@ -279,6 +322,7 @@
           <li data-value="kk">KK</li>
         </ul>
         <span class="arrow"><i data-lucide="chevron-down"></i></span>
+        <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
       </div>
 
       <!-- SK Specific Fields -->
@@ -287,9 +331,10 @@
           <p>Upload Oath Taking Certificate</p>
           <div class="upload-box">
             <label for="oath_certificate" class="upload-label">Choose File</label>
-            <input type="file" id="oath_certificate" name="oath_certificate" accept=".pdf" required hidden>
+            <input type="file" id="oath_certificate" name="oath_certificate" accept=".pdf" hidden>
             <span id="fileText1" class="file-text">Accepted: PDF, max 5 MB</span>
           </div>
+          <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
         </div>
       </div>
 
@@ -299,9 +344,10 @@
           <p>Upload Barangay Indigency or Valid ID with Full Address</p>
           <div class="upload-box">
             <label for="barangay_indigency" class="upload-label">Choose File</label>
-            <input type="file" id="barangay_indigency" name="barangay_indigency" accept=".pdf" required hidden>
+            <input type="file" id="barangay_indigency" name="barangay_indigency" accept=".pdf" hidden>
             <span id="fileText3" class="file-text">Accepted: PDF, max 5 MB</span>
           </div>
+          <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
         </div>
       </div>
 
@@ -366,6 +412,7 @@
           <input type="checkbox" name="certify_info" required>
           I certify that the information and documents I submitted are true and correct. <span class="required">*</span>
         </label>
+        <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
       </div>
     </section>
 
@@ -411,11 +458,13 @@
           <input type="checkbox" name="certify_final" required>
           I certify that the information and documents I submitted are true and correct. <span class="required">*</span>
         </label>
+        <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
 
         <label>
           <input type="checkbox" name="confirm_submission" required>
           I confirm that I have reviewed my information and this will be my final submission. <span class="required">*</span>
         </label>
+        <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
       </div>
     </section>
 
@@ -550,6 +599,10 @@ document.querySelectorAll(".select-wrapper").forEach(wrapper => {
       wrapper.classList.remove("open");
       dropdown.style.display = "none";
 
+      // Clear any field error for this input
+      const errorSpan = wrapper.querySelector('.field-error');
+      if (errorSpan) errorSpan.style.display = 'none';
+
       // Show/hide role-specific fields
       if (input.name === "role") {
         const skFields = document.getElementById("skFields");
@@ -580,7 +633,7 @@ document.addEventListener("click", e => {
   }
 });
 
-// ---- MULTI-STEP FORM ----
+// ---- MULTI-STEP FORM WITH REAL-TIME VALIDATION ----
 document.addEventListener("DOMContentLoaded", () => {
   let currentStep = 1;
   const steps = document.querySelectorAll(".step-content");
@@ -589,6 +642,73 @@ document.addEventListener("DOMContentLoaded", () => {
   const nextBtn = document.querySelector(".next-btn");
   const form = document.getElementById("multiStepForm");
   const currentStepInput = document.getElementById("currentStep");
+  const stepErrors = document.getElementById("stepErrors");
+  const stepErrorsList = document.getElementById("stepErrorsList");
+
+  // Function to validate current step
+  function validateCurrentStep() {
+    const currentStepElement = document.querySelector(`.step-content[data-step="${currentStep}"]`);
+    const requiredFields = currentStepElement.querySelectorAll('[required]');
+    const errors = [];
+    
+    // Clear previous errors
+    stepErrors.style.display = 'none';
+    stepErrorsList.innerHTML = '';
+    document.querySelectorAll('.field-error').forEach(error => error.style.display = 'none');
+    
+    // Check each required field
+    requiredFields.forEach(field => {
+      let isValid = true;
+      
+      if (field.type === 'checkbox') {
+        isValid = field.checked;
+      } else if (field.type === 'file') {
+        // Special handling for file inputs - only validate if they are visible and for the selected role
+        const roleInput = document.querySelector('input[name="role"]');
+        const selectedRole = roleInput ? roleInput.value.toLowerCase() : '';
+        
+        if (field.id === 'oath_certificate' && selectedRole !== 'sk') {
+          return; // Skip SK file validation if role is not SK
+        }
+        if (field.id === 'barangay_indigency' && selectedRole !== 'kk') {
+          return; // Skip KK file validation if role is not KK
+        }
+        
+        isValid = field.files.length > 0;
+      } else {
+        isValid = field.value.trim() !== '';
+        
+        // Special validation for location dropdowns
+        if (field.id === 'regionInput' || field.id === 'provinceInput' || 
+            field.id === 'cityInput' || field.id === 'barangayInput') {
+          const hiddenIdField = document.getElementById(field.id.replace('Input', 'Id'));
+          isValid = hiddenIdField && hiddenIdField.value !== '';
+        }
+      }
+      
+      if (!isValid) {
+        let fieldName = field.placeholder || field.name;
+        // Make file field names more user-friendly
+        if (field.type === 'file') {
+          if (field.id === 'oath_certificate') {
+            fieldName = 'Oath Taking Certificate';
+          } else if (field.id === 'barangay_indigency') {
+            fieldName = 'Barangay Indigency';
+          }
+        }
+        errors.push(fieldName);
+        
+        // Show individual field error
+        const fieldWrapper = field.closest('.input-wrapper, .select-wrapper, .checkbox-group, .file-section');
+        if (fieldWrapper) {
+          const errorSpan = fieldWrapper.querySelector('.field-error');
+          if (errorSpan) errorSpan.style.display = 'block';
+        }
+      }
+    });
+    
+    return errors;
+  }
 
   function showStep(step) {
     steps.forEach((s, i) => s.classList.toggle("active", i === step - 1));
@@ -601,20 +721,45 @@ document.addEventListener("DOMContentLoaded", () => {
       nextBtn.innerText = "Submit";
       nextBtn.type = "button";
       
-      // REMOVED: reCAPTCHA display logic
+      // Fill review data
+      fillStep3();
       
       nextBtn.onclick = () => {
-        if (validateStep3()) {
+        const errors = validateCurrentStep();
+        if (errors.length === 0) {
           // Submit form directly - this will go to preview route
           // which then redirects to captcha page
           form.submit();
+        } else {
+          stepErrors.style.display = 'block';
+          errors.forEach(error => {
+            const li = document.createElement('li');
+            li.textContent = error;
+            li.style.color = '#d00';
+            stepErrorsList.appendChild(li);
+          });
         }
       };
     } else {
       nextBtn.innerText = "Next";
       nextBtn.type = "button";
       nextBtn.onclick = () => {
-        if (currentStep === 1 && !validateStep1()) return;
+        const errors = validateCurrentStep();
+        if (errors.length > 0) {
+          stepErrors.style.display = 'block';
+          errors.forEach(error => {
+            const li = document.createElement('li');
+            li.textContent = error;
+            li.style.color = '#d00';
+            stepErrorsList.appendChild(li);
+          });
+          return;
+        }
+        
+        // Clear errors if validation passes
+        stepErrors.style.display = 'none';
+        stepErrorsList.innerHTML = '';
+        
         if (currentStep === 2) fillStep3();
         if (currentStep < steps.length) {
           currentStep++;
@@ -625,35 +770,40 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function validateStep1() {
-    const regionId = document.getElementById('regionId').value;
-    const provinceId = document.getElementById('provinceId').value;
-    const cityId = document.getElementById('cityId').value;
-    const barangayId = document.getElementById('barangayId').value;
-    
-    if (!regionId || !provinceId || !cityId || !barangayId) {
-      alert('Please complete all location fields (Region, Province, City, Barangay)');
-      return false;
-    }
-    return true;
-  }
-
-  function validateStep3() {
-    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
-    for (let checkbox of checkboxes) {
-      if (checkbox.required && !checkbox.checked) {
-        alert('Please check all required checkboxes');
-        return false;
-      }
-    }
-    return true;
-  }
-
   backBtn?.addEventListener("click", () => {
     if (currentStep > 1) {
       currentStep--;
       showStep(currentStep);
       currentStepInput.value = currentStep;
+      
+      // Clear errors when going back
+      stepErrors.style.display = 'none';
+      stepErrorsList.innerHTML = '';
+      document.querySelectorAll('.field-error').forEach(error => error.style.display = 'none');
+    }
+  });
+
+  // Add real-time validation for input fields
+  document.querySelectorAll('input[required]').forEach(input => {
+    input.addEventListener('input', function() {
+      if (this.value.trim() !== '') {
+        const fieldWrapper = this.closest('.input-wrapper, .select-wrapper, .checkbox-group');
+        if (fieldWrapper) {
+          const errorSpan = fieldWrapper.querySelector('.field-error');
+          if (errorSpan) errorSpan.style.display = 'none';
+        }
+      }
+    });
+    
+    // For dropdowns, clear error when value is selected
+    if (input.readOnly && input.placeholder && input.placeholder.includes('Select')) {
+      input.addEventListener('click', function() {
+        const fieldWrapper = this.closest('.select-wrapper');
+        if (fieldWrapper) {
+          const errorSpan = fieldWrapper.querySelector('.field-error');
+          if (errorSpan) errorSpan.style.display = 'none';
+        }
+      });
     }
   });
 
@@ -704,6 +854,15 @@ function setupFileUpload(inputId, fileTextId) {
       text.textContent = input.files.length > 0
         ? input.files[0].name
         : "Accepted: PDF, max 5 MB";
+      
+      // Clear file error when file is selected
+      if (input.files.length > 0) {
+        const fieldWrapper = input.closest('.file-section');
+        if (fieldWrapper) {
+          const errorSpan = fieldWrapper.querySelector('.field-error');
+          if (errorSpan) errorSpan.style.display = 'none';
+        }
+      }
     });
   }
 }
@@ -755,6 +914,13 @@ document.addEventListener("DOMContentLoaded", () => {
         // Store the ID in the hidden input field
         if (hiddenInput) {
           hiddenInput.value = e.target.dataset.id;
+        }
+
+        // Clear location error when selection is made
+        const fieldWrapper = input.closest('.select-wrapper');
+        if (fieldWrapper) {
+          const errorSpan = fieldWrapper.querySelector('.field-error');
+          if (errorSpan) errorSpan.style.display = 'none';
         }
 
         // Reset lower-level inputs

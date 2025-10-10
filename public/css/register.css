@@ -1785,3 +1785,24 @@ input.error, select.error, .select-wrapper.error input {
     font-size: 0.8rem;
 }
 }
+/* Remove asterisk from middle name and suffix fields */
+.input-wrapper:has(#step1_middlename)::after,
+.input-wrapper:has(#step1_suffix)::after {
+  content: none !important;
+}
+
+/* Alternative method for older browsers */
+#step1_middlename ~ .field-error,
+#step1_suffix ~ .field-error {
+  display: none !important;
+}
+
+.input-wrapper:has(#step1_middlename),
+.input-wrapper:has(#step1_suffix) {
+  position: relative;
+}
+
+.input-wrapper:has(#step1_middlename)::after,
+.input-wrapper:has(#step1_suffix)::after {
+  content: none !important;
+}
