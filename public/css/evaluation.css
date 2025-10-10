@@ -1229,7 +1229,68 @@ h2 {
   
 }
 
+/* Evaluation specific styles */
+.no-events-message {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+}
 
+.no-events-message i {
+  font-size: 48px;
+  margin-bottom: 15px;
+  color: #ccc;
+}
+
+.no-events-message .sub-message {
+  font-size: 14px;
+  color: #888;
+  margin-top: 5px;
+}
+
+.evaluated-section {
+  margin-top: 40px;
+  border-top: 1px solid #eee;
+  padding-top: 30px;
+}
+
+.evaluated-section h3 {
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.program-card.evaluated {
+  opacity: 0.7;
+  background: #f9f9f9;
+}
+
+.evaluate-btn.done {
+  background: #28a745;
+  cursor: not-allowed;
+}
+
+.status-dot.completed {
+  background: #28a745;
+}
+
+.location {
+  font-size: 14px;
+  color: #666;
+  margin-top: 5px;
+}
+
+.location i {
+  margin-right: 5px;
+}
+
+/* Form validation styles */
+.question {
+  transition: all 0.3s ease;
+}
+
+.question:has(input[type="radio"]:not(:checked)) {
+  border: 2px solid transparent;
+}
 
 
 

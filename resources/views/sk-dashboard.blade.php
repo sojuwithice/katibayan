@@ -373,7 +373,7 @@
         <button class="prev"><i class="fas fa-chevron-left"></i></button>
         <h3></h3>
         <button class="next"><i class="fas fa-chevron-right"></i></button>
-        <a href="{{ route('eventpage') }}" title="View full month">
+        <a href="{{ route('sk-eventpage') }}" title="View full month">
           <i class="fas fa-calendar calendar-toggle"></i>
         </a>
       </header>

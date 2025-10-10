@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KatiBayan - Profile Page</title>
+  <title>KatiBayan - Attendance</title>
   <link rel="stylesheet" href="{{ asset('css/attendance.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -11,12 +11,12 @@
 </head>
 <body>
   
-  <!-- Sidebar -->
+  <!-- Sidebar (same as your existing sidebar) -->
   <aside class="sidebar">
     <button class="menu-toggle">Menu</button>
     <div class="divider"></div>
     <nav class="nav">
-      <a href="{{ route('dashboard.index') }}" class="active">
+      <a href="{{ route('dashboard.index') }}">
         <i data-lucide="layout-dashboard"></i>
         <span class="label">Dashboard</span>
       </a>
@@ -47,18 +47,17 @@
           <span class="label">Evaluation</span>
       </a>
 
-        <a href="{{ route('serviceoffers') }}">
+      <a href="{{ route('serviceoffers') }}">
           <i data-lucide="hand-heart"></i>
           <span class="label">Service Offer</span>
         </a>
-
     </nav>
   </aside>
 
   <!-- Main -->
   <div class="main">
 
-    <!-- Topbar -->
+    <!-- Topbar (same as your existing topbar) -->
     <header class="topbar">
       <div class="logo">
         <img src="{{ asset('images/logo.png') }}" alt="Logo">
@@ -143,391 +142,342 @@
     </header>
 
     <!-- QR Scanner Section -->
-<div class="qr-container">
-  <button class="qr-close">&times;</button>
-  <div class="qr-header">
-    <h2>Scan QR Code</h2>
-    <p>Place the QR code properly inside the area. Scanning will start automatically.</p>
-  </div>
+    <div class="qr-container">
+      <button class="qr-close">&times;</button>
+      <div class="qr-header">
+        <h2>Scan QR Code for Attendance</h2>
+        <p>Place the QR code properly inside the area. Scanning will start automatically.</p>
+      </div>
 
-  <!-- Scanner -->
-  <div id="reader" class="qr-reader"></div>
+      <!-- Scanner -->
+      <div id="reader" class="qr-reader"></div>
 
-  <!-- Manual Entry -->
-  <div class="manual-entry">
-    <p>Having trouble scanning the QR code?<br>Enter the code manually below.</p>
-    <input type="text" id="manualCode" placeholder="Enter the code">
-    <button id="submitCode">Enter</button>
-  </div>
+      <!-- Manual Entry -->
+      <div class="manual-entry">
+        <p>Having trouble scanning the QR code?<br>Enter the passcode manually below.</p>
+        <input type="text" id="manualCode" placeholder="Enter event passcode">
+        <button id="submitCode">Submit Attendance</button>
+      </div>
 
-  <p class="note">This will mark your attendance in the program.</p>
-</div>
+      <p class="note">This will mark your attendance in the program.</p>
+    </div>
 
-<!-- Success Modal -->
-<div id="successModal" class="modal">
-  <div class="modal-content">
-    <h2>Congratulations</h2>
-    <p>
-      You are accepted to attend the program! <br>
-      Please wait for the evaluation to be completed. Thank you!
-    </p>
-    <button class="ok-btn">OK</button>
-  </div>
-</div>
+    <!-- Attendance Records Section -->
+    <section class="attendance-records">
+      <h2>My Attendance Records</h2>
+      <div class="records-container">
+        <table class="attendance-table">
+          <thead>
+            <tr>
+              <th>Event Name</th>
+              <th>Event Date</th>
+              <th>Event Time</th>
+              <th>Location</th>
+              <th>Attended At</th>
+            </tr>
+          </thead>
+          <tbody id="attendanceRecordsBody">
+            <tr>
+              <td colspan="5" class="loading-text">Loading attendance records...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
 
-<!-- Quit Confirmation Modal -->
-<div id="quitModal" class="modal">
-  <div class="modal-content">
-    <p>Are you sure you don’t want to join this event?</p>
-    <div class="modal-actions">
-      <button class="cancel-btn">Cancel</button>
-      <button class="quit-btn">Quit</button>
+    <!-- Success Modal -->
+    <div id="successModal" class="modal">
+      <div class="modal-content">
+        <div class="success-icon">
+          <i class="fas fa-check-circle"></i>
+        </div>
+        <h2>Attendance Successful!</h2>
+        <p id="successMessage">
+          Your attendance has been recorded successfully.
+        </p>
+        <div class="event-details" id="eventDetails" style="display: none;">
+          <p><strong>Event:</strong> <span id="eventTitle"></span></p>
+          <p><strong>Date:</strong> <span id="eventDate"></span></p>
+          <p><strong>Time:</strong> <span id="eventTime"></span></p>
+        </div>
+        <button class="ok-btn">OK</button>
+      </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div id="errorModal" class="modal">
+      <div class="modal-content error">
+        <div class="error-icon">
+          <i class="fas fa-exclamation-circle"></i>
+        </div>
+        <h2>Attendance Failed</h2>
+        <p id="errorMessage"></p>
+        <button class="ok-btn">OK</button>
+      </div>
+    </div>
+
+    <!-- Quit Confirmation Modal -->
+    <div id="quitModal" class="modal">
+      <div class="modal-content">
+        <p>Are you sure you don't want to mark attendance for this event?</p>
+        <div class="modal-actions">
+          <button class="cancel-btn">Cancel</button>
+          <button class="quit-btn">Quit</button>
+        </div>
+      </div>
     </div>
   </div>
-</div>
 
-
-
-
-
-
-
-
-
-
-
-<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-
-
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-  // === Lucide icons ===
-  if (window.lucide) {
-    lucide.createIcons();
-  }
-
-  // === Elements ===
-  const menuToggle = document.querySelector('.menu-toggle');
-  const sidebar = document.querySelector('.sidebar');
-
-  // Submenus
-  const profileItem = document.querySelector('.profile-item');
-  const profileLink = profileItem?.querySelector('.profile-link');
-  const eventsItem = document.querySelector('.events-item');
-  const eventsLink = eventsItem?.querySelector('.events-link');
-
-  // Profile & notifications dropdown (topbar)
-  const profileWrapper = document.querySelector('.profile-wrapper');
-  const profileToggle = document.getElementById('profileToggle');
-  const profileDropdown = document.querySelector('.profile-dropdown');
-
-  const notifWrapper = document.querySelector(".notification-wrapper");
-  const notifBell = notifWrapper?.querySelector(".fa-bell");
-  const notifDropdown = notifWrapper?.querySelector(".notif-dropdown");
-
-  // === Sidebar toggle ===
-  if (menuToggle && sidebar) {
-    menuToggle.addEventListener('click', (e) => {
-      e.stopPropagation();
-      sidebar.classList.toggle('open');
-
-      if (!sidebar.classList.contains('open')) {
-        profileItem?.classList.remove('open');
-        eventsItem?.classList.remove('open');
-      }
-    });
-  }
-
-  // Helper: close all submenus
-  function closeAllSubmenus() {
-    profileItem?.classList.remove('open');
-    eventsItem?.classList.remove('open');
-  }
-
-  // === Profile submenu toggle ===
-  if (profileItem && profileLink) {
-    profileLink.addEventListener('click', (e) => {
-      e.preventDefault();
-      if (sidebar?.classList.contains('open')) {
-        const isOpen = profileItem.classList.contains('open');
-        closeAllSubmenus();
-        if (!isOpen) profileItem.classList.add('open');
-      }
-    });
-  }
-
-  // === Events submenu toggle ===
-  if (eventsItem && eventsLink) {
-    eventsLink.addEventListener('click', (e) => {
-      e.preventDefault();
-      if (sidebar?.classList.contains('open')) {
-        const isOpen = eventsItem.classList.contains('open');
-        closeAllSubmenus();
-        if (!isOpen) eventsItem.classList.add('open');
-      }
-    });
-  }
-
-  // === Close sidebar when clicking outside ===
-  document.addEventListener('click', (e) => {
-    if (sidebar && menuToggle && !sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
-      sidebar.classList.remove('open');
-      closeAllSubmenus();
-    }
-
-    if (profileWrapper && !profileWrapper.contains(e.target)) {
-      profileWrapper.classList.remove('active');
-    }
-
-    if (notifWrapper && !notifWrapper.contains(e.target)) {
-      notifWrapper.classList.remove('active');
-    }
-  });
-
-  // === Profile dropdown toggle (topbar) ===
-  if (profileToggle) {
-    profileToggle.addEventListener('click', (e) => {
-      e.stopPropagation();
-      profileWrapper?.classList.toggle('active');
-      notifWrapper?.classList.remove('active');
-    });
-  }
-
-  profileDropdown?.addEventListener('click', e => e.stopPropagation());
-
-  // === Notifications dropdown toggle ===
-  if (notifBell) {
-    notifBell.addEventListener('click', (e) => {
-      e.stopPropagation();
-      notifWrapper?.classList.toggle('active');
-      profileWrapper?.classList.remove('active');
-    });
-  }
-
-  notifDropdown?.addEventListener('click', e => e.stopPropagation());
-
-  // === Calendar ===
-  const weekdays = ["MON","TUE","WED","THU","FRI","SAT","SUN"];
-  const daysContainer = document.querySelector(".calendar .days");
-  const header = document.querySelector(".calendar header h3");
-  let today = new Date();
-  let currentView = new Date();
-
-  const holidays = [
-    "2025-01-01", "2025-04-09", "2025-04-17", "2025-04-18",
-    "2025-05-01", "2025-06-06", "2025-06-12", "2025-08-25",
-    "2025-11-30", "2025-12-25", "2025-12-30"
-  ];
-
-  function renderCalendar(baseDate) {
-    if (!daysContainer || !header) return;
-    daysContainer.innerHTML = "";
-
-    const startOfWeek = new Date(baseDate);
-    startOfWeek.setDate(baseDate.getDate() - (baseDate.getDay() === 0 ? 6 : baseDate.getDay() - 1));
-
-    const middleDay = new Date(startOfWeek);
-    middleDay.setDate(startOfWeek.getDate() + 3);
-    header.textContent = middleDay.toLocaleDateString("en-US", { month: "long", year: "numeric" });
-
-    for (let i = 0; i < 7; i++) {
-      const thisDay = new Date(startOfWeek);
-      thisDay.setDate(startOfWeek.getDate() + i);
-
-      const dayEl = document.createElement("div");
-      dayEl.classList.add("day");
-
-      const weekdayEl = document.createElement("span");
-      weekdayEl.classList.add("weekday");
-      weekdayEl.textContent = weekdays[i];
-
-      const dateEl = document.createElement("span");
-      dateEl.classList.add("date");
-      dateEl.textContent = thisDay.getDate();
-
-      const month = (thisDay.getMonth() + 1).toString().padStart(2,'0');
-      const day = thisDay.getDate().toString().padStart(2,'0');
-      const dateStr = `${thisDay.getFullYear()}-${month}-${day}`;
-
-      if (holidays.includes(dateStr)) dateEl.classList.add('holiday');
-
-      if (
-        thisDay.getDate() === today.getDate() &&
-        thisDay.getMonth() === today.getMonth() &&
-        thisDay.getFullYear() === today.getFullYear()
-      ) dayEl.classList.add("active");
-
-      dayEl.appendChild(weekdayEl);
-      dayEl.appendChild(dateEl);
-      daysContainer.appendChild(dayEl);
-    }
-  }
-
-  renderCalendar(currentView);
-
-  const prevBtn = document.querySelector(".calendar .prev");
-  const nextBtn = document.querySelector(".calendar .next");
-  prevBtn?.addEventListener("click", () => {
-    currentView.setDate(currentView.getDate() - 7);
-    renderCalendar(currentView);
-  });
-  nextBtn?.addEventListener("click", () => {
-    currentView.setDate(currentView.getDate() + 7);
-    renderCalendar(currentView);
-  });
-
-  // === Time auto-update ===
-const timeEl = document.querySelector(".time");
-function updateTime() {
-  if (!timeEl) return;
-  const now = new Date();
-
-  const shortWeekdays = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
-  const shortMonths = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
-
-  const weekday = shortWeekdays[now.getDay()];
-  const month = shortMonths[now.getMonth()];
-  const day = now.getDate();
-
-  let hours = now.getHours();
-  const minutes = now.getMinutes().toString().padStart(2, "0");
-  const ampm = hours >= 12 ? "PM" : "AM";
-  hours = hours % 12 || 12;
-
-  // Example: MON, AUG 8 10:00 AM
-  timeEl.innerHTML = `${weekday}, ${month} ${day} ${hours}:${minutes} <span>${ampm}</span>`;
-}
-updateTime();
-setInterval(updateTime, 60000);
-
-
-  // === Password toggle ===
-  const tempPassword = document.getElementById('tempPassword');
-  const toggleIcon = document.querySelector('.toggle-password');
-  if (tempPassword && toggleIcon) {
-    let hidden = true;
-    const realPassword = "marijoy";
-    toggleIcon.addEventListener('click', () => {
-      if (hidden) {
-        tempPassword.textContent = realPassword;
-        toggleIcon.classList.remove('fa-eye-slash');
-        toggleIcon.classList.add('fa-eye');
-        hidden = false;
-      } else {
-        tempPassword.textContent = "•••••";
-        toggleIcon.classList.remove('fa-eye');
-        toggleIcon.classList.add('fa-eye-slash');
-        hidden = true;
-      }
-    });
-  }
-
-  // === Modal ===
-  const modalOverlay = document.getElementById('modalOverlay');
-  const closeModal = document.getElementById('closeModal');
-  const printBtns = document.querySelectorAll('.print-btn');
-
-  printBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      if (modalOverlay) modalOverlay.style.display = 'flex';
-    });
-  });
-
-  closeModal?.addEventListener('click', () => {
-    if (modalOverlay) modalOverlay.style.display = 'none';
-  });
-
-  modalOverlay?.addEventListener('click', (e) => {
-    if (e.target === modalOverlay) {
-      modalOverlay.style.display = 'none';
-    }
-  });
-
-  // === Success Modal ===
-  const successModal = document.getElementById("successModal");
-  const okBtn = successModal?.querySelector(".ok-btn");
-
-  function showSuccessModal() {
-    successModal.style.display = "flex";
-  }
-  function closeSuccessModal() {
-    successModal.style.display = "none";
-  }
-
-  okBtn.addEventListener("click", () => {
-  window.location.href = "{{ route('eventpage') }}";
-});
-
-  // === Quit Modal ===
-  // === Quit Confirmation Modal ===
-const quitModal = document.getElementById("quitModal");
-const qrCloseBtn = document.querySelector(".qr-close");
-const cancelBtn = quitModal?.querySelector(".cancel-btn");
-const quitBtn = quitModal?.querySelector(".quit-btn");
-
-// Show quit modal when clicking the X
-qrCloseBtn?.addEventListener("click", () => {
-  quitModal.style.display = "flex";
-});
-
-// Close when clicking Cancel
-cancelBtn?.addEventListener("click", () => {
-  quitModal.style.display = "none";
-});
-
-// Close when clicking outside the modal box
-quitModal?.addEventListener("click", (e) => {
-  if (e.target === quitModal) {
-    quitModal.style.display = "none";
-  }
-});
-
-// Handle Quit button
-// Handle Quit button
-quitBtn?.addEventListener("click", () => {
-  quitModal.style.display = "none";
-  window.location.href = "{{ route('eventpage') }}"; 
-});
-
-
-
-  // === QR Scanner ===
-  const qrReaderEl = document.getElementById("reader");
-  if (qrReaderEl && window.Html5Qrcode) {
-    try {
-      let lastResult = null;
-      function onScanSuccess(decodedText) {
-        if (decodedText === lastResult) return;
-        lastResult = decodedText;
-
-        console.log("Scanned:", decodedText);
-        showSuccessModal();
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // === Lucide icons ===
+      if (window.lucide) {
+        lucide.createIcons();
       }
 
-      const html5QrCode = new Html5Qrcode("reader");
-      html5QrCode.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: 250 },
-        onScanSuccess,
-        (err) => console.warn("QR scan error", err)
-      );
-    } catch (err) {
-      console.error("QR Scanner init failed:", err);
-    }
-  }
+      // === Sidebar and topbar functionality (same as your existing code) ===
+      const menuToggle = document.querySelector('.menu-toggle');
+      const sidebar = document.querySelector('.sidebar');
+      const profileItem = document.querySelector('.profile-item');
+      const profileLink = profileItem?.querySelector('.profile-link');
+      const profileWrapper = document.querySelector('.profile-wrapper');
+      const profileToggle = document.getElementById('profileToggle');
+      const notifWrapper = document.querySelector(".notification-wrapper");
+      const notifBell = notifWrapper?.querySelector(".fa-bell");
 
-  // === Manual Entry ===
-  const submitCodeBtn = document.getElementById("submitCode");
-  const manualInput = document.getElementById("manualCode");
+      // Sidebar toggle
+      if (menuToggle && sidebar) {
+        menuToggle.addEventListener('click', (e) => {
+          e.stopPropagation();
+          sidebar.classList.toggle('open');
+        });
+      }
 
-  submitCodeBtn?.addEventListener("click", () => {
-    const code = manualInput?.value.trim();
-    if (code) {
-      console.log("Manual code entered:", code);
-      showSuccessModal();
-    } else {
-      alert("Please enter a code.");
-    }
-  });
-});
-</script>
+      // Profile submenu
+      if (profileItem && profileLink) {
+        profileLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          if (sidebar?.classList.contains('open')) {
+            profileItem.classList.toggle('open');
+          }
+        });
+      }
+
+      // Close sidebar when clicking outside
+      document.addEventListener('click', (e) => {
+        if (sidebar && menuToggle && !sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+          sidebar.classList.remove('open');
+          profileItem?.classList.remove('open');
+        }
+      });
+
+      // Topbar dropdowns
+      if (profileToggle) {
+        profileToggle.addEventListener('click', (e) => {
+          e.stopPropagation();
+          profileWrapper?.classList.toggle('active');
+          notifWrapper?.classList.remove('active');
+        });
+      }
+
+      if (notifBell) {
+        notifBell.addEventListener('click', (e) => {
+          e.stopPropagation();
+          notifWrapper?.classList.toggle('active');
+          profileWrapper?.classList.remove('active');
+        });
+      }
+
+      // === Time auto-update ===
+      const timeEl = document.querySelector(".time");
+      function updateTime() {
+        if (!timeEl) return;
+        const now = new Date();
+        const shortWeekdays = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
+        const shortMonths = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+        const weekday = shortWeekdays[now.getDay()];
+        const month = shortMonths[now.getMonth()];
+        const day = now.getDate();
+        let hours = now.getHours();
+        const minutes = now.getMinutes().toString().padStart(2, "0");
+        const ampm = hours >= 12 ? "PM" : "AM";
+        hours = hours % 12 || 12;
+        timeEl.innerHTML = `${weekday}, ${month} ${day} ${hours}:${minutes} <span>${ampm}</span>`;
+      }
+      updateTime();
+      setInterval(updateTime, 60000);
+
+      // === Modals ===
+      const successModal = document.getElementById("successModal");
+      const errorModal = document.getElementById("errorModal");
+      const quitModal = document.getElementById("quitModal");
+      const okBtns = document.querySelectorAll(".ok-btn");
+      const qrCloseBtn = document.querySelector(".qr-close");
+      const cancelBtn = quitModal?.querySelector(".cancel-btn");
+      const quitBtn = quitModal?.querySelector(".quit-btn");
+
+      function showSuccessModal(eventData = null) {
+        if (eventData) {
+          document.getElementById('eventTitle').textContent = eventData.title;
+          document.getElementById('eventDate').textContent = eventData.date;
+          document.getElementById('eventTime').textContent = eventData.time;
+          document.getElementById('eventDetails').style.display = 'block';
+        }
+        successModal.style.display = "flex";
+      }
+
+      function showErrorModal(message) {
+        document.getElementById('errorMessage').textContent = message;
+        errorModal.style.display = "flex";
+      }
+
+      function closeAllModals() {
+        successModal.style.display = "none";
+        errorModal.style.display = "none";
+        quitModal.style.display = "none";
+      }
+
+      // Modal event listeners
+      okBtns.forEach(btn => {
+        btn.addEventListener("click", closeAllModals);
+      });
+
+      qrCloseBtn?.addEventListener("click", () => {
+        quitModal.style.display = "flex";
+      });
+
+      cancelBtn?.addEventListener("click", closeAllModals);
+
+      quitBtn?.addEventListener("click", () => {
+        window.location.href = "{{ route('eventpage') }}";
+      });
+
+      // Close modals when clicking outside
+      [successModal, errorModal, quitModal].forEach(modal => {
+        modal?.addEventListener("click", (e) => {
+          if (e.target === modal) {
+            closeAllModals();
+          }
+        });
+      });
+
+      // === QR Scanner ===
+      const qrReaderEl = document.getElementById("reader");
+      let html5QrCode = null;
+
+      if (qrReaderEl && window.Html5Qrcode) {
+        try {
+          let lastResult = null;
+          
+          function onScanSuccess(decodedText) {
+            if (decodedText === lastResult) return;
+            lastResult = decodedText;
+
+            console.log("Scanned passcode:", decodedText);
+            markAttendance(decodedText);
+          }
+
+          html5QrCode = new Html5Qrcode("reader");
+          html5QrCode.start(
+            { facingMode: "environment" },
+            { fps: 10, qrbox: 250 },
+            onScanSuccess,
+            (err) => console.warn("QR scan error", err)
+          );
+        } catch (err) {
+          console.error("QR Scanner init failed:", err);
+          showErrorModal("Failed to initialize QR scanner. Please use manual entry.");
+        }
+      }
+
+      // === Manual Entry ===
+      const submitCodeBtn = document.getElementById("submitCode");
+      const manualInput = document.getElementById("manualCode");
+
+      submitCodeBtn?.addEventListener("click", () => {
+        const passcode = manualInput?.value.trim();
+        if (passcode) {
+          markAttendance(passcode);
+        } else {
+          showErrorModal("Please enter a passcode.");
+        }
+      });
+
+      manualInput?.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+          const passcode = manualInput.value.trim();
+          if (passcode) {
+            markAttendance(passcode);
+          }
+        }
+      });
+
+      // === Attendance Function ===
+      async function markAttendance(passcode) {
+        try {
+          const response = await fetch("{{ route('attendance.mark') }}", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRF-TOKEN": "{{ csrf_token() }}"
+            },
+            body: JSON.stringify({ passcode: passcode })
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            showSuccessModal(data.event);
+            manualInput.value = ''; // Clear input
+            loadAttendanceRecords(); // Refresh records
+          } else {
+            showErrorModal(data.error || "Failed to mark attendance.");
+          }
+        } catch (error) {
+          console.error("Error marking attendance:", error);
+          showErrorModal("Network error. Please try again.");
+        }
+      }
+
+      // === Load Attendance Records ===
+      async function loadAttendanceRecords() {
+        try {
+          const response = await fetch("{{ route('attendance.my') }}");
+          const data = await response.json();
+
+          const tbody = document.getElementById('attendanceRecordsBody');
+          
+          if (data.success && data.attendances.length > 0) {
+            tbody.innerHTML = data.attendances.map(attendance => `
+              <tr>
+                <td>${attendance.event_title}</td>
+                <td>${attendance.event_date}</td>
+                <td>${attendance.event_time}</td>
+                <td>${attendance.location}</td>
+                <td>${attendance.attended_at}</td>
+              </tr>
+            `).join('');
+          } else {
+            tbody.innerHTML = `
+              <tr>
+                <td colspan="5" class="no-records">No attendance records found.</td>
+              </tr>
+            `;
+          }
+        } catch (error) {
+          console.error("Error loading attendance records:", error);
+          document.getElementById('attendanceRecordsBody').innerHTML = `
+            <tr>
+              <td colspan="5" class="error-text">Error loading records.</td>
+            </tr>
+          `;
+        }
+      }
+
+      // Load attendance records on page load
+      loadAttendanceRecords();
+    });
+  </script>
+</body>
+</html>

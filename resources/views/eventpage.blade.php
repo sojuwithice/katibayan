@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KatiBayan - Profile Page</title>
+  <title>KatiBayan - Events</title>
   <link rel="stylesheet" href="{{ asset('css/eventpage.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -37,10 +37,6 @@
         <span class="label">Events and Programs</span>
       </a>
 
-      <a href="#">
-        <i data-lucide="megaphone"></i>
-        <span class="label">Announcements</span>
-      </a>
 
       <a href="{{ route('evaluation') }}">
           <i data-lucide="user-star"></i>
@@ -108,17 +104,20 @@
           </div>
         </div>
 
+        
         <!-- Profile Avatar -->
         <div class="profile-wrapper">
-          <img src="https://i.pravatar.cc/80" alt="User" class="avatar" id="profileToggle">
+          <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+               alt="User" class="avatar" id="profileToggle">
           <div class="profile-dropdown">
             <div class="profile-header">
-              <img src="https://i.pravatar.cc/80" alt="User" class="profile-avatar">
+              <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+                   alt="User" class="profile-avatar">
               <div class="profile-info">
-                <h4>Marijoy S. Novora</h4>
+                <h4>{{ $user->given_name }} {{ $user->middle_name }} {{ $user->last_name }} {{ $user->suffix }}</h4>
                 <div class="profile-badge">
-                  <span class="badge">KK- Member</span>
-                  <span class="badge">19 yrs old</span>
+                  <span class="badge">{{ $roleBadge }}</span>
+                  <span class="badge">{{ $age }} yrs old</span>
                 </div>
               </div>
             </div>
@@ -136,6 +135,11 @@
                 </a>
               </li>
               <li><i class="fas fa-star"></i> Send Feedback to Katibayan</li>
+               <li class="logout-item">
+                <a href="loginpage" onclick="confirmLogout(event)">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </li>
             </ul>
           </div>
         </div>
@@ -143,525 +147,515 @@
     </header>
 
     <!-- Events and Programs -->
-      <section class="events-section">
-        <!-- LEFT -->
-        <div class="events-left">
-          <h2>Events and Programs</h2>
-          <p>This page serves as your guide to upcoming events designed to empower the youth, foster engagement, and build stronger communities.</p>
-        </div>
+    <section class="events-section">
+      <!-- LEFT -->
+      <div class="events-left">
+        <h2>Events and Programs</h2>
+        <p>This page serves as your guide to upcoming events designed to empower the youth, foster engagement, and build stronger communities.</p>
+      </div>
 
-        <!-- RIGHT -->
-        <div class="events-right">
-          <h3>Today's Agenda 
-        <i class="fa-solid fa-thumbtack"></i>
-      </h3>
+      <!-- RIGHT -->
+      <div class="events-right">
+        <h3>Today's Agenda 
+          <i class="fa-solid fa-thumbtack"></i>
+        </h3>
 
-          <div class="agenda-card">
-            <div class="agenda-banner">
-              <div class="agenda-date">
-                <span class="month">SEP.</span>
-                <span class="day">15</span>
-                <span class="year">2025</span>
+        @php
+          // Use Carbon to get today's date and ensure proper date comparison
+          use Carbon\Carbon;
+          
+          $today = Carbon::today()->format('Y-m-d');
+          $currentDateTime = Carbon::now();
+          
+          // Debug: Check what events we have
+          $allEvents = $events ?? collect();
+          
+          // Filter today's events - only show events that are happening today AND haven't ended
+          $todayEvents = $allEvents->filter(function($event) use ($today, $currentDateTime) {
+              // Handle both string and Carbon date formats
+              $eventDate = $event->event_date;
+              
+              if ($eventDate instanceof Carbon) {
+                  $eventDateFormatted = $eventDate->format('Y-m-d');
+              } else {
+                  $eventDateFormatted = Carbon::parse($eventDate)->format('Y-m-d');
+              }
+              
+              // Check if event is today and is launched
+              $isToday = $eventDateFormatted === $today;
+              $isLaunched = $event->is_launched;
+              
+              // If event has end time, check if current time is before end time
+              if ($event->end_time) {
+                  $eventEndDateTime = Carbon::parse($eventDateFormatted . ' ' . $event->end_time);
+                  $hasNotEnded = $currentDateTime->lt($eventEndDateTime);
+              } else {
+                  // If no end time, consider it as today's full day event
+                  $hasNotEnded = true;
+              }
+              
+              return $isToday && $isLaunched && $hasNotEnded;
+          });
+        @endphp
+
+        @if($todayEvents->count() > 0)
+          @foreach($todayEvents as $event)
+            <div class="agenda-card">
+              <div class="agenda-banner">
+                <div class="agenda-date">
+                  @php
+                    // Ensure we have a Carbon date object for formatting
+                    $eventDate = $event->event_date instanceof Carbon 
+                      ? $event->event_date 
+                      : Carbon::parse($event->event_date);
+                  @endphp
+                  <span class="month">{{ $eventDate->format('M') }}.</span>
+                  <span class="day">{{ $eventDate->format('d') }}</span>
+                  <span class="year">{{ $eventDate->format('Y') }}</span>
+                </div>
+                @if($event->image && Storage::disk('public')->exists($event->image))
+                  <img src="{{ asset('storage/' . $event->image) }}" alt="{{ $event->title }}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0jOTk5IHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5FdmVudCBJbWFnZTwvdGV4dD48L3N2Zz4='">
+                @else
+                  <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0jOTk5IHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5FdmVudCBJbWFnZTwvdGV4dD48L3N2Zz4=" alt="Event Image">
+                @endif
               </div>
-              <img src="{{ asset('images/drugs.jpeg') }}" alt="Event Banner">
+              <div class="agenda-actions">
+                <a href="#" class="details-btn view-event-details" data-event-id="{{ $event->id }}">
+                  See full details 
+                  <span class="icon-circle">
+                    <i class="fa-solid fa-chevron-right"></i>
+                  </span>
+                </a>
+                <a href="{{ route('attendancepage') }}" class="attend-btn">Attend Now</a>
+              </div>
             </div>
-            <div class="agenda-actions">
-            <a href="#" class="details-btn">
-                See full details 
-                <span class="icon-circle">
-                  <i class="fa-solid fa-chevron-right"></i>
-                </span>
-              </a>
-
-              <a href="{{ route('attendancepage') }}" class="attend-btn">Attend Now</a>
-
+          @endforeach
+        @else
+          <div class="agenda-card no-events">
+            <div class="agenda-banner">
+              <div class="no-events-content">
+                <i class="fas fa-calendar-times"></i>
+                <p>No events scheduled for today</p>
+              </div>
             </div>
           </div>
+        @endif
+      </div>
+    </section>
+
+    <!-- Upcoming Activities -->
+    <section class="upcoming-section">
+      <h2>UPCOMING ACTIVITIES</h2>
+      
+      <div class="committee-bar">
+        <h3>Committee</h3>
+        <div class="committee-tabs">
+          <button class="committee-tab active" data-category="all">All</button>
+          <button class="committee-tab" data-category="active_citizenship">Active Citizenship</button>
+          <button class="committee-tab" data-category="economic_empowerment">Economic Empowerment</button>
+          <button class="committee-tab" data-category="education">Education</button>
+          <button class="committee-tab" data-category="health">Health</button>
+          <button class="committee-tab" data-category="sports">Sports</button>
         </div>
-      </section>
+      </div>
+    </section>
 
+    <!-- Programs Section -->
+    <section class="programs-section">
+      <div class="programs-bar">
+        <h3>Launched Events</h3>
+        <a href="#" class="see-all">See All</a>
+      </div>
 
-      <!-- Upcoming Activities -->
-      <section class="upcoming-section">
-        <h2>UPCOMING ACTIVITIES</h2>
-        
-        <div class="committee-bar">
-          <h3>Committee</h3>
-          <div class="committee-tabs">
-            <button class="active">All</button>
-            <button>Active Citizenship</button>
-            <button>Economic Empowerment</button>
-            <button>Education</button>
-            <button>Health</button>
-            <button>Sports</button>
+      <div class="programs-scroll">
+        <div class="programs-container">
+          @php
+            // Proper date comparison for launched events - only future events
+            $launchedEvents = $allEvents->filter(function($event) use ($currentDateTime) {
+                // Handle both string and Carbon date formats
+                $eventDate = $event->event_date;
+                
+                if ($eventDate instanceof Carbon) {
+                    $eventDateTime = $eventDate;
+                } else {
+                    $eventDateTime = Carbon::parse($eventDate);
+                }
+                
+                // If event has specific time, use it for comparison
+                if ($event->start_time) {
+                    $eventFullDateTime = Carbon::parse($eventDateTime->format('Y-m-d') . ' ' . $event->start_time);
+                } else {
+                    $eventFullDateTime = $eventDateTime->startOfDay();
+                }
+                
+                return $event->is_launched && $currentDateTime->lt($eventFullDateTime);
+            });
+          @endphp
+
+          @if($launchedEvents->count() > 0)
+            @foreach($launchedEvents as $event)
+              <article class="program-card" data-category="{{ $event->category }}">
+                <div class="program-media">
+                  @if($event->image && Storage::disk('public')->exists($event->image))
+                    <img src="{{ asset('storage/' . $event->image) }}" alt="{{ $event->title }}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0jOTk5IHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5FdmVudCBJbWFnZTwvdGV4dD48L3N2Zz4='">
+                  @else
+                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0jOTk5IHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5FdmVudCBJbWFnZTwvdGV4dD48L3N2Zz4=" alt="Event Image">
+                  @endif
+                  <a href="{{ route('attendancepage') }}" class="register-btn">REGISTER NOW!</a>
+                </div>
+                <div class="program-body">
+                  <p class="program-title">{{ $event->title }}</p>
+                  <p class="program-desc">
+                    {{ $event->description ? Str::limit($event->description, 100) : 'No description available.' }}
+                  </p>
+                  <div class="program-actions">
+                    <a class="read-more view-event-details" href="#" data-event-id="{{ $event->id }}">
+                      READ MORE 
+                      <span class="circle-btn">
+                        <i class="fas fa-chevron-right"></i>
+                      </span>
+                    </a>
+                  </div>
+                </div>
+              </article>
+            @endforeach
+          @else
+            <div class="no-events-message">
+              <i class="fas fa-calendar-times"></i>
+              <p>No launched events available at the moment.</p>
+            </div>
+          @endif
+        </div>
+      </div>
+    </section>
+
+    <!-- List of Events (stacked) -->
+    <section class="events-list-section">
+      <div class="section-header">
+        <h3>All Upcoming Events</h3>
+        <a href="#" class="see-all">See All</a>
+      </div>
+
+      <div class="events-wrapper">
+        @php
+          // Proper date comparison for upcoming events - only future events
+          $upcomingEvents = $allEvents->filter(function($event) use ($currentDateTime) {
+              // Handle both string and Carbon date formats
+              $eventDate = $event->event_date;
+              
+              if ($eventDate instanceof Carbon) {
+                  $eventDateTime = $eventDate;
+              } else {
+                  $eventDateTime = Carbon::parse($eventDate);
+              }
+              
+              // If event has specific time, use it for comparison
+              if ($event->start_time) {
+                  $eventFullDateTime = Carbon::parse($eventDateTime->format('Y-m-d') . ' ' . $event->start_time);
+              } else {
+                  $eventFullDateTime = $eventDateTime->startOfDay();
+              }
+              
+              return $event->is_launched && $currentDateTime->lt($eventFullDateTime);
+          });
+        @endphp
+
+        @if($upcomingEvents->count() > 0)
+          @foreach($upcomingEvents as $event)
+            <article class="event-card" data-category="{{ $event->category }}">
+              <div class="event-left">
+                <div class="event-thumb upcoming">
+                  @if($event->image && Storage::disk('public')->exists($event->image))
+                    <img src="{{ asset('storage/' . $event->image) }}" alt="{{ $event->title }}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0jOTk5IHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5FdmVudCBJbWFnZTwvdGV4dD48L3N2Zz4='">
+                  @else
+                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0jOTk5IHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5FdmVudCBJbWFnZwwvdGV4dD48L3N2Zz4=" alt="Event Image">
+                  @endif
+                </div>
+              </div>
+
+              <div class="event-right">
+                <a class="view-details view-event-details" href="#" data-event-id="{{ $event->id }}">View more details</a>
+                <h4 class="event-title">{{ $event->title }}</h4>
+                <div class="event-meta">
+                  <p><i class="fas fa-location-dot"></i> {{ $event->location }}</p>
+                  <p><i class="fas fa-users"></i> Committee on {{ ucfirst(str_replace('_', ' ', $event->category)) }}</p>
+                </div>
+
+                <div class="event-footer">
+                  <div class="event-when">
+                    <div class="when-label">WHEN</div>
+                    <div class="event-date">
+                      @php
+                        // Ensure we have a Carbon date object for formatting
+                        $eventDate = $event->event_date instanceof Carbon 
+                          ? $event->event_date 
+                          : Carbon::parse($event->event_date);
+                      @endphp
+                      {{ $eventDate->format('F d, Y') }} | {{ $event->formatted_time ?? 'Time not specified' }}
+                    </div>
+                  </div>
+                  <div class="event-action">
+                    <a href="{{ route('attendancepage') }}" class="register-event-btn">Register Now</a>
+                  </div>
+                </div>
+              </div>
+            </article>
+          @endforeach
+        @else
+          <div class="no-events-message">
+            <i class="fas fa-calendar-times"></i>
+            <p>No upcoming events scheduled.</p>
           </div>
+        @endif
+      </div>
+    </section>
+  </div>
+
+  <!-- Event Details Modal -->
+  <div id="eventModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <div class="modal-header">
+        <h2 id="modalEventTitle">Event Title</h2>
+        <span id="modalEventCategory" class="event-category">Category</span>
+      </div>
+      <div class="modal-body">
+        <img id="modalEventImage" src="" alt="Event Image" style="display: none;">
+        <div class="event-details">
+          <p><strong>Date & Time:</strong> <span id="modalEventDateTime"></span></p>
+          <p><strong>Location:</strong> <span id="modalEventLocation"></span></p>
+          <p><strong>Published by:</strong> <span id="modalEventPublisher"></span></p>
+          <p><strong>Description:</strong></p>
+          <p id="modalEventDescription"></p>
         </div>
-      </section>
-
-
-<section class="programs-section">
-  <!-- Programs bar -->
-  <div class="programs-bar">
-    <h3>Programs for you</h3>
-    <a href="#" class="see-all">See All</a>
-  </div>
-
-  <!-- Scrollable cards row -->
-   <div class="programs-scroll">
-    <div class="programs-container">
-    <!-- Program card 1 -->
-    <article class="program-card">
-  <div class="program-media">
-    <img src="{{ asset('images/drugs.jpeg') }}" alt="Program 1">
-    <button class="register-btn">REGISTER NOW!</button>
-  </div>
-  <div class="program-body">
-    <p class="program-title">Available Testing for TESDA Courses</p>
-    <p class="program-desc">This program short summary is najbabxicaba anuwcbibxciabxka nquvuabx</p>
-    <div class="program-actions">
-      <a class="read-more" href="#">
-        READ MORE 
-        <span class="circle-btn">
-          <i class="fas fa-chevron-right"></i>
-        </span>
-      </a>
+      </div>
+      <div class="modal-footer">
+        <a href="{{ route('attendancepage') }}" class="register-modal-btn">Register for Event</a>
+        <button class="close-btn">Close</button>
+      </div>
     </div>
   </div>
-</article>
 
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // === Lucide icons ===
+      lucide.createIcons();
 
-    <!-- Program card 2 -->
-    <article class="program-card">
-  <div class="program-media">
-    <img src="{{ asset('images/linggo.jpeg') }}" alt="Program 1">
-    <button class="register-btn">REGISTER NOW!</button>
-  </div>
-  <div class="program-body">
-    <p class="program-title">Linggo ng Kabataan</p>
-    <p class="program-desc">This program short summary is najbabxicaba anuwcbibxciabxka nquvuabx</p>
-    <div class="program-actions">
-      <a class="read-more" href="#">
-        READ MORE 
-        <span class="circle-btn">
-          <i class="fas fa-chevron-right"></i>
-        </span>
-      </a>
-    </div>
-  </div>
-</article>
+      // === Elements ===
+      const menuToggle = document.querySelector('.menu-toggle');
+      const sidebar = document.querySelector('.sidebar');
 
-    <!-- Program card 3 -->
-    <article class="program-card">
-  <div class="program-media">
-    <img src="{{ asset('images/basketball.jpg') }}" alt="Program 1">
-    <button class="register-btn">REGISTER NOW!</button>
-  </div>
-  <div class="program-body">
-    <p class="program-title">Basketball Tournament</p>
-    <p class="program-desc">This program short summary is najbabxicaba anuwcbibxciabxka nquvuabx</p>
-    <div class="program-actions">
-      <a class="read-more" href="#">
-        READ MORE 
-        <span class="circle-btn">
-          <i class="fas fa-chevron-right"></i>
-        </span>
-      </a>
-    </div>
-  </div>
-</article>
+      // Submenus
+      const profileItem = document.querySelector('.profile-item');
+      const profileLink = profileItem?.querySelector('.profile-link');
 
-    <article class="program-card">
-  <div class="program-media">
-    <img src="{{ asset('images/drugs.jpeg') }}" alt="Program 1">
-    <button class="register-btn">REGISTER NOW!</button>
-  </div>
-  <div class="program-body">
-    <p class="program-title">Available Testing for TESDA Courses</p>
-    <p class="program-desc">This program short summary is najbabxicaba anuwcbibxciabxka nquvuabx</p>
-    <div class="program-actions">
-      <a class="read-more" href="#">
-        READ MORE 
-        <span class="circle-btn">
-          <i class="fas fa-chevron-right"></i>
-        </span>
-      </a>
-    </div>
-  </div>
-</article>
+      // Profile & notifications dropdown (topbar)
+      const profileWrapper = document.querySelector('.profile-wrapper');
+      const profileToggle = document.getElementById('profileToggle');
+      const profileDropdown = document.querySelector('.profile-dropdown');
 
-    <article class="program-card">
-  <div class="program-media">
-    <img src="{{ asset('images/drugs.jpeg') }}" alt="Program 1">
-    <button class="register-btn">REGISTER NOW!</button>
-  </div>
-  <div class="program-body">
-    <p class="program-title">Available Testing for TESDA Courses</p>
-    <p class="program-desc">This program short summary is najbabxicaba anuwcbibxciabxka nquvuabx</p>
-    <div class="program-actions">
-      <a class="read-more" href="#">
-        READ MORE 
-        <span class="circle-btn">
-          <i class="fas fa-chevron-right"></i>
-        </span>
-      </a>
-    </div>
-  </div>
-</article>
-  </div>
-</div>
-</section>
+      const notifWrapper = document.querySelector(".notification-wrapper");
+      const notifBell = notifWrapper?.querySelector(".fa-bell");
+      const notifDropdown = notifWrapper?.querySelector(".notif-dropdown");
 
+      // === Sidebar toggle ===
+      menuToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        sidebar.classList.toggle('open');
 
-<!-- === List of Events (stacked) === -->
-<section class="events-list-section">
-  <div class="section-header">
-    <h3>List of Events</h3>
-    <a href="#" class="see-all">See All</a>
-  </div>
+        if (!sidebar.classList.contains('open')) {
+          profileItem?.classList.remove('open');
+        }
+      });
 
-  <div class="events-wrapper">
-    <!-- Event row 1 -->
-    <article class="event-card">
-      <div class="event-left">
-        <div class="event-thumb upcoming">
-          <!-- placeholder image -->
-          <img src="{{ asset('images/linis.jpg') }}" alt="Event banner">
-        </div>
-      </div>
-
-      <div class="event-right">
-        <a class="view-details" href="#">View more details</a>
-        <h4 class="event-title">Kalinsan sa bagong Pilipinas Program</h4>
-        <div class="event-meta">
-          <p><i class="fas fa-location-dot"></i> Barangay Hall (Starting Point)</p>
-          <p><i class="fas fa-users"></i> Committee on Active Citizenship</p>
-        </div>
-
-        <div class="event-footer">
-          <div class="event-when">
-            <div class="when-label">WHEN</div>
-            <div class="event-date">SEPTEMBER 22, 2025 | 9:00 AM</div>
-          </div>
-        </div>
-
-      </div>
-    </article>
-
-    <!-- Event row 2 -->
-    <article class="event-card">
-      <div class="event-left">
-        <div class="event-thumb upcoming">
-          <img src="{{ asset('images/linis.jpg') }}" alt="Event banner">
-        </div>
-      </div>
-
-      <div class="event-right">
-        <a class="view-details" href="#">View more details</a>
-        <h4 class="event-title">Kalinsan sa bagong Pilipinas Program</h4>
-        <div class="event-meta">
-          <p><i class="fas fa-location-dot"></i> Barangay Hall (Starting Point)</p>
-          <p><i class="fas fa-users"></i> Committee on Active Citizenship</p>
-        </div>
-        <div class="event-footer">
-          <div class="event-when">
-          <span class="when-label">WHEN</span>
-          <span class="event-date">SEPTEMBER 22, 2025 | 9:00 AM</span>
-        </div>
-</div>
-      </div>
-    </article>
-
-    <article class="event-card">
-      <div class="event-left">
-        <div class="event-thumb">
-          <img src="{{ asset('images/drugs.jpeg') }}" alt="Event banner">
-        </div>
-      </div>
-
-      <div class="event-right">
-        <a class="view-details" href="#">View more details</a>
-        <h4 class="event-title">Kontra Droga</h4>
-        <div class="event-meta">
-          <p><i class="fas fa-location-dot"></i> Barangay Hall (Starting Point)</p>
-          <p><i class="fas fa-users"></i> Committee on Active Citizenship</p>
-        </div>
-        <div class="event-footer">
-          <div class="event-when">
-          <span class="when-label">WHEN</span>
-          <span class="event-date">SEPTEMBER 22, 2025 | 9:00 AM</span>
-        </div>
-</div>
-      </div>
-    </article>
-
-    
-  </div>
-</section>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    <script>
-document.addEventListener("DOMContentLoaded", () => {
-  // === Lucide icons ===
-  lucide.createIcons();
-
-  // === Elements ===
-  const menuToggle = document.querySelector('.menu-toggle');
-  const sidebar = document.querySelector('.sidebar');
-
-  // Submenus
-  const profileItem = document.querySelector('.profile-item');
-  const profileLink = profileItem?.querySelector('.profile-link');
-  const eventsItem = document.querySelector('.events-item');
-  const eventsLink = eventsItem?.querySelector('.events-link');
-
-  // Profile & notifications dropdown (topbar)
-  const profileWrapper = document.querySelector('.profile-wrapper');
-  const profileToggle = document.getElementById('profileToggle');
-  const profileDropdown = document.querySelector('.profile-dropdown');
-
-  const notifWrapper = document.querySelector(".notification-wrapper");
-  const notifBell = notifWrapper?.querySelector(".fa-bell");
-  const notifDropdown = notifWrapper?.querySelector(".notif-dropdown");
-
-  // === Sidebar toggle ===
-  menuToggle.addEventListener('click', (e) => {
-    e.stopPropagation();
-    sidebar.classList.toggle('open');
-
-    if (!sidebar.classList.contains('open')) {
-      profileItem?.classList.remove('open');
-      eventsItem?.classList.remove('open');
-    }
-  });
-
-  // Helper: close all submenus
-  function closeAllSubmenus() {
-    profileItem?.classList.remove('open');
-    eventsItem?.classList.remove('open');
-  }
-
-  // === Profile submenu toggle ===
-  if (profileItem && profileLink) {
-    profileLink.addEventListener('click', (e) => {
-      e.preventDefault();
-      if (sidebar.classList.contains('open')) {
-        const isOpen = profileItem.classList.contains('open');
-        closeAllSubmenus();
-        if (!isOpen) profileItem.classList.add('open');
+      // Helper: close all submenus
+      function closeAllSubmenus() {
+        profileItem?.classList.remove('open');
       }
-    });
-  }
 
-  // === Events submenu toggle ===
-  if (eventsItem && eventsLink) {
-    eventsLink.addEventListener('click', (e) => {
-      e.preventDefault();
-      if (sidebar.classList.contains('open')) {
-        const isOpen = eventsItem.classList.contains('open');
-        closeAllSubmenus();
-        if (!isOpen) eventsItem.classList.add('open');
+      // === Profile submenu toggle ===
+      if (profileItem && profileLink) {
+        profileLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          if (sidebar.classList.contains('open')) {
+            const isOpen = profileItem.classList.contains('open');
+            closeAllSubmenus();
+            if (!isOpen) profileItem.classList.add('open');
+          }
+        });
       }
-    });
-  }
 
-  // === Close sidebar when clicking outside ===
-  document.addEventListener('click', (e) => {
-    if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
-      sidebar.classList.remove('open');
-      closeAllSubmenus();
-    }
+      // === Close sidebar when clicking outside ===
+      document.addEventListener('click', (e) => {
+        if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+          sidebar.classList.remove('open');
+          closeAllSubmenus();
+        }
 
-    if (profileWrapper && !profileWrapper.contains(e.target)) {
-      profileWrapper.classList.remove('active');
-    }
+        if (profileWrapper && !profileWrapper.contains(e.target)) {
+          profileWrapper.classList.remove('active');
+        }
 
-    if (notifWrapper && !notifWrapper.contains(e.target)) {
-      notifWrapper.classList.remove('active');
-    }
-  });
+        if (notifWrapper && !notifWrapper.contains(e.target)) {
+          notifWrapper.classList.remove('active');
+        }
+      });
 
-  // === Profile dropdown toggle (topbar) ===
-  if (profileToggle) {
-    profileToggle.addEventListener('click', (e) => {
-      e.stopPropagation();
-      profileWrapper.classList.toggle('active');
-      notifWrapper?.classList.remove('active');
-    });
-  }
-
-  profileDropdown?.addEventListener('click', e => e.stopPropagation());
-
-  // === Notifications dropdown toggle ===
-  if (notifBell) {
-    notifBell.addEventListener('click', (e) => {
-      e.stopPropagation();
-      notifWrapper.classList.toggle('active');
-      profileWrapper?.classList.remove('active');
-    });
-  }
-
-  notifDropdown?.addEventListener('click', e => e.stopPropagation());
-
-  // === Calendar ===
-  const weekdays = ["MON","TUE","WED","THU","FRI","SAT","SUN"];
-  const daysContainer = document.querySelector(".calendar .days");
-  const header = document.querySelector(".calendar header h3");
-  let today = new Date();
-  let currentView = new Date();
-
-  const holidays = [
-    "2025-01-01", "2025-04-09", "2025-04-17", "2025-04-18",
-    "2025-05-01", "2025-06-06", "2025-06-12", "2025-08-25",
-    "2025-11-30", "2025-12-25", "2025-12-30"
-  ];
-
-  function renderCalendar(baseDate) {
-    if (!daysContainer || !header) return;
-    daysContainer.innerHTML = "";
-
-    const startOfWeek = new Date(baseDate);
-    startOfWeek.setDate(baseDate.getDate() - (baseDate.getDay() === 0 ? 6 : baseDate.getDay() - 1));
-
-    const middleDay = new Date(startOfWeek);
-    middleDay.setDate(startOfWeek.getDate() + 3);
-    header.textContent = middleDay.toLocaleDateString("en-US", { month: "long", year: "numeric" });
-
-    for (let i = 0; i < 7; i++) {
-      const thisDay = new Date(startOfWeek);
-      thisDay.setDate(startOfWeek.getDate() + i);
-
-      const dayEl = document.createElement("div");
-      dayEl.classList.add("day");
-
-      const weekdayEl = document.createElement("span");
-      weekdayEl.classList.add("weekday");
-      weekdayEl.textContent = weekdays[i];
-
-      const dateEl = document.createElement("span");
-      dateEl.classList.add("date");
-      dateEl.textContent = thisDay.getDate();
-
-      const month = (thisDay.getMonth() + 1).toString().padStart(2,'0');
-      const day = thisDay.getDate().toString().padStart(2,'0');
-      const dateStr = `${thisDay.getFullYear()}-${month}-${day}`;
-
-      if (holidays.includes(dateStr)) dateEl.classList.add('holiday');
-
-      if (
-        thisDay.getDate() === today.getDate() &&
-        thisDay.getMonth() === today.getMonth() &&
-        thisDay.getFullYear() === today.getFullYear()
-      ) dayEl.classList.add("active");
-
-      dayEl.appendChild(weekdayEl);
-      dayEl.appendChild(dateEl);
-      daysContainer.appendChild(dayEl);
-    }
-  }
-
-  renderCalendar(currentView);
-
-  const prevBtn = document.querySelector(".calendar .prev");
-  const nextBtn = document.querySelector(".calendar .next");
-  prevBtn?.addEventListener("click", () => {
-    currentView.setDate(currentView.getDate() - 7);
-    renderCalendar(currentView);
-  });
-  nextBtn?.addEventListener("click", () => {
-    currentView.setDate(currentView.getDate() + 7);
-    renderCalendar(currentView);
-  });
-
-  // === Time auto-update ===
-const timeEl = document.querySelector(".time");
-function updateTime() {
-  if (!timeEl) return;
-  const now = new Date();
-
-  const shortWeekdays = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
-  const shortMonths = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
-
-  const weekday = shortWeekdays[now.getDay()];
-  const month = shortMonths[now.getMonth()];
-  const day = now.getDate();
-
-  let hours = now.getHours();
-  const minutes = now.getMinutes().toString().padStart(2, "0");
-  const ampm = hours >= 12 ? "PM" : "AM";
-  hours = hours % 12 || 12;
-
-  // Example: MON, AUG 8 10:00 AM
-  timeEl.innerHTML = `${weekday}, ${month} ${day} ${hours}:${minutes} <span>${ampm}</span>`;
-}
-updateTime();
-setInterval(updateTime, 60000);
-
-
-  // === Password toggle ===
-  const tempPassword = document.getElementById('tempPassword');
-  const toggleIcon = document.querySelector('.toggle-password');
-  if (tempPassword && toggleIcon) {
-    let hidden = true;
-    const realPassword = "marijoy";
-    toggleIcon.addEventListener('click', () => {
-      if (hidden) {
-        tempPassword.textContent = realPassword;
-        toggleIcon.classList.remove('fa-eye-slash');
-        toggleIcon.classList.add('fa-eye');
-        hidden = false;
-      } else {
-        tempPassword.textContent = "•••••";
-        toggleIcon.classList.remove('fa-eye');
-        toggleIcon.classList.add('fa-eye-slash');
-        hidden = true;
+      // === Profile dropdown toggle (topbar) ===
+      if (profileToggle) {
+        profileToggle.addEventListener('click', (e) => {
+          e.stopPropagation();
+          profileWrapper.classList.toggle('active');
+          notifWrapper?.classList.remove('active');
+        });
       }
+
+      profileDropdown?.addEventListener('click', e => e.stopPropagation());
+
+      // === Notifications dropdown toggle ===
+      if (notifBell) {
+        notifBell.addEventListener('click', (e) => {
+          e.stopPropagation();
+          notifWrapper.classList.toggle('active');
+          profileWrapper?.classList.remove('active');
+        });
+      }
+
+      notifDropdown?.addEventListener('click', e => e.stopPropagation());
+
+      // === Committee Filtering ===
+      const committeeTabs = document.querySelectorAll('.committee-tab');
+      const programCards = document.querySelectorAll('.program-card');
+      const eventCards = document.querySelectorAll('.event-card');
+
+      committeeTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          // Remove active class from all tabs
+          committeeTabs.forEach(t => t.classList.remove('active'));
+          // Add active class to clicked tab
+          tab.classList.add('active');
+          
+          const category = tab.getAttribute('data-category');
+          
+          // Filter program cards
+          programCards.forEach(card => {
+            if (category === 'all' || card.getAttribute('data-category') === category) {
+              card.style.display = 'block';
+            } else {
+              card.style.display = 'none';
+            }
+          });
+          
+          // Filter event cards
+          eventCards.forEach(card => {
+            if (category === 'all' || card.getAttribute('data-category') === category) {
+              card.style.display = 'flex';
+            } else {
+              card.style.display = 'none';
+            }
+          });
+        });
+      });
+
+      // === Time auto-update ===
+      const timeEl = document.querySelector(".time");
+      function updateTime() {
+        if (!timeEl) return;
+        const now = new Date();
+
+        const shortWeekdays = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
+        const shortMonths = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+
+        const weekday = shortWeekdays[now.getDay()];
+        const month = shortMonths[now.getMonth()];
+        const day = now.getDate();
+
+        let hours = now.getHours();
+        const minutes = now.getMinutes().toString().padStart(2, "0");
+        const ampm = hours >= 12 ? "PM" : "AM";
+        hours = hours % 12 || 12;
+
+        timeEl.innerHTML = `${weekday}, ${month} ${day} ${hours}:${minutes} <span>${ampm}</span>`;
+      }
+      updateTime();
+      setInterval(updateTime, 60000);
+
+      // === Event Details Modal ===
+      const eventModal = document.getElementById('eventModal');
+      const closeModal = document.querySelector('.close');
+      const closeBtn = document.querySelector('.close-btn');
+      const viewDetailsButtons = document.querySelectorAll('.view-event-details');
+
+      // Function to fetch and display event details
+      async function showEventDetails(eventId) {
+        try {
+          const response = await fetch(`/events/${eventId}`);
+          if (!response.ok) throw new Error('Event not found');
+          
+          const event = await response.json();
+          
+          // Populate modal with event data
+          document.getElementById('modalEventTitle').textContent = event.title;
+          document.getElementById('modalEventCategory').textContent = event.category ? event.category.replace(/_/g, ' ').toUpperCase() : 'No category';
+          document.getElementById('modalEventDateTime').textContent = event.event_date_time || 'Date not specified';
+          document.getElementById('modalEventLocation').textContent = event.location || 'Location not specified';
+          document.getElementById('modalEventPublisher').textContent = event.published_by || 'Publisher not specified';
+          document.getElementById('modalEventDescription').textContent = event.description || 'No description available.';
+          
+          // Handle event image
+          const modalImage = document.getElementById('modalEventImage');
+          if (event.image) {
+            modalImage.src = event.image;
+            modalImage.style.display = 'block';
+            modalImage.alt = event.title;
+            
+            modalImage.onerror = function() {
+              this.style.display = 'none';
+            };
+          } else {
+            modalImage.style.display = 'none';
+          }
+          
+          eventModal.style.display = 'block';
+        } catch (error) {
+          console.error('Error fetching event details:', error);
+          alert('Error loading event details. Please try again.');
+        }
+      }
+
+      // Add click event to all view details buttons
+      viewDetailsButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+          e.preventDefault();
+          const eventId = button.getAttribute('data-event-id');
+          showEventDetails(eventId);
+        });
+      });
+
+      // Close modal functions
+      closeModal?.addEventListener('click', () => {
+        eventModal.style.display = 'none';
+      });
+
+      closeBtn?.addEventListener('click', () => {
+        eventModal.style.display = 'none';
+      });
+
+      eventModal?.addEventListener('click', (e) => {
+        if (e.target === eventModal) {
+          eventModal.style.display = 'none';
+        }
+      });
+
+      // Truncate program descriptions
+      document.querySelectorAll('.program-desc').forEach(el => {
+        let text = el.textContent.trim();
+        if (text.length > 100) {
+          el.textContent = text.substring(0, 100) + '...';
+        }
+      });
     });
-  }
+  </script>
 
-  // === Modal ===
-  const modalOverlay = document.getElementById('modalOverlay');
-  const closeModal = document.getElementById('closeModal');
-  const printBtns = document.querySelectorAll('.print-btn');
-
-  printBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      modalOverlay.style.display = 'flex';
-    });
-  });
-
-  closeModal?.addEventListener('click', () => {
-    modalOverlay.style.display = 'none';
-  });
-
-  modalOverlay?.addEventListener('click', (e) => {
-    if (e.target === modalOverlay) {
-      modalOverlay.style.display = 'none';
-    }
-  });
-
-
-  document.querySelectorAll('.program-desc').forEach(el => {
-  let text = el.textContent.trim().split(" ");
-  if (text.length > 100) {
-    el.textContent = text.slice(0, 100).join(" ") + "...";
-  }
-});
-
-});
-</script>
+</body>
+</html>

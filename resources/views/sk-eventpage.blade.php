@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KatiBayan - Dashboard</title>
+  <title>KatiBayan - Events</title>
   <link rel="stylesheet" href="{{ asset('css/sk-eventpage.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -13,14 +13,10 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/qr-code-styling/lib/qr-code-styling.js"></script>
-
-
-
-
-
+  <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+  <!-- Fixed QR Code library imports -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.6.0/lib/qr-code-styling.min.js"></script>
 </head>
 <body>
   
@@ -71,10 +67,8 @@
         <i data-lucide="hand-heart"></i>
         <span class="label">Service Offer</span>
       </a>
-
     </nav>
   </aside>
-
 
   <!-- Main -->
   <div class="main">
@@ -163,528 +157,904 @@
       </div>
     </header>
 
-
     <!-- Event and Program Section -->
-<section class="event-section">
-  <!-- Event and Program Section -->
-<div class="event-header">
-  <h2>Event and Program</h2>
+    <section class="event-section">
+      <!-- Event Header -->
+      <div class="event-header">
+        <h2>Event and Program</h2>
 
-  <div class="create-activity-dropdown">
-    <a href="#" class="create-activity">
-      Create Activity <i class="fa-solid fa-calendar-plus"></i>
-    </a>
+        <div class="create-activity-dropdown">
+          <a href="#" class="create-activity">
+            Create Activity <i class="fa-solid fa-calendar-plus"></i>
+          </a>
 
-    <ul class="dropdown-menu">
-      <li>
-        <a href="{{ route('create-event') }}">
-          <span class="dot blue"></span> Event
-        </a>
-      </li>
-      <li>
-        <a href="{{ route('create-program') }}">
-          <span class="dot yellow"></span> Program
-        </a>
-      </li>
-    </ul>
-  </div>
-</div>
-
-
-  <!-- Happening Today -->
-  <div class="event-category happening">
-    <span class="tag">Happening Today</span>
-    <div class="event-card">
-      <div class="event-date">
-        <span class="day">Thu</span>
-        <span class="num">09</span>
-      </div>
-      <div class="event-details">
-        <h3>Kalinisan sa Bagong Pilipinas Program</h3>
-        <p><i class="fas fa-map-marker-alt"></i> Barangay Hall (Starting Point)</p>
-        <p><i class="fas fa-users"></i> Committee on Active Citizenship</p>
-        <div class="event-datetime">
-        <span class="label">DATE AND TIME</span>
-        <span class="divider"></span>
-        <span class="value">September 22, 2025 | 9:00 AM</span>
+          <ul class="dropdown-menu">
+            <li>
+              <a href="{{ route('create-event') }}">
+                <span class="dot blue"></span> Event
+              </a>
+            </li>
+            <li>
+              <a href="{{ route('create-program') }}">
+                <span class="dot yellow"></span> Program
+              </a>
+            </li>
+          </ul>
         </div>
       </div>
-      <div class="event-action">
-        <button class="launch-btn">Launch Event</button>
+
+      <!-- Display Success/Error Messages -->
+      @if(session('success'))
+        <div class="alert alert-success">
+          {{ session('success') }}
+        </div>
+      @endif
+
+      @if($errors->any())
+        <div class="alert alert-error">
+          <ul>
+            @foreach($errors->all() as $error)
+              <li>{{ $error }}</li>
+            @endforeach
+          </ul>
+        </div>
+      @endif
+
+      <!-- Tabs + Dropdown Container - MOVED TO TOP -->
+      <div class="tabs-container">
+        <!-- Tabs -->
+        <div class="tabs">
+          <button class="tab active" data-filter="all">All</button>
+          <button class="tab" data-filter="upcoming">Upcoming</button>
+          <button class="tab" data-filter="ongoing">Ongoing</button>
+          <button class="tab" data-filter="completed">Completed</button>
+        </div>
+
+        <!-- Custom Category Dropdown -->
+        <div class="category-dropdown">
+          <label for="category">Category:</label>
+          <div class="custom-select" id="category" tabindex="0" role="listbox" aria-haspopup="listbox">
+            <div class="selected" data-value="all">
+              <span class="selected-text">All</span>
+              <i data-lucide="chevron-down" class="dropdown-icon"></i>
+            </div>
+            <ul class="options" role="presentation">
+              <li data-value="all" role="option">All</li>
+              <li data-value="active_citizenship" role="option">Active Citizenship</li>
+              <li data-value="economic_empowerment" role="option">Economic Empowerment</li>
+              <li data-value="education" role="option">Education</li>
+              <li data-value="health" role="option">Health</li>
+              <li data-value="sports" role="option">Sports</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Check if there are events -->
+      @if($events->count() > 0)
+        
+        <!-- Happening Today Section -->
+        @if($todayEvents->count() > 0)
+          <div class="event-category happening" data-status="ongoing">
+            <span class="tag">Happening Today</span>
+            @foreach($todayEvents as $event)
+              @php
+                // CORRECTED: Determine current status based on date, time, and launch status
+                $currentDateTime = now();
+                $eventDateTime = \Carbon\Carbon::parse($event->event_date->format('Y-m-d') . ' ' . $event->event_time);
+                
+                if ($eventDateTime->isPast()) {
+                    // Event date/time has passed - it's completed
+                    $currentStatus = 'completed';
+                } elseif ($event->is_launched && $eventDateTime->isToday()) {
+                    // Event is launched AND happening today - it's ongoing
+                    $currentStatus = 'ongoing';
+                } elseif ($event->is_launched && $eventDateTime->isFuture()) {
+                    // Event is launched but date is in future - it should still be upcoming
+                    $currentStatus = 'upcoming';
+                } else {
+                    // Event is not launched and date is in future - it's upcoming
+                    $currentStatus = 'upcoming';
+                }
+              @endphp
+              <div class="event-card" data-event-id="{{ $event->id }}" data-status="{{ $currentStatus }}" data-category="{{ $event->category }}">
+                <div class="event-date">
+                  <span class="day">{{ $event->event_date->format('D') }}</span>
+                  <span class="num">{{ $event->event_date->format('d') }}</span>
+                </div>
+                <div class="event-details">
+                  <h3>{{ $event->title }}</h3>
+                  <p><i class="fas fa-map-marker-alt"></i> {{ $event->location }}</p>
+                  <p><i class="fas fa-users"></i> Committee on {{ ucfirst(str_replace('_', ' ', $event->category)) }}</p>
+                  @if($event->description)
+                    <div class="event-description">
+                      <p>{{ Str::limit($event->description, 150) }}</p>
+                    </div>
+                  @endif
+                  <div class="event-datetime">
+                    <span class="label">DATE AND TIME</span>
+                    <span class="divider"></span>
+                    <span class="value">{{ $event->event_date_time }}</span>
+                  </div>
+                </div>
+                <div class="event-action">
+                  @if(!$event->is_launched && $currentStatus === 'upcoming')
+                    <button class="launch-btn" data-event-id="{{ $event->id }}">Launch Event</button>
+                  @elseif($event->is_launched && $currentStatus === 'ongoing')
+                    <span class="launched-badge">Launched</span>
+                  @elseif($event->is_launched && $currentStatus === 'upcoming')
+                    <span class="launched-badge">Launched</span>
+                  @elseif($currentStatus === 'completed')
+                    <span class="completed-badge">Completed</span>
+                  @endif
+                  
+                  @if($currentStatus !== 'completed')
+                    <a href="{{ route('edit-event', $event->id) }}" class="edit-btn">
+                      Edit <i class="fa-solid fa-pen"></i>
+                    </a>
+                  @endif
+                  
+                  <button class="delete-btn" data-event-id="{{ $event->id }}">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+            @endforeach
+          </div>
+        @endif
+
+        <!-- Grouped Events by Month -->
+        @foreach($groupedEvents as $month => $eventsInMonth)
+          <div class="event-category">
+            <h4>{{ $month }}</h4>
+            @foreach($eventsInMonth as $event)
+              @php
+                // CORRECTED: Determine current status based on date, time, and launch status
+                $currentDateTime = now();
+                $eventDateTime = \Carbon\Carbon::parse($event->event_date->format('Y-m-d') . ' ' . $event->event_time);
+                
+                if ($eventDateTime->isPast()) {
+                    // Event date/time has passed - it's completed
+                    $currentStatus = 'completed';
+                } elseif ($event->is_launched && $eventDateTime->isToday()) {
+                    // Event is launched AND happening today - it's ongoing
+                    $currentStatus = 'ongoing';
+                } elseif ($event->is_launched && $eventDateTime->isFuture()) {
+                    // Event is launched but date is in future - it should still be upcoming
+                    $currentStatus = 'upcoming';
+                } else {
+                    // Event is not launched and date is in future - it's upcoming
+                    $currentStatus = 'upcoming';
+                }
+              @endphp
+              <div class="event-card" data-event-id="{{ $event->id }}" data-status="{{ $currentStatus }}" data-category="{{ $event->category }}">
+                <div class="event-date">
+                  <span class="day">{{ $event->event_date->format('D') }}</span>
+                  <span class="num">{{ $event->event_date->format('d') }}</span>
+                </div>
+                <div class="event-details">
+                  <h3>{{ $event->title }}</h3>
+                  <p><i class="fas fa-map-marker-alt"></i> {{ $event->location }}</p>
+                  <p><i class="fas fa-users"></i> Committee on {{ ucfirst(str_replace('_', ' ', $event->category)) }}</p>
+                  @if($event->description)
+                    <div class="event-description">
+                      <p>{{ Str::limit($event->description, 150) }}</p>
+                    </div>
+                  @endif
+                  <div class="event-datetime">
+                    <span class="label">DATE AND TIME</span>
+                    <span class="divider"></span>
+                    <span class="value">{{ $event->event_date_time }}</span>
+                  </div>
+                </div>
+                <div class="event-action">
+                  @if(!$event->is_launched && $currentStatus === 'upcoming')
+                    <button class="launch-btn" data-event-id="{{ $event->id }}">Launch Event</button>
+                  @elseif($event->is_launched && $currentStatus === 'ongoing')
+                    <span class="launched-badge">Launched</span>
+                  @elseif($event->is_launched && $currentStatus === 'upcoming')
+                    <span class="launched-badge">Launched</span>
+                  @elseif($currentStatus === 'completed')
+                    <span class="completed-badge">Completed</span>
+                  @endif
+                  
+                  @if($currentStatus !== 'completed')
+                    <a href="{{ route('edit-event', $event->id) }}" class="edit-btn">
+                      Edit <i class="fa-solid fa-pen"></i>
+                    </a>
+                  @endif
+                  
+                  <button class="delete-btn" data-event-id="{{ $event->id }}">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+            @endforeach
+          </div>
+        @endforeach
+
+      @else
+        <!-- No Events State -->
+        <div class="no-events">
+          <i class="fas fa-calendar-times"></i>
+          <h3>No Events Yet</h3>
+          <p>Get started by creating your first event or program.</p>
+          <a href="{{ route('create-event') }}" class="btn-create-event">
+            Create Your First Event
+          </a>
+        </div>
+      @endif
+    </section>
+
+    <!-- Event Modal -->
+    <div id="eventModal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Launch Event</h2>
+        <p><strong>Title</strong><br> <span id="modalEventTitle"></span></p>
+        <p><strong>Committee on:</strong> <span id="modalEventCategory"></span></p>
+        <img id="modalEventImage" src="" alt="Event Banner" class="event-banner" style="display: none;">
+        <p><em>Event Date: <span id="modalEventDateTime"></span> &nbsp;&nbsp; Location: <span id="modalEventLocation"></span></em></p>
+        <h3 id="modalEventDescriptionTitle"></h3>
+        <p id="modalEventDescription"></p>
+        <p class="published">
+          Published by: <span id="modalEventPublisher"></span><br>
+          Committee on <span id="modalEventCommittee"></span>
+        </p>
+        <div class="modal-actions">
+          <button id="proceedPasscode" class="launch-btn">Generate QR & Passcode</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- QR Modal -->
+    <div id="qrModal" class="modal">
+      <div class="modal-content qr-content">
+        <span class="close qr-close">&times;</span>
+        <h2>Scan for your attendance</h2>
+        <p><strong>Title:</strong> <span id="qrEventTitle"></span></p>
+        <div id="qrcode" style="width: 250px; height: 250px; margin: 0 auto;"></div>
+        <p class="small-text">
+          Having trouble scanning the QR code?<br>
+          Here's the passcode below.
+        </p>
+        <input type="text" id="generatedPasscode" readonly style="text-align: center; font-weight: bold; font-size: 16px; width: 200px; margin: 10px auto; display: block;" />
+        <p class="footer-text">
+          This will mark your attendance in the program.
+        </p>
+        <div class="modal-actions" style="margin-top: 20px;">
+          <button id="closeQR" class="btn-primary">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="modal">
+      <div class="modal-content delete-modal">
+        <div class="delete-icon">
+          <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <h2>Delete Event</h2>
+        <p>Are you sure you want to delete this event? This action cannot be undone.</p>
+        <div class="modal-actions">
+          <button id="confirmDelete" class="delete-btn-confirm">Delete</button>
+          <button id="cancelDelete" class="cancel-btn">Cancel</button>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Modal -->
-<div id="eventModal" class="modal">
-  <div class="modal-content">
-    <span class="close">&times;</span>
-    
-    <h2>Launch Event</h2>
-    <p><strong>Title</strong><br> Kalinisan sa Bagong Pilipinas Program</p>
-    <p><strong>Committee on:</strong> Active Citizenship</p>
-    
-    <img src="{{ asset('images/kalinisan.jpeg') }}" alt="Event Banner" class="event-banner">
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // Initialize icons
+      if (typeof lucide !== "undefined" && lucide.createIcons) lucide.createIcons();
 
-    <p><em>Event Date: September 9, 2025 at 1:00 PM &nbsp;&nbsp; Location: Barangay Hall</em></p>
-    <h3>Kalinisan sa Bagong Pilipinas</h3>
-    <p>
-      The Kalinisan sa Bagong Pilipinas is more than just a clean-up drive—it is a nationwide campaign
-      that calls on every Filipino to take part in building a cleaner, greener, and more disciplined nation.
-      ...
-    </p>
+      // Global variables
+      let currentEventId = null;
+      let currentStatusFilter = 'all';
+      let currentCategoryFilter = 'all';
+      let qrCodeInstance = null;
 
-    <p class="published">
-      Published by: Hon. Marijoy<br>
-      Committee on Active Citizenship
-    </p>
+      // --- UI elements ---
+      const menuToggle = document.querySelector('.menu-toggle');
+      const sidebar = document.querySelector('.sidebar');
+      const profileWrapper = document.querySelector('.profile-wrapper');
+      const profileToggle = document.getElementById('profileToggle');
+      const notifWrapper = document.querySelector(".notification-wrapper");
 
-    <div class="modal-actions">
-  <button id="proceedPasscode" class="launch-btn">Launch Event</button>
-</div>
-
-  </div>
-</div>
-
-<!-- Passcode Modal -->
-<div id="passcodeModal" class="modal">
-  <div class="modal-content">
-    <span class="close passcode-close">&times;</span>
-
-    <h2>Create Passcode for Attendance Tracking</h2>
-    <p>
-      The passcode is automatically converted into a QR code for easier tracking
-      of attendance. The QR code can be displayed digitally, making the attendance
-      process more efficient and accessible.
-    </p>
-    <input type="text" placeholder="Enter the passcode here" />
-    <button>Generate</button>
-  </div>
-</div>
-
-<!-- QR Modal -->
-<div id="qrModal" class="modal">
-  <div class="modal-content qr-content">
-    <span class="close qr-close">&times;</span>
-
-    <h2>Scan for your attendance</h2>
-    <p><strong>Title:</strong> Kalinisan sa Bagong Pilipinas Program</p>
-
-    <div id="qrcode"></div>
-
-    <p class="small-text">
-      Having trouble scanning the QR code?<br>
-      Here’s the passcode below.
-    </p>
-
-    <input type="text" id="generatedPasscode" readonly />
-
-    <p class="footer-text">
-      This will mark your attendance in the program.
-    </p>
-  </div>
-</div>
-
-
-
-
-
-
-  <!-- Tabs + Dropdown Container -->
-<div class="tabs-container">
-  <!-- Tabs -->
-  <div class="tabs">
-    <button class="tab active">All</button>
-    <button class="tab">Upcoming</button>
-    <button class="tab">Rescheduled</button>
-    <button class="tab">Completed</button>
-  </div>
-
-  <!-- Custom Category Dropdown (must match classes used in JS) -->
-  <div class="category-dropdown">
-    <label for="category">Category:</label>
-
-    <div class="custom-select" id="category" tabindex="0" role="listbox" aria-haspopup="listbox">
-  <div class="selected" data-value="all">
-    <span class="selected-text">All</span>
-    <i data-lucide="chevron-down" class="dropdown-icon"></i>
-  </div>
-  <ul class="options" role="presentation">
-    <li data-value="all" role="option">All</li>
-    <li data-value="active citizenship" role="option">Active Citizenship</li>
-    <li data-value="economic empowerment" role="option">Economic Empowerment</li>
-    <li data-value="education" role="option">Education</li>
-    <li data-value="health" role="option">Health</li>
-    <li data-value="sports" role="option">Sports</li>
-  </ul>
-</div>
-
-  </div>
-</div>
-
-
-
-
-  
-
-  <!-- This Month -->
-  <div class="event-category">
-    <h4>This Month</h4>
-    <div class="event-card">
-      <div class="event-date">
-        <span class="day">Thu</span>
-        <span class="num">09</span>
-      </div>
-      <div class="event-details">
-        <h3>Kalinisan sa Bagong Pilipinas Program</h3>
-        <p><i class="fas fa-map-marker-alt"></i> Barangay Hall (Starting Point)</p>
-        <p><i class="fas fa-users"></i> Committee on Active Citizenship</p>
-        <div class="event-datetime">
-        <span class="label">DATE AND TIME</span>
-        <span class="divider"></span>
-        <span class="value">September 22, 2025 | 9:00 AM</span>
-        </div>
-        </div>
-        <div class="event-action">
-            <a href="{{ route('edit-event') }}" class="edit-btn">
-                Edit <i class="fa-solid fa-pen"></i>
-            </a>
-        </div>
-    </div>
-  </div>
-
-  <!-- October -->
-  <div class="event-category">
-    <h4>October</h4>
-    <div class="event-card">
-      <div class="event-date">
-        <span class="day">Thu</span>
-        <span class="num">09</span>
-      </div>
-      <div class="event-details">
-        <h3>Kalinisan sa Bagong Pilipinas Program</h3>
-        <p><i class="fas fa-map-marker-alt"></i> Barangay Hall (Starting Point)</p>
-        <p><i class="fas fa-users"></i> Committee on Active Citizenship</p>
-        <div class="event-datetime">
-        <span class="label">DATE AND TIME</span>
-        <span class="divider"></span>
-        <span class="value">September 22, 2025 | 9:00 AM</span>
-        </div>
-      </div>
-      <div class="event-action">
-            <button class="edit-btn">
-                Edit<i class="fa-solid fa-pen"></i>  
-            </button>
-     </div>
-    </div>
-  </div>
-</section>
-
-
-
-
-
-
-
-
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-  // Initialize icons (safe-check)
-  if (typeof lucide !== "undefined" && lucide.createIcons) lucide.createIcons();
-
-  // --- UI elements (safe lookups) ---
-  const menuToggle = document.querySelector('.menu-toggle');
-  const sidebar = document.querySelector('.sidebar');
-  const profileItem = document.querySelector('.profile-item');
-  const profileWrapper = document.querySelector('.profile-wrapper');
-  const profileToggle = document.getElementById('profileToggle');
-  const profileDropdown = document.querySelector('.profile-dropdown');
-  const notifWrapper = document.querySelector(".notification-wrapper");
-
-  // Sidebar toggle (only if both exist)
-  if (menuToggle && sidebar) {
-    menuToggle.addEventListener('click', (e) => {
-      e.stopPropagation();
-      sidebar.classList.toggle('open');
-      if (!sidebar.classList.contains('open')) profileItem?.classList.remove('open');
-    });
-  }
-
-  // Example submenu toggle (defensive)
-  const evaluationItem = document.querySelector('.evaluation-item');
-  const evaluationLink = document.querySelector('.evaluation-link');
-  evaluationLink?.addEventListener('click', (e) => {
-    e.preventDefault();
-    evaluationItem?.classList.toggle('open');
-  });
-
-  // --- Calendar code (kept as-is, but guarded) ---
-  const weekdays = ["MON","TUE","WED","THU","FRI","SAT","SUN"];
-  const daysContainer = document.querySelector(".calendar .days");
-  const header = document.querySelector(".calendar header h3");
-  let today = new Date();
-  let currentView = new Date();
-
-  const holidays = [
-    "2025-01-01","2025-04-09","2025-04-17","2025-04-18",
-    "2025-05-01","2025-06-06","2025-06-12","2025-08-25",
-    "2025-11-30","2025-12-25","2025-12-30"
-  ];
-
-  function renderCalendar(baseDate) {
-    if (!daysContainer || !header) return;
-    daysContainer.innerHTML = "";
-
-    const startOfWeek = new Date(baseDate);
-    startOfWeek.setDate(baseDate.getDate() - (baseDate.getDay() === 0 ? 6 : baseDate.getDay() - 1));
-    const middleDay = new Date(startOfWeek);
-    middleDay.setDate(startOfWeek.getDate() + 3);
-    header.textContent = middleDay.toLocaleDateString("en-US", { month: "long", year: "numeric" });
-
-    for (let i = 0; i < 7; i++) {
-      const thisDay = new Date(startOfWeek);
-      thisDay.setDate(startOfWeek.getDate() + i);
-
-      const dayEl = document.createElement("div");
-      dayEl.classList.add("day");
-
-      const weekdayEl = document.createElement("span");
-      weekdayEl.classList.add("weekday");
-      weekdayEl.textContent = weekdays[i];
-
-      const dateEl = document.createElement("span");
-      dateEl.classList.add("date");
-      dateEl.textContent = thisDay.getDate();
-
-      const month = (thisDay.getMonth() + 1).toString().padStart(2,'0');
-      const day = thisDay.getDate().toString().padStart(2,'0');
-      const dateStr = `${thisDay.getFullYear()}-${month}-${day}`;
-
-      if (holidays.includes(dateStr)) dateEl.classList.add('holiday');
-      if (
-        thisDay.getDate() === today.getDate() &&
-        thisDay.getMonth() === today.getMonth() &&
-        thisDay.getFullYear() === today.getFullYear()
-      ) {
-        dayEl.classList.add("active");
+      // Sidebar toggle
+      if (menuToggle && sidebar) {
+        menuToggle.addEventListener('click', (e) => {
+          e.stopPropagation();
+          sidebar.classList.toggle('open');
+        });
       }
 
-      dayEl.appendChild(weekdayEl);
-      dayEl.appendChild(dateEl);
-      daysContainer.appendChild(dayEl);
-    }
-  }
+      // Evaluation submenu toggle
+      const evaluationItem = document.querySelector('.evaluation-item');
+      const evaluationLink = document.querySelector('.evaluation-link');
+      evaluationLink?.addEventListener('click', (e) => {
+        e.preventDefault();
+        evaluationItem?.classList.toggle('open');
+      });
 
-  renderCalendar(currentView);
-
-  const prevBtn = document.querySelector(".calendar .prev");
-  const nextBtn = document.querySelector(".calendar .next");
-  prevBtn?.addEventListener("click", () => {
-    currentView.setDate(currentView.getDate() - 7);
-    renderCalendar(currentView);
-  });
-  nextBtn?.addEventListener("click", () => {
-    currentView.setDate(currentView.getDate() + 7);
-    renderCalendar(currentView);
-  });
-
-  // === Time auto-update ===
-  const timeEl = document.querySelector(".time");
-  function updateTime() {
-    if (!timeEl) return;
-    const now = new Date();
-    const shortWeekdays = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
-    const shortMonths = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
-    const weekday = shortWeekdays[now.getDay()];
-    const month = shortMonths[now.getMonth()];
-    const day = now.getDate();
-    let hours = now.getHours();
-    const minutes = now.getMinutes().toString().padStart(2, "0");
-    const ampm = hours >= 12 ? "PM" : "AM";
-    hours = hours % 12 || 12;
-    timeEl.innerHTML = `${weekday}, ${month} ${day} ${hours}:${minutes} <span>${ampm}</span>`;
-  }
-  updateTime();
-  setInterval(updateTime, 60000);
-
-  // === Notifications / profile dropdowns ===
-  if (notifWrapper) {
-    const bell = notifWrapper.querySelector(".fa-bell");
-    bell?.addEventListener("click", (e) => {
-      e.stopPropagation();
-      notifWrapper.classList.toggle("active");
-      profileWrapper?.classList.remove("active");
-    });
-    notifWrapper.querySelector(".notif-dropdown")?.addEventListener("click", (e) => e.stopPropagation());
-  }
-  if (profileWrapper && profileToggle && profileDropdown) {
-    profileToggle.addEventListener("click", (e) => {
-      e.stopPropagation();
-      profileWrapper.classList.toggle("active");
-      notifWrapper?.classList.remove("active");
-    });
-    profileDropdown.addEventListener("click", (e) => e.stopPropagation());
-  }
-
-  // --- Prevent runtime errors when checking containment on null elements ---
-  document.addEventListener("click", (e) => {
-    // close sidebar if click outside (defensive)
-    if (sidebar && menuToggle) {
-      if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
-        sidebar.classList.remove('open');
-        profileItem?.classList.remove('open');
+      // Time auto-update
+      const timeEl = document.querySelector(".time");
+      function updateTime() {
+        if (!timeEl) return;
+        const now = new Date();
+        const shortWeekdays = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
+        const shortMonths = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+        const weekday = shortWeekdays[now.getDay()];
+        const month = shortMonths[now.getMonth()];
+        const day = now.getDate();
+        let hours = now.getHours();
+        const minutes = now.getMinutes().toString().padStart(2, "0");
+        const ampm = hours >= 12 ? "PM" : "AM";
+        hours = hours % 12 || 12;
+        timeEl.innerHTML = `${weekday}, ${month} ${day} ${hours}:${minutes} <span>${ampm}</span>`;
       }
-    } else if (sidebar) {
-      if (!sidebar.contains(e.target)) sidebar.classList.remove('open');
-    }
+      updateTime();
+      setInterval(updateTime, 60000);
 
-    if (profileWrapper && !profileWrapper.contains(e.target)) profileWrapper.classList.remove('active');
-    if (notifWrapper && !notifWrapper.contains(e.target)) notifWrapper.classList.remove('active');
+      // Notifications / profile dropdowns
+      if (notifWrapper) {
+        const bell = notifWrapper.querySelector(".fa-bell");
+        bell?.addEventListener("click", (e) => {
+          e.stopPropagation();
+          notifWrapper.classList.toggle("active");
+          profileWrapper?.classList.remove("active");
+        });
+      }
 
-    // Close any open custom-select options
-    document.querySelectorAll('.custom-select .options.show').forEach(o => o.classList.remove('show'));
-  });
+      if (profileWrapper && profileToggle) {
+        profileToggle.addEventListener("click", (e) => {
+          e.stopPropagation();
+          profileWrapper.classList.toggle("active");
+          notifWrapper?.classList.remove("active");
+        });
+      }
 
-  // === Highlight Holidays in Events (defensive) ===
-  document.querySelectorAll('.events li').forEach(eventItem => {
-    const dateEl = eventItem.querySelector('.date span');
-    const monthEl = eventItem.querySelector('.date strong');
-    if (!dateEl || !monthEl) return;
-    const monthMap = {
-      JAN: "01", FEB: "02", MAR: "03", APR: "04", MAY: "05", JUN: "06",
-      JUL: "07", AUG: "08", SEP: "09", OCT: "10", NOV: "11", DEC: "12"
-    };
-    const monthNum = monthMap[monthEl.textContent.trim().toUpperCase()];
-    const day = dateEl.textContent.trim().padStart(2,'0');
-    const dateStr = `2025-${monthNum}-${day}`;
-    if (holidays.includes(dateStr)) {
-      eventItem.querySelector('.date')?.classList.add('holiday');
-    }
-  });
+      // Close dropdowns when clicking outside
+      document.addEventListener("click", (e) => {
+        if (sidebar && !sidebar.contains(e.target) && menuToggle && !menuToggle.contains(e.target)) {
+          sidebar.classList.remove('open');
+        }
+        if (profileWrapper && !profileWrapper.contains(e.target)) profileWrapper.classList.remove('active');
+        if (notifWrapper && !notifWrapper.contains(e.target)) notifWrapper.classList.remove('active');
+        document.querySelectorAll('.custom-select .options.show').forEach(o => o.classList.remove('show'));
+      });
 
-  // === CUSTOM SELECT: works for multiple .custom-select on page ===
-    const customSelect = document.querySelector("#category");
-    const selected = customSelect.querySelector(".selected");
-    const options = customSelect.querySelector(".options");
-    const items = options.querySelectorAll("li");
+      // ========== TAB FILTERING FUNCTIONALITY ==========
+      const tabs = document.querySelectorAll('.tab');
+      
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          // Remove active class from all tabs
+          tabs.forEach(t => t.classList.remove('active'));
+          // Add active class to clicked tab
+          tab.classList.add('active');
+          
+          // Get the filter value
+          currentStatusFilter = tab.getAttribute('data-filter');
+          
+          // Apply filters
+          applyFilters();
+        });
+      });
 
-    selected.addEventListener("click", () => {
-    const isOpen = options.style.display === "block";
-    options.style.display = isOpen ? "none" : "block";
-    customSelect.classList.toggle("open", !isOpen);
+      // Custom Select functionality for category filtering
+      const customSelect = document.querySelector("#category");
+      if (customSelect) {
+        const selected = customSelect.querySelector(".selected");
+        const options = customSelect.querySelector(".options");
+        const items = options.querySelectorAll("li");
+
+        selected.addEventListener("click", () => {
+          const isOpen = options.style.display === "block";
+          options.style.display = isOpen ? "none" : "block";
+          customSelect.classList.toggle("open", !isOpen);
+        });
+
+        items.forEach(item => {
+          item.addEventListener("click", () => {
+            customSelect.querySelector(".selected-text").textContent = item.textContent;
+            options.style.display = "none";
+            customSelect.classList.remove("open");
+            
+            // Update category filter
+            currentCategoryFilter = item.getAttribute('data-value');
+            
+            // Apply filters
+            applyFilters();
+          });
+        });
+      }
+
+      // Apply both status and category filters
+      function applyFilters() {
+        const eventCards = document.querySelectorAll('.event-card');
+        const eventCategories = document.querySelectorAll('.event-category');
+        
+        let hasVisibleEvents = false;
+
+        eventCategories.forEach(category => {
+          let categoryHasVisibleEvents = false;
+          const categoryEventCards = category.querySelectorAll('.event-card');
+          
+          categoryEventCards.forEach(card => {
+            const eventStatus = card.getAttribute('data-status');
+            const eventCategory = card.getAttribute('data-category');
+            
+            // Check if event matches both status and category filters
+            const statusMatch = currentStatusFilter === 'all' || eventStatus === currentStatusFilter;
+            const categoryMatch = currentCategoryFilter === 'all' || eventCategory === currentCategoryFilter;
+            
+            if (statusMatch && categoryMatch) {
+              card.style.display = 'flex';
+              categoryHasVisibleEvents = true;
+              hasVisibleEvents = true;
+            } else {
+              card.style.display = 'none';
+            }
+          });
+          
+          // Show/hide category header based on visible events
+          const categoryHeader = category.querySelector('h4');
+          const happeningTag = category.querySelector('.tag');
+          
+          if (categoryHeader || happeningTag) {
+            if (categoryHasVisibleEvents) {
+              category.style.display = 'block';
+            } else {
+              category.style.display = 'none';
+            }
+          }
+        });
+
+        // Show no events message if no events match filters
+        const noEventsElement = document.querySelector('.no-events');
+        if (!hasVisibleEvents && eventCards.length > 0) {
+          if (!noEventsElement) {
+            const noEventsHTML = `
+              <div class="no-events">
+                <i class="fas fa-calendar-times"></i>
+                <h3>No Events Match Your Filters</h3>
+                <p>Try adjusting your filter criteria to see more events.</p>
+                <button class="btn-create-event" onclick="resetFilters()">
+                  Reset Filters
+                </button>
+              </div>
+            `;
+            document.querySelector('.event-section').insertAdjacentHTML('beforeend', noEventsHTML);
+          }
+        } else if (noEventsElement && eventCards.length > 0) {
+          noEventsElement.remove();
+        }
+      }
+
+      // Reset filters function
+      window.resetFilters = function() {
+        // Reset tabs
+        tabs.forEach(tab => {
+          tab.classList.remove('active');
+          if (tab.getAttribute('data-filter') === 'all') {
+            tab.classList.add('active');
+          }
+        });
+        
+        // Reset category dropdown
+        const selected = customSelect.querySelector(".selected");
+        const selectedText = customSelect.querySelector(".selected-text");
+        selected.setAttribute('data-value', 'all');
+        selectedText.textContent = 'All';
+        
+        // Reset filter variables
+        currentStatusFilter = 'all';
+        currentCategoryFilter = 'all';
+        
+        // Apply reset
+        applyFilters();
+        
+        // Remove no events message if it exists
+        const noEventsElement = document.querySelector('.no-events');
+        if (noEventsElement) {
+          noEventsElement.remove();
+        }
+      };
+
+      // SIMPLE Launch Event functionality using event delegation
+      document.addEventListener('click', function(e) {
+        // Check if the clicked element is a launch button
+        if (e.target.classList.contains('launch-btn')) {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          // Get the event ID from the button's data attribute
+          const eventId = e.target.getAttribute('data-event-id');
+          console.log('Launch button clicked, event ID:', eventId);
+          
+          if (!eventId) {
+            console.log('Button clicked but no event ID found');
+            return;
+          }
+
+          currentEventId = eventId;
+          console.log('Current event ID set to:', currentEventId);
+
+          // Fetch and show event details
+          fetchEventDetails(currentEventId, e.target);
+        }
+        
+        // Also handle delete buttons with event delegation
+        if (e.target.classList.contains('delete-btn')) {
+          e.preventDefault();
+          currentEventId = e.target.getAttribute('data-event-id');
+          document.getElementById("deleteModal").style.display = "block";
+        }
+      });
+
+      // Function to fetch event details
+      async function fetchEventDetails(eventId, button) {
+        try {
+          // Show loading state
+          const originalText = button.textContent;
+          button.disabled = true;
+          button.textContent = 'Loading...';
+
+          console.log('Fetching event details for ID:', eventId);
+          const response = await fetch(`/events/${eventId}`, {
+            headers: {
+              'Accept': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin'
+          });
+          
+          console.log('Response status:', response.status);
+          
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          
+          const event = await response.json();
+          console.log('Event data received:', event);
+          
+          // Populate modal with event data
+          document.getElementById('modalEventTitle').textContent = event.title || 'No title';
+          document.getElementById('modalEventCategory').textContent = event.category ? ucfirst(event.category.replace(/_/g, ' ')) : 'No category';
+          document.getElementById('modalEventDateTime').textContent = event.event_date_time || 'No date/time';
+          document.getElementById('modalEventLocation').textContent = event.location || 'No location';
+          document.getElementById('modalEventDescriptionTitle').textContent = event.title || 'Description';
+          document.getElementById('modalEventDescription').textContent = event.description || 'No description provided.';
+          document.getElementById('modalEventPublisher').textContent = event.published_by || 'Unknown';
+          document.getElementById('modalEventCommittee').textContent = event.category ? ucfirst(event.category.replace(/_/g, ' ')) : 'Unknown';
+          
+          // Handle event image
+          const modalImage = document.getElementById('modalEventImage');
+          if (event.image) {
+            console.log('Event image URL:', event.image);
+            modalImage.src = event.image;
+            modalImage.style.display = 'block';
+            modalImage.alt = event.title || 'Event image';
+            
+            // Add error handling for image load
+            modalImage.onerror = function() {
+              console.error('Failed to load event image:', event.image);
+              this.style.display = 'none';
+            };
+          } else {
+            modalImage.style.display = 'none';
+          }
+          
+          document.getElementById("eventModal").style.display = "block";
+          
+        } catch (error) {
+          console.error('Error fetching event details:', error);
+          alert('Error loading event details: ' + error.message);
+        } finally {
+          // Reset button state
+          button.disabled = false;
+          button.textContent = 'Launch Event';
+        }
+      }
+
+      // Generate QR & Passcode
+      document.getElementById("proceedPasscode").addEventListener("click", async () => {
+        if (!currentEventId) {
+          console.log('No event selected for QR generation');
+          return;
+        }
+
+        const proceedBtn = document.getElementById("proceedPasscode");
+        
+        try {
+          // Show loading state
+          proceedBtn.disabled = true;
+          proceedBtn.textContent = 'Generating...';
+
+          // Generate a random passcode
+          const passcode = generateRandomPasscode();
+          console.log('Generated passcode:', passcode);
+          
+          // Save passcode to database and launch event
+          const passcodeResponse = await fetch(`/events/${currentEventId}/generate-passcode`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-TOKEN': '{{ csrf_token() }}',
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify({ passcode: passcode })
+          });
+
+          if (!passcodeResponse.ok) {
+            throw new Error('Failed to save passcode');
+          }
+
+          const passcodeResult = await passcodeResponse.json();
+          if (!passcodeResult.success) {
+            throw new Error(passcodeResult.error || 'Failed to save passcode');
+          }
+
+          // Launch the event
+          const launchResponse = await fetch(`/events/${currentEventId}/launch`, {
+            method: 'POST',
+            headers: {
+              'X-CSRF-TOKEN': '{{ csrf_token() }}',
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            }
+          });
+
+          if (!launchResponse.ok) {
+            throw new Error('Failed to launch event');
+          }
+
+          const launchResult = await launchResponse.json();
+          if (!launchResult.success) {
+            throw new Error(launchResult.error || 'Failed to launch event');
+          }
+
+          // Close Event Modal
+          document.getElementById("eventModal").style.display = "none";
+
+          // Open QR Modal
+          document.getElementById("qrModal").style.display = "flex";
+          
+          // Set event title and passcode
+          const eventTitle = document.getElementById('modalEventTitle').textContent;
+          document.getElementById("qrEventTitle").textContent = eventTitle;
+          document.getElementById("generatedPasscode").value = passcode;
+
+          // Update event card UI
+          const eventCard = document.querySelector(`[data-event-id="${currentEventId}"]`);
+          if (eventCard) {
+            const launchBtn = eventCard.querySelector('.launch-btn');
+            const actionDiv = eventCard.querySelector('.event-action');
+            
+            if (launchBtn && actionDiv) {
+              launchBtn.remove();
+              const launchedBadge = document.createElement('span');
+              launchedBadge.className = 'launched-badge';
+              launchedBadge.textContent = 'Launched';
+              actionDiv.prepend(launchedBadge);
+              
+              // Update data-status for filtering - but only if it's today's event
+              // For future events, keep status as 'upcoming'
+              const eventDate = new Date(eventCard.querySelector('.event-datetime .value').textContent);
+              const today = new Date();
+              if (eventDate.toDateString() === today.toDateString()) {
+                eventCard.setAttribute('data-status', 'ongoing');
+              } else {
+                // Keep as upcoming for future dates
+                eventCard.setAttribute('data-status', 'upcoming');
+              }
+            }
+          }
+
+          // Generate QR Code
+          console.log('Generating QR code for passcode:', passcode);
+          await generateQRCode(passcode);
+
+        } catch (error) {
+          console.error('Error generating QR and passcode:', error);
+          alert('Error: ' + error.message);
+        } finally {
+          // Reset button state
+          proceedBtn.disabled = false;
+          proceedBtn.textContent = 'Generate QR & Passcode';
+        }
+      });
+
+      // Close QR Modal
+      document.getElementById("closeQR").addEventListener("click", () => {
+        document.getElementById("qrModal").style.display = "none";
+        // Clear QR code for next use
+        const qrcodeContainer = document.getElementById("qrcode");
+        if (qrcodeContainer) {
+          qrcodeContainer.innerHTML = "";
+        }
+      });
+
+      // Close QR Modal with X button
+      document.querySelector(".qr-close").addEventListener("click", () => {
+        document.getElementById("qrModal").style.display = "none";
+        const qrcodeContainer = document.getElementById("qrcode");
+        if (qrcodeContainer) {
+          qrcodeContainer.innerHTML = "";
+        }
+      });
+
+      // Confirm delete
+      document.getElementById("confirmDelete").addEventListener("click", async () => {
+        try {
+          const response = await fetch(`/events/${currentEventId}`, {
+            method: 'DELETE',
+            headers: {
+              'X-CSRF-TOKEN': '{{ csrf_token() }}',
+              'Accept': 'application/json'
+            }
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            if (result.success) {
+              // Remove event card from UI
+              const eventCard = document.querySelector(`[data-event-id="${currentEventId}"]`);
+              if (eventCard) {
+                eventCard.remove();
+              }
+              document.getElementById("deleteModal").style.display = "none";
+              
+              // Reload page if no events left
+              if (document.querySelectorAll('.event-card').length === 0) {
+                window.location.reload();
+              }
+            } else {
+              throw new Error(result.error || 'Delete failed');
+            }
+          } else {
+            throw new Error('Delete failed with status: ' + response.status);
+          }
+        } catch (error) {
+          console.error('Error deleting event:', error);
+          alert('Error deleting event. Please try again.');
+        }
+      });
+
+      // Cancel delete
+      document.getElementById("cancelDelete").addEventListener("click", () => {
+        document.getElementById("deleteModal").style.display = "none";
+      });
+
+      // Close modals
+      document.querySelectorAll(".close").forEach(btn => {
+        btn.addEventListener("click", () => {
+          btn.closest(".modal").style.display = "none";
+        });
+      });
+
+      // Create Activity dropdown
+      const createActivityDropdown = document.querySelector(".create-activity-dropdown");
+      const createActivityBtn = createActivityDropdown?.querySelector(".create-activity");
+
+      if (createActivityDropdown && createActivityBtn) {
+        createActivityBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          createActivityDropdown.classList.toggle("active");
+        });
+
+        document.addEventListener("click", (e) => {
+          if (!createActivityDropdown.contains(e.target)) {
+            createActivityDropdown.classList.remove("active");
+          }
+        });
+      }
+
+      // Utility functions
+      function generateRandomPasscode() {
+        return Math.random().toString(36).substring(2, 10).toUpperCase();
+      }
+
+      function ucfirst(str) {
+        return str.charAt(0).toUpperCase() + str.slice(1);
+      }
+
+      // QR Code Generation
+      async function generateQRCode(passcode) {
+        const qrcodeContainer = document.getElementById("qrcode");
+        if (!qrcodeContainer) {
+          console.error('QR code container not found');
+          return;
+        }
+        
+        qrcodeContainer.innerHTML = "";
+        
+        try {
+          // Method 1: Try QRCodeStyling first
+          if (typeof QRCodeStyling !== 'undefined') {
+            console.log('Using QRCodeStyling library');
+            qrCodeInstance = new QRCodeStyling({
+              width: 250,
+              height: 250,
+              type: "canvas",
+              data: passcode,
+              dotsOptions: {
+                color: "#3C87C4",
+                type: "rounded"
+              },
+              backgroundOptions: {
+                color: "#ffffff",
+              },
+              imageOptions: {
+                crossOrigin: "anonymous",
+                margin: 0
+              }
+            });
+
+            await qrCodeInstance.append(qrcodeContainer);
+            console.log('QR Code generated successfully with QRCodeStyling');
+            return;
+          }
+          
+          // Method 2: Try basic QRCode library
+          if (typeof QRCode !== 'undefined') {
+            console.log('Using basic QRCode library');
+            new QRCode(qrcodeContainer, {
+              text: passcode,
+              width: 250,
+              height: 250,
+              colorDark: "#3C87C4",
+              colorLight: "#ffffff",
+              correctLevel: QRCode.CorrectLevel.H
+            });
+            console.log('Basic QR Code generated successfully');
+            return;
+          }
+          
+          // Fallback: Create a simple visual representation
+          console.log('Using fallback QR representation');
+          qrcodeContainer.innerHTML = `
+            <div style="text-align: center; padding: 20px; border: 2px dashed #ccc; border-radius: 10px; background: #f9f9f9;">
+              <div style="font-size: 18px; font-weight: bold; color: #3C87C4; margin-bottom: 10px;">QR CODE</div>
+              <div style="font-size: 14px; color: #666; margin-bottom: 15px;">Passcode for attendance:</div>
+              <div style="font-size: 24px; font-weight: bold; color: #333; letter-spacing: 3px; font-family: monospace; background: #fff; padding: 10px; border-radius: 5px; border: 1px solid #ddd;">${passcode}</div>
+              <div style="font-size: 12px; color: #999; margin-top: 15px;">(Scan this code with your device)</div>
+            </div>
+          `;
+          
+        } catch (error) {
+          console.error('Error generating QR code:', error);
+          // Ultimate fallback
+          qrcodeContainer.innerHTML = `
+            <div style="text-align:center; color:#666; padding: 20px;">
+              <i class="fas fa-qrcode" style="font-size: 48px; color: #3C87C4; margin-bottom: 10px;"></i>
+              <div style="font-size: 16px; font-weight: bold; margin-bottom: 10px;">Attendance Passcode</div>
+              <div style="font-size: 20px; font-weight: bold; color: #333; letter-spacing: 2px; font-family: monospace; background: #f0f0f0; padding: 10px; border-radius: 5px;">${passcode}</div>
+              <div style="font-size: 12px; color: #999; margin-top: 10px;">Share this code with attendees</div>
+            </div>
+          `;
+        }
+      }
+
+      // Auto-update event statuses every minute
+      setInterval(() => {
+        const eventCards = document.querySelectorAll('.event-card');
+        eventCards.forEach(card => {
+          const eventId = card.getAttribute('data-event-id');
+          const currentStatus = card.getAttribute('data-status');
+          
+          // Only check events that are not completed
+          if (currentStatus !== 'completed') {
+            // This would ideally make an API call to check status
+            // For now, we'll just re-apply filters
+            applyFilters();
+          }
+        });
+      }, 60000); // Check every minute
     });
-
-    items.forEach(item => {
-    item.addEventListener("click", () => {
-        customSelect.querySelector(".selected-text").textContent = item.textContent;
-        options.style.display = "none";
-        customSelect.classList.remove("open");
-    });
-    });
-
-    document.addEventListener("click", (e) => {
-    if (!customSelect.contains(e.target)) {
-        options.style.display = "none";
-        customSelect.classList.remove("open");
-    }
-    });
-
-  // Launch Event button → open event modal
-document.querySelectorAll(".launch-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document.getElementById("eventModal").style.display = "block";
-  });
-});
-
-// Event modal → proceed to passcode modal
-document.getElementById("proceedPasscode").addEventListener("click", () => {
-  document.getElementById("eventModal").style.display = "none";
-  document.getElementById("passcodeModal").style.display = "flex"; 
-});
-
-
-// Close modals
-document.querySelectorAll(".close").forEach(btn => {
-  btn.addEventListener("click", () => {
-    btn.closest(".modal").style.display = "none";
-  });
-});
-
-document.querySelector("#passcodeModal button").addEventListener("click", () => {
-  const input = document.querySelector("#passcodeModal input").value;
-  const passcode = input || "Linis1MA3Ys"; // fallback
-
-  // Close Passcode Modal
-  document.getElementById("passcodeModal").style.display = "none";
-
-  // Open QR Modal
-  document.getElementById("qrModal").style.display = "flex";
-
-  // Insert passcode to readonly input
-  document.getElementById("generatedPasscode").value = passcode;
-
-  // Clear previous QR
-  document.getElementById("qrcode").innerHTML = "";
-
-  // Generate gradient QR using QRCodeStyling
-  const qrCode = new QRCodeStyling({
-  width: 250,
-  height: 250,
-  data: passcode,
-  dotsOptions: {
-    type: "square",
-    gradient: {
-      type: "linear",
-      rotation: 135, 
-      colorStops: [
-        { offset: 0, color: "#3C87C4" }, 
-        { offset: 1, color: "#F9CD55" }  
-      ]
-    }
-  },
-  backgroundOptions: { color: "#ffffff" },
-  image: "" 
-});
-
-
-  // Append to container
-  qrCode.append(document.getElementById("qrcode"));
-});
-
-// Close QR modal
-document.querySelector(".qr-close").addEventListener("click", () => {
-  document.getElementById("qrModal").style.display = "none";
-});
-
-// === Create Activity dropdown toggle ===
-const createActivityDropdown = document.querySelector(".create-activity-dropdown");
-const createActivityBtn = createActivityDropdown?.querySelector(".create-activity");
-
-if (createActivityDropdown && createActivityBtn) {
-  createActivityBtn.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    createActivityDropdown.classList.toggle("active");
-  });
-
-  // Close kapag nag-click sa labas
-  document.addEventListener("click", (e) => {
-    if (!createActivityDropdown.contains(e.target)) {
-      createActivityDropdown.classList.remove("active");
-    }
-  });
-}
-
-
-
-});
-</script>
-
-
-
-
-
-
-
+  </script>
 </body>
 </html>

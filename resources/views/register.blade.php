@@ -11,6 +11,8 @@
   <!-- CSRF Token -->
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <!-- REMOVED: reCAPTCHA script from here -->
+
 </head>
 <body>
 
@@ -83,9 +85,24 @@
   <div class="steps-divider"></div>
 
   <!-- Form -->
-  <form id="multiStepForm" class="register-form" action="{{ route('register') }}" method="POST" enctype="multipart/form-data">
+  <form id="multiStepForm" class="register-form" action="{{ route('register.preview') }}" method="POST" enctype="multipart/form-data">
     @csrf
-    
+    @if($errors->any())
+<div class="error-container" style="background: #fee; border: 1px solid #f00; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
+    <h4 style="color: #d00; margin-top: 0;">Please fix the following errors:</h4>
+    <ul style="margin: 0; padding-left: 20px;">
+        @foreach($errors->all() as $error)
+            <li style="color: #d00;">{{ $error }}</li>
+        @endforeach
+    </ul>
+</div>
+@endif
+
+@if(session('error'))
+<div class="error-message" style="background: #fee; border: 1px solid #f00; padding: 15px; margin-bottom: 20px; border-radius: 4px; color: #d00;">
+    {{ session('error') }}
+</div>
+@endif
     <!-- Hidden fields for storing location IDs -->
     <input type="hidden" name="region_id" id="regionId">
     <input type="hidden" name="province_id" id="provinceId">
@@ -337,7 +354,7 @@
       <input type="text" maxlength="1" class="code-box" />
       <input type="text" maxlength="1" class="code-box" />
     </div>
-    <p class="resend">Didn’t get the code? Tap <a href="#" id="resendLink">Resend</a></p>
+    <p class="resend">Didn't get the code? Tap <a href="#" id="resendLink">Resend</a></p>
     <a href="#" id="chooseMethod">choose another method</a>
     <button id="codeVerifyBtn">Verify</button>
   </div>
@@ -406,6 +423,8 @@
     <div class="form-actions">
       <button type="button" class="back-btn">Back</button>
       <button type="button" class="next-btn">Next</button>
+      
+      <!-- REMOVED: reCAPTCHA container from here -->
     </div>
   </form>
 </section>
@@ -573,33 +592,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function showStep(step) {
     steps.forEach((s, i) => s.classList.toggle("active", i === step - 1));
-
     progressSteps.forEach((p, i) => {
       p.classList.toggle("active", i < step);
       p.classList.toggle("completed", i < step - 1);
     });
 
-    if (step === 1) {
-      backBtn.style.display = "inline-flex";
-      backBtn.onclick = () => { window.location.href = "/loginpage"; };
-    } else {
-      backBtn.style.display = "inline-flex";
-      backBtn.onclick = e => {
-        e.preventDefault();
-        if (currentStep > 1) {
-          currentStep--;
-          showStep(currentStep);
-          currentStepInput.value = currentStep;
-        }
-      };
-    }
-
     if (step === steps.length) {
       nextBtn.innerText = "Submit";
       nextBtn.type = "button";
+      
+      // REMOVED: reCAPTCHA display logic
+      
       nextBtn.onclick = () => {
-        // Validate all required fields are filled
         if (validateStep3()) {
+          // Submit form directly - this will go to preview route
+          // which then redirects to captcha page
           form.submit();
         }
       };
@@ -607,12 +614,8 @@ document.addEventListener("DOMContentLoaded", () => {
       nextBtn.innerText = "Next";
       nextBtn.type = "button";
       nextBtn.onclick = () => {
-        if (currentStep === 1 && !validateStep1()) {
-          return;
-        }
-        if (currentStep === 2) {
-          fillStep3();
-        }
+        if (currentStep === 1 && !validateStep1()) return;
+        if (currentStep === 2) fillStep3();
         if (currentStep < steps.length) {
           currentStep++;
           showStep(currentStep);
@@ -645,6 +648,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     return true;
   }
+
+  backBtn?.addEventListener("click", () => {
+    if (currentStep > 1) {
+      currentStep--;
+      showStep(currentStep);
+      currentStepInput.value = currentStep;
+    }
+  });
 
   showStep(currentStep);
 });
@@ -899,154 +910,14 @@ function fillStep3() {
     filesText || "No files uploaded";
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  const methodModal = document.getElementById("methodModal");
-  const codeModal = document.getElementById("codeModal");
-  const contactInput = document.getElementById("contactInput");
-  const openMethodBtn = document.getElementById("openMethodBtn");
-  const closeModal = document.getElementById("closeModal");
-  const mobileOption = document.getElementById("mobileOption");
-  const googleOption = document.getElementById("googleOption");
-  const codeMessage = document.getElementById("codeMessage");
-  const chooseMethod = document.getElementById("chooseMethod");
-  const codeVerifyBtn = document.getElementById("codeVerifyBtn");
-  const resendLink = document.getElementById("resendLink");
-  const codeBoxes = document.querySelectorAll(".code-box");
+// OTP functionality (dummy functions for now)
+function sendOtp(mobile) {
+  return Promise.resolve({ message: "OTP sent successfully" });
+}
 
-  let selectedMethod = null;
-  let currentMobile = "";
-
-  // === Move focus between OTP boxes ===
-  codeBoxes.forEach((box, index) => {
-    box.addEventListener("input", (e) => {
-      if (e.target.value.length === 1 && index < codeBoxes.length - 1) {
-        codeBoxes[index + 1].focus();
-      }
-    });
-
-    box.addEventListener("keydown", (e) => {
-      if (e.key === "Backspace" && !e.target.value && index > 0) {
-        codeBoxes[index - 1].focus();
-      }
-    });
-  });
-
-  // === Verify Button (open method or send OTP) ===
-  openMethodBtn.addEventListener("click", () => {
-    if (!selectedMethod) {
-      methodModal.style.display = "flex";
-    } else if (selectedMethod === "mobile") {
-      if (contactInput.value.trim() === "") {
-        alert("Please enter your mobile number first.");
-        return;
-      }
-      currentMobile = contactInput.value.trim();
-
-      // Call backend to send OTP
-      sendOtp(currentMobile).then((res) => {
-        if (res.message) {
-          codeMessage.innerHTML = `We sent a code to your mobile <b>${currentMobile}</b>`;
-          codeBoxes.forEach((b) => (b.value = "")); // clear old inputs
-          codeBoxes[0].focus();
-          codeModal.style.display = "flex";
-        }
-      }).catch(() => alert("Failed to send OTP."));
-    }
-  });
-
-  // === Close Method Modal ===
-  closeModal.addEventListener("click", () => {
-    methodModal.style.display = "none";
-  });
-
-  // === Mobile Option ===
-  mobileOption.addEventListener("click", () => {
-    methodModal.style.display = "none";
-    contactInput.removeAttribute("readonly");
-    contactInput.type = "tel";
-    contactInput.placeholder = "+63 9XX XXX XXXX";
-    contactInput.value = "";
-    contactInput.focus();
-    selectedMethod = "mobile";
-  });
-
-  // === Google Option (dummy for now) ===
-  googleOption.addEventListener("click", () => {
-    methodModal.style.display = "none";
-    contactInput.setAttribute("readonly", true);
-
-    const accounts = ["m****n673@gmail.com", "demo.account@gmail.com"];
-    let account = prompt("Choose Google Account:\n" + accounts.join("\n"));
-
-    if (account && accounts.includes(account)) {
-      contactInput.value = account;
-      selectedMethod = "google";
-
-      codeMessage.innerHTML = `We sent a code to your email <b>${account}</b>`;
-      codeBoxes.forEach((b) => (b.value = ""));
-      codeBoxes[0].focus();
-      codeModal.style.display = "flex";
-    } else {
-      alert("Please select a valid account.");
-    }
-  });
-
-  // === Choose Another Method ===
-  chooseMethod.addEventListener("click", (e) => {
-    e.preventDefault();
-    codeModal.style.display = "none";
-    methodModal.style.display = "flex";
-    selectedMethod = null;
-    contactInput.value = "";
-    contactInput.setAttribute("readonly", true);
-    contactInput.type = "text";
-    contactInput.placeholder = "Please enter your recovery email or phone";
-  });
-
-  // === Resend OTP ===
-  resendLink.addEventListener("click", (e) => {
-    e.preventDefault();
-    if (selectedMethod === "mobile" && currentMobile) {
-      sendOtp(currentMobile).then((res) => {
-        if (res.message) {
-          alert("OTP resent!");
-          codeBoxes.forEach((b) => (b.value = ""));
-          codeBoxes[0].focus();
-        }
-      });
-    }
-  });
-
-  // === Code Verify Button ===
-  codeVerifyBtn.addEventListener("click", () => {
-  if (selectedMethod === "mobile") {
-    const otp = Array.from(codeBoxes).map((b) => b.value).join("");
-    if (otp.length < 6) {
-      alert("Enter the 6-digit code.");
-      return;
-    }
-    verifyOtp(currentMobile, otp)
-      .then((res) => {
-        if (res.status === "approved") {
-          alert("OTP verified!");
-          codeModal.style.display = "none";
-        } else {
-          alert("Invalid OTP, try again.");
-        }
-      })
-      .catch(() => {
-        alert("OTP verification failed.");
-      });
-  }
-});
-
-
-
-});
-
-  
-
-
+function verifyOtp(mobile, otp) {
+  return Promise.resolve({ status: "approved" });
+}
 
 </script>
 </body>
