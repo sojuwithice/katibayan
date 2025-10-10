@@ -287,63 +287,77 @@ public function complete(Request $request)
     }
 
 }    protected function create(array $data)
-    {
-        // Generate account number: ROLE + BIRTHDATE (YYYYMMDD)
-        $prefix = strtoupper($data['role']); // SK or KK
-        $birthdate = date('Ymd', strtotime($data['date_of_birth']));
-        $accountNumber = $prefix . $birthdate;
+{
+    // Role prefix
+    $prefix = strtoupper($data['role']); // SK or KK
 
-        // Generate password: ROLE + 4 random digits
-        $plainPassword = $prefix . rand(1000, 9999);
+    // Birthdate in Ymd
+    $birthdate = date('Ymd', strtotime($data['date_of_birth']));
 
-        // Create user in DB
-        $user = User::create([
-            'role' => $data['role'],
-            'account_number' => $accountNumber,
-            'last_name' => $data['last_name'],
-            'given_name' => $data['given_name'],
-            'middle_name' => $data['middle_name'] ?? null,
-            'suffix' => $data['suffix'] ?? null,
-
-            // Location
-            'region_id' => $data['region_id'],
-            'province_id' => $data['province_id'],
-            'city_id' => $data['city_id'],
-            'barangay_id' => $data['barangay_id'],
-            'purok_zone' => $data['purok_zone'],
-            'zip_code' => $data['zip_code'],
-
-            // Personal
-            'date_of_birth' => $data['date_of_birth'],
-            'sex' => $data['sex'],
-            'email' => $data['email'],
-            'contact_no' => $data['contact_no'],
-            'civil_status' => $data['civil_status'],
-            'education' => $data['education'],
-            'work_status' => $data['work_status'],
-            'youth_classification' => $data['youth_classification'],
-            'sk_voter' => $data['sk_voter'],
-
-            // Account status & password
-            'account_status' => $data['role'] === 'kk' ? 'approved' : 'pending',
-            'password' => Hash::make($plainPassword),
-            'default_password' => $plainPassword,
-        ]);
-
-        // Send email only for KK (auto-approved)
-        if ($data['role'] === 'kk') {
-            try {
-                Mail::to($user->email)->send(
-                    new AccountCredentialsMail($user, $accountNumber, $plainPassword)
-                );
-                Log::info('Account credentials email sent to KK user');
-            } catch (\Exception $e) {
-                Log::error('Failed to send email: ' . $e->getMessage());
-            }
+    // Get initials from name
+    $fullName = $data['given_name'] . ' ' . ($data['middle_name'] ?? '') . ' ' . $data['last_name'];
+    $names = explode(' ', $fullName);
+    $initials = '';
+    foreach ($names as $n) {
+        if (!empty($n)) {
+            $initials .= strtoupper(substr($n, 0, 1));
         }
-
-        return $user;
     }
+
+    // Combine role + birthdate + initials
+    $accountNumber = $prefix . $birthdate . $initials;
+
+    // Generate password: ROLE + 4 random digits
+    $plainPassword = $prefix . rand(1000, 9999);
+
+    // Create user
+    $user = User::create([
+        'role' => $data['role'],
+        'account_number' => $accountNumber,
+        'last_name' => $data['last_name'],
+        'given_name' => $data['given_name'],
+        'middle_name' => $data['middle_name'] ?? null,
+        'suffix' => $data['suffix'] ?? null,
+
+        // Location
+        'region_id' => $data['region_id'],
+        'province_id' => $data['province_id'],
+        'city_id' => $data['city_id'],
+        'barangay_id' => $data['barangay_id'],
+        'purok_zone' => $data['purok_zone'],
+        'zip_code' => $data['zip_code'],
+
+        // Personal
+        'date_of_birth' => $data['date_of_birth'],
+        'sex' => $data['sex'],
+        'email' => $data['email'],
+        'contact_no' => $data['contact_no'],
+        'civil_status' => $data['civil_status'],
+        'education' => $data['education'],
+        'work_status' => $data['work_status'],
+        'youth_classification' => $data['youth_classification'],
+        'sk_voter' => $data['sk_voter'],
+
+        // Account status & password
+        'account_status' => $data['role'] === 'kk' ? 'approved' : 'pending',
+        'password' => Hash::make($plainPassword),
+        'default_password' => $plainPassword,
+    ]);
+
+    // Send email only for KK (auto-approved)
+    if ($data['role'] === 'kk') {
+        try {
+            Mail::to($user->email)->send(
+                new AccountCredentialsMail($user, $accountNumber, $plainPassword)
+            );
+            Log::info('Account credentials email sent to KK user');
+        } catch (\Exception $e) {
+            Log::error('Failed to send email: ' . $e->getMessage());
+        }
+    }
+
+    return $user;
+}
 
     protected function createSkOfficial(User $user, Request $request)
     {

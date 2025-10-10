@@ -37,26 +37,44 @@ class AdminController extends Controller
         return back()->with('error', 'User is not pending.');
     }
 
-    // Generate account number + password here
+    // 1. Role prefix
+    $rolePrefix = strtoupper(substr($user->role, 0, 2)); // 'SK'
+
+    // 2. Birthdate in Ymd
     $birthdate = $user->date_of_birth
         ? Carbon::parse($user->date_of_birth)->format('Ymd')
         : now()->format('Ymd');
 
-    $accountNumber = 'SK' . $birthdate;
-    $plainPassword = 'SK' . rand(1000, 9999);
+    // 3. Initials from full name
 
+    $fullName = trim($user->given_name . ' ' . ($user->middle_name ?? '') . ' ' . $user->last_name);
+    $names = explode(' ', $fullName);
+    $initials = '';
+    foreach ($names as $n) {
+        if (!empty($n)) {
+            $initials .= strtoupper(substr($n, 0, 1));
+        }
+    }
+
+    // Combine role + birthdate + initials
+    $accountNumber = $rolePrefix . $birthdate . $initials;
+
+
+    // 5. Generate random password: role + 4 digits
+    $plainPassword = $rolePrefix . rand(1000, 9999);
+
+    // 6. Save account number and hashed password
     $user->account_number = $accountNumber;
     $user->password = bcrypt($plainPassword);
     $user->account_status = 'approved';
     $user->save();
 
-    // Send credentials email once
-    Mail::to($user->email)->send(
-        new AccountCredentialsMail($user, $accountNumber, $plainPassword)
-    );
+    // 7. Send credentials email
+    Mail::to($user->email)->send(new AccountCredentialsMail($user, $accountNumber, $plainPassword));
 
     return back()->with('success', 'SK user approved and credentials sent.');
 }
+
 
 
 
