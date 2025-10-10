@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KatiBayan - Dashboard</title>
-  <link rel="stylesheet" href="{{ asset('css/edit-event.css') }}">
+  <link rel="stylesheet" href="{{ asset('css/edit-program.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -14,6 +14,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+
 
 
 
@@ -46,7 +47,7 @@
       </a>
 
       <div class="evaluation-item nav-item">
-        <a href="#" class="evaluation-link nav-link">
+        <a href="{{ route('sk-evaluation-feedback') }}" class="evaluation-link nav-link">
           <i data-lucide="user-star"></i>
           <span class="label">Evaluation</span>
           <i data-lucide="chevron-down" class="submenu-arrow"></i>
@@ -161,7 +162,7 @@
 
     <!-- Event Form -->
 <section class="event-form">
-  <h2>Edit Event</h2>
+  <h2>Edit Program</h2>
   <p class="subtitle">Set up events or programs designed for youth involvement.</p>
 
   <form>
@@ -233,6 +234,8 @@
   <textarea id="description" rows="4"></textarea>
 </div>
 
+    
+
     <!-- Upload -->
     <label>Upload Display</label>
     <div class="upload-box" id="uploadBox">
@@ -257,9 +260,209 @@
   <input type="text" id="publisher">
 </div>
 
-    <!-- Submit -->
-    <button type="submit" class="btn-submit">Update Event</button>
-  </form>
+<!-- Youth Registration Option -->
+    <div class="form-group">
+      <label style="display:block; font-weight:100; margin-bottom:0.7rem;">
+        Choose an option (for youth registration)
+      </label>
+      <div class="registration-options">
+        <label>
+          <input type="radio" name="registrationOption" value="create">
+          Create Registration
+        </label>
+        <label style="margin-left: 1rem;">
+          <input type="radio" name="registrationOption" value="link">
+          Add link source
+        </label>
+      </div>
+    </div>
+
+    <!-- Link Source Field -->
+<div id="linkSourceField" class="form-group" style="display:none;">
+  <div class="link-source-wrapper">
+    <i class="fas fa-link link-icon"></i>
+    <input type="url" id="linkSource" placeholder="Link Source">
+  </div>
+
+  <!-- Post Program Button for Link Source -->
+  <div class="form-actions">
+  <button type="submit" class="btn-submit postProgramBtn" id="programBtn">Update Program</button>
+</div>
+
+</div>
+
+
+    <!-- Create Registration Fields -->
+<div id="createRegistrationFields" class="regform-container" style="display:none;">
+  <h3 class="regform-title">Registration Form</h3>
+
+  <!-- Title -->
+<div class="regform-block-wide">
+  <label class="regform-label">Title</label>
+  <input type="text" class="regform-input" value="2025 BADMINTON REGISTRATION FORM">
+</div>
+
+<!-- Description -->
+<div class="regform-block-wide">
+  <label class="regform-label">Add description</label>
+  <textarea class="regform-textarea" rows="3">Open to all bona fide residents of Barangay 3, EM's Bo. East, Legazpi City, Albay. Slots are limited, and once all slots are filled, we will make an official announcement. Slot allocation will be based on the timestamp of registration.</textarea>
+</div>
+
+  <!-- Registration Period -->
+<div class="regform-period">
+  <h4>Registration Period (Set date and time)</h4>
+  <div class="regform-dates">
+    <!-- Opens -->
+    <div class="regform-block">
+      <label class="regform-label">Registration Opens</label>
+      <div class="regform-datetime">
+        <div class="regform-datetime-icon">
+          <input type="date" id="openDate" />
+          <i class="fas fa-calendar-alt"></i>
+        </div>
+        <div class="regform-datetime-icon">
+          <input type="time" id="openTime" />
+          <i class="fas fa-clock"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Closes -->
+    <div class="regform-block">
+      <label class="regform-label">Registration Closes</label>
+      <div class="regform-datetime">
+        <div class="regform-datetime-icon">
+          <input type="date" id="closeDate" />
+          <i class="fas fa-calendar-alt"></i>
+        </div>
+        <div class="regform-datetime-icon">
+      <input type="time" id="closeTime" name="closeTime" />
+      <i class="fas fa-clock"></i>
+    </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="regform-note" id="regNote">
+    Registration opens: —<br>
+    Registration closes: —
+  </p>
+</div>
+
+
+<!-- Registration Fields -->
+<div class="regform-fields">
+  <h4>Registration Fields</h4>
+
+  <div>
+    <label class="regform-label">Name</label>
+    <input type="text" class="regform-input">
+  </div>
+
+  <div>
+    <label class="regform-label">Age</label>
+    <input type="number" class="regform-input">
+  </div>
+  
+  <div class="regform-gender">
+  <label class="regform-label">Gender</label>
+  <div class="regform-gender-options">
+    <label><input type="radio" name="gender"><span>Female</span></label>
+    <label><input type="radio" name="gender"><span>Male</span></label>
+    <label><input type="radio" name="gender"><span>Other</span></label>
+  </div>
+</div>
+
+
+  <div>
+    <label class="regform-label">Contact Number</label>
+    <input type="text" class="regform-input">
+  </div>
+
+  <div>
+    <label class="regform-label">Purok</label>
+    <input type="text" class="regform-input">
+  </div>
+
+  <!-- Extra question fields (container for all fields) -->
+<div id="extra-fields">
+  <!-- One field -->
+  <div class="regform-field">
+    <!-- 3 dots sa labas -->
+<span class="regform-dots">⋯</span>
+
+<!-- Dropdown menu -->
+<div class="dots-menu hidden">
+  <p class="edit-option"><i class="fas fa-edit"></i> Edit</p>
+  <p class="delete-option"><i class="fas fa-trash"></i> Delete</p>
+</div>
+
+
+
+    <!-- Card -->
+    <div class="regform-extra">
+      <!-- Card content -->
+      <div class="regform-main">
+        <div class="regform-top">
+          <!-- Question input -->
+          <input type="text" placeholder="Add question" />
+
+          <!-- Answer type dropdown (upper right) -->
+          <div class="answer-type-wrapper">
+            <span class="answer-type" onclick="toggleDropdown(this)">
+              Choose type of answer
+            </span>
+            <div class="answer-dropdown">
+              <p onclick="selectAnswerType(this, 'short')">Short answer</p>
+              <p onclick="selectAnswerType(this, 'radio')">Radio button</p>
+              <p onclick="selectAnswerType(this, 'file')">File upload</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Answer preview (short) -->
+<div class="answer-preview hidden" data-type="short">
+  <input type="text" placeholder="Short answer" disabled />
+</div>
+
+<!-- Radio button preview -->
+<div class="answer-radio hidden" data-type="radio">
+  <div class="options-box">
+    <div class="option-item">
+      <input type="radio" name="sampleRadio">
+      <span contenteditable="true" class="editable">Option 1</span>
+    </div>
+    <div class="option-item">
+      <input type="radio" name="sampleRadio">
+      <span contenteditable="true" class="editable">Option 2</span>
+    </div>
+  </div>
+  <a href="#" class="add-option">+ Add option</a>
+</div>
+
+
+<!-- File upload preview -->
+<div class="answer-file hidden" data-type="file">
+  <input type="file" disabled />
+</div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add button -->
+<div class="add-btn-wrapper">
+  <button type="button" class="regform-add-btn" id="addFieldBtn">
+    + Add Another Field
+  </button>
+</div>
+
+<div class="form-actions">
+  <button type="submit" class="btn-submit postProgramBtn" id="programBtn">Update Program</button>
+</div>
+
+
 </section>
 
 <!-- Time Picker Modal -->
@@ -302,41 +505,6 @@
   </div>
 </div>
 
-<!-- Confirmation Modal -->
-<div id="editEventModal" class="modal-overlay">
-  <div class="modal-box">
-    <p>Are you sure you want to edit this field? Editing will reschedule the event. Do you want to continue?</p>
-
-    <div class="modal-actions">
-      <button class="btn cancel" id="cancelEditEvent">Cancel</button>
-      <button class="btn save" id="saveEditEvent">Yes</button>
-    </div>
-  </div>
-</div>
-
-<!-- Success Popup -->
-<div id="successPopup" class="success-popup">
-  <p>Event updated successfully!</p>
-</div>
-
-<!-- Posted Modal -->
-<div id="postedModal" class="posted-modal">
-  <div class="posted-modal-content">
-    <div class="posted-icon">
-      <div class="icon-circle">
-        <i class="fa-solid fa-check"></i>
-      </div>
-    </div>
-
-    <h2>Done</h2>
-    <p>The program has already been edited. Please check the details again.</p>
-
-    <button id="closePostedModal">Ok</button>
-  </div>
-</div>
-
-
-
 <!-- Done Modal -->
 <div id="doneModal" class="done-modal hidden">
   <div class="done-modal-content">
@@ -350,10 +518,18 @@
 </div>
 </div>
 
-
-
-
-
+<!-- Confirmation Modal -->
+<div id="confirmModal" class="confirm-modal hidden">
+  <div class="confirm-modal-content">
+    <p>
+      Are you sure you want to edit this field? Editing will reschedule the event. Do you want to continue?
+    </p>
+    <div class="btn-group">
+      <button id="cancelBtn" class="cancel-btn">Cancel</button>
+      <button id="yesBtn" class="yes-btn">Yes</button>
+    </div>
+  </div>
+</div>
 
 
 
@@ -621,9 +797,17 @@ setTimeBtn.addEventListener("click", () => {
   const hour = hourEl.textContent;
   const minute = minuteEl.textContent;
   const ampm = amBtn.classList.contains("active") ? "AM" : "PM";
-  timeInput.value = `${hour}:${minute} ${ampm}`;
+  const newVal = `${hour}:${minute} ${ampm}`;
+
   timeModal.style.display = "none";
+
+  // Reset to old until confirmed
+  timeInput.value = timeInput.getAttribute("data-old") || "";
+
+  // Trigger confirm modal
+  showConfirmModal(timeInput, newVal);
 });
+
 
 // --- Increment / Decrement
 document.querySelectorAll(".arrow").forEach(btn => {
@@ -664,35 +848,259 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
-// === EDIT EVENT MODAL ===
-const editEventModal = document.getElementById("editEventModal");
-const cancelEditEvent = document.getElementById("cancelEditEvent");
-const saveEditEvent = document.getElementById("saveEditEvent");
+    // === YOUTH REGISTRATION OPTION TOGGLE ===
+const registrationOptions = document.querySelectorAll('input[name="registrationOption"]');
+const createRegSection = document.getElementById("createRegistrationFields");
+const linkSourceField = document.getElementById("linkSourceField");
+
+registrationOptions.forEach(option => {
+  option.addEventListener("change", () => {
+    if (option.value === "create") {
+      createRegSection.style.display = "block";
+      linkSourceField.style.display = "none";
+    } else if (option.value === "link") {
+      createRegSection.style.display = "none";
+      linkSourceField.style.display = "block";
+    }
+  });
+});
+
+
+  // === DATE + NOTE AUTO UPDATE ===
+  document.querySelectorAll('.datetime-input i').forEach(icon => {
+    icon.addEventListener('click', () => { icon.previousElementSibling.showPicker?.(); });
+  });
+
+  const openDate = document.getElementById("openDate");
+  const openTime = document.getElementById("openTime");
+  const closeDate = document.getElementById("closeDate");
+  const closeTime = document.getElementById("closeTime");
+  const note = document.getElementById("regNote");
+
+  function formatDate(dateStr) {
+    if (!dateStr) return "";
+    const d = new Date(dateStr);
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  }
+
+  function formatTime(timeStr) {
+    if (!timeStr) return "";
+    const [h, m] = timeStr.split(":");
+    const d = new Date();
+    d.setHours(h, m);
+    return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  }
+
+  function updateNote() {
+    const open = `${formatDate(openDate.value)} ${formatTime(openTime.value)}`.trim();
+    const close = `${formatDate(closeDate.value)} ${formatTime(closeTime.value)}`.trim();
+
+    note.innerHTML = `
+      Registration opens: ${open || "—"}<br>
+      Registration closes: ${close || "—"}
+    `;
+  }
+
+  [openDate, openTime, closeDate, closeTime].forEach(input => input.addEventListener("change", updateNote));
+
+  // === DOTS MENU INIT ===
+  function initDotsMenu(field) {
+    const dots = field.querySelector(".regform-dots");
+    const menu = field.querySelector(".dots-menu");
+
+    if (!dots || !menu) return;
+
+    // Toggle menu
+    dots.addEventListener("click", (e) => {
+      e.stopPropagation();
+      document.querySelectorAll(".dots-menu").forEach(m => { if (m !== menu) m.classList.add("hidden"); });
+      menu.classList.toggle("hidden");
+    });
+
+    // Edit option
+    const editBtn = menu.querySelector(".edit-option");
+    if (editBtn) {
+      editBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const input = field.querySelector("input[type='text'], textarea");
+        if (input) input.removeAttribute("disabled");
+        menu.classList.add("hidden");
+      });
+    }
+
+    // Delete option
+    const deleteBtn = menu.querySelector(".delete-option");
+    if (deleteBtn) {
+      deleteBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        field.remove();
+      });
+    }
+  }
+
+  // === ADD FIELD (clone template) ===
+  const addFieldBtn = document.getElementById("addFieldBtn");
+  const extraFieldsContainer = document.getElementById("extra-fields");
+  const templateField = extraFieldsContainer.firstElementChild?.cloneNode(true);
+
+  addFieldBtn.addEventListener("click", () => {
+    if (!templateField) return;
+    const clone = templateField.cloneNode(true);
+
+    // Reset
+    clone.querySelectorAll("input[type='text'], textarea").forEach(input => input.value = "");
+    clone.querySelectorAll(".answer-preview, .answer-radio, .answer-file").forEach(el => el.classList.add("hidden"));
+    clone.querySelector(".answer-type").textContent = "Choose type of answer";
+    clone.querySelectorAll(".answer-dropdown p").forEach(p => p.classList.remove("selected"));
+    clone.querySelectorAll(".dots-menu").forEach(menu => menu.classList.add("hidden"));
+
+    extraFieldsContainer.appendChild(clone);
+    initDotsMenu(clone);
+  });
+
+  document.querySelectorAll("#extra-fields .regform-field").forEach(initDotsMenu);
+
+  document.addEventListener("click", () => {
+    document.querySelectorAll(".dots-menu").forEach(menu => menu.classList.add("hidden"));
+  });
+
+  // === DROPDOWN FUNCTIONALITY ===
+  document.addEventListener("click", (e) => {
+    const typeBtn = e.target.closest(".answer-type");
+    const optionP = e.target.closest(".answer-dropdown p");
+
+    if (typeBtn) {
+      const wrapper = typeBtn.closest(".answer-type-wrapper");
+      const dropdown = wrapper.querySelector(".answer-dropdown");
+
+      document.querySelectorAll(".answer-dropdown.open").forEach(d => { if (d !== dropdown) d.classList.remove("open"); });
+      dropdown.classList.toggle("open");
+      return;
+    }
+
+    if (optionP) {
+      const extra = optionP.closest(".regform-extra");
+      const preview = extra.querySelector(".answer-preview");
+      const typeText = extra.querySelector(".answer-type");
+      const dropdown = optionP.closest(".answer-dropdown");
+
+      typeText.style.display = "none";
+      dropdown.classList.remove("open");
+      extra.querySelectorAll(".answer-preview, .answer-radio, .answer-file").forEach(el => el.classList.add("hidden"));
+
+      if (optionP.textContent === "Short answer") {
+        preview.classList.remove("hidden");
+        preview.innerHTML = `<textarea placeholder="Short answer" rows="1" style="width:100%; resize: both; min-height: 30px; padding:6px; font-size:0.9rem;"></textarea>`;
+      }
+
+      if (optionP.textContent === "Radio button") {
+        extra.querySelector(".answer-radio").classList.remove("hidden");
+      }
+
+      if (optionP.textContent === "File upload") {
+        const fileBox = extra.querySelector(".answer-file");
+        fileBox.classList.remove("hidden");
+        fileBox.innerHTML = `<input type="file" style="font-size:0.9rem;" />`;
+      }
+      return;
+    }
+
+    if (!e.target.closest(".answer-type-wrapper")) {
+      document.querySelectorAll(".answer-dropdown.open").forEach(d => d.classList.remove("open"));
+    }
+  });
+
+  // === RADIO DYNAMIC OPTIONS ===
+  document.addEventListener("click", (e) => {
+    if (e.target.classList.contains("add-option")) {
+      e.preventDefault();
+      const optionsBox = e.target.previousElementSibling;
+      const newOption = document.createElement("div");
+      newOption.className = "option-item";
+      newOption.innerHTML = `<input type="radio" name="sampleRadio"><span contenteditable="true" class="editable">New option</span>`;
+      optionsBox.appendChild(newOption);
+    }
+  });
+
+/* =====================
+     DONE MODAL
+  ====================== */
+  const doneModal = document.getElementById("doneModal");
+  const okBtn = document.getElementById("okBtn");
+  const updateBtns = document.querySelectorAll(".postProgramBtn");
+
+  updateBtns.forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault(); 
+      doneModal.classList.remove("hidden");
+      doneModal.style.display = "flex";
+    });
+  });
+  okBtn?.addEventListener("click", () => { doneModal.style.display = "none"; });
+
+ 
+/* =====================
+   CONFIRMATION MODAL (Date & Time change)
+====================== */
+const confirmModal = document.getElementById("confirmModal");
+const cancelBtn = document.getElementById("cancelBtn");
+const yesBtn = document.getElementById("yesBtn");
+
 const dateInput = document.getElementById("date");
+const timeField = document.getElementById("time");
 
-// Show modal function
-function showEditEventModal() {
-  editEventModal.style.display = "flex";
+let pendingChange = null; // store new value temporarily
+
+function showConfirmModal(inputEl, newValue) {
+  confirmModal.style.display = "flex";
+  confirmModal.setAttribute("data-target", inputEl.id);
+  pendingChange = { el: inputEl, value: newValue };
 }
 
-// Close modal function
-function closeEditEventModal() {
-  editEventModal.style.display = "none";
-}
+// init old values
+if (dateInput) dateInput.setAttribute("data-old", dateInput.value);
+if (timeField) timeField.setAttribute("data-old", timeField.value);
 
-// Trigger when date changes
-dateInput.addEventListener("change", showEditEventModal);
 
-// Trigger when time is set
-setTimeBtn.addEventListener("click", () => {
-  const hour = hourEl.textContent;
-  const minute = minuteEl.textContent;
-  const ampm = amBtn.classList.contains("active") ? "AM" : "PM";
-  timeInput.value = `${hour}:${minute} ${ampm}`;
-  timeModal.style.display = "none";
+dateInput?.addEventListener("change", (e) => {
+  e.preventDefault(); 
+  const newVal = e.target.value;
+  e.target.value = e.target.getAttribute("data-old") || "";
+  showConfirmModal(dateInput, newVal);
+});
 
-  // Show edit event modal after time is chosen
-  showEditEventModal();
+
+timeField?.addEventListener("input", (e) => {
+  e.preventDefault();
+  const newVal = e.target.value;
+  e.target.value = e.target.getAttribute("data-old") || "";
+  showConfirmModal(timeField, newVal);
+});
+
+// Cancel → discard changes
+cancelBtn?.addEventListener("click", (e) => {
+  e.preventDefault();
+  confirmModal.style.display = "none";
+  pendingChange = null;
+});
+
+// Yes → accept changes
+yesBtn?.addEventListener("click", (e) => {
+  e.preventDefault();
+  if (pendingChange) {
+    pendingChange.el.value = pendingChange.value;
+    pendingChange.el.setAttribute("data-old", pendingChange.value);
+    pendingChange = null;
+  }
+  confirmModal.style.display = "none";
+});
+
+// Click outside modal
+window.addEventListener("click", (e) => {
+  if (e.target === confirmModal) {
+    confirmModal.style.display = "none";
+    pendingChange = null;
+  }
 });
 
 // === Success popup ===
@@ -708,64 +1116,13 @@ function showSuccessPopup(message = "Event updated successfully!") {
   }, 3000);
 }
 
-// Modal buttons
-cancelEditEvent.addEventListener("click", closeEditEventModal);
-saveEditEvent.addEventListener("click", () => {
-  closeEditEventModal();    // close confirmation modal
-  showSuccessPopup();       // show popup instead of alert
-});
-
-// Close if clicking outside
-window.addEventListener("click", (e) => {
-  if (e.target === editEventModal) {
-    closeEditEventModal();
-  }
-});
-
-// === POSTED MODAL ===
-const postedModal = document.getElementById("postedModal");
-const closePostedModal = document.getElementById("closePostedModal");
-
-// Function to show modal
-function showPostedModal(message = "The program has already been edited. Please check the details again.") {
-  postedModal.querySelector("p").textContent = message;
-  postedModal.style.display = "flex";
-}
-
-// Close modal
-closePostedModal.addEventListener("click", () => {
-  postedModal.style.display = "none";
-});
-
-// Close when clicking outside
-window.addEventListener("click", (e) => {
-  if (e.target === postedModal) postedModal.style.display = "none";
-});
-
-// === DONE MODAL ===
-const doneModal = document.getElementById("doneModal");
-const okBtn = document.getElementById("okBtn");
-const postEventBtn = document.querySelector(".btn-submit");
-
-// Show Done Modal when Post Event is clicked
-postEventBtn?.addEventListener("click", (e) => {
-  e.preventDefault(); // prevent actual form submission (remove if you want real submit)
-  doneModal.classList.remove("hidden");
-  doneModal.style.display = "flex";
-});
-
-// Close Done Modal
-okBtn?.addEventListener("click", () => {
-  doneModal.style.display = "none";
-
-  // 👉 If you want to actually submit the form after OK:
-  // postEventBtn.closest("form").submit();
-});
-
-
 
 });
+
 </script>
+
+
+
 
 </body>
 </html>

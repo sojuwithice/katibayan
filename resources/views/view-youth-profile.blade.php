@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KatiBayan - Dashboard</title>
-  <link rel="stylesheet" href="{{ asset('css/sk-eval-review.css') }}">
+  <link rel="stylesheet" href="{{ asset('css/view-youth-profile.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -14,6 +14,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+
 
 
 
@@ -35,7 +36,7 @@
         <span class="label">Analytics</span>
       </a>
 
-      <a href="{{ route('youth-profilepage') }}">
+      <a href="{{ route('youth-profilepage') }}" class="active">
         <i data-lucide="users"></i>
         <span class="label">Youth Profile</span>
       </a>
@@ -46,13 +47,13 @@
       </a>
 
       <div class="evaluation-item nav-item">
-        <a href="{{ route('sk-evaluation-feedback') }}" class="evaluation-link nav-link active">
+        <a href="{{ route('sk-evaluation-feedback') }}" class="evaluation-link nav-link">
           <i data-lucide="user-star"></i>
           <span class="label">Evaluation</span>
           <i data-lucide="chevron-down" class="submenu-arrow"></i>
         </a>
         <div class="submenu">
-          <a href="{{ route('sk-evaluation-feedback') }}">Feedbacks</a>
+          <a href="#">Feedbacks</a>
           <a href="#">Polls</a>
           <a href="#">Suggestion Box</a>
         </div>
@@ -159,179 +160,158 @@
       </div>
     </header>
 
-    <main class="container">
-  <div class="evaluation-container">
-
-    <!-- Header -->
-<div class="evaluation-header">
-  <button class="back-btn"><i class="fas fa-arrow-left"></i></button>
-  <div>
-    <h2>Kalinisan sa bagong Pilipinas Program</h2>
-    <p class="event-details">Date: 2025-09-20 | Venue: Barangay Hall</p>
-  </div>
-</div>
-
-<!-- Tabs -->
-<div class="tab-buttons">
-  <button class="tab-btn active" data-tab="rating">Rating</button>
-  <button class="tab-btn" data-tab="comments">Comments</button>
-</div>
-
-<!-- ================== RATING TAB ================== -->
-<div id="rating" class="tab-content active">
-
-  <!-- Stats -->
-  <div class="stats">
-    <div class="stat-card">
-      <h3>Average Rating of this Event</h3>
-      <div class="rating-score">4.5 / 5</div>
-      <small>Based on the <b class="highlight">100 responses</b></small>
-    </div>
-    <div class="stat-card">
-      <h3>Rating Distribution</h3>
-      <canvas id="ratingChart"></canvas>
-    </div>
-  </div>
-
-  <!-- Question Breakdown -->
-  <div class="question-section">
-    <h3>
-      Question Breakdown
-      <a href="{{ route('list-of-eval-respondents') }}" class="see-respondents">See Respondents</a>
-    </h3>
-
-    <div class="question-card">
-      <div class="question-text">Question 1: Was the purpose of the program/event explained clearly?</div>
-      <div class="rating">Rating: 5/5</div>
-    </div>
-
-    <div class="question-card">
-      <div class="question-text">Question 2: Was the time given for the program/event enough?</div>
-      <div class="rating">Rating: 4/5</div>
-    </div>
-
-    <div class="question-card">
-      <div class="question-text">Question 3: Were you able to join and participate in the activities?</div>
-      <div class="rating">Rating: 5/5</div>
-    </div>
-
-    <div class="question-card">
-      <div class="question-text">Question 4: Did you learn something new from this program/event?</div>
-      <div class="rating">Rating: 5/5</div>
-    </div>
-
-    <div class="question-card">
-      <div class="question-text">Question 5: Did the SK officials/facilitators treat all participants fairly and equally?</div>
-      <div class="rating">Rating: 5/5</div>
-    </div>
-
-    <div class="question-card">
-      <div class="question-text">Question 6: Did the SK officials/facilitators show enthusiasm and commitment in leading the program/event?</div>
-      <div class="rating">Rating: 5/5</div>
-    </div>
-
-    <div class="question-card">
-      <div class="question-text">Question 7: Overall, are you satisfied with this program/event?</div>
-      <div class="rating">Rating: 5/5</div>
-    </div>
-  </div>
-</div>
-
-<!-- ================== COMMENTS TAB ================== -->
-<!-- Feedback Section -->
-<div id="comments" class="tab-content">
-  
-  <!-- Filters inside comments -->
-  <div class="feedback-filters">
-    <button class="active">All</button>
-    <button>5 - Strongly Agree</button>
-    <button>4 - Agree</button>
-    <button>3 - Neutral</button>
-    <button>2 - Disagree</button>
-    <button>1 - Strongly Disagree</button>
-  </div>
-
-  <!-- Section Title -->
-  <h3>Feedback from participants</h3>
-
-  <!-- Comment Card -->
-  <div class="feedback-card">
-    <div class="feedback-left">
-      <img src="https://i.pravatar.cc/60?img=1" alt="profile" />
-      <div>
-        <div class="name-stars">
-          <h4>Beverly J. Hills</h4>
-          <div class="stars">★★★★★ <span>5</span></div>
+    <main class="youth-profile-container">
+  <!-- Profile Header -->
+  <section class="profile-header">
+    <div class="profile-left">
+      <div class="photo-wrapper">
+        <img src="https://i.pravatar.cc/120" alt="Profile" class="profile-photo">
+      </div>
+      <div class="profile-info">
+        <h2>Marijoy S. Novora <span>| 21 years old</span></h2>
+        <div class="profile-tags">
+          <span class="tag member">KK Member</span>
+          <span class="tag voter">Registered Voter</span>
+          <span class="tag location"><i class="fa-solid fa-location-dot"></i> Purok 3, EM’s Barrio East Legazpi City</span>
         </div>
-        <p>I gained a lot of knowledge</p>
       </div>
     </div>
-    <div class="feedback-right">
-      <span>09/09/2025&nbsp;&nbsp;6:00 PM</span>
-    </div>
-  </div>
+  </section>
 
-  <div class="feedback-card">
-    <div class="feedback-left">
-      <img src="https://i.pravatar.cc/60?img=2" alt="profile" />
-      <div>
-        <div class="name-stars">
-          <h4>Beverly J. Hills</h4>
-          <div class="stars">★★★★★ <span>5</span></div>
+  <!-- GRID SECTION -->
+<div class="profile-grid">
+  <!-- LEFT SIDE -->
+  <div class="left-column">
+    <div class="top-cards">
+      <!-- === Youth Progress Card === -->
+      <div class="progress-card card">
+        <p>Youth Progress</p>
+        <div class="progress-ring">
+          <svg>
+            <circle class="bg" cx="45" cy="45" r="40"></circle>
+            <circle
+              class="progress"
+              cx="45"
+              cy="45"
+              r="40"
+              stroke-dasharray="251"
+              stroke-dashoffset="238"
+            ></circle>
+          </svg>
+          <div class="progress-text">5%</div>
         </div>
-        <p>Goods and foods. Yess!</p>
+        <span class="note">Still a long journey ahead!</span>
+      </div>
+
+      <!-- === Evaluated Programs Card === -->
+      <div class="card evaluated-card">
+        <h3>Evaluated Programs</h3>
+        <div class="big-number">3</div>
+        <div class="bar-container">
+          <div class="bar-fill" style="width: 60%;"></div>
+        </div>
+        <div class="note">Have 3 events/programs to evaluate</div>
       </div>
     </div>
-    <div class="feedback-right">
-      <span>09/09/2025&nbsp;&nbsp;6:00 PM</span>
-    </div>
-  </div>
 
-  <div class="feedback-card">
-    <div class="feedback-left">
-      <img src="https://i.pravatar.cc/60?img=3" alt="profile" />
-      <div>
-        <div class="name-stars">
-          <h4>Joey Y. Yes</h4>
-          <div class="stars">★★★★☆ <span>4</span></div>
+    <!-- === Events and Programs === -->
+    <div class="events-card">
+      <div class="events-header">
+        <h3>Events and Programs Attended</h3>
+        <div class="custom-dropdown">
+          <div class="dropdown-selected">
+            All Months <i class="fa-solid fa-chevron-down"></i>
+          </div>
+          <ul class="dropdown-options">
+            <li data-value="all">All Months</li>
+            <li data-value="This Month">This Month</li>
+            <li data-value="Last Month">Last Month</li>
+          </ul>
         </div>
-        <p>
-          The program is great I hope sa sunod mas mahaba ang time pero overall it’s good
-        </p>
+      </div>
+
+      <div class="event-list" id="eventList">
+        <div class="month-label">October 2025</div>
+        <div class="event-item" data-month="October 2025">
+          <div class="date">October 13, 2025</div>
+          <p>International Day Against Drug Abuse and Illicit Trafficking</p>
+        </div>
+        <div class="event-item" data-month="October 2025">
+          <div class="date">October 09, 2025</div>
+          <p>Leadership Training and Orientation</p>
+        </div>
+
+        <div class="month-label">September 2025</div>
+        <div class="event-item" data-month="September 2025">
+          <div class="date">September 10, 2025</div>
+          <p>Youth Environmental Summit</p>
+        </div>
+        <div class="event-item" data-month="September 2025">
+          <div class="date">September 05, 2025</div>
+          <p>Tree Planting Activity</p>
+        </div>
       </div>
     </div>
-    <div class="feedback-right">
-      <span>09/09/2025&nbsp;&nbsp;6:00 PM</span>
-    </div>
   </div>
 
-  <div class="feedback-card">
-    <div class="feedback-left">
-      <img src="https://i.pravatar.cc/60?img=4" alt="profile" />
-      <div>
-        <div class="name-stars">
-          <h4>Jay Park</h4>
-          <div class="stars">★★★★★ <span>5</span></div>
+  <!-- RIGHT SIDE -->
+  <div class="right-column">
+    <div class="card kk-profile">
+      <div class="kk-header">
+        <h2>KK Profile</h2>
+        <button class="print-btn"><i class="fa-solid fa-print"></i> Print</button>
+      </div>
+
+      <p class="kk-desc">
+        The KK profiling is an organized summary of the demographic information of the Katipunan ng Kabataan members. 
+        This provides a clear basis for developing programs and policies that respond to the needs of the youth sector.
+      </p>
+
+      <hr class="divider" />
+
+      <!-- Scrollable Info Section -->
+      <div class="kk-scrollable">
+        <div class="kk-section">
+          <h3>I. Profile</h3>
+          <p class="subtext">Name of Respondent</p>
+
+          <div class="info-grid">
+            <div><strong>Last Name:</strong> Novora</div>
+            <div><strong>First Name:</strong> Marijoy</div>
+            <div><strong>Middle Name:</strong> Novora</div>
+            <div><strong>Address:</strong> Purok 3, EM’s Barrio East Legazpi City</div>
+            <div><strong>Date of Birth:</strong> November 9, 2003</div>
+            <div><strong>Sex:</strong> Female</div>
+            <div><strong>Contact Number:</strong> 0920384****</div>
+            <div><strong>Personal Email:</strong> marijoynr42@gmail.com</div>
+          </div>
+
+          <h3>II. Demographics</h3>
+          <p class="subtext">Please provide your demographic details as accurately as possible</p>
+
+          <div class="info-grid">
+            <div><strong>Educational Attainment:</strong> College Level</div>
+            <div><strong>Occupation:</strong> Student</div>
+            <div><strong>Skills:</strong> Communication, Leadership, Creativity</div>
+            <div><strong>Organization:</strong> SK Youth Volunteers</div>
+            <div><strong>Participation:</strong> Active in local youth programs</div>
+            <div><strong>Barangay:</strong> EM’s Barrio East</div>
+            <div><strong>Registered Voter:</strong> Yes</div>
+            <div><strong>Years as Member:</strong> 2 years</div>
+          </div>
         </div>
-        <p>I gained a lot of knowledge</p>
       </div>
     </div>
-    <div class="feedback-right">
-      <span>09/09/2025&nbsp;&nbsp;6:00 PM</span>
-    </div>
   </div>
-</div>
-
+</div> <!-- END of .profile-grid -->
 
 </main>
 
 
 
+  
 
-
-
-
-<script>
+  <script>
 document.addEventListener("DOMContentLoaded", () => {
   // === Lucide icons + sidebar toggle ===
   lucide.createIcons();
@@ -517,48 +497,91 @@ evaluationLink?.addEventListener('click', (e) => {
     }
   });
 
-// Rating Distribution Chart
-const ctx = document.getElementById('ratingChart').getContext('2d');
-new Chart(ctx, {
-  type: 'bar',
-  data: {
-    labels: ['1: Strongly Disagree', '2: Disagree', '3: Neutral', '4: Agree', '5: Strongly Agree'],
-    datasets: [{
-      label: 'Responses',
-      data: [0, 2, 5, 15, 78], // sample data
-      backgroundColor: '#0C4B92',
-      borderRadius: 6,
-    }]
-  },
-  options: {
-    responsive: true,
-    plugins: {
-      legend: { display: true, labels: { color: "#01214A" } }
-    },
-    scales: {
-      x: { ticks: { color: "#4b5c77", font: { size: 12 } } },
-      y: { beginAtZero: true, ticks: { stepSize: 25, color: "#4b5c77" } }
-    }
-  }
+const printBtn = document.querySelector('.print-btn');
+  printBtn?.addEventListener('click', () => {
+    const contentToPrint = document.querySelector('.kk-scrollable');
+    if (!contentToPrint) return;
+
+    const printWindow = window.open('', '', 'width=800,height=600');
+    printWindow.document.write(`
+      <html>
+        <head>
+          <style>
+            body { font-family: 'Montserrat', sans-serif; padding: 20px; line-height: 1.6; }
+            h3 { margin: 20px 0 10px 0; }
+            .kk-section { margin-bottom: 20px; }
+            .info-grid { display: block; } /* vertical column */
+            .info-grid div { margin-bottom: 8px; }
+            .divider { border: 0; border-top: 1px solid #ccc; margin: 10px 0; }
+          </style>
+        </head>
+        <body>
+          ${contentToPrint.innerHTML}
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+  });
+
+  const dropdown = document.querySelector('.custom-dropdown');
+const selected = dropdown.querySelector('.dropdown-selected');
+const options = dropdown.querySelector('.dropdown-options');
+const eventItems = document.querySelectorAll('.event-item');
+const monthLabels = document.querySelectorAll('.month-label');
+
+// Toggle dropdown visibility
+selected.addEventListener('click', () => {
+  dropdown.classList.toggle('active');
 });
 
-// === Tabs Switching ===
-const tabButtons = document.querySelectorAll(".tab-btn");
-const tabContents = document.querySelectorAll(".tab-content");
+// Handle option click
+options.querySelectorAll('li').forEach(li => {
+  li.addEventListener('click', () => {
+    const value = li.dataset.value;
+    selected.innerHTML = li.textContent + ' <i class="fa-solid fa-chevron-down"></i>';
+    dropdown.classList.remove('active');
 
-tabButtons.forEach(btn => {
-  btn.addEventListener("click", () => {
-
-    tabButtons.forEach(b => b.classList.remove("active"));
-    tabContents.forEach(c => c.classList.remove("active"));
-
-    btn.classList.add("active");
-    const tabId = btn.getAttribute("data-tab");
-    document.getElementById(tabId).classList.add("active");
+    // Call filter function
+    filterEvents(value);
   });
 });
 
-  
+// Close dropdown if clicked outside
+document.addEventListener('click', (e) => {
+  if (!dropdown.contains(e.target)) dropdown.classList.remove('active');
+});
+
+// === Filter Events Function ===
+function filterEvents(filter) {
+  eventItems.forEach(item => {
+    const month = item.dataset.month.toLowerCase();
+
+    if (filter === 'all') {
+      item.style.display = 'block';
+    } else if (filter === 'This Month' && month.includes('october 2025')) {
+      item.style.display = 'block';
+    } else if (filter === 'Last Month' && month.includes('september 2025')) {
+      item.style.display = 'block';
+    } else {
+      item.style.display = 'none';
+    }
+  });
+
+  monthLabels.forEach(label => {
+    const month = label.textContent.toLowerCase();
+    const hasVisibleEvents = [...eventItems].some(
+      item => item.style.display === 'block' && item.dataset.month.toLowerCase() === month
+    );
+    label.style.display = hasVisibleEvents ? 'block' : 'none';
+  });
+}
+
+
+
+
 });
 </script>
 </body>

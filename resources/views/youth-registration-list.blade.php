@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KatiBayan - Dashboard</title>
-  <link rel="stylesheet" href="{{ asset('css/sk-eval-review.css') }}">
+  <link rel="stylesheet" href="{{ asset('css/youth-registration-list.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -35,7 +35,7 @@
         <span class="label">Analytics</span>
       </a>
 
-      <a href="{{ route('youth-profilepage') }}">
+      <a href="{{ route('youth-profilepage') }}" class="active">
         <i data-lucide="users"></i>
         <span class="label">Youth Profile</span>
       </a>
@@ -46,13 +46,13 @@
       </a>
 
       <div class="evaluation-item nav-item">
-        <a href="{{ route('sk-evaluation-feedback') }}" class="evaluation-link nav-link active">
+        <a href="{{ route('sk-evaluation-feedback') }}" class="evaluation-link nav-link">
           <i data-lucide="user-star"></i>
           <span class="label">Evaluation</span>
           <i data-lucide="chevron-down" class="submenu-arrow"></i>
         </a>
         <div class="submenu">
-          <a href="{{ route('sk-evaluation-feedback') }}">Feedbacks</a>
+          <a href="#">Feedbacks</a>
           <a href="#">Polls</a>
           <a href="#">Suggestion Box</a>
         </div>
@@ -159,171 +159,100 @@
       </div>
     </header>
 
-    <main class="container">
-  <div class="evaluation-container">
+    <div class="registration-list-container">
 
     <!-- Header -->
-<div class="evaluation-header">
-  <button class="back-btn"><i class="fas fa-arrow-left"></i></button>
-  <div>
-    <h2>Kalinisan sa bagong Pilipinas Program</h2>
-    <p class="event-details">Date: 2025-09-20 | Venue: Barangay Hall</p>
-  </div>
-</div>
-
-<!-- Tabs -->
-<div class="tab-buttons">
-  <button class="tab-btn active" data-tab="rating">Rating</button>
-  <button class="tab-btn" data-tab="comments">Comments</button>
-</div>
-
-<!-- ================== RATING TAB ================== -->
-<div id="rating" class="tab-content active">
-
-  <!-- Stats -->
-  <div class="stats">
-    <div class="stat-card">
-      <h3>Average Rating of this Event</h3>
-      <div class="rating-score">4.5 / 5</div>
-      <small>Based on the <b class="highlight">100 responses</b></small>
-    </div>
-    <div class="stat-card">
-      <h3>Rating Distribution</h3>
-      <canvas id="ratingChart"></canvas>
-    </div>
-  </div>
-
-  <!-- Question Breakdown -->
-  <div class="question-section">
-    <h3>
-      Question Breakdown
-      <a href="{{ route('list-of-eval-respondents') }}" class="see-respondents">See Respondents</a>
-    </h3>
-
-    <div class="question-card">
-      <div class="question-text">Question 1: Was the purpose of the program/event explained clearly?</div>
-      <div class="rating">Rating: 5/5</div>
+    <div class="header-section">
+      <h2>Basketball League Open Category 2025 Registration</h2>
     </div>
 
-    <div class="question-card">
-      <div class="question-text">Question 2: Was the time given for the program/event enough?</div>
-      <div class="rating">Rating: 4/5</div>
-    </div>
-
-    <div class="question-card">
-      <div class="question-text">Question 3: Were you able to join and participate in the activities?</div>
-      <div class="rating">Rating: 5/5</div>
-    </div>
-
-    <div class="question-card">
-      <div class="question-text">Question 4: Did you learn something new from this program/event?</div>
-      <div class="rating">Rating: 5/5</div>
-    </div>
-
-    <div class="question-card">
-      <div class="question-text">Question 5: Did the SK officials/facilitators treat all participants fairly and equally?</div>
-      <div class="rating">Rating: 5/5</div>
-    </div>
-
-    <div class="question-card">
-      <div class="question-text">Question 6: Did the SK officials/facilitators show enthusiasm and commitment in leading the program/event?</div>
-      <div class="rating">Rating: 5/5</div>
-    </div>
-
-    <div class="question-card">
-      <div class="question-text">Question 7: Overall, are you satisfied with this program/event?</div>
-      <div class="rating">Rating: 5/5</div>
-    </div>
-  </div>
-</div>
-
-<!-- ================== COMMENTS TAB ================== -->
-<!-- Feedback Section -->
-<div id="comments" class="tab-content">
-  
-  <!-- Filters inside comments -->
-  <div class="feedback-filters">
-    <button class="active">All</button>
-    <button>5 - Strongly Agree</button>
-    <button>4 - Agree</button>
-    <button>3 - Neutral</button>
-    <button>2 - Disagree</button>
-    <button>1 - Strongly Disagree</button>
-  </div>
-
-  <!-- Section Title -->
-  <h3>Feedback from participants</h3>
-
-  <!-- Comment Card -->
-  <div class="feedback-card">
-    <div class="feedback-left">
-      <img src="https://i.pravatar.cc/60?img=1" alt="profile" />
-      <div>
-        <div class="name-stars">
-          <h4>Beverly J. Hills</h4>
-          <div class="stars">★★★★★ <span>5</span></div>
+    <!-- Actions Row -->
+    <div class="actions-row">
+      <div class="left-actions">
+        <div class="search-box">
+          <i class="fa fa-search"></i>
+          <input type="text" placeholder="Search">
         </div>
-        <p>I gained a lot of knowledge</p>
+        <button class="filter-btn">
+          <i class="fa fa-filter"></i> Filter
+        </button>
+      </div>
+
+      <div class="right-action">
+        <button class="download-btn">
+          Download All <i class="fa-solid fa-download"></i>
+        </button>
       </div>
     </div>
-    <div class="feedback-right">
-      <span>09/09/2025&nbsp;&nbsp;6:00 PM</span>
-    </div>
-  </div>
 
-  <div class="feedback-card">
-    <div class="feedback-left">
-      <img src="https://i.pravatar.cc/60?img=2" alt="profile" />
-      <div>
-        <div class="name-stars">
-          <h4>Beverly J. Hills</h4>
-          <div class="stars">★★★★★ <span>5</span></div>
-        </div>
-        <p>Goods and foods. Yess!</p>
-      </div>
+    <!-- Table -->
+    <div class="table-wrapper">
+      <table class="attendees-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Age</th>
+            <th>Contact Number</th>
+            <th>Purok</th>
+            <th>Team Name</th>
+            <th>Registration Form</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Troy O. Balimbing</td><td>20</td><td>09509078654</td><td>Purok 6</td><td>Team Troy</td><td>basketballleague2025.form</td>
+          </tr>
+          <tr>
+            <td>Red D. Lopez</td><td>20</td><td>09509078654</td><td>Purok 5</td><td>Team Red</td><td>basketballleague2025.form</td>
+          </tr>
+          <tr>
+            <td>Jun A. Gomez</td><td>20</td><td>09509078654</td><td>Purok 1</td><td>Team Jun</td><td>basketballleague2025.form</td>
+          </tr>
+          <tr>
+            <td>Troy O. Balimbing</td><td>20</td><td>09509078654</td><td>Purok 6</td><td>Team Troy</td><td>basketballleague2025.form</td>
+          </tr>
+          <tr>
+            <td>Red D. Lopez</td><td>20</td><td>09509078654</td><td>Purok 5</td><td>Team Red</td><td>basketballleague2025.form</td>
+          </tr>
+          <tr>
+            <td>Jun A. Gomez</td><td>20</td><td>09509078654</td><td>Purok 1</td><td>Team Jun</td><td>basketballleague2025.form</td>
+          </tr>
+          <tr>
+            <td>Troy O. Balimbing</td><td>20</td><td>09509078654</td><td>Purok 6</td><td>Team Troy</td><td>basketballleague2025.form</td>
+          </tr>
+          <tr>
+            <td>Red D. Lopez</td><td>20</td><td>09509078654</td><td>Purok 5</td><td>Team Red</td><td>basketballleague2025.form</td>
+          </tr>
+          <tr>
+            <td>Jun A. Gomez</td><td>20</td><td>09509078654</td><td>Purok 1</td><td>Team Jun</td><td>basketballleague2025.form</td>
+          </tr>
+          <tr>
+            <td>Troy O. Balimbing</td><td>20</td><td>09509078654</td><td>Purok 6</td><td>Team Troy</td><td>basketballleague2025.form</td>
+          </tr>
+          <tr>
+            <td>Red D. Lopez</td><td>20</td><td>09509078654</td><td>Purok 5</td><td>Team Red</td><td>basketballleague2025.form</td>
+          </tr>
+          <tr>
+            <td>Jun A. Gomez</td><td>20</td><td>09509078654</td><td>Purok 1</td><td>Team Jun</td><td>basketballleague2025.form</td>
+          </tr>
+          <tr>
+            <td>Troy O. Balimbing</td><td>20</td><td>09509078654</td><td>Purok 6</td><td>Team Troy</td><td>basketballleague2025.form</td>
+          </tr>
+          <tr>
+            <td>Red D. Lopez</td><td>20</td><td>09509078654</td><td>Purok 5</td><td>Team Red</td><td>basketballleague2025.form</td>
+          </tr>
+          <tr>
+            <td>Jun A. Gomez</td><td>20</td><td>09509078654</td><td>Purok 1</td><td>Team Jun</td><td>basketballleague2025.form</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
-    <div class="feedback-right">
-      <span>09/09/2025&nbsp;&nbsp;6:00 PM</span>
-    </div>
-  </div>
 
-  <div class="feedback-card">
-    <div class="feedback-left">
-      <img src="https://i.pravatar.cc/60?img=3" alt="profile" />
-      <div>
-        <div class="name-stars">
-          <h4>Joey Y. Yes</h4>
-          <div class="stars">★★★★☆ <span>4</span></div>
-        </div>
-        <p>
-          The program is great I hope sa sunod mas mahaba ang time pero overall it’s good
-        </p>
-      </div>
-    </div>
-    <div class="feedback-right">
-      <span>09/09/2025&nbsp;&nbsp;6:00 PM</span>
-    </div>
-  </div>
-
-  <div class="feedback-card">
-    <div class="feedback-left">
-      <img src="https://i.pravatar.cc/60?img=4" alt="profile" />
-      <div>
-        <div class="name-stars">
-          <h4>Jay Park</h4>
-          <div class="stars">★★★★★ <span>5</span></div>
-        </div>
-        <p>I gained a lot of knowledge</p>
-      </div>
-    </div>
-    <div class="feedback-right">
-      <span>09/09/2025&nbsp;&nbsp;6:00 PM</span>
-    </div>
-  </div>
 </div>
 
 
-</main>
+
+
 
 
 
@@ -517,46 +446,40 @@ evaluationLink?.addEventListener('click', (e) => {
     }
   });
 
-// Rating Distribution Chart
-const ctx = document.getElementById('ratingChart').getContext('2d');
-new Chart(ctx, {
-  type: 'bar',
-  data: {
-    labels: ['1: Strongly Disagree', '2: Disagree', '3: Neutral', '4: Agree', '5: Strongly Agree'],
-    datasets: [{
-      label: 'Responses',
-      data: [0, 2, 5, 15, 78], // sample data
-      backgroundColor: '#0C4B92',
-      borderRadius: 6,
-    }]
-  },
-  options: {
-    responsive: true,
-    plugins: {
-      legend: { display: true, labels: { color: "#01214A" } }
-    },
-    scales: {
-      x: { ticks: { color: "#4b5c77", font: { size: 12 } } },
-      y: { beginAtZero: true, ticks: { stepSize: 25, color: "#4b5c77" } }
+  // === Back Button Fallback ===
+  const backBtn = document.querySelector('.back-btn');
+  backBtn?.addEventListener('click', (e) => {
+    if (backBtn.getAttribute('href') === '#') {
+      e.preventDefault();
+      history.back();
     }
-  }
-});
-
-// === Tabs Switching ===
-const tabButtons = document.querySelectorAll(".tab-btn");
-const tabContents = document.querySelectorAll(".tab-content");
-
-tabButtons.forEach(btn => {
-  btn.addEventListener("click", () => {
-
-    tabButtons.forEach(b => b.classList.remove("active"));
-    tabContents.forEach(c => c.classList.remove("active"));
-
-    btn.classList.add("active");
-    const tabId = btn.getAttribute("data-tab");
-    document.getElementById(tabId).classList.add("active");
   });
-});
+
+  // === Search Attendees ===
+  const searchInput = document.querySelector('.search-box input');
+  const tableRows = document.querySelectorAll('.attendees-table tbody tr');
+
+  searchInput?.addEventListener('input', () => {
+    const query = searchInput.value.toLowerCase();
+    tableRows.forEach(row => {
+      const text = row.textContent.toLowerCase();
+      row.style.display = text.includes(query) ? '' : 'none';
+    });
+  });
+
+  // === Filter Attendees ===
+  const filterBtn = document.querySelector('.filter-btn');
+  filterBtn?.addEventListener('click', () => {
+    const status = prompt("Filter by Status (ex: Active Youth):");
+    if (!status) {
+      tableRows.forEach(row => row.style.display = '');
+      return;
+    }
+    tableRows.forEach(row => {
+      const cell = row.cells[5]?.textContent.toLowerCase(); // Status column
+      row.style.display = cell && cell.includes(status.toLowerCase()) ? '' : 'none';
+    });
+  });
 
   
 });

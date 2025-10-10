@@ -4,16 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KatiBayan - Dashboard</title>
-  <link rel="stylesheet" href="{{ asset('css/sk-eval-review.css') }}">
+  <link rel="stylesheet" href="{{ asset('css/sk-polls.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+
 
 
 
@@ -35,7 +32,7 @@
         <span class="label">Analytics</span>
       </a>
 
-      <a href="{{ route('youth-profilepage') }}">
+      <a href="{{ route('youth-profilepage') }}" class="active">
         <i data-lucide="users"></i>
         <span class="label">Youth Profile</span>
       </a>
@@ -46,13 +43,13 @@
       </a>
 
       <div class="evaluation-item nav-item">
-        <a href="{{ route('sk-evaluation-feedback') }}" class="evaluation-link nav-link active">
+        <a href="{{ route('sk-evaluation-feedback') }}" class="evaluation-link nav-link">
           <i data-lucide="user-star"></i>
           <span class="label">Evaluation</span>
           <i data-lucide="chevron-down" class="submenu-arrow"></i>
         </a>
         <div class="submenu">
-          <a href="{{ route('sk-evaluation-feedback') }}">Feedbacks</a>
+          <a href="#">Feedbacks</a>
           <a href="#">Polls</a>
           <a href="#">Suggestion Box</a>
         </div>
@@ -159,173 +156,133 @@
       </div>
     </header>
 
-    <main class="container">
-  <div class="evaluation-container">
-
-    <!-- Header -->
-<div class="evaluation-header">
-  <button class="back-btn"><i class="fas fa-arrow-left"></i></button>
-  <div>
-    <h2>Kalinisan sa bagong Pilipinas Program</h2>
-    <p class="event-details">Date: 2025-09-20 | Venue: Barangay Hall</p>
-  </div>
-</div>
-
-<!-- Tabs -->
-<div class="tab-buttons">
-  <button class="tab-btn active" data-tab="rating">Rating</button>
-  <button class="tab-btn" data-tab="comments">Comments</button>
-</div>
-
-<!-- ================== RATING TAB ================== -->
-<div id="rating" class="tab-content active">
-
-  <!-- Stats -->
-  <div class="stats">
-    <div class="stat-card">
-      <h3>Average Rating of this Event</h3>
-      <div class="rating-score">4.5 / 5</div>
-      <small>Based on the <b class="highlight">100 responses</b></small>
-    </div>
-    <div class="stat-card">
-      <h3>Rating Distribution</h3>
-      <canvas id="ratingChart"></canvas>
-    </div>
+    <div class="poll-container">
+  <!-- Poll Header -->
+  <div class="poll-header">
+    <h2>Poll</h2>
+    <a href="#" class="btn create-poll-btn">Create Poll</a>
   </div>
 
-  <!-- Question Breakdown -->
-  <div class="question-section">
-    <h3>
-      Question Breakdown
-      <a href="{{ route('list-of-eval-respondents') }}" class="see-respondents">See Respondents</a>
-    </h3>
+  <!-- Responses Subheader -->
+  <div class="responses-header">
+    <h3>Responses</h3>
+  </div>
 
-    <div class="question-card">
-      <div class="question-text">Question 1: Was the purpose of the program/event explained clearly?</div>
-      <div class="rating">Rating: 5/5</div>
+  <!-- Poll Card 1 -->
+<div class="poll-card">
+  <div class="poll-top">
+    <p class="question">
+      <span class="label">Question:</span>
+      <em>Would you like us to organize a Drag Race event for the youth?</em>
+    </p>
+    <a href="#" class="btn view-respondents">View Respondents</a>
+  </div>
+
+  <div class="poll-content">
+    <div class="poll-options">
+      <div class="option"><span class="swatch purple"></span> Yes, that would be exciting</div>
+      <div class="option"><span class="swatch gold"></span> Maybe, I need more details</div>
+      <div class="option"><span class="swatch navy"></span> No, not interested</div>
     </div>
 
-    <div class="question-card">
-      <div class="question-text">Question 2: Was the time given for the program/event enough?</div>
-      <div class="rating">Rating: 4/5</div>
-    </div>
-
-    <div class="question-card">
-      <div class="question-text">Question 3: Were you able to join and participate in the activities?</div>
-      <div class="rating">Rating: 5/5</div>
-    </div>
-
-    <div class="question-card">
-      <div class="question-text">Question 4: Did you learn something new from this program/event?</div>
-      <div class="rating">Rating: 5/5</div>
-    </div>
-
-    <div class="question-card">
-      <div class="question-text">Question 5: Did the SK officials/facilitators treat all participants fairly and equally?</div>
-      <div class="rating">Rating: 5/5</div>
-    </div>
-
-    <div class="question-card">
-      <div class="question-text">Question 6: Did the SK officials/facilitators show enthusiasm and commitment in leading the program/event?</div>
-      <div class="rating">Rating: 5/5</div>
-    </div>
-
-    <div class="question-card">
-      <div class="question-text">Question 7: Overall, are you satisfied with this program/event?</div>
-      <div class="rating">Rating: 5/5</div>
+    <div class="poll-chart-wrap">
+      <canvas id="pollChart1"></canvas>
+      <p class="responses">Total Responses: 60</p>
     </div>
   </div>
 </div>
 
-<!-- ================== COMMENTS TAB ================== -->
-<!-- Feedback Section -->
-<div id="comments" class="tab-content">
+<!-- Poll Card 2 -->
+<div class="poll-card">
+  <div class="poll-top">
+    <p class="question">
+      <span class="label">Question:</span>
+      <em>Would you like us to organize a Drag Race event for the youth?</em>
+    </p>
+    <a href="#" class="btn view-respondents">View Respondents</a>
+  </div>
+
+  <div class="poll-content">
+    <div class="poll-options">
+      <div class="option"><span class="swatch purple"></span> Yes, that would be exciting</div>
+      <div class="option"><span class="swatch gold"></span> Maybe, I need more details</div>
+      <div class="option"><span class="swatch navy"></span> No, not interested</div>
+    </div>
+
+    <div class="poll-chart-wrap">
+      <canvas id="pollChart2"></canvas>
+      <p class="responses">Total Responses: 60</p>
+    </div>
+  </div>
+</div>
+
+<!-- RESPONDENTS MODAL -->
+<div class="modal-overlay" id="respondentsOverlay">
+  <div class="respondents-modal">
+    <span class="modal-close">&times;</span>
+    <h3>60 Respondents</h3>
+
+    <div class="respondent-item">
+      <img src="https://i.pravatar.cc/40?img=1" alt="User">
+      <span>Beverly J. Hills</span>
+    </div>
+    <div class="respondent-item">
+      <img src="https://i.pravatar.cc/40?img=2" alt="User">
+      <span>Juan Dela Cruz</span>
+    </div>
+    <div class="respondent-item">
+      <img src="https://i.pravatar.cc/40?img=3" alt="User">
+      <span>Jane Rea May Mengorio</span>
+    </div>
+    <div class="respondent-item">
+      <img src="https://i.pravatar.cc/40?img=4" alt="User">
+      <span>Juliane Rebecca Dayandante</span>
+    </div>
+    <div class="respondent-item">
+      <img src="https://i.pravatar.cc/40?img=5" alt="User">
+      <span>Marijoy Novora</span>
+    </div>
+    <div class="respondent-item">
+      <img src="https://i.pravatar.cc/40?img=6" alt="User">
+      <span>Sarrah Joe</span>
+    </div>
+  </div>
+</div>
+
+<!-- CREATE POLL MODAL -->
+<div class="modal-overlay" id="createPollOverlay">
+  <div class="create-poll-modal">
+    <span class="modal-close">&times;</span>
+    <h2>Create Poll</h2>
+    <p>Empower the youth to voice their ideas through activity polls</p>
+
+    <label for="pollQuestion"><em>Poll Question:</em></label>
+    <input type="text" id="pollQuestion" placeholder="Enter your question">
+
+    <label for="pollEnd"><em>Poll end date</em></label>
+    <input type="date" id="pollEnd">
+
+
+    <label><em>Create choices</em></label>
+    <div id="pollOptions">
+    <div class="option-item">
+        <input type="text" name="options[]" placeholder="Option 1" class="poll-option">
+        <span class="remove-option">×</span>
+    </div>
+    <div class="option-item">
+        <input type="text" name="options[]" placeholder="Option 2" class="poll-option">
+        <span class="remove-option">×</span>
+    </div>
+    </div>
+    <button class="add-option">+ Add another option</button>
+</div>
+
+
+
+
   
-  <!-- Filters inside comments -->
-  <div class="feedback-filters">
-    <button class="active">All</button>
-    <button>5 - Strongly Agree</button>
-    <button>4 - Agree</button>
-    <button>3 - Neutral</button>
-    <button>2 - Disagree</button>
-    <button>1 - Strongly Disagree</button>
-  </div>
-
-  <!-- Section Title -->
-  <h3>Feedback from participants</h3>
-
-  <!-- Comment Card -->
-  <div class="feedback-card">
-    <div class="feedback-left">
-      <img src="https://i.pravatar.cc/60?img=1" alt="profile" />
-      <div>
-        <div class="name-stars">
-          <h4>Beverly J. Hills</h4>
-          <div class="stars">★★★★★ <span>5</span></div>
-        </div>
-        <p>I gained a lot of knowledge</p>
-      </div>
-    </div>
-    <div class="feedback-right">
-      <span>09/09/2025&nbsp;&nbsp;6:00 PM</span>
-    </div>
-  </div>
-
-  <div class="feedback-card">
-    <div class="feedback-left">
-      <img src="https://i.pravatar.cc/60?img=2" alt="profile" />
-      <div>
-        <div class="name-stars">
-          <h4>Beverly J. Hills</h4>
-          <div class="stars">★★★★★ <span>5</span></div>
-        </div>
-        <p>Goods and foods. Yess!</p>
-      </div>
-    </div>
-    <div class="feedback-right">
-      <span>09/09/2025&nbsp;&nbsp;6:00 PM</span>
-    </div>
-  </div>
-
-  <div class="feedback-card">
-    <div class="feedback-left">
-      <img src="https://i.pravatar.cc/60?img=3" alt="profile" />
-      <div>
-        <div class="name-stars">
-          <h4>Joey Y. Yes</h4>
-          <div class="stars">★★★★☆ <span>4</span></div>
-        </div>
-        <p>
-          The program is great I hope sa sunod mas mahaba ang time pero overall it’s good
-        </p>
-      </div>
-    </div>
-    <div class="feedback-right">
-      <span>09/09/2025&nbsp;&nbsp;6:00 PM</span>
-    </div>
-  </div>
-
-  <div class="feedback-card">
-    <div class="feedback-left">
-      <img src="https://i.pravatar.cc/60?img=4" alt="profile" />
-      <div>
-        <div class="name-stars">
-          <h4>Jay Park</h4>
-          <div class="stars">★★★★★ <span>5</span></div>
-        </div>
-        <p>I gained a lot of knowledge</p>
-      </div>
-    </div>
-    <div class="feedback-right">
-      <span>09/09/2025&nbsp;&nbsp;6:00 PM</span>
-    </div>
-  </div>
-</div>
-
-
-</main>
-
-
+ 
+  
 
 
 
@@ -517,46 +474,157 @@ evaluationLink?.addEventListener('click', (e) => {
     }
   });
 
-// Rating Distribution Chart
-const ctx = document.getElementById('ratingChart').getContext('2d');
-new Chart(ctx, {
-  type: 'bar',
-  data: {
-    labels: ['1: Strongly Disagree', '2: Disagree', '3: Neutral', '4: Agree', '5: Strongly Agree'],
-    datasets: [{
-      label: 'Responses',
-      data: [0, 2, 5, 15, 78], // sample data
-      backgroundColor: '#0C4B92',
-      borderRadius: 6,
-    }]
-  },
-  options: {
-    responsive: true,
-    plugins: {
-      legend: { display: true, labels: { color: "#01214A" } }
+// === Poll Charts ===
+function createPollChart(id, dataValues) {
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+
+  new Chart(ctx, {
+    type: "pie",
+    data: {
+      labels: ["Yes", "Maybe", "No"],
+      datasets: [{
+        data: dataValues,
+        backgroundColor: ["#5A2D91", "#D9A441", "#0C2744"],
+        borderWidth: 2,
+        borderColor: "#fff"
+      }]
     },
-    scales: {
-      x: { ticks: { color: "#4b5c77", font: { size: 12 } } },
-      y: { beginAtZero: true, ticks: { stepSize: 25, color: "#4b5c77" } }
-    }
+    options: {
+      plugins: {
+        legend: { display: false },
+        datalabels: {
+          color: "#fff",
+          font: { weight: "bold", size: 14 },
+          formatter: (value, context) => {
+            const dataset = context.chart.data.datasets[0].data;
+            const total = dataset.reduce((a, b) => a + b, 0);
+            return ((value / total) * 100).toFixed(0) + "%";
+          }
+        }
+      }
+    },
+    plugins: [ChartDataLabels]
+  });
+}
+
+// call charts separately
+createPollChart("pollChart1", [30, 10, 20]);
+createPollChart("pollChart2", [25, 15, 20]);
+
+// ================= RESPONDENTS MODAL =================
+document.querySelectorAll(".view-respondents").forEach(btn => {
+  btn.addEventListener("click", (e) => {
+    e.preventDefault();
+    document.getElementById("respondentsOverlay").style.display = "flex";
+  });
+});
+
+// Close respondents modal
+document
+  .querySelector("#respondentsOverlay .modal-close")
+  .addEventListener("click", () => {
+    document.getElementById("respondentsOverlay").style.display = "none";
+  });
+
+// Close respondents when clicking outside
+document.getElementById("respondentsOverlay").addEventListener("click", (e) => {
+  if (e.target.id === "respondentsOverlay") {
+    e.currentTarget.style.display = "none";
   }
 });
 
-// === Tabs Switching ===
-const tabButtons = document.querySelectorAll(".tab-btn");
-const tabContents = document.querySelectorAll(".tab-content");
 
-tabButtons.forEach(btn => {
-  btn.addEventListener("click", () => {
+// ================= CREATE POLL MODAL =================
+const createPollBtn = document.querySelector(".create-poll-btn");
+const createPollOverlay = document.getElementById("createPollOverlay");
 
-    tabButtons.forEach(b => b.classList.remove("active"));
-    tabContents.forEach(c => c.classList.remove("active"));
-
-    btn.classList.add("active");
-    const tabId = btn.getAttribute("data-tab");
-    document.getElementById(tabId).classList.add("active");
+// Open
+if (createPollBtn) {
+  createPollBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    createPollOverlay.style.display = "flex";
   });
+}
+
+// Close
+createPollOverlay.querySelector(".modal-close").addEventListener("click", () => {
+  createPollOverlay.style.display = "none";
 });
+
+// Close when clicking outside
+createPollOverlay.addEventListener("click", (e) => {
+  if (e.target.id === "createPollOverlay") {
+    e.currentTarget.style.display = "none";
+  }
+});
+
+// --- Add option functionality (with remove, min 2 options) ---
+(function() {
+  const createOverlay = document.getElementById("createPollOverlay");
+  if (!createOverlay) return;
+
+  const optionsContainer = createOverlay.querySelector("#pollOptions");
+  const addOptionBtn = createOverlay.querySelector(".add-option");
+
+  if (!optionsContainer || !addOptionBtn) return;
+
+  function reindexOptions() {
+    const items = optionsContainer.querySelectorAll(".option-item");
+    items.forEach((wrapper, i) => {
+      const input = wrapper.querySelector("input");
+      input.placeholder = `Option ${i + 1}`;
+
+      const removeBtn = wrapper.querySelector(".remove-option");
+      if (i < 2) {
+        // Hide remove button for Option 1 & 2
+        if (removeBtn) removeBtn.style.display = "none";
+      } else {
+        if (removeBtn) removeBtn.style.display = "flex";
+      }
+    });
+  }
+
+  function createOptionField() {
+    const wrapper = document.createElement("div");
+    wrapper.className = "option-item";
+
+    const input = document.createElement("input");
+    input.type = "text";
+    input.name = "options[]";
+    input.className = "poll-option";
+    input.placeholder = `Option ${optionsContainer.children.length + 1}`;
+
+    const removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.textContent = "×";
+    removeBtn.className = "remove-option";
+
+    removeBtn.addEventListener("click", () => {
+      wrapper.remove();
+      reindexOptions();
+    });
+
+    wrapper.appendChild(input);
+    wrapper.appendChild(removeBtn);
+    return wrapper;
+  }
+
+  addOptionBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    const optionField = createOptionField();
+    optionsContainer.appendChild(optionField);
+    requestAnimationFrame(() => optionField.querySelector("input").focus());
+    reindexOptions();
+  });
+
+  // Initial reindex on load
+  reindexOptions();
+})();
+
+
+
+
 
   
 });

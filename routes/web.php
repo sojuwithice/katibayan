@@ -129,6 +129,46 @@ Route::get('/sk-eval-review', function () {
     return view('sk-eval-review');
 })->name('sk-eval-review');
 
+Route::get('/sk-polls', function () {
+    return view('sk-polls');
+})->name('sk-polls');
+
+Route::get('/edit-program', function () {
+    return view('edit-program');
+})->name('edit-program');
+
+Route::get('/youth-assistance', function () {
+    return view('youth-assistance');
+})->name('youth-assistance');
+
+Route::get('/youth-suggestion', function () {
+    return view('youth-suggestion');
+})->name('youth-suggestion');
+
+Route::get('/youth-program-registration', function () {
+    return view('youth-program-registration');
+})->name('youth-program-registration');
+
+Route::get('/youth-registration-list', function () {
+    return view('youth-registration-list');
+})->name('youth-registration-list');
+
+Route::get('/list-of-eval-respondents', function () {
+    return view('list-of-eval-respondents');
+})->name('list-of-eval-respondents');
+
+Route::get('/sk-services-offer', function () {
+    return view('sk-services-offer');
+})->name('sk-services-offer');
+
+Route::get('/reports', function () {
+    return view('reports');
+})->name('reports');
+
+Route::get('/view-youth-profile', function () {
+    return view('view-youth-profile');
+})->name('view-youth-profile');
+
 
 
 

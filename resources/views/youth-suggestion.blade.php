@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KatiBayan - Dashboard</title>
-  <link rel="stylesheet" href="{{ asset('css/sk-eval-review.css') }}">
+  <link rel="stylesheet" href="{{ asset('css/youth-suggestion.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -35,7 +35,7 @@
         <span class="label">Analytics</span>
       </a>
 
-      <a href="{{ route('youth-profilepage') }}">
+      <a href="{{ route('youth-profilepage') }}" class="active">
         <i data-lucide="users"></i>
         <span class="label">Youth Profile</span>
       </a>
@@ -46,13 +46,13 @@
       </a>
 
       <div class="evaluation-item nav-item">
-        <a href="{{ route('sk-evaluation-feedback') }}" class="evaluation-link nav-link active">
+        <a href="{{ route('sk-evaluation-feedback') }}" class="evaluation-link nav-link">
           <i data-lucide="user-star"></i>
           <span class="label">Evaluation</span>
           <i data-lucide="chevron-down" class="submenu-arrow"></i>
         </a>
         <div class="submenu">
-          <a href="{{ route('sk-evaluation-feedback') }}">Feedbacks</a>
+          <a href="#">Feedbacks</a>
           <a href="#">Polls</a>
           <a href="#">Suggestion Box</a>
         </div>
@@ -70,7 +70,7 @@
 
     </nav>
   </aside>
-
+ 
 
   <!-- Main -->
   <div class="main">
@@ -158,174 +158,148 @@
         </div>
       </div>
     </header>
+    
 
-    <main class="container">
-  <div class="evaluation-container">
-
-    <!-- Header -->
-<div class="evaluation-header">
-  <button class="back-btn"><i class="fas fa-arrow-left"></i></button>
-  <div>
-    <h2>Kalinisan sa bagong Pilipinas Program</h2>
-    <p class="event-details">Date: 2025-09-20 | Venue: Barangay Hall</p>
-  </div>
-</div>
-
-<!-- Tabs -->
-<div class="tab-buttons">
-  <button class="tab-btn active" data-tab="rating">Rating</button>
-  <button class="tab-btn" data-tab="comments">Comments</button>
-</div>
-
-<!-- ================== RATING TAB ================== -->
-<div id="rating" class="tab-content active">
-
-  <!-- Stats -->
-  <div class="stats">
-    <div class="stat-card">
-      <h3>Average Rating of this Event</h3>
-      <div class="rating-score">4.5 / 5</div>
-      <small>Based on the <b class="highlight">100 responses</b></small>
-    </div>
-    <div class="stat-card">
-      <h3>Rating Distribution</h3>
-      <canvas id="ratingChart"></canvas>
+  <!-- Suggestions Header -->
+  <div class="suggestions-card">
+    <h2>Youth Suggestions</h2>
+    <div class="total-suggestions">
+      Total suggestions <span>20</span>
     </div>
   </div>
 
-  <!-- Question Breakdown -->
-  <div class="question-section">
-    <h3>
-      Question Breakdown
-      <a href="{{ route('list-of-eval-respondents') }}" class="see-respondents">See Respondents</a>
-    </h3>
-
-    <div class="question-card">
-      <div class="question-text">Question 1: Was the purpose of the program/event explained clearly?</div>
-      <div class="rating">Rating: 5/5</div>
+  <!-- Overview of Suggestions -->
+  <div class="overview-card">
+    <h3 class="overview-title">Overview of Suggestions<br>by Category</h3>
+    <div class="chart-container">
+      <canvas id="suggestionChart"></canvas>
     </div>
+  </div>
 
-    <div class="question-card">
-      <div class="question-text">Question 2: Was the time given for the program/event enough?</div>
-      <div class="rating">Rating: 4/5</div>
+  <!-- Suggestions List -->
+<div class="suggestions-section">
+  <h3 class="suggestions-title">Suggestions List</h3>
+
+  <div class="suggestions-subheader">
+    <h4 class="group-title">This month</h4>
+
+    <div class="filters">
+      <!-- Month Dropdown -->
+      <div class="custom-dropdown" data-type="month">
+        <div class="dropdown-selected">
+          <span>This month</span>
+          <div class="icon-circle">
+                <i class="fa-solid fa-chevron-down"></i>
+            </div>
+        </div>
+        <ul class="dropdown-options">
+          <li data-value="all">All</li>
+          <li data-value="this">This month</li>
+          <li data-value="last">Last month</li>
+        </ul>
+      </div>
+
+      <label class="filter-label">Category:</label>
+
+      <!-- Category Dropdown -->
+      <div class="custom-dropdown" data-type="category">
+        <div class="dropdown-selected">
+          <span>All</span>
+          <div class="icon-circle">
+    <i class="fa-solid fa-chevron-down"></i>
+  </div>
+        </div>
+        <ul class="dropdown-options">
+          <li data-value="all">All</li>
+          <li data-value="event">Events</li>
+          <li data-value="program">Programs</li>
+          <li data-value="other">Other</li>
+        </ul>
+      </div>
     </div>
+  </div>
 
-    <div class="question-card">
-      <div class="question-text">Question 3: Were you able to join and participate in the activities?</div>
-      <div class="rating">Rating: 5/5</div>
+  <!-- ✅ THIS MONTH LIST -->
+<div class="suggestions-group" data-month="this">
+
+
+  <div class="suggestion-card" data-category="event">
+    <img src="https://i.pravatar.cc/80?img=8" alt="User" class="suggestion-avatar">
+    <div class="suggestion-content">
+      <h5>Jay Park <span class="suggestion-id">#KK2025296JP</span></h5>
+      <p>Hello po, pwede po ba kayo mag event ng art contest? gusto ko po kasi sumali kaso wala pa nagpapaevent na ganon. Sana mapansin tnx.</p>
+      <div class="suggestion-footer">
+        <span class="badge event">Events</span>
+        <span class="date">09/09/2025 6:00 PM</span>
+      </div>
     </div>
+  </div>
 
-    <div class="question-card">
-      <div class="question-text">Question 4: Did you learn something new from this program/event?</div>
-      <div class="rating">Rating: 5/5</div>
-    </div>
-
-    <div class="question-card">
-      <div class="question-text">Question 5: Did the SK officials/facilitators treat all participants fairly and equally?</div>
-      <div class="rating">Rating: 5/5</div>
-    </div>
-
-    <div class="question-card">
-      <div class="question-text">Question 6: Did the SK officials/facilitators show enthusiasm and commitment in leading the program/event?</div>
-      <div class="rating">Rating: 5/5</div>
-    </div>
-
-    <div class="question-card">
-      <div class="question-text">Question 7: Overall, are you satisfied with this program/event?</div>
-      <div class="rating">Rating: 5/5</div>
+  <div class="suggestion-card" data-category="program">
+    <img src="https://i.pravatar.cc/80?img=9" alt="User" class="suggestion-avatar">
+    <div class="suggestion-content">
+      <h5>Ammiel N. Lim <span class="suggestion-id">#KK2025296JP</span></h5>
+      <p>Hello SK Chair. Si Sassa to, pwede pa request ng program for awareness sa HIV thankies.</p>
+      <div class="suggestion-footer">
+        <span class="badge program">Programs</span>
+        <span class="date">09/09/2025 6:00 PM</span>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- ================== COMMENTS TAB ================== -->
-<!-- Feedback Section -->
-<div id="comments" class="tab-content">
+
+<!-- ✅ LAST MONTH LIST -->
+<div class="suggestions-group" data-month="last">
   
-  <!-- Filters inside comments -->
-  <div class="feedback-filters">
-    <button class="active">All</button>
-    <button>5 - Strongly Agree</button>
-    <button>4 - Agree</button>
-    <button>3 - Neutral</button>
-    <button>2 - Disagree</button>
-    <button>1 - Strongly Disagree</button>
-  </div>
 
-  <!-- Section Title -->
-  <h3>Feedback from participants</h3>
-
-  <!-- Comment Card -->
-  <div class="feedback-card">
-    <div class="feedback-left">
-      <img src="https://i.pravatar.cc/60?img=1" alt="profile" />
-      <div>
-        <div class="name-stars">
-          <h4>Beverly J. Hills</h4>
-          <div class="stars">★★★★★ <span>5</span></div>
-        </div>
-        <p>I gained a lot of knowledge</p>
+  <div class="suggestion-card" data-category="event">
+    <img src="https://i.pravatar.cc/80?img=8" alt="User" class="suggestion-avatar">
+    <div class="suggestion-content">
+      <h5>Jay Park <span class="suggestion-id">#KK2025296JP</span></h5>
+      <p>Hello po, pwede po ba kayo mag event ng art contest? gusto ko po kasi sumali kaso wala pa nagpapaevent na ganon. Sana mapansin tnx.</p>
+      <div class="suggestion-footer">
+        <span class="badge event">Events</span>
+        <span class="date">09/09/2025 6:00 PM</span>
       </div>
-    </div>
-    <div class="feedback-right">
-      <span>09/09/2025&nbsp;&nbsp;6:00 PM</span>
     </div>
   </div>
 
-  <div class="feedback-card">
-    <div class="feedback-left">
-      <img src="https://i.pravatar.cc/60?img=2" alt="profile" />
-      <div>
-        <div class="name-stars">
-          <h4>Beverly J. Hills</h4>
-          <div class="stars">★★★★★ <span>5</span></div>
-        </div>
-        <p>Goods and foods. Yess!</p>
+  <div class="suggestion-card" data-category="program">
+    <img src="https://i.pravatar.cc/80?img=9" alt="User" class="suggestion-avatar">
+    <div class="suggestion-content">
+      <h5>Ammiel N. Lim <span class="suggestion-id">#KK2025296ANL</span></h5>
+      <p>Hello SK Chair. Si Sassa to, pwede pa request ng program for awareness sa HIV thankies.</p>
+      <div class="suggestion-footer">
+        <span class="badge program">Programs</span>
+        <span class="date">09/09/2025 6:00 PM</span>
       </div>
-    </div>
-    <div class="feedback-right">
-      <span>09/09/2025&nbsp;&nbsp;6:00 PM</span>
     </div>
   </div>
 
-  <div class="feedback-card">
-    <div class="feedback-left">
-      <img src="https://i.pravatar.cc/60?img=3" alt="profile" />
-      <div>
-        <div class="name-stars">
-          <h4>Joey Y. Yes</h4>
-          <div class="stars">★★★★☆ <span>4</span></div>
-        </div>
-        <p>
-          The program is great I hope sa sunod mas mahaba ang time pero overall it’s good
-        </p>
+  <div class="suggestion-card" data-category="other">
+    <img src="https://i.pravatar.cc/80?img=10" alt="User" class="suggestion-avatar">
+    <div class="suggestion-content">
+      <h5>Miguel G. Dominguez <span class="suggestion-id">#KK2025296MGD</span></h5>
+      <p>May I suggest serving snacks like siopao during events? It would also be nice if pancit could be included, SK Chair. Thank you!</p>
+      <div class="suggestion-footer">
+        <span class="badge other">Other</span>
+        <span class="date">09/09/2025 6:00 PM</span>
       </div>
-    </div>
-    <div class="feedback-right">
-      <span>09/09/2025&nbsp;&nbsp;6:00 PM</span>
-    </div>
-  </div>
-
-  <div class="feedback-card">
-    <div class="feedback-left">
-      <img src="https://i.pravatar.cc/60?img=4" alt="profile" />
-      <div>
-        <div class="name-stars">
-          <h4>Jay Park</h4>
-          <div class="stars">★★★★★ <span>5</span></div>
-        </div>
-        <p>I gained a lot of knowledge</p>
-      </div>
-    </div>
-    <div class="feedback-right">
-      <span>09/09/2025&nbsp;&nbsp;6:00 PM</span>
     </div>
   </div>
 </div>
 
 
-</main>
+
+</div>
 
 
+
+
+
+
+  
 
 
 
@@ -517,46 +491,144 @@ evaluationLink?.addEventListener('click', (e) => {
     }
   });
 
-// Rating Distribution Chart
-const ctx = document.getElementById('ratingChart').getContext('2d');
-new Chart(ctx, {
-  type: 'bar',
-  data: {
-    labels: ['1: Strongly Disagree', '2: Disagree', '3: Neutral', '4: Agree', '5: Strongly Agree'],
-    datasets: [{
-      label: 'Responses',
-      data: [0, 2, 5, 15, 78], // sample data
-      backgroundColor: '#0C4B92',
-      borderRadius: 6,
-    }]
-  },
-  options: {
-    responsive: true,
-    plugins: {
-      legend: { display: true, labels: { color: "#01214A" } }
-    },
-    scales: {
-      x: { ticks: { color: "#4b5c77", font: { size: 12 } } },
-      y: { beginAtZero: true, ticks: { stepSize: 25, color: "#4b5c77" } }
+  const ctx = document.getElementById('suggestionChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Programs', 'Events', 'Others'],
+        datasets: [{
+          label: 'Suggestions',
+          data: [90, 75, 50],
+          backgroundColor: [
+            'rgba(253, 220, 108, 0.9)',
+            'rgba(200, 220, 200, 0.9)',
+            'rgba(240, 190, 220, 0.9)'
+          ],
+          borderRadius: 6,
+          barThickness: 60
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'right',
+            labels: {
+              color: '#2b3a55',
+              font: { size: 13, weight: '600' }
+            }
+          }
+        },
+        scales: {
+          x: {
+            ticks: { color: '#2b3a55', font: { weight: '600' } },
+            grid: { display: false }
+          },
+          y: {
+            ticks: { color: '#2b3a55' },
+            grid: { color: '#e0e0e0' }
+          }
+        }
+      }
+    });
+
+    // === Custom Dropdown ===
+const dropdowns = document.querySelectorAll(".custom-dropdown");
+
+// Track current filters
+let currentMonth = "this";
+let currentCategory = "all";
+
+function filterSuggestions() {
+  document.querySelectorAll(".suggestions-group").forEach(group => {
+    const groupMonth = group.dataset.month;
+
+    // Show group if:
+    // 1) "all" is selected, or 2) group matches current month
+    const isMonth = currentMonth === "all" || groupMonth === currentMonth;
+    group.style.display = isMonth ? "block" : "none";
+
+    // Update group title dynamically
+    const titleEl = group.querySelector(".group-title");
+    if (titleEl) {
+      if (currentMonth === "this") titleEl.textContent = "This month";
+      else if (currentMonth === "last") titleEl.textContent = "Last month";
+      else titleEl.textContent = groupMonth === "this" ? "This month" : "Last month";
     }
+  });
+
+  // Update subheader above filters
+  const subheaderTitle = document.querySelector(".suggestions-subheader .group-title");
+  if (subheaderTitle) {
+    if (currentMonth === "all") subheaderTitle.textContent = "All suggestions";
+    else subheaderTitle.textContent = currentMonth === "this" ? "This month" : "Last month";
   }
-});
 
-// === Tabs Switching ===
-const tabButtons = document.querySelectorAll(".tab-btn");
-const tabContents = document.querySelectorAll(".tab-content");
+  // Filter cards inside groups
+  document.querySelectorAll(".suggestion-card").forEach(card => {
+    const cardMonth = card.closest(".suggestions-group").dataset.month;
+    const matchMonth = currentMonth === "all" || cardMonth === currentMonth;
+    const matchCategory = currentCategory === "all" || card.dataset.category === currentCategory;
+    card.style.display = matchMonth && matchCategory ? "flex" : "none";
+  });
+}
 
-tabButtons.forEach(btn => {
-  btn.addEventListener("click", () => {
 
-    tabButtons.forEach(b => b.classList.remove("active"));
-    tabContents.forEach(c => c.classList.remove("active"));
 
-    btn.classList.add("active");
-    const tabId = btn.getAttribute("data-tab");
-    document.getElementById(tabId).classList.add("active");
+// Function to close all dropdowns except the currently open one
+function closeAllDropdowns(except = null) {
+  dropdowns.forEach(dropdown => {
+    const options = dropdown.querySelector(".dropdown-options");
+    const icon = dropdown.querySelector(".icon-circle");
+    if (!except || dropdown !== except) {
+      options.classList.remove("active");
+      if (icon) icon.classList.remove("rotate");
+    }
+  });
+}
+
+// Initialize each dropdown
+dropdowns.forEach(dropdown => {
+  const selected = dropdown.querySelector(".dropdown-selected");
+  const optionsList = dropdown.querySelector(".dropdown-options");
+  const options = optionsList.querySelectorAll("li");
+  const icon = selected.querySelector(".icon-circle");
+  const type = dropdown.dataset.type;
+
+  // Toggle dropdown open/close
+  selected.addEventListener("click", (e) => {
+    e.stopPropagation();
+    closeAllDropdowns(dropdown);
+
+    optionsList.classList.toggle("active");
+    if (icon) icon.classList.toggle("rotate");
+  });
+
+  // Select an option
+  options.forEach(option => {
+    option.addEventListener("click", () => {
+      selected.querySelector("span").textContent = option.textContent;
+      optionsList.classList.remove("active");
+      if (icon) icon.classList.remove("rotate");
+
+      // Update current filters
+      if (type === "month") currentMonth = option.dataset.value;
+      if (type === "category") currentCategory = option.dataset.value;
+
+      // Apply filter and update group title
+      filterSuggestions();
+    });
   });
 });
+
+// Close dropdowns when clicking outside
+document.addEventListener("click", () => closeAllDropdowns());
+
+// Initial filter on page load
+filterSuggestions();
+
+
+
 
   
 });

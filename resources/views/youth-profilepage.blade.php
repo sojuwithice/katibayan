@@ -324,7 +324,7 @@
         </tr>
     </thead>
     <tbody>
-      <tr>
+      <tr data-id="1">
         <td>Bicol</td>
         <td>Albay</td>
         <td>Legazpi City</td>
@@ -345,7 +345,7 @@
         <td>Unemployed</td>
         <td>Yes</td>
       </tr>
-        <tr>
+        <tr data-id="2">
           <td>Bicol</td>
           <td>Albay</td>
           <td>Legazpi City</td>
@@ -366,7 +366,7 @@
           <td>Unemployed</td>
           <td>Yes</td>
         </tr>
-        <tr>
+        <tr data-id="3">
           <td>Bicol</td>
           <td>Albay</td>
           <td>Legazpi City</td>
@@ -387,7 +387,7 @@
           <td>Unemployed</td>
           <td>Yes</td>
         </tr>
-        <tr>
+        <tr data-id="4">
           <td>Bicol</td>
           <td>Albay</td>
           <td>Legazpi City</td>
@@ -408,7 +408,7 @@
           <td>Unemployed</td>
           <td>Yes</td>
         </tr>
-        <tr>
+        <tr data-id="5">
           <td>Bicol</td>
           <td>Albay</td>
           <td>Legazpi City</td>
@@ -429,7 +429,7 @@
           <td>Unemployed</td>
           <td>Yes</td>
         </tr>
-        <tr>
+        <tr data-id="6">
           <td>Bicol</td>
           <td>Albay</td>
           <td>Legazpi City</td>
@@ -450,7 +450,7 @@
           <td>Unemployed</td>
           <td>Yes</td>
         </tr>
-        <tr>
+        <tr data-id="7">
           <td>Bicol</td>
           <td>Albay</td>
           <td>Legazpi City</td>
@@ -471,7 +471,7 @@
           <td>Unemployed</td>
           <td>Yes</td>
         </tr>
-        <tr>
+        <tr data-id="8">
           <td>Bicol</td>
           <td>Albay</td>
           <td>Legazpi City</td>
@@ -492,7 +492,7 @@
           <td>Unemployed</td>
           <td>Yes</td>
         </tr>
-        <tr>
+        <tr data-id="9">
           <td>Bicol</td>
           <td>Albay</td>
           <td>Legazpi City</td>
@@ -513,7 +513,7 @@
           <td>Unemployed</td>
           <td>Yes</td>
         </tr>
-        <tr>
+        <tr data-id="10">
           <td>Bicol</td>
           <td>Albay</td>
           <td>Legazpi City</td>
@@ -1012,6 +1012,20 @@ document.getElementById("printBtn").addEventListener("click", function() {
     iframe.contentWindow.print();
   };
 });
+
+// === CLICK ROW TO VIEW PROFILE ===
+const youthTable = document.getElementById("youthTable");
+if (youthTable) {
+  youthTable.querySelectorAll("tbody tr").forEach(row => {
+    row.style.cursor = "pointer"; 
+    row.addEventListener("click", () => {
+      const youthId = row.getAttribute("data-id"); 
+      if (!youthId) return; 
+      window.location.href = "/view-youth-profile/";
+    });
+  });
+}
+
 
   
 });

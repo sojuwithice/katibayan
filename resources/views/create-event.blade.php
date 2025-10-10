@@ -303,6 +303,17 @@
 </div>
 
 
+<!-- Posted Modal -->
+<div id="postedModal" class="posted-modal">
+  <div class="posted-modal-content">
+    <div class="posted-icon">
+      <i class="fa-solid fa-circle-check"></i>
+    </div>
+    <h2>Posted</h2>
+    <p>The event has already been created and posted.</p>
+    <button id="closePostedModal">OK</button>
+  </div>
+</div>
 
 
 
@@ -618,6 +629,31 @@ timeModal.addEventListener("click", (e) => {
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape" && timeModal.style.display === "flex") {
     timeModal.style.display = "none";
+  }
+});
+
+// === Posted Modal ===
+const postedModal = document.getElementById("postedModal");
+const closePostedModal = document.getElementById("closePostedModal");
+const postEventBtn = document.querySelector(".btn-submit");
+
+// Show modal on submit click
+if (postEventBtn) {
+  postEventBtn.addEventListener("click", (e) => {
+    e.preventDefault(); 
+    postedModal.style.display = "flex";
+  });
+}
+
+// Close modal
+closePostedModal.addEventListener("click", () => {
+  postedModal.style.display = "none";
+});
+
+// Close when clicking outside
+window.addEventListener("click", (e) => {
+  if (e.target === postedModal) {
+    postedModal.style.display = "none";
   }
 });
 

@@ -1827,73 +1827,8 @@ input[type="time"]::-webkit-inner-spin-button {
 }
 
 
-/* Posted Modal Styling */
-.posted-modal {
-  display: none; 
-  position: fixed; 
-  z-index: 9999; 
-  left: 0; 
-  top: 0; 
-  width: 100%; 
-  height: 100%; 
-  background: rgba(0,0,0,0.7);
-  justify-content: center; 
-  align-items: center;
-}
 
-.posted-modal-content {
-  background: #fff;
-  border-radius: 12px;
-  text-align: center;
-  padding: 40px 30px;
-  max-width: 500px;
-  width: 90%;
-  box-shadow: 0 6px 15px rgba(0,0,0,0.3);
-  animation: scaleIn 0.3s ease-in-out;
-}
 
-.posted-icon {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 15px;
-}
-
-.posted-icon i {
-  font-size: 80px;        
-  color: #3C87C4;         
-}
-
-.posted-modal h2 {
-  font-size: 24px;
-  color: #3C87C4;
-  margin-bottom: 10px;
-}
-
-.posted-modal p {
-  font-size: 15px;
-  margin-bottom: 20px;
-  color: #333;
-}
-
-#closePostedModal {
-  background: #3C87C4;
-  color: white;
-  border: none;
-  padding: 10px 25px;
-  font-size: 16px;
-  border-radius: 30px;
-  cursor: pointer;
-}
-
-#closePostedModal:hover {
-  background: #2a5f91;
-}
-
-/* Animation */
-@keyframes scaleIn {
-  from { transform: scale(0.8); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
-}
 
 
 
@@ -1927,6 +1862,157 @@ input[type="time"]::-webkit-inner-spin-button {
   flex: 1;
   font-size: 0.95rem;
 }
+
+/* Done Modal background */
+.done-modal {
+  display: none; /* hidden by default */
+  position: fixed;
+  z-index: 9999;
+  inset: 0; /* shorthand for top/right/bottom/left:0 */
+  background-color: rgba(0,0,0,0.7);
+  justify-content: center;
+  align-items: center;
+  font-family: "Arial", sans-serif;
+}
+
+/* Modal box */
+.done-modal-content {
+  background: #fff;
+  border-radius: 12px;
+  padding: 30px;
+  width: 550px;
+  max-width: 90%;
+  text-align: center;
+  box-shadow: 0px 6px 20px rgba(0,0,0,0.2);
+  animation: popUp 0.3s ease;
+}
+
+/* Circle Check Icon */
+.check-icon {
+  width: 90px;
+  height: 90px;
+  margin: 0 auto 15px auto;
+  border-radius: 50%;
+  background-color: #3C87C4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.check-icon i {
+  font-size: 40px;
+  color: #fff;
+}
+
+/* Title */
+.done-modal-content h2 {
+  margin: 10px 0;
+  color: #3C87C4;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+/* Message text */
+.done-modal-content p {
+  color: #333;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+/* OK Button */
+#okBtn {
+  background-color: #3C87C4;
+  border: none;
+  color: white;
+  padding: 10px 25px;
+  border-radius: 20px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+#okBtn:hover {
+  background-color: #357abd;
+}
+
+/* Animation */
+@keyframes popUp {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* Confirmation Modal background */
+.confirm-modal {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  justify-content: center;
+  align-items: center;
+  font-family: "Arial", sans-serif;
+}
+
+/* Modal Box */
+.confirm-modal-content {
+  background: #fff;
+  border-radius: 12px;
+  padding: 30px 30px;
+  width: 500px;
+  max-width: 90%;
+  text-align: left; 
+  box-shadow: 0px 6px 20px rgba(0,0,0,0.2);
+  animation: fadeIn 0.3s ease;
+}
+
+/* Text */
+.confirm-modal-content p {
+  color: #222;
+  font-size: 15px;
+  margin-bottom: 25px;
+  line-height: 1.4;
+}
+
+/* Button Group */
+.btn-group {
+  display: flex;
+  justify-content: flex-end; 
+  gap: 12px;
+}
+
+/* Cancel Button */
+.cancel-btn {
+  background: #e6e6e6;
+  border: none;
+  color: #333;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.cancel-btn:hover { background: #d5d5d5; }
+
+/* Yes Button */
+.yes-btn {
+  background: #3C87C4;
+  border: none;
+  color: white;
+  padding: 10px 25px;
+  border-radius: 20px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.yes-btn:hover { background: #357abd; }
+
+/* Animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+
 
 
 

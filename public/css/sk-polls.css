@@ -533,425 +533,361 @@ body {
   pointer-events: auto;       
 }
 
-/* Container */
-.evaluation-container {
-  background: #fdfdfd;
-  border-radius: 12px;
-  padding: 1.5rem 2rem;
-  font-family: 'Montserrat', sans-serif;
-  color: #01214A;
+/* Poll Container */
+.poll-container {
+  padding: 1rem;
+  font-family: Arial, sans-serif;
 }
 
 /* Header */
-.evaluation-header {
+.poll-header {
   display: flex;
-  align-items: flex-start; 
-  gap: 0.8rem;
+  justify-content: space-between;
+  align-items: center;
+  background: #fff;
+  padding: 1rem 1.5rem;
+  border-radius: 16px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
   margin-bottom: 1rem;
 }
 
-.evaluation-header h2 {
-  font-size: 1.5rem;
+.poll-header h2 {
+  font-size: 2rem;
   font-weight: 700;
-  margin: 0;
   color: #3C87C4;
-  line-height: 1.2; 
 }
 
-.evaluation-header .event-details {
-  font-size: 1rem;
-  color: #000;
-  margin-top: 0.4rem; 
-}
-
-.back-btn {
-  width: 35px;
-  height: 35px;
-  border-radius: 50%;
-  background: #3C87C4;
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-size: 16px;
-  cursor: pointer;
-  flex-shrink: 0; 
-}
-
-
-/* Tabs */
-.tab-buttons {
-  display: flex;
-  border: 1.5px solid #3C87C4;
-  border-radius: 40px;
-  overflow: hidden;
-  width: fit-content;
-  margin: 1rem 0 1.5rem auto; 
-}
-
-.tab-buttons button {
-  flex: 1 1 50%; 
-  text-align: center;
-  padding: 0.4rem 1rem;
-  border: none;
-  background: transparent;
-  color: #3C87C4;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-.tab-buttons button.active {
-  background: #3C87C4;
-  color: #fff;
-}
-
-.tab-buttons button + button {
-  border-left: 1px solid #3C87C4; 
-}
-
-
-/* Stats Cards */
-.stats {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
-
-/* Average Rating card */
-.stat-card:first-child {
-  flex: 0 0 32%; 
-  justify-content: flex-start;
-  align-items: center;
-  text-align: center;
-}
-
-/* Rating Distribution card */
-.stat-card:nth-child(2) {
-  flex: 1; 
-  justify-content: flex-start;
-  align-items: flex-start;
-  text-align: left;
-}
-
-
-/* Stat Card Base */
-.stat-card {
+.create-poll-btn {
   background: #fff;
-  border-radius: 12px;
-  padding: 1.2rem 1.5rem;
-  box-shadow: 0 3px 8px rgba(0,0,0,0.08);
-  border: 1px solid #ddd;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Headings (common style) */
-.stat-card h3 {
-  font-size: 1rem;
-  margin-bottom: 0.8rem;
-  font-weight: 600;
-  text-align: left; 
-  width: 100%;
-}
-
-/* --- Average Rating Card --- */
-.stat-card:first-child {
-  justify-content: flex-start;
-  align-items: center;   
-  text-align: center;
-}
-
-.stat-card:first-child h3 {
-  align-self: flex-start; 
-  color: #000;
-}
-
-.stat-card:first-child .rating-score {
-  font-size: 5rem;
-  font-weight: 700;
-  color: #3C87C4;
-  margin: 0.5rem 0;
-}
-
-.stat-card:first-child small {
-  margin-top: 0.3rem;
-  font-size: 0.85rem;
-  color: #000;
-}
-
-.stat-card:first-child small b {
-  font-weight: 700;
-}
-
-.stat-card:first-child small .highlight {
-  color: #3C87C4;
-}
-
-/* --- Rating Distribution Card --- */
-.stat-card:nth-child(2) {
-  justify-content: flex-start;
-  align-items: flex-start;
-  text-align: left;
-}
-
-.stat-card:nth-child(2) h3 {
-  color: #000;
-}
-
-#ratingChart {
-  width: 100% !important;
-  max-height: 180px !important;
-}
-
-
-/* Question Breakdown */
-/* Question Section */
-.question-section {
-  margin-top: 3rem;
-}
-
-/* Header ng Question Breakdown */
-.question-section h3 {
-  font-size: 1.4rem;
-  color: #3C87C4;
-  margin-bottom: 1.3rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center; 
-}
-
-.see-respondents {
-  font-size: 1rem;
+  border: 2px solid #3C87C4;
   color: #3C87C4;
   font-weight: 600;
+  padding: 0.6rem 2rem;
+  border-radius: 25px;
   cursor: pointer;
-  position: relative;
-  top: -20px; 
   text-decoration: none;
 }
 
-.see-respondents:hover {
-  color: #3C87C4; 
+.create-poll-btn:hover {
+  background: #3C87C4;
+  color: #fff;
+}
+
+/* Responses Subheader */
+.responses-header {
+  border: 2px solid #3C87C4;
+  border-radius: 12px;
+  padding: 0.5rem 1rem;
+  margin-bottom: 1rem;
+  background: #fff;
+}
+
+.responses-header h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #3C87C4;
+}
+
+/* Poll Card */
+.poll-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+  padding: 1.2rem 1.5rem;
+  margin-bottom: 1.5rem;
+  border-left: 6px solid #3C87C4; 
+}
+
+/* Top (Question + Respondents link) */
+.poll-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start; 
+  margin-bottom: 1rem;
+}
+
+.poll-top .question {
+  font-size: 1rem;
+  margin: 0;
+  color: #01214A;
+}
+
+.poll-top .label {
+  font-weight: 700;
+  color: #3C87C4;
+  margin-right: 0.3rem;
+}
+
+.poll-top em {
+  font-weight: 600;
+  color: #000;
+}
+
+.view-respondents {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #3C87C4;
+  text-decoration: none;
+}
+
+.view-respondents:hover {
   text-decoration: underline;
 }
 
-
-/* Question Card */
-/* Question Card */
-.question-card {
+/* Poll Content Layout */
+.poll-content {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start; 
   align-items: center;
-  background: #f4f8fb;
-  border-radius: 10px;
-  padding: 0.9rem 1.2rem;
-  margin-bottom: 1rem;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-  position: relative;
+  gap: 2rem;
 }
 
-/* Line sa loob */
-.question-card::before {
+/* Options List */
+.poll-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  font-size: 0.95rem;
+  color: #222;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.swatch {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.swatch.purple { background: #5A2D91; }
+.swatch.gold   { background: #D9A441; }
+.swatch.navy   { background: #0C2744; }
+
+/* Chart Area */
+
+.poll-chart-wrap {
+  flex: 0 0 auto;
+  transform: translateX(700px);
+}
+
+
+.poll-chart-wrap canvas {
+  max-width: 160px;
+  margin-bottom: 0.5rem;
+}
+
+.responses {
+  font-size: 0.80rem;
+  font-weight: 700;
+  color: #3C87C4;
+}
+
+/* Common Overlay */
+.modal-overlay {
+  display: none;              
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(2px);
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---------------- RESPONDENTS MODAL ---------------- */
+.respondents-modal {
+  position: relative;
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.5rem 1.5rem 1.5rem 2rem;
+  width: 90%;
+  max-width: 450px;
+  max-height: 80vh;   
+  overflow-y: auto;   
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  overflow: hidden;
+}
+
+.respondents-modal::before {
   content: "";
   position: absolute;
-  left: 12px; 
-  top: 50%;
-  transform: translateY(-50%);
-  width: 4px;
-  height: 70%;
+  top: 0;
+  left: 0;
+  width: 9px;
+  height: 100%;
   background: #3C87C4;
-  border-radius: 4px;
+  border-top-left-radius: 9px;
+  border-bottom-left-radius: 9px;
 }
 
-.question-card p, 
-.question-card .question-text {
-  margin: 0;
-  color: #000;
-  font-size: 0.95rem;
-  font-weight: 500;
-  flex: 1;
-  padding-left: 20px; 
-}
-
-.question-card .rating {
-  font-weight: 600;
-  color: #1d5bbf;
-  font-size: 0.95rem;
-  margin-left: 1rem;
-  white-space: nowrap;
-}
-
-/* Evaluation Section */
-.evaluation-wrapper {
-  margin: 2rem 0;
-  padding: 1.5rem;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-}
-
-.evaluation-header {
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
+.respondents-modal h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #3C87C4;
   margin-bottom: 1rem;
 }
 
-.evaluation-header h2 {
-  font-size: 1.4rem;
-  font-weight: 700;
-  margin: 0;
-}
-
-.evaluation-header .event-details {
-  font-size: 0.9rem;
-  color: #555;
-  margin-top: 0.4rem;
-}
-
-.back-btn {
-  background: none;
-  border: none;
-  font-size: 1.2rem;
-  cursor: pointer;
-  color: #3C87C4;
-}
-
-/* Tabs */
-.tab-buttons {
+.respondent-item {
   display: flex;
-  border: 2px solid #3C87C4;
-  border-radius: 50px;
-  overflow: hidden;
-  width: fit-content;
-  margin: 1.2rem 0 2rem auto;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.5rem 0;
 }
 
-.tab-buttons button {
-  padding: 0.5rem 1.1rem;
-  border: none;
-  background: transparent;
-  color: #3C87C4;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: 0.3s;
+.respondent-item img {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
-.tab-buttons button.active {
+.respondent-item span {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #222;
+}
+
+/* Close button (generic) */
+.modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
   background: #3C87C4;
   color: #fff;
-}
-
-.tab-buttons button:not(:last-child) {
-  border-right: 1px solid #3C87C4;
-}
-
-/* Tab Content */
-.tab-content { display: none; }
-.tab-content.active { display: block; }
-
-
-
-/* Filters */
-.feedback-filters {
+  font-size: 16px;
+  font-weight: bold;
   display: flex;
-  gap: 10px;
-  margin-bottom: 15px;
-  flex-wrap: wrap;
-}
-.feedback-filters button {
-  border: 1px solid #3c87c4;
-  background: #fff;
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 14px;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  color: #3c87c4;
-  transition: 0.2s ease;
+  transition: background 0.2s ease;
 }
-.feedback-filters button:hover {
-  background: #e6f1fb;
-}
-.feedback-filters button.active {
-  background: #3c87c4;
-  color: #fff;
-}
+.modal-close:hover { background: #2b5d8a; }
 
-/* Section Title */
-#comments h3 {
-  font-size: 18px;
-  font-weight: 600;
-  color: #3c87c4;
-  margin-bottom: 15px;
-}
 
-/* Feedback Card */
-.feedback-card {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+/* ---------------- CREATE POLL MODAL ---------------- */
+.create-poll-modal {
+  position: relative;
   background: #fff;
   border-radius: 12px;
-  padding: 15px 20px;
-  margin-bottom: 15px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  padding: 2rem;
+  width: 95%;
+  max-width: 650px; /* dati 550px → pinalaki */
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  overflow: hidden;
 }
 
-.feedback-left {
-  display: flex;
-  gap: 12px;
+.create-poll-modal::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0;
+  width: 12px;
+  height: 100%;
+  background: #3C87C4;
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px;
 }
 
-.feedback-left img {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
+.create-poll-modal h2 {
+  color: #3C87C4;
+  margin-bottom: 0.5rem;
 }
 
-/* Name + Stars inline */
-.name-stars {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
+.create-poll-modal p {
+  margin-bottom: 1.2rem;
+  font-size: 0.95rem;
+  color: #444;
 }
 
-.name-stars h4 {
-  font-size: 15px;
-  margin: 0;
+.create-poll-modal label {
+  display: block;
+  margin: 0.8rem 0 0.4rem;
+  font-size: 0.9rem;
   font-weight: 600;
-  color: #222;
-}
-
-.stars {
-  color: #f4b400; /* gold */
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-}
-
-.stars span {
-  color: #222;
-  font-weight: 600;
-  margin-left: 3px;
-}
-
-.feedback-left p {
-  margin: 4px 0 0;
-  font-size: 14px;
   color: #333;
 }
 
-.feedback-right {
-  font-size: 13px;
-  color: #666;
-  white-space: nowrap;
-  margin-top: 5px;
+.create-poll-modal input[type="text"],
+.create-poll-modal input[type="date"] {
+  width: 100%;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  margin-bottom: 1rem; 
+  font-size: 0.95rem;
 }
+
+.create-poll-modal .add-option {
+  display: inline-block;
+  margin: 0.3rem 0 1rem;
+  background: transparent;
+  border: none;
+  color: #3C87C4;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.create-poll-modal .btn-submit {
+  width: 100%;
+  padding: 0.9rem;
+  border: none;
+  border-radius: 6px;
+  background: #3C87C4;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 0.8rem;
+  transition: background 0.2s ease;
+}
+.create-poll-modal .btn-submit:hover {
+  background: #2b5d8a;
+}
+
+.option-item {
+  display: flex;
+  align-items: center; 
+  margin-bottom: 0.6rem;
+}
+
+.option-item input {
+  flex: 1;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  height: 40px; 
+  box-sizing: border-box;
+}
+
+.option-item .remove-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;              
+  height: 40px;
+  border: none;
+  background: transparent;
+  color: #888;              
+  font-size: 1.3rem;
+  cursor: pointer;
+  margin-left: 0.3rem;
+}
+
+.option-item .remove-option:hover {
+  color: #555;              
+}
+
 
 
 

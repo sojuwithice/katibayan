@@ -17,6 +17,7 @@
 
 
 
+
 </head>
 <body>
   
@@ -276,26 +277,191 @@
       </div>
     </div>
 
-    <!-- Create Registration Fields -->
-    <div id="createRegistrationFields" class="option-field hidden">
-      <label for="maxParticipants">Max Participants</label>
-      <input type="number" id="maxParticipants" placeholder="Enter max participants">
-
-      <label for="extraNotes">Additional Notes</label>
-      <input type="text" id="extraNotes" placeholder="Optional notes">
-    </div>
-
     <!-- Link Source Field -->
-    <div id="linkSourceField" class="option-field hidden">
-      <div class="input-with-icon">
-        <i class="fas fa-link"></i>
-        <input type="url" id="linkSource" placeholder="Link Source">
+<div id="linkSourceField" class="form-group" style="display:none;">
+  <div class="link-source-wrapper">
+    <i class="fas fa-link link-icon"></i>
+    <input type="url" id="linkSource" placeholder="Link Source">
+  </div>
+
+  <!-- Post Program Button for Link Source -->
+  <div class="form-actions">
+  <button type="submit" class="btn-submit postProgramBtn">Post Program</button>
+</div>
+</div>
+
+
+    <!-- Create Registration Fields -->
+<div id="createRegistrationFields" class="regform-container">
+  <h3 class="regform-title">Registration Form</h3>
+
+  <!-- Title -->
+<div class="regform-block-wide">
+  <label class="regform-label">Title</label>
+  <input type="text" class="regform-input" value="2025 BADMINTON REGISTRATION FORM">
+</div>
+
+<!-- Description -->
+<div class="regform-block-wide">
+  <label class="regform-label">Add description</label>
+  <textarea class="regform-textarea" rows="3">Open to all bona fide residents of Barangay 3, EM's Bo. East, Legazpi City, Albay. Slots are limited, and once all slots are filled, we will make an official announcement. Slot allocation will be based on the timestamp of registration.</textarea>
+</div>
+
+  <!-- Registration Period -->
+<div class="regform-period">
+  <h4>Registration Period (Set date and time)</h4>
+  <div class="regform-dates">
+    <!-- Opens -->
+    <div class="regform-block">
+      <label class="regform-label">Registration Opens</label>
+      <div class="regform-datetime">
+        <div class="regform-datetime-icon">
+          <input type="date" id="openDate" />
+          <i class="fas fa-calendar-alt"></i>
+        </div>
+        <div class="regform-datetime-icon">
+          <input type="time" id="openTime" />
+          <i class="fas fa-clock"></i>
+        </div>
       </div>
     </div>
 
-    <!-- Submit -->
-    <button type="submit" class="btn-submit">Post Event</button>
-  </form>
+    <!-- Closes -->
+    <div class="regform-block">
+      <label class="regform-label">Registration Closes</label>
+      <div class="regform-datetime">
+        <div class="regform-datetime-icon">
+          <input type="date" id="closeDate" />
+          <i class="fas fa-calendar-alt"></i>
+        </div>
+        <div class="regform-datetime-icon">
+      <input type="time" id="closeTime" name="closeTime" />
+      <i class="fas fa-clock"></i>
+    </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="regform-note" id="regNote">
+    Registration opens: —<br>
+    Registration closes: —
+  </p>
+</div>
+
+
+<!-- Registration Fields -->
+<div class="regform-fields">
+  <h4>Registration Fields</h4>
+
+  <div>
+    <label class="regform-label">Name</label>
+    <input type="text" class="regform-input">
+  </div>
+
+  <div>
+    <label class="regform-label">Age</label>
+    <input type="number" class="regform-input">
+  </div>
+  
+  <div class="regform-gender">
+  <label class="regform-label">Gender</label>
+  <div class="regform-gender-options">
+    <label><input type="radio" name="gender"><span>Female</span></label>
+    <label><input type="radio" name="gender"><span>Male</span></label>
+    <label><input type="radio" name="gender"><span>Other</span></label>
+  </div>
+</div>
+
+
+  <div>
+    <label class="regform-label">Contact Number</label>
+    <input type="text" class="regform-input">
+  </div>
+
+  <div>
+    <label class="regform-label">Purok</label>
+    <input type="text" class="regform-input">
+  </div>
+
+  <!-- Extra question fields (container for all fields) -->
+<div id="extra-fields">
+  <!-- One field -->
+  <div class="regform-field">
+    <!-- 3 dots sa labas -->
+<span class="regform-dots">⋯</span>
+
+<!-- Dropdown menu -->
+<div class="dots-menu hidden">
+  <p class="edit-option"><i class="fas fa-edit"></i> Edit</p>
+  <p class="delete-option"><i class="fas fa-trash"></i> Delete</p>
+</div>
+
+
+
+    <!-- Card -->
+    <div class="regform-extra">
+      <!-- Card content -->
+      <div class="regform-main">
+        <div class="regform-top">
+          <!-- Question input -->
+          <input type="text" placeholder="Add question" />
+
+          <!-- Answer type dropdown (upper right) -->
+          <div class="answer-type-wrapper">
+            <span class="answer-type" onclick="toggleDropdown(this)">
+              Choose type of answer
+            </span>
+            <div class="answer-dropdown">
+              <p onclick="selectAnswerType(this, 'short')">Short answer</p>
+              <p onclick="selectAnswerType(this, 'radio')">Radio button</p>
+              <p onclick="selectAnswerType(this, 'file')">File upload</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Answer preview (short) -->
+<div class="answer-preview hidden" data-type="short">
+  <input type="text" placeholder="Short answer" disabled />
+</div>
+
+<!-- Radio button preview -->
+<div class="answer-radio hidden" data-type="radio">
+  <div class="options-box">
+    <div class="option-item">
+      <input type="radio" name="sampleRadio">
+      <span contenteditable="true" class="editable">Option 1</span>
+    </div>
+    <div class="option-item">
+      <input type="radio" name="sampleRadio">
+      <span contenteditable="true" class="editable">Option 2</span>
+    </div>
+  </div>
+  <a href="#" class="add-option">+ Add option</a>
+</div>
+
+
+<!-- File upload preview -->
+<div class="answer-file hidden" data-type="file">
+  <input type="file" disabled />
+</div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add button -->
+<div class="add-btn-wrapper">
+  <button type="button" class="regform-add-btn" id="addFieldBtn">
+    + Add Another Field
+  </button>
+</div>
+
+<div class="form-actions">
+  <button type="submit" class="btn-submit postProgramBtn">Post Program</button>
+
+</div>
+
 </section>
 
 <!-- Time Picker Modal -->
@@ -332,13 +498,24 @@
     <h3>Add New Category</h3>
     <input type="text" id="newCategoryInput" placeholder="Enter category name">
     <div class="modal-actions">
-      <button id="cancelAddCategory">Cancel</button>
-      <button id="saveAddCategory">Add</button>
+      <button type="button" id="cancelAddCategory">Cancel</button>
+      <button type="button" id="saveAddCategory">Add</button>
     </div>
   </div>
 </div>
 
 
+<!-- Posted Modal -->
+<div id="postedModal" class="posted-modal">
+  <div class="posted-modal-content">
+    <div class="posted-icon">
+  <i class="fa-solid fa-circle-check"></i>
+</div>
+    <h2>Posted</h2>
+    <p>The program has already been created and posted.</p>
+    <button id="closePostedModal">OK</button>
+  </div>
+</div>
 
 
 
@@ -658,35 +835,270 @@ document.addEventListener("keydown", (e) => {
 });
 
     // === YOUTH REGISTRATION OPTION TOGGLE ===
-  const radios = document.querySelectorAll('input[name="registrationOption"]');
-  const createFields = document.getElementById("createRegistrationFields");
-  const linkField = document.getElementById("linkSourceField");
+const registrationOptions = document.querySelectorAll('input[name="registrationOption"]');
+const createRegSection = document.getElementById("createRegistrationFields");
+const linkSourceField = document.getElementById("linkSourceField");
 
-  radios.forEach(radio => {
-    radio.addEventListener("change", () => {
-      if (radio.value === "create") {
-        createFields.classList.remove("hidden");
-        linkField.classList.add("hidden");
-      } else if (radio.value === "link") {
-        linkField.classList.remove("hidden");
-        createFields.classList.add("hidden");
-      }
-    });
+registrationOptions.forEach(option => {
+  option.addEventListener("change", () => {
+    if (option.value === "create") {
+      createRegSection.style.display = "block";
+      linkSourceField.style.display = "none";
+    } else if (option.value === "link") {
+      createRegSection.style.display = "none";
+      linkSourceField.style.display = "block";
+    }
+  });
+});
+
+
+  // === DATE + NOTE AUTO UPDATE ===
+  document.querySelectorAll('.datetime-input i').forEach(icon => {
+    icon.addEventListener('click', () => { icon.previousElementSibling.showPicker?.(); });
   });
 
+  const openDate = document.getElementById("openDate");
+  const openTime = document.getElementById("openTime");
+  const closeDate = document.getElementById("closeDate");
+  const closeTime = document.getElementById("closeTime");
+  const note = document.getElementById("regNote");
 
+  function formatDate(dateStr) {
+    if (!dateStr) return "";
+    const d = new Date(dateStr);
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  }
 
+  function formatTime(timeStr) {
+    if (!timeStr) return "";
+    const [h, m] = timeStr.split(":");
+    const d = new Date();
+    d.setHours(h, m);
+    return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  }
 
+  function updateNote() {
+    const open = `${formatDate(openDate.value)} ${formatTime(openTime.value)}`.trim();
+    const close = `${formatDate(closeDate.value)} ${formatTime(closeTime.value)}`.trim();
+
+    note.innerHTML = `
+      Registration opens: ${open || "—"}<br>
+      Registration closes: ${close || "—"}
+    `;
+  }
+
+  [openDate, openTime, closeDate, closeTime].forEach(input => input.addEventListener("change", updateNote));
+
+  // === DOTS MENU INIT ===
+  function initDotsMenu(field) {
+    const dots = field.querySelector(".regform-dots");
+    const menu = field.querySelector(".dots-menu");
+
+    if (!dots || !menu) return;
+
+    // Toggle menu
+    dots.addEventListener("click", (e) => {
+      e.stopPropagation();
+      document.querySelectorAll(".dots-menu").forEach(m => { if (m !== menu) m.classList.add("hidden"); });
+      menu.classList.toggle("hidden");
+    });
+
+    // Edit option
+    const editBtn = menu.querySelector(".edit-option");
+    if (editBtn) {
+      editBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const input = field.querySelector("input[type='text'], textarea");
+        if (input) input.removeAttribute("disabled");
+        menu.classList.add("hidden");
+      });
+    }
+
+    // Delete option
+    const deleteBtn = menu.querySelector(".delete-option");
+    if (deleteBtn) {
+      deleteBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        field.remove();
+      });
+    }
+  }
+
+  // === ADD FIELD (clone template) ===
+  const addFieldBtn = document.getElementById("addFieldBtn");
+  const extraFieldsContainer = document.getElementById("extra-fields");
+  const templateField = extraFieldsContainer.firstElementChild?.cloneNode(true);
+
+  addFieldBtn.addEventListener("click", () => {
+    if (!templateField) return;
+    const clone = templateField.cloneNode(true);
+
+    // Reset
+    clone.querySelectorAll("input[type='text'], textarea").forEach(input => input.value = "");
+    clone.querySelectorAll(".answer-preview, .answer-radio, .answer-file").forEach(el => el.classList.add("hidden"));
+    clone.querySelector(".answer-type").textContent = "Choose type of answer";
+    clone.querySelectorAll(".answer-dropdown p").forEach(p => p.classList.remove("selected"));
+    clone.querySelectorAll(".dots-menu").forEach(menu => menu.classList.add("hidden"));
+
+    extraFieldsContainer.appendChild(clone);
+    initDotsMenu(clone);
+  });
+
+  document.querySelectorAll("#extra-fields .regform-field").forEach(initDotsMenu);
+
+  document.addEventListener("click", () => {
+    document.querySelectorAll(".dots-menu").forEach(menu => menu.classList.add("hidden"));
+  });
+
+  // === DROPDOWN FUNCTIONALITY ===
+  document.addEventListener("click", (e) => {
+    const typeBtn = e.target.closest(".answer-type");
+    const optionP = e.target.closest(".answer-dropdown p");
+
+    if (typeBtn) {
+      const wrapper = typeBtn.closest(".answer-type-wrapper");
+      const dropdown = wrapper.querySelector(".answer-dropdown");
+
+      document.querySelectorAll(".answer-dropdown.open").forEach(d => { if (d !== dropdown) d.classList.remove("open"); });
+      dropdown.classList.toggle("open");
+      return;
+    }
+
+    if (optionP) {
+      const extra = optionP.closest(".regform-extra");
+      const preview = extra.querySelector(".answer-preview");
+      const typeText = extra.querySelector(".answer-type");
+      const dropdown = optionP.closest(".answer-dropdown");
+
+      typeText.style.display = "none";
+      dropdown.classList.remove("open");
+      extra.querySelectorAll(".answer-preview, .answer-radio, .answer-file").forEach(el => el.classList.add("hidden"));
+
+      if (optionP.textContent === "Short answer") {
+        preview.classList.remove("hidden");
+        preview.innerHTML = `<textarea placeholder="Short answer" rows="1" style="width:100%; resize: both; min-height: 30px; padding:6px; font-size:0.9rem;"></textarea>`;
+      }
+
+      if (optionP.textContent === "Radio button") {
+        extra.querySelector(".answer-radio").classList.remove("hidden");
+      }
+
+      if (optionP.textContent === "File upload") {
+        const fileBox = extra.querySelector(".answer-file");
+        fileBox.classList.remove("hidden");
+        fileBox.innerHTML = `<input type="file" style="font-size:0.9rem;" />`;
+      }
+      return;
+    }
+
+    if (!e.target.closest(".answer-type-wrapper")) {
+      document.querySelectorAll(".answer-dropdown.open").forEach(d => d.classList.remove("open"));
+    }
+  });
+
+  // === RADIO DYNAMIC OPTIONS ===
+  document.addEventListener("click", (e) => {
+    if (e.target.classList.contains("add-option")) {
+      e.preventDefault();
+      const optionsBox = e.target.previousElementSibling;
+      const newOption = document.createElement("div");
+      newOption.className = "option-item";
+      newOption.innerHTML = `<input type="radio" name="sampleRadio"><span contenteditable="true" class="editable">New option</span>`;
+      optionsBox.appendChild(newOption);
+    }
+  });
+
+  // === Posted Modal ===
+const postedModal = document.getElementById("postedModal");
+const closePostedModal = document.getElementById("closePostedModal");
+
+// Target both Post Program buttons
+const postProgramBtn = document.getElementById("postProgramBtn");
+const postProgramLinkBtn = document.getElementById("postProgramLinkBtn");
+
+// Show modal on click
+const postButtons = document.querySelectorAll(".postProgramBtn");
+
+postButtons.forEach(btn => {
+  btn.addEventListener("click", (e) => {
+    e.preventDefault(); // stop form submission
+    postedModal.style.display = "flex";
+  });
 });
+
+
+// Close modal
+closePostedModal.addEventListener("click", () => {
+  postedModal.style.display = "none";
+});
+
+// Close when clicking outside
+window.addEventListener("click", (e) => {
+  if (e.target === postedModal) {
+    postedModal.style.display = "none";
+  }
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  const addCategoryBtn = document.querySelector(".add-category");
+  const addCategoryModal = document.getElementById("addCategoryModal");
+  const newCategoryInput = document.getElementById("newCategoryInput");
+  const cancelAddCategory = document.getElementById("cancelAddCategory");
+  const saveAddCategory = document.getElementById("saveAddCategory");
+  const categoryOptions = document.querySelector(".custom-select .options");
+  const selectedText = document.querySelector(".selected-text");
+
+  // Open modal
+  addCategoryBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    addCategoryModal.style.display = "flex";
+    newCategoryInput.value = "";
+    newCategoryInput.focus();
+  });
+
+  // Cancel modal
+  cancelAddCategory?.addEventListener("click", () => {
+    addCategoryModal.style.display = "none";
+  });
+
+  // Add category
+  saveAddCategory?.addEventListener("click", () => {
+    const newCategory = newCategoryInput.value.trim();
+    if (!newCategory) {
+      alert("Please enter a category name.");
+      return;
+    }
+
+    // Create new <li>
+    const newOption = document.createElement("li");
+    newOption.textContent = newCategory;
+    newOption.dataset.value = newCategory.toLowerCase();
+    newOption.setAttribute("role", "option");
+
+    // Insert before "+ Add another category"
+    const addBtn = categoryOptions.querySelector(".add-category");
+    categoryOptions.insertBefore(newOption, addBtn);
+
+    // Select the new category automatically
+    selectedText.textContent = newCategory;
+
+    // Close modal
+    addCategoryModal.style.display = "none";
+  });
+
+  // Click outside modal closes it
+  window.addEventListener("click", (e) => {
+    if (e.target === addCategoryModal) {
+      addCategoryModal.style.display = "none";
+    }
+  });
+});
+
+
+  
+
+  });
 </script>
-
-
-
-
-
-
-
-
 
 
 

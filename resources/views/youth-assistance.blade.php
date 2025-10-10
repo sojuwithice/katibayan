@@ -4,16 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KatiBayan - Dashboard</title>
-  <link rel="stylesheet" href="{{ asset('css/sk-eval-review.css') }}">
+  <link rel="stylesheet" href="{{ asset('css/youth-assistance.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+
 
 
 
@@ -35,7 +32,7 @@
         <span class="label">Analytics</span>
       </a>
 
-      <a href="{{ route('youth-profilepage') }}">
+      <a href="{{ route('youth-profilepage') }}" class="active">
         <i data-lucide="users"></i>
         <span class="label">Youth Profile</span>
       </a>
@@ -46,13 +43,13 @@
       </a>
 
       <div class="evaluation-item nav-item">
-        <a href="{{ route('sk-evaluation-feedback') }}" class="evaluation-link nav-link active">
+        <a href="{{ route('sk-evaluation-feedback') }}" class="evaluation-link nav-link">
           <i data-lucide="user-star"></i>
           <span class="label">Evaluation</span>
           <i data-lucide="chevron-down" class="submenu-arrow"></i>
         </a>
         <div class="submenu">
-          <a href="{{ route('sk-evaluation-feedback') }}">Feedbacks</a>
+          <a href="#">Feedbacks</a>
           <a href="#">Polls</a>
           <a href="#">Suggestion Box</a>
         </div>
@@ -159,173 +156,140 @@
       </div>
     </header>
 
-    <main class="container">
-  <div class="evaluation-container">
+    <!-- Youth Assistance Records -->
+<section class="youth-assistance">
+  <h2>Youth Assistance Records</h2>
+  <p class="subtitle">
+    This will help you recognize youth who need support, monitor the type of assistance provided, 
+    and ensure timely follow-up for their well-being
+  </p>
 
-    <!-- Header -->
-<div class="evaluation-header">
-  <button class="back-btn"><i class="fas fa-arrow-left"></i></button>
-  <div>
-    <h2>Kalinisan sa bagong Pilipinas Program</h2>
-    <p class="event-details">Date: 2025-09-20 | Venue: Barangay Hall</p>
-  </div>
-</div>
-
-<!-- Tabs -->
-<div class="tab-buttons">
-  <button class="tab-btn active" data-tab="rating">Rating</button>
-  <button class="tab-btn" data-tab="comments">Comments</button>
-</div>
-
-<!-- ================== RATING TAB ================== -->
-<div id="rating" class="tab-content active">
-
-  <!-- Stats -->
-  <div class="stats">
-    <div class="stat-card">
-      <h3>Average Rating of this Event</h3>
-      <div class="rating-score">4.5 / 5</div>
-      <small>Based on the <b class="highlight">100 responses</b></small>
+  <!-- Summary Cards -->
+  <div class="summary-cards">
+    <div class="card">
+      <span class="count">3</span>
+      <span class="label">Person's with Disability (PWD)</span>
     </div>
-    <div class="stat-card">
-      <h3>Rating Distribution</h3>
-      <canvas id="ratingChart"></canvas>
+    <div class="card">
+      <span class="count">5</span>
+      <span class="label">Out of School Youth</span>
+    </div>
+    <div class="card">
+      <span class="count">1</span>
+      <span class="label">Unemployed</span>
+    </div>
+    <div class="card">
+      <span class="count">1</span>
+      <span class="label">Single Parent</span>
     </div>
   </div>
 
-  <!-- Question Breakdown -->
-  <div class="question-section">
-    <h3>
-      Question Breakdown
-      <a href="{{ route('list-of-eval-respondents') }}" class="see-respondents">See Respondents</a>
-    </h3>
-
-    <div class="question-card">
-      <div class="question-text">Question 1: Was the purpose of the program/event explained clearly?</div>
-      <div class="rating">Rating: 5/5</div>
+  <div class="table-container">
+  <!-- Filter row -->
+  <div class="filter-bar">
+    <!-- LEFT: Search + Category -->
+    <div class="filter-left">
+      <input type="text" placeholder="Search" class="search-input">
+      <div class="custom-dropdown">
+        <div class="dropdown-selected">All</div>
+        <ul class="dropdown-options">
+            <li data-value="all">All</li>
+            <li data-value="pwd">PWD</li>
+            <li data-value="oosy">Out of School Youth</li>
+            <li data-value="unemployed">Unemployed</li>
+            <li data-value="single-parent">Single Parent</li>
+        </ul>
+        </div>
     </div>
 
-    <div class="question-card">
-      <div class="question-text">Question 2: Was the time given for the program/event enough?</div>
-      <div class="rating">Rating: 4/5</div>
-    </div>
-
-    <div class="question-card">
-      <div class="question-text">Question 3: Were you able to join and participate in the activities?</div>
-      <div class="rating">Rating: 5/5</div>
-    </div>
-
-    <div class="question-card">
-      <div class="question-text">Question 4: Did you learn something new from this program/event?</div>
-      <div class="rating">Rating: 5/5</div>
-    </div>
-
-    <div class="question-card">
-      <div class="question-text">Question 5: Did the SK officials/facilitators treat all participants fairly and equally?</div>
-      <div class="rating">Rating: 5/5</div>
-    </div>
-
-    <div class="question-card">
-      <div class="question-text">Question 6: Did the SK officials/facilitators show enthusiasm and commitment in leading the program/event?</div>
-      <div class="rating">Rating: 5/5</div>
-    </div>
-
-    <div class="question-card">
-      <div class="question-text">Question 7: Overall, are you satisfied with this program/event?</div>
-      <div class="rating">Rating: 5/5</div>
-    </div>
+    <!-- RIGHT: Total -->
+    <div class="total">Total Youth in need: 10</div>
   </div>
-</div>
 
-<!-- ================== COMMENTS TAB ================== -->
-<!-- Feedback Section -->
-<div id="comments" class="tab-content">
+  <!-- Table -->
+  <div class="table-wrapper">
+    <table class="youth-table">
+      <thead>
+        <tr>
+          <th>Youth Name</th>
+          <th>Age</th>
+          <th>Purok</th>
+          <th>Youth Classification</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><img src="https://i.pravatar.cc/40?img=1" alt=""> Alvin N. Dchipmunks</td>
+          <td>17</td>
+          <td>Purok 5</td>
+          <td><span class="tag tag-pwd">Person's with Disability (PWD)</span></td>
+          <td>
+            <button class="btn btn-outline">Contact</button>
+            <button class="btn btn-primary">Send Help</button>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="https://i.pravatar.cc/40?img=2" alt=""> Joe L. No</td>
+          <td>27</td>
+          <td>Purok 5</td>
+          <td><span class="tag tag-unemployed">Unemployed</span></td>
+          <td>
+            <button class="btn btn-outline">Contact</button>
+            <button class="btn btn-primary">Send Help</button>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="https://i.pravatar.cc/40?img=3" alt=""> Jessica D. Didyousleep</td>
+          <td>17</td>
+          <td>Purok 5</td>
+          <td><span class="tag tag-oosy">Out of School Youth</span></td>
+          <td>
+            <button class="btn btn-outline">Contact</button>
+            <button class="btn btn-primary">Send Help</button>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="https://i.pravatar.cc/40?img=4" alt=""> Christine tawag ng Tanhalan</td>
+          <td>17</td>
+          <td>Purok 5</td>
+          <td><span class="tag tag-oosy">Out of School Youth</span></td>
+          <td>
+            <button class="btn btn-outline">Contact</button>
+            <button class="btn btn-primary">Send Help</button>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="https://i.pravatar.cc/40?img=5" alt=""> Joe L. No</td>
+          <td>17</td>
+          <td>Purok 5</td>
+          <td><span class="tag tag-single">Single Parent</span></td>
+          <td>
+            <button class="btn btn-outline">Contact</button>
+            <button class="btn btn-primary">Send Help</button>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="https://i.pravatar.cc/40?img=5" alt=""> Joe L. No</td>
+          <td>17</td>
+          <td>Purok 5</td>
+          <td><span class="tag tag-single">Single Parent</span></td>
+          <td>
+            <button class="btn btn-outline">Contact</button>
+            <button class="btn btn-primary">Send Help</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+
+
+
   
-  <!-- Filters inside comments -->
-  <div class="feedback-filters">
-    <button class="active">All</button>
-    <button>5 - Strongly Agree</button>
-    <button>4 - Agree</button>
-    <button>3 - Neutral</button>
-    <button>2 - Disagree</button>
-    <button>1 - Strongly Disagree</button>
-  </div>
-
-  <!-- Section Title -->
-  <h3>Feedback from participants</h3>
-
-  <!-- Comment Card -->
-  <div class="feedback-card">
-    <div class="feedback-left">
-      <img src="https://i.pravatar.cc/60?img=1" alt="profile" />
-      <div>
-        <div class="name-stars">
-          <h4>Beverly J. Hills</h4>
-          <div class="stars">★★★★★ <span>5</span></div>
-        </div>
-        <p>I gained a lot of knowledge</p>
-      </div>
-    </div>
-    <div class="feedback-right">
-      <span>09/09/2025&nbsp;&nbsp;6:00 PM</span>
-    </div>
-  </div>
-
-  <div class="feedback-card">
-    <div class="feedback-left">
-      <img src="https://i.pravatar.cc/60?img=2" alt="profile" />
-      <div>
-        <div class="name-stars">
-          <h4>Beverly J. Hills</h4>
-          <div class="stars">★★★★★ <span>5</span></div>
-        </div>
-        <p>Goods and foods. Yess!</p>
-      </div>
-    </div>
-    <div class="feedback-right">
-      <span>09/09/2025&nbsp;&nbsp;6:00 PM</span>
-    </div>
-  </div>
-
-  <div class="feedback-card">
-    <div class="feedback-left">
-      <img src="https://i.pravatar.cc/60?img=3" alt="profile" />
-      <div>
-        <div class="name-stars">
-          <h4>Joey Y. Yes</h4>
-          <div class="stars">★★★★☆ <span>4</span></div>
-        </div>
-        <p>
-          The program is great I hope sa sunod mas mahaba ang time pero overall it’s good
-        </p>
-      </div>
-    </div>
-    <div class="feedback-right">
-      <span>09/09/2025&nbsp;&nbsp;6:00 PM</span>
-    </div>
-  </div>
-
-  <div class="feedback-card">
-    <div class="feedback-left">
-      <img src="https://i.pravatar.cc/60?img=4" alt="profile" />
-      <div>
-        <div class="name-stars">
-          <h4>Jay Park</h4>
-          <div class="stars">★★★★★ <span>5</span></div>
-        </div>
-        <p>I gained a lot of knowledge</p>
-      </div>
-    </div>
-    <div class="feedback-right">
-      <span>09/09/2025&nbsp;&nbsp;6:00 PM</span>
-    </div>
-  </div>
-</div>
-
-
-</main>
-
-
+ 
+  
 
 
 
@@ -517,46 +481,43 @@ evaluationLink?.addEventListener('click', (e) => {
     }
   });
 
-// Rating Distribution Chart
-const ctx = document.getElementById('ratingChart').getContext('2d');
-new Chart(ctx, {
-  type: 'bar',
-  data: {
-    labels: ['1: Strongly Disagree', '2: Disagree', '3: Neutral', '4: Agree', '5: Strongly Agree'],
-    datasets: [{
-      label: 'Responses',
-      data: [0, 2, 5, 15, 78], // sample data
-      backgroundColor: '#0C4B92',
-      borderRadius: 6,
-    }]
-  },
-  options: {
-    responsive: true,
-    plugins: {
-      legend: { display: true, labels: { color: "#01214A" } }
-    },
-    scales: {
-      x: { ticks: { color: "#4b5c77", font: { size: 12 } } },
-      y: { beginAtZero: true, ticks: { stepSize: 25, color: "#4b5c77" } }
-    }
-  }
-});
+// === Custom Dropdown ===
+const dropdown = document.querySelector(".custom-dropdown");
+if (dropdown) {
+  const selected = dropdown.querySelector(".dropdown-selected");
+  const options = dropdown.querySelector(".dropdown-options");
+  const items = options.querySelectorAll("li");
 
-// === Tabs Switching ===
-const tabButtons = document.querySelectorAll(".tab-btn");
-const tabContents = document.querySelectorAll(".tab-content");
-
-tabButtons.forEach(btn => {
-  btn.addEventListener("click", () => {
-
-    tabButtons.forEach(b => b.classList.remove("active"));
-    tabContents.forEach(c => c.classList.remove("active"));
-
-    btn.classList.add("active");
-    const tabId = btn.getAttribute("data-tab");
-    document.getElementById(tabId).classList.add("active");
+  // Toggle dropdown
+  selected.addEventListener("click", (e) => {
+    e.stopPropagation();
+    options.style.display = options.style.display === "block" ? "none" : "block";
   });
-});
+
+  // Select option
+  items.forEach(item => {
+    item.addEventListener("click", () => {
+      selected.textContent = item.textContent;
+      options.style.display = "none";
+      selected.dataset.value = item.dataset.value; // store value
+    });
+  });
+
+  // Close if click outside
+  document.addEventListener("click", (e) => {
+    if (!dropdown.contains(e.target)) {
+      options.style.display = "none";
+    }
+  });
+}
+
+
+
+
+
+
+
+
 
   
 });
