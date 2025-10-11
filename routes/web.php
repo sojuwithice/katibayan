@@ -15,6 +15,7 @@ use App\Http\Controllers\EvaluationController;
 use App\Http\Controllers\SKEvaluationController;
 use App\Http\Controllers\ServicesController;
 use App\Http\Controllers\SuggestionController;
+use App\Http\Controllers\YouthProfileController;
 
 Route::get('/', function () {
     return view('landingpage');
@@ -145,7 +146,8 @@ Route::get('/reports', function () {
 Route::get('/view-youth-profile', function () {
     return view('view-youth-profile');
 })->name('view-youth-profile');
-
+// Replace the existing youth-profilepage route
+Route::get('/youth-profilepage', [YouthProfileController::class, 'index'])->name('youth-profilepage');
 
 
 

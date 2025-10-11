@@ -46,8 +46,8 @@
         </a>
         <div class="submenu">
           <a href="{{ route('sk-evaluation-feedback') }}">Feedbacks</a>
-          <a href="#">Polls</a>
-          <a href="#">Suggestion Box</a>
+          <a href="{{ route('sk-polls') }}">Polls</a>
+          <a href="{{ route('youth-suggestion') }}">Suggestion Box</a>
         </div>
       </div>
 
