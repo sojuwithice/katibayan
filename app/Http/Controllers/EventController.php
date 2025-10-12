@@ -22,6 +22,8 @@ class EventController extends Controller
     public function index(): View
     {
         try {
+            $user = Auth::user(); // Get the authenticated user
+            
             $events = Event::orderBy('event_date', 'asc')
                 ->orderBy('event_time', 'asc')
                 ->get();
@@ -40,14 +42,34 @@ class EventController extends Controller
             Log::info('Today events count: ' . $todayEvents->count());
             Log::info('Grouped events months: ' . implode(', ', $groupedEvents->keys()->toArray()));
 
-            return view('sk-eventpage', compact('groupedEvents', 'todayEvents', 'events'));
+            // Calculate role badge and age for the user
+            $roleBadge = $user && $user->role ? strtoupper($user->role) . '-Member' : 'GUEST';
+            $age = $user && $user->date_of_birth 
+                ? Carbon::parse($user->date_of_birth)->age 
+                : 'N/A';
+
+            return view('sk-eventpage', compact(
+                'groupedEvents', 
+                'todayEvents', 
+                'events', 
+                'user', 
+                'roleBadge', 
+                'age'
+            ));
         } catch (\Exception $e) {
             Log::error('Error in events index: ' . $e->getMessage());
+            
+            $user = Auth::user();
+            $roleBadge = 'GUEST';
+            $age = 'N/A';
+            
             return view('sk-eventpage', [
                 'groupedEvents' => collect(),
                 'todayEvents' => collect(),
                 'events' => collect(),
-               
+                'user' => $user,
+                'roleBadge' => $roleBadge,
+                'age' => $age,
             ]);
         }
     }
@@ -181,6 +203,8 @@ class EventController extends Controller
             'published_by' => $validated['published_by'],
             'status' => 'upcoming',
             'is_launched' => false,
+            'user_id' => Auth::id(), 
+            'barangay_id' => Auth::user()->barangay_id, 
         ];
 
         if (isset($validated['image'])) {
@@ -297,21 +321,22 @@ class EventController extends Controller
     /**
      * Display events page for regular users
      */
-     public function userEvents(): View
+    public function userEvents(): View
     {
         try {
             $user = Auth::user();
             $today = Carbon::today()->format('Y-m-d');
             $currentDateTime = Carbon::now();
 
-            // Get events from the same barangay as the user
+            Log::info("Loading events for user ID: {$user->id}, Barangay ID: {$user->barangay_id}");
+
+            // FIXED: Get ALL launched events for now (remove barangay filtering temporarily for testing)
             $events = Event::where('is_launched', true)
-                ->whereHas('user', function($query) use ($user) {
-                    $query->where('barangay_id', $user->barangay_id);
-                })
                 ->orderBy('event_date', 'asc')
                 ->orderBy('event_time', 'asc')
                 ->get();
+
+            Log::info("Total launched events found: " . $events->count());
 
             // Filter today's events
             $todayEvents = $events->filter(function($event) use ($today) {
@@ -406,7 +431,6 @@ class EventController extends Controller
         }
     }
 
-
     /**
      * Display events for public viewing (launched events only)
      */
@@ -476,8 +500,8 @@ class EventController extends Controller
 
     /**
      * Get events attended by user for evaluation
-     */public function getAttendedEvents(): View|RedirectResponse
-
+     */
+    public function getAttendedEvents(): View|RedirectResponse
     {
         try {
             $user = Auth::user();
@@ -486,52 +510,52 @@ class EventController extends Controller
                 return redirect()->route('login');
             }
 
-           Log::info("Getting attended events for user: {$user->id}");
+            Log::info("Getting attended events for user: {$user->id}");
 
-        // Get events that user has attended but not yet evaluated
-        $attendedEvents = Event::whereHas('attendances', function($query) use ($user) {
-            $query->where('user_id', $user->id)
-                  ->whereNotNull('attended_at');
-        })
-        ->with(['attendances' => function($query) use ($user) {
-            $query->where('user_id', $user->id);
-        }])
-        ->with(['evaluations' => function($query) use ($user) {
-            $query->where('user_id', $user->id);
-        }])
-        ->where('is_launched', true)
-        ->orderBy('event_date', 'desc')
-        ->get();
+            // Get events that user has attended but not yet evaluated
+            $attendedEvents = Event::whereHas('attendances', function($query) use ($user) {
+                $query->where('user_id', $user->id)
+                      ->whereNotNull('attended_at');
+            })
+            ->with(['attendances' => function($query) use ($user) {
+                $query->where('user_id', $user->id);
+            }])
+            ->with(['evaluations' => function($query) use ($user) {
+                $query->where('user_id', $user->id);
+            }])
+            ->where('is_launched', true)
+            ->orderBy('event_date', 'desc')
+            ->get();
 
-        Log::info("Found {$attendedEvents->count()} attended events for user {$user->id}");
+            Log::info("Found {$attendedEvents->count()} attended events for user {$user->id}");
 
-        // Debug: Log each attended event
-        foreach ($attendedEvents as $event) {
-            Log::info("Attended event: {$event->id} - {$event->title} - {$event->event_date}");
+            // Debug: Log each attended event
+            foreach ($attendedEvents as $event) {
+                Log::info("Attended event: {$event->id} - {$event->title} - {$event->event_date}");
+            }
+
+            // Compute role badge & age
+            $roleBadge = $user && $user->role ? strtoupper($user->role) . '-Member' : 'GUEST';
+            $age = $user && $user->date_of_birth 
+                ? Carbon::parse($user->date_of_birth)->age 
+                : 'N/A';
+
+            return view('evaluationpage', compact(
+                'attendedEvents',
+                'user', 
+                'roleBadge', 
+                'age'
+            ));
+
+        } catch (\Exception $e) {
+            Log::error('Error loading attended events: ' . $e->getMessage());
+
+            return view('evaluationpage', [
+                'attendedEvents' => collect(), 
+                'user' => Auth::user(),
+                'roleBadge' => 'GUEST',
+                'age' => 'N/A',
+            ]);
         }
-
-        // Compute role badge & age
-        $roleBadge = $user && $user->role ? strtoupper($user->role) . '-Member' : 'GUEST';
-        $age = $user && $user->date_of_birth 
-            ? Carbon::parse($user->date_of_birth)->age 
-            : 'N/A';
-
-        return view('evaluationpage', compact(
-            'attendedEvents',
-            'user', 
-            'roleBadge', 
-            'age'
-        ));
-
-    } catch (\Exception $e) {
-        Log::error('Error loading attended events: ' . $e->getMessage());
-
-        return view('evaluationpage', [
-            'attendedEvents' => collect(), 
-            'user' => Auth::user(),
-            'roleBadge' => 'GUEST',
-            'age' => 'N/A',
-        ]);
     }
-}
 }

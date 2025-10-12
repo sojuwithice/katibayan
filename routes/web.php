@@ -5,6 +5,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\SKDashboardController; // ADD THIS LINE
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\AdminController;
@@ -77,9 +78,9 @@ Route::delete('/sk-polls/{pollId}', [SKPollsController::class, 'destroy'])->name
 Route::get('/evaluation', [EvaluationController::class, 'index'])->name('evaluation');
 Route::post('/evaluation', [EvaluationController::class, 'store']);
 Route::get('/evaluation/check/{eventId}', [EvaluationController::class, 'checkEvaluation']);
-Route::get('/sk-dashboard', function () {
-    return view('sk-dashboard'); 
-})->name('sk.dashboard');
+
+// FIXED: SK Dashboard route - use controller instead of direct view
+Route::get('/sk-dashboard', [SKDashboardController::class, 'index'])->name('sk.dashboard');
 
 Route::get('/youth-profilepage', function () {
     return view('youth-profilepage'); 
@@ -193,6 +194,9 @@ Route::middleware(['auth'])->group(function () {
     
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
+    
+    // SK Dashboard - ADD THIS INSIDE AUTH MIDDLEWARE
+    Route::get('/sk-dashboard', [SKDashboardController::class, 'index'])->name('sk.dashboard');
     
     // Password routes
     Route::post('/profile/change-password', [ProfileController::class, 'changePassword'])->name('profile.change-password');

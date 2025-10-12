@@ -111,7 +111,7 @@
         </div>
 
         
-        <!-- Profile Avatar -->
+         <!-- Profile Avatar -->
         <div class="profile-wrapper">
           <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
                alt="User" class="avatar" id="profileToggle">
@@ -124,9 +124,6 @@
                 <div class="profile-badge">
                   <span class="badge">{{ $roleBadge }}</span>
                   <span class="badge">{{ $age }} yrs old</span>
-                  @if($user->barangay)
-                    <span class="badge">{{ $user->barangay->name }}</span>
-                  @endif
                 </div>
               </div>
             </div>
@@ -144,12 +141,17 @@
                 </a>
               </li>
               <li><i class="fas fa-star"></i> Send Feedback to Katibayan</li>
-               <li class="logout-item">
+              <li class="logout-item">
                 <a href="loginpage" onclick="confirmLogout(event)">
-                    <i class="fas fa-sign-out-alt"></i> Logout
+                  <i class="fas fa-sign-out-alt"></i> Logout
                 </a>
-            </li>
+              </li>
             </ul>
+            
+            <!-- Hidden Logout Form -->
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+              @csrf
+            </form>
           </div>
         </div>
       </div>
@@ -270,7 +272,7 @@
               <article class="program-card" data-category="{{ $event->category }}">
                 <div class="program-media">
                   @if($event->image && Storage::disk('public')->exists($event->image))
-                    <img src="{{ asset('storage/' . $event->image) }}" alt="{{ $event->title }}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0jOTk5IHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5FdmVudCBJbWFnZzwvdGV4dD48L3N2Zz4='">
+                    <img src="{{ asset('storage/' . $event->image) }}" alt="{{ $event->title }}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0jOTk5IHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5FdmVudCBJbWFnZTwvdGV4dD48L3N2Zz4='">
                   @else
                     <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0jOTk5IHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5FdmVudCBJbWFnZTwvdGV4dD48L3N2Zz4=" alt="Event Image">
                   @endif

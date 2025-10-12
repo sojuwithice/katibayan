@@ -120,27 +120,18 @@
 
         <!-- Profile Avatar -->
         <div class="profile-wrapper">
-          <img src="https://i.pravatar.cc/80" alt="User" class="avatar" id="profileToggle">
+          <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+               alt="User" class="avatar" id="profileToggle">
           <div class="profile-dropdown">
             <div class="profile-header">
-              <img src="https://i.pravatar.cc/80" alt="User" class="profile-avatar">
+              <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+                   alt="User" class="profile-avatar">
               <div class="profile-info">
-                <h4>
-                {{ Auth::user()->given_name ?? '' }}
-                {{ Auth::user()->middle_name ?? '' }}
-                {{ Auth::user()->last_name ?? '' }}
-                {{ Auth::user()->suffix ?? '' }}
-              </h4>
-
-              <div class="profile-badge">
-                <span class="badge">
-                  {{ Auth::user()->role === 'sk' ? 'SK Official' : (Auth::user()->role === 'kk' ? 'KK Member' : ucfirst(Auth::user()->role)) }}
-                </span>
-                <span class="badge">
-                  {{ Auth::user()->date_of_birth ? \Carbon\Carbon::parse(Auth::user()->date_of_birth)->age : 'N/A' }} yrs old
-                </span>
-              </div>
-
+                <h4>{{ $user->given_name }} {{ $user->middle_name }} {{ $user->last_name }} {{ $user->suffix }}</h4>
+                <div class="profile-badge">
+                  <span class="badge">{{ $roleBadge }}</span>
+                  <span class="badge">{{ $age }} yrs old</span>
+                </div>
               </div>
             </div>
             <hr>
@@ -159,17 +150,15 @@
               <li><i class="fas fa-star"></i> Send Feedback to Katibayan</li>
               <li class="logout-item">
                 <a href="loginpage" onclick="confirmLogout(event)">
-                    <i class="fas fa-sign-out-alt"></i> Logout
+                  <i class="fas fa-sign-out-alt"></i> Logout
                 </a>
-            </li>
-        </ul>
-        
-        <!-- Hidden Logout Form -->
-        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-            @csrf
-        </form>
-            </li>
+              </li>
             </ul>
+            
+            <!-- Hidden Logout Form -->
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+              @csrf
+            </form>
           </div>
         </div>
       </div>
