@@ -9,6 +9,7 @@ use App\Http\Controllers\LocationController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\PollsController;
+use App\Http\Controllers\SKPollsController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\EvaluationController;
@@ -61,7 +62,18 @@ Route::post('/suggestions', [SuggestionController::class, 'store'])->name('sugge
 Route::view('/attendance', 'attendancepage')->name('attendancepage');
 Route::get('/serviceoffers', [ServicesController::class, 'index'])->name('serviceoffers');
 
+// ========== POLLS ROUTES ==========
 Route::get('/polls', [PollsController::class, 'index'])->name('polls.page');
+Route::post('/polls', [PollsController::class, 'store'])->name('polls.store');
+Route::post('/polls/{pollId}/vote', [PollsController::class, 'vote'])->name('polls.vote');
+Route::get('/polls/{pollId}/results', [PollsController::class, 'getPollResults'])->name('polls.results');
+
+// SK Polls Routes
+Route::get('/sk-polls', [SKPollsController::class, 'index'])->name('sk-polls');
+Route::post('/sk-polls', [SKPollsController::class, 'store'])->name('sk-polls.store');
+Route::get('/sk-polls/{pollId}/respondents', [SKPollsController::class, 'getRespondents'])->name('sk-polls.respondents');
+Route::delete('/sk-polls/{pollId}', [SKPollsController::class, 'destroy'])->name('sk-polls.destroy');
+
 Route::get('/evaluation', [EvaluationController::class, 'index'])->name('evaluation');
 Route::post('/evaluation', [EvaluationController::class, 'store']);
 Route::get('/evaluation/check/{eventId}', [EvaluationController::class, 'checkEvaluation']);
@@ -106,10 +118,6 @@ Route::get('/sk-evaluation-feedback', function () {
     return view('sk-evaluation-feedback');
 })->name('sk-evaluation-feedback');
 
-
-Route::get('/sk-polls', function () {
-    return view('sk-polls');
-})->name('sk-polls');
 
 Route::get('/edit-program', function () {
     return view('edit-program');
@@ -200,4 +208,14 @@ Route::middleware(['auth'])->group(function () {
     
     // SK Evaluation
     Route::get('/sk/evaluation/review/{event_id}', [App\Http\Controllers\SKEvaluationController::class, 'showReview'])->name('sk-eval-review');
+    
+    // Protected Poll Routes (for voting)
+    Route::post('/polls/{pollId}/vote', [PollsController::class, 'vote'])->name('polls.vote');
+    Route::get('/polls/{pollId}/results', [PollsController::class, 'getPollResults'])->name('polls.results');
+    
+    // Protected SK Poll Routes (for creating/managing polls)
+    Route::post('/sk-polls', [SKPollsController::class, 'store'])->name('sk-polls.store');
+    Route::get('/sk-polls/{pollId}/respondents', [SKPollsController::class, 'getRespondents'])->name('sk-polls.respondents');
+    Route::delete('/sk-polls/{pollId}', [SKPollsController::class, 'destroy'])->name('sk-polls.destroy');
 });
+Route::post('/polls/{pollId}/reset-vote', [PollsController::class, 'resetVote'])->name('polls.reset-vote');

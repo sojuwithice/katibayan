@@ -1085,3 +1085,126 @@ body {
 
   
 }
+
+    .committee-tag {
+      background: #e9ecef;
+      padding: 4px 12px;
+      border-radius: 15px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 10px;
+      color: #495057;
+    }
+
+    .poll-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .delete-poll {
+      background: #dc3545;
+      border: none;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .delete-poll:hover {
+      background: #c82333;
+    }
+
+    .no-polls {
+      text-align: center;
+      padding: 60px 20px;
+      color: #666;
+      background: #f8f9fa;
+      border-radius: 10px;
+      margin: 20px 0;
+      border: 2px dashed #dee2e6;
+    }
+
+    .end-date {
+      font-size: 14px;
+      color: #666;
+      margin-top: 10px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+
+    .cancel-btn, .submit-btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .cancel-btn {
+      background: #6c757d;
+      color: white;
+    }
+
+    .cancel-btn:hover {
+      background: #5a6268;
+    }
+
+    .submit-btn {
+      background: #5A2D91;
+      color: white;
+    }
+
+    .submit-btn:hover {
+      background: #4a2478;
+    }
+
+    .success-message {
+      background: #d4edda;
+      color: #155724;
+      padding: 10px;
+      border-radius: 5px;
+      margin: 10px 0;
+      text-align: center;
+    }
+
+    .error-message {
+      background: #f8d7da;
+      color: #721c24;
+      padding: 10px;
+      border-radius: 5px;
+      margin: 10px 0;
+      text-align: center;
+    }
+
+    .vote-count {
+      color: #666;
+      font-size: 12px;
+      margin-left: 8px;
+    }
+
+    .no-votes {
+      text-align: center;
+      color: #999;
+      font-style: italic;
+      padding: 20px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: #666;
+    }
+
+    .respondent-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+ 
