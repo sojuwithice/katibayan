@@ -37,7 +37,6 @@
         <span class="label">Events and Programs</span>
       </a>
 
-
       <a href="{{ route('evaluation') }}">
           <i data-lucide="user-star"></i>
           <span class="label">Evaluation</span>
@@ -70,37 +69,44 @@
         <!-- Notifications -->
         <div class="notification-wrapper">
           <i class="fas fa-bell"></i>
-          <span class="notif-count">3</span>
+          @if($notificationCount > 0)
+            <span class="notif-count">{{ $notificationCount }}</span>
+          @endif
           <div class="notif-dropdown">
             <div class="notif-header">
-              <strong>Notification</strong> <span>3</span>
+              <strong>Notification</strong> 
+              @if($notificationCount > 0)
+                <span>{{ $notificationCount }}</span>
+              @endif
             </div>
             <ul class="notif-list">
-              <li>
-                <div class="notif-icon"></div>
-                <div class="notif-content">
-                  <strong>Program Evaluation</strong>
-                  <p>We need evaluation for the KK-Assembly Event</p>
-                </div>
-                <span class="notif-dot"></span>
-              </li>
-              <li>
-                <div class="notif-icon"></div>
-                <div class="notif-content">
-                  <strong>Program Evaluation</strong>
-                  <p>We need evaluation for the KK-Assembly Event</p>
-                </div>
-                <span class="notif-dot"></span>
-              </li>
-              <li>
-                <div class="notif-icon"></div>
-                <div class="notif-content">
-                  <strong>Program Evaluation</strong>
-                  <p>We need evaluation for the KK-Assembly Event</p>
-                </div>
-                <span class="notif-dot"></span>
-              </li>
+              @if($unevaluatedEvents->count() > 0)
+                @foreach($unevaluatedEvents as $event)
+                  <li class="evaluation-notification" data-event-id="{{ $event->id }}">
+                    <div class="notif-icon" style="background-color: #4CAF50;">
+                      <i class="fas fa-star" style="color: white;"></i>
+                    </div>
+                    <div class="notif-content">
+                      <strong>Program Evaluation Required</strong>
+                      <p>Please evaluate "{{ $event->title }}"</p>
+                      <small>Attended on {{ $event->attendances->first()->attended_at->format('M j, Y') }}</small>
+                    </div>
+                    <span class="notif-dot unread"></span>
+                  </li>
+                @endforeach
+              @else
+                <li class="no-notifications">
+                  <div class="notif-content">
+                    <p>No new notifications</p>
+                  </div>
+                </li>
+              @endif
             </ul>
+            @if($unevaluatedEvents->count() > 0)
+              <div class="notif-footer">
+                <a href="{{ route('evaluation') }}" class="view-all-evaluations">View All Evaluations</a>
+              </div>
+            @endif
           </div>
         </div>
 
@@ -118,6 +124,9 @@
                 <div class="profile-badge">
                   <span class="badge">{{ $roleBadge }}</span>
                   <span class="badge">{{ $age }} yrs old</span>
+                  @if($user->barangay)
+                    <span class="badge">{{ $user->barangay->name }}</span>
+                  @endif
                 </div>
               </div>
             </div>
@@ -152,6 +161,14 @@
       <div class="events-left">
         <h2>Events and Programs</h2>
         <p>This page serves as your guide to upcoming events designed to empower the youth, foster engagement, and build stronger communities.</p>
+        
+        <!-- Barangay Info -->
+        @if($user->barangay)
+          <div class="barangay-info">
+            <i class="fas fa-map-marker-alt"></i>
+            <span>Showing events from your barangay: <strong>{{ $user->barangay->name }}</strong></span>
+          </div>
+        @endif
       </div>
 
       <!-- RIGHT -->
@@ -161,41 +178,9 @@
         </h3>
 
         @php
-          // Use Carbon to get today's date and ensure proper date comparison
           use Carbon\Carbon;
-          
           $today = Carbon::today()->format('Y-m-d');
           $currentDateTime = Carbon::now();
-          
-          // Debug: Check what events we have
-          $allEvents = $events ?? collect();
-          
-          // Filter today's events - only show events that are happening today AND haven't ended
-          $todayEvents = $allEvents->filter(function($event) use ($today, $currentDateTime) {
-              // Handle both string and Carbon date formats
-              $eventDate = $event->event_date;
-              
-              if ($eventDate instanceof Carbon) {
-                  $eventDateFormatted = $eventDate->format('Y-m-d');
-              } else {
-                  $eventDateFormatted = Carbon::parse($eventDate)->format('Y-m-d');
-              }
-              
-              // Check if event is today and is launched
-              $isToday = $eventDateFormatted === $today;
-              $isLaunched = $event->is_launched;
-              
-              // If event has end time, check if current time is before end time
-              if ($event->end_time) {
-                  $eventEndDateTime = Carbon::parse($eventDateFormatted . ' ' . $event->end_time);
-                  $hasNotEnded = $currentDateTime->lt($eventEndDateTime);
-              } else {
-                  // If no end time, consider it as today's full day event
-                  $hasNotEnded = true;
-              }
-              
-              return $isToday && $isLaunched && $hasNotEnded;
-          });
         @endphp
 
         @if($todayEvents->count() > 0)
@@ -204,7 +189,6 @@
               <div class="agenda-banner">
                 <div class="agenda-date">
                   @php
-                    // Ensure we have a Carbon date object for formatting
                     $eventDate = $event->event_date instanceof Carbon 
                       ? $event->event_date 
                       : Carbon::parse($event->event_date);
@@ -235,7 +219,7 @@
             <div class="agenda-banner">
               <div class="no-events-content">
                 <i class="fas fa-calendar-times"></i>
-                <p>No events scheduled for today</p>
+                <p>No events scheduled for today in your barangay</p>
               </div>
             </div>
           </div>
@@ -270,25 +254,14 @@
       <div class="programs-scroll">
         <div class="programs-container">
           @php
-            // Proper date comparison for launched events - only future events
-            $launchedEvents = $allEvents->filter(function($event) use ($currentDateTime) {
-                // Handle both string and Carbon date formats
-                $eventDate = $event->event_date;
+            // FIXED: Include today's events AND future events in launched events
+            $launchedEvents = $events->filter(function($event) use ($currentDateTime) {
+                $eventDate = $event->event_date instanceof Carbon 
+                  ? $event->event_date 
+                  : Carbon::parse($event->event_date);
                 
-                if ($eventDate instanceof Carbon) {
-                    $eventDateTime = $eventDate;
-                } else {
-                    $eventDateTime = Carbon::parse($eventDate);
-                }
-                
-                // If event has specific time, use it for comparison
-                if ($event->start_time) {
-                    $eventFullDateTime = Carbon::parse($eventDateTime->format('Y-m-d') . ' ' . $event->start_time);
-                } else {
-                    $eventFullDateTime = $eventDateTime->startOfDay();
-                }
-                
-                return $event->is_launched && $currentDateTime->lt($eventFullDateTime);
+                // Include events that are today OR in the future
+                return $event->is_launched && $eventDate->gte($currentDateTime->startOfDay());
             });
           @endphp
 
@@ -297,7 +270,7 @@
               <article class="program-card" data-category="{{ $event->category }}">
                 <div class="program-media">
                   @if($event->image && Storage::disk('public')->exists($event->image))
-                    <img src="{{ asset('storage/' . $event->image) }}" alt="{{ $event->title }}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0jOTk5IHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5FdmVudCBJbWFnZTwvdGV4dD48L3N2Zz4='">
+                    <img src="{{ asset('storage/' . $event->image) }}" alt="{{ $event->title }}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0jOTk5IHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5FdmVudCBJbWFnZzwvdGV4dD48L3N2Zz4='">
                   @else
                     <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0jOTk5IHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5FdmVudCBJbWFnZTwvdGV4dD48L3N2Zz4=" alt="Event Image">
                   @endif
@@ -322,7 +295,7 @@
           @else
             <div class="no-events-message">
               <i class="fas fa-calendar-times"></i>
-              <p>No launched events available at the moment.</p>
+              <p>No launched events available in your barangay at the moment.</p>
             </div>
           @endif
         </div>
@@ -338,25 +311,31 @@
 
       <div class="events-wrapper">
         @php
-          // Proper date comparison for upcoming events - only future events
-          $upcomingEvents = $allEvents->filter(function($event) use ($currentDateTime) {
-              // Handle both string and Carbon date formats
-              $eventDate = $event->event_date;
+          // FIXED: Only show events that haven't happened yet (considering date AND time)
+          $upcomingEvents = $events->filter(function($event) use ($currentDateTime) {
+              $eventDate = $event->event_date instanceof Carbon 
+                ? $event->event_date 
+                : Carbon::parse($event->event_date);
               
-              if ($eventDate instanceof Carbon) {
-                  $eventDateTime = $eventDate;
+              // Create full datetime object for the event
+              if ($event->event_time) {
+                  // Parse the time and combine with event date
+                  $eventTime = Carbon::parse($event->event_time);
+                  $eventDateTime = Carbon::create(
+                      $eventDate->year,
+                      $eventDate->month,
+                      $eventDate->day,
+                      $eventTime->hour,
+                      $eventTime->minute,
+                      $eventTime->second
+                  );
               } else {
-                  $eventDateTime = Carbon::parse($eventDate);
+                  // If no time specified, use end of day
+                  $eventDateTime = $eventDate->endOfDay();
               }
               
-              // If event has specific time, use it for comparison
-              if ($event->start_time) {
-                  $eventFullDateTime = Carbon::parse($eventDateTime->format('Y-m-d') . ' ' . $event->start_time);
-              } else {
-                  $eventFullDateTime = $eventDateTime->startOfDay();
-              }
-              
-              return $event->is_launched && $currentDateTime->lt($eventFullDateTime);
+              // Only show events that haven't happened yet
+              return $event->is_launched && $eventDateTime->gt($currentDateTime);
           });
         @endphp
 
@@ -386,7 +365,6 @@
                     <div class="when-label">WHEN</div>
                     <div class="event-date">
                       @php
-                        // Ensure we have a Carbon date object for formatting
                         $eventDate = $event->event_date instanceof Carbon 
                           ? $event->event_date 
                           : Carbon::parse($event->event_date);
@@ -394,9 +372,7 @@
                       {{ $eventDate->format('F d, Y') }} | {{ $event->formatted_time ?? 'Time not specified' }}
                     </div>
                   </div>
-                  <div class="event-action">
-                    <a href="{{ route('attendancepage') }}" class="register-event-btn">Register Now</a>
-                  </div>
+                  <!-- REMOVED: Register Now button from event footer -->
                 </div>
               </div>
             </article>
@@ -404,7 +380,7 @@
         @else
           <div class="no-events-message">
             <i class="fas fa-calendar-times"></i>
-            <p>No upcoming events scheduled.</p>
+            <p>No upcoming events scheduled in your barangay.</p>
           </div>
         @endif
       </div>

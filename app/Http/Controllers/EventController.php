@@ -297,25 +297,88 @@ class EventController extends Controller
     /**
      * Display events page for regular users
      */
-    public function userEvents(): View
+     public function userEvents(): View
     {
         try {
             $user = Auth::user();
-            $today = now()->format('Y-m-d');
+            $today = Carbon::today()->format('Y-m-d');
+            $currentDateTime = Carbon::now();
 
+            // Get events from the same barangay as the user
             $events = Event::where('is_launched', true)
+                ->whereHas('user', function($query) use ($user) {
+                    $query->where('barangay_id', $user->barangay_id);
+                })
                 ->orderBy('event_date', 'asc')
                 ->orderBy('event_time', 'asc')
                 ->get();
 
-            $todayEvents = $events->filter(fn($event) => $event->event_date->format('Y-m-d') === $today);
-            $upcomingEvents = $events->filter(fn($event) => $event->event_date->format('Y-m-d') > $today);
+            // Filter today's events
+            $todayEvents = $events->filter(function($event) use ($today) {
+                $eventDate = $event->event_date instanceof Carbon 
+                    ? $event->event_date 
+                    : Carbon::parse($event->event_date);
+                
+                $eventDateFormatted = $eventDate->format('Y-m-d');
+                return $eventDateFormatted === $today;
+            });
 
-            // ✅ Compute role badge & age
+            // Get unevaluated events for notifications
+            $unevaluatedEvents = Event::whereHas('attendances', function($query) use ($user) {
+                    $query->where('user_id', $user->id)
+                          ->whereNotNull('attended_at');
+                })
+                ->whereDoesntHave('evaluations', function($query) use ($user) {
+                    $query->where('user_id', $user->id);
+                })
+                ->where('is_launched', true)
+                ->with(['attendances' => function($query) use ($user) {
+                    $query->where('user_id', $user->id);
+                }])
+                ->orderBy('event_date', 'desc')
+                ->get();
+
+            $notificationCount = $unevaluatedEvents->count();
+
+            // Filter upcoming events (considering date AND time)
+            $upcomingEvents = $events->filter(function($event) use ($currentDateTime) {
+                $eventDate = $event->event_date instanceof Carbon 
+                    ? $event->event_date 
+                    : Carbon::parse($event->event_date);
+                
+                // Create full datetime object for the event
+                if ($event->event_time) {
+                    // Parse the time and combine with event date
+                    $eventTime = Carbon::parse($event->event_time);
+                    $eventDateTime = Carbon::create(
+                        $eventDate->year,
+                        $eventDate->month,
+                        $eventDate->day,
+                        $eventTime->hour,
+                        $eventTime->minute,
+                        $eventTime->second
+                    );
+                } else {
+                    // If no time specified, use end of day
+                    $eventDateTime = $eventDate->endOfDay();
+                }
+                
+                // Only show events that haven't happened yet
+                return $eventDateTime->gt($currentDateTime);
+            });
+
+            // Compute role badge & age
             $roleBadge = $user && $user->role ? strtoupper($user->role) . '-Member' : 'GUEST';
             $age = $user && $user->date_of_birth 
                 ? Carbon::parse($user->date_of_birth)->age 
                 : 'N/A';
+
+            // Debug logging
+            Log::info("User barangay_id: " . $user->barangay_id);
+            Log::info("Total events found: " . $events->count());
+            Log::info("Today's events: " . $todayEvents->count());
+            Log::info("Upcoming events: " . $upcomingEvents->count());
+            Log::info("Unevaluated events: " . $unevaluatedEvents->count());
 
             return view('eventpage', compact(
                 'events', 
@@ -323,7 +386,9 @@ class EventController extends Controller
                 'upcomingEvents', 
                 'user', 
                 'roleBadge', 
-                'age' // ✅ pass age
+                'age',
+                'unevaluatedEvents',
+                'notificationCount'
             ));
         } catch (\Exception $e) {
             Log::error('Error loading user events: ' . $e->getMessage());
@@ -334,10 +399,13 @@ class EventController extends Controller
                 'upcomingEvents' => collect(),
                 'user' => Auth::user(),
                 'roleBadge' => 'GUEST',
-                'age' => 'N/A', // ✅ provide fallback
+                'age' => 'N/A',
+                'unevaluatedEvents' => collect(),
+                'notificationCount' => 0
             ]);
         }
     }
+
 
     /**
      * Display events for public viewing (launched events only)

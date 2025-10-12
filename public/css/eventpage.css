@@ -1943,3 +1943,44 @@ body {
     padding: 3px 5px;
   }
 }
+/* Barangay Info Styling */
+.barangay-info {
+    background: #e8f4ff;
+    border: 1px solid #3C87C4;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-top: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: #01214A;
+}
+
+.barangay-info i {
+    color: #3C87C4;
+}
+
+.barangay-info strong {
+    font-weight: 700;
+}
+
+
+
+/* No events message styling */
+.no-events-message {
+    text-align: center;
+    padding: 40px 20px;
+    color: #666;
+}
+
+.no-events-message i {
+    font-size: 48px;
+    color: #ccc;
+    margin-bottom: 15px;
+}
+
+.no-events-message p {
+    font-size: 16px;
+    margin: 0;
+}
