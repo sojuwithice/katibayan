@@ -174,6 +174,12 @@
       <!-- Event Header -->
       <div class="event-header">
         <h2>Event and Program</h2>
+        
+        <!-- Barangay Filter Indicator -->
+        <div class="barangay-indicator">
+          <i class="fas fa-map-marker-alt"></i>
+          <span>Showing events for your barangay</span>
+        </div>
 
         <div class="create-activity-dropdown">
           <a href="#" class="create-activity">
@@ -389,8 +395,8 @@
         <!-- No Events State -->
         <div class="no-events">
           <i class="fas fa-calendar-times"></i>
-          <h3>No Events Yet</h3>
-          <p>Get started by creating your first event or program.</p>
+          <h3>No Events Yet in Your Barangay</h3>
+          <p>Get started by creating your first event or program for your barangay.</p>
           <a href="{{ route('create-event') }}" class="btn-create-event">
             Create Your First Event
           </a>
@@ -763,7 +769,7 @@
           
         } catch (error) {
           console.error('Error fetching event details:', error);
-          alert('Error loading event details: ' + error.message);
+          alert('Error loading event details: ' . error.message);
         } finally {
           // Reset button state
           button.disabled = false;
@@ -871,7 +877,7 @@
 
         } catch (error) {
           console.error('Error generating QR and passcode:', error);
-          alert('Error: ' + error.message);
+          alert('Error: ' . error.message);
         } finally {
           // Reset button state
           proceedBtn.disabled = false;
@@ -927,7 +933,7 @@
               throw new Error(result.error || 'Delete failed');
             }
           } else {
-            throw new Error('Delete failed with status: ' + response.status);
+            throw new Error('Delete failed with status: ' . response.status);
           }
         } catch (error) {
           console.error('Error deleting event:', error);
@@ -971,7 +977,7 @@
       }
 
       function ucfirst(str) {
-        return str.charAt(0).toUpperCase() + str.slice(1);
+        return str.charAt(0).toUpperCase() . str.slice(1);
       }
 
       // QR Code Generation

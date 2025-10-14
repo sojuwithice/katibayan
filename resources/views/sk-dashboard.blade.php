@@ -10,6 +10,13 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+  <!-- Pass PHP data to JavaScript -->
+  <script>
+    window.demographicsData = <?php echo json_encode($demographicsData ?? []); ?>;
+    window.populationData = <?php echo json_encode($populationData ?? []); ?>;
+    window.ageGroupData = <?php echo json_encode($ageGroupData ?? []); ?>;
+    window.remindersData = <?php echo json_encode($remindersData ?? []); ?>;
+  </script>
 </head>
 <body>
   
@@ -51,7 +58,7 @@
         </div>
       </div>
 
-      <a href="#">
+      <a href="{{ route('reports') }}">
         <i data-lucide="file-chart-column"></i>
         <span class="label">Reports</span>
       </a>
@@ -376,45 +383,42 @@
   <!-- Today Section -->
   <div class="reminders-section">
     <h4 class="section-label">Today</h4>
-    <div class="reminder-item">
-      <div class="reminder-date">08/09/2025</div>
-      <div class="reminder-text">
-        Event Today: International Day Against Drug Abuse and Illicit Trafficking
-      </div>
+    <div id="todayReminders">
+      <!-- Today's events will be loaded here dynamically -->
+      <div class="no-reminders">No events for today</div>
     </div>
   </div>
 
   <!-- Upcoming Section -->
   <div class="reminders-section">
     <h4 class="section-label">Upcoming</h4>
-    <div class="reminder-item">
-      <div class="reminder-date">08/09/2025</div>
-      <div class="reminder-text">
-        Event Today: International Day Against Drug Abuse and Illicit Trafficking
-      </div>
+    <div id="upcomingReminders">
+      <!-- Upcoming events will be loaded here dynamically -->
+      <div class="no-reminders">No upcoming events</div>
+    </div>
   </div>
 </div>
-</div>
+
 <!-- Youth Population -->
 <div class="youth-population card">
   <h3 class="population-title">Youth Population</h3>
   <div class="population-chart">
     <canvas id="populationChart"></canvas>
     <div class="population-center">
-      <span class="population-total">600</span>
-      <p>Overall population of the barangay</p>
+      <span class="population-total" id="populationTotal">0</span>
+      <p>Youth population in your barangay</p>
     </div>
   </div>
 
   <div class="population-legend">
     <div class="legend-item">
       <span>Female</span>
-      <span>390</span>
+      <span id="femaleCount">0</span>
       <span class="dot female"></span>
     </div>
     <div class="legend-item">
       <span>Male</span>
-      <span>200</span>
+      <span id="maleCount">0</span>
       <span class="dot male"></span>
     </div>
   </div>
@@ -422,17 +426,6 @@
 
   </div>
 </div>
-
-
-
-
-
-
-
-
-
-
-
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
@@ -603,6 +596,75 @@ evaluationLink?.addEventListener('click', (e) => {
     document.querySelectorAll('.options-dropdown').forEach(drop => drop.classList.remove('show'));
   });
 
+  // === Load Reminders from Backend ===
+  function loadReminders() {
+    const remindersData = window.remindersData || {};
+    const todayEvents = remindersData.today || [];
+    const upcomingEvents = remindersData.upcoming || [];
+
+    // Load Today's Events
+    const todayContainer = document.getElementById('todayReminders');
+    if (todayEvents.length > 0) {
+      todayContainer.innerHTML = '';
+      todayEvents.forEach(event => {
+        const reminderItem = createReminderItem(event, 'today');
+        todayContainer.appendChild(reminderItem);
+      });
+    } else {
+      todayContainer.innerHTML = '<div class="no-reminders">No events for today</div>';
+    }
+
+    // Load Upcoming Events
+    const upcomingContainer = document.getElementById('upcomingReminders');
+    if (upcomingEvents.length > 0) {
+      upcomingContainer.innerHTML = '';
+      upcomingEvents.forEach(event => {
+        const reminderItem = createReminderItem(event, 'upcoming');
+        upcomingContainer.appendChild(reminderItem);
+      });
+    } else {
+      upcomingContainer.innerHTML = '<div class="no-reminders">No upcoming events</div>';
+    }
+  }
+
+  // Function to create reminder item
+  function createReminderItem(event, type) {
+    const reminderItem = document.createElement('div');
+    reminderItem.className = 'reminder-item';
+    reminderItem.setAttribute('data-event-id', event.id);
+    
+    const categoryClass = event.category ? `category-${event.category.replace('_', '-')}` : '';
+    
+    reminderItem.innerHTML = `
+      <div class="reminder-date ${categoryClass}">${event.date}</div>
+      <div class="reminder-text">
+        <strong>${event.title}</strong>
+        <p>${event.full_date_time} • ${event.location}</p>
+        ${event.category ? `<span class="event-category-badge">${formatCategory(event.category)}</span>` : ''}
+      </div>
+    `;
+
+    // Add click event to navigate to events page
+    reminderItem.style.cursor = 'pointer';
+    reminderItem.addEventListener('click', () => {
+      window.location.href = "{{ route('sk-eventpage') }}";
+    });
+
+    return reminderItem;
+  }
+
+  // Format category for display
+  function formatCategory(category) {
+    const categoryMap = {
+      'active_citizenship': 'Active Citizenship',
+      'economic_empowerment': 'Economic Empowerment',
+      'education': 'Education',
+      'health': 'Health',
+      'sports': 'Sports'
+    };
+    return categoryMap[category] || category.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+  }
+
   // === Highlight Holidays in Events ===
   document.querySelectorAll('.events li').forEach(eventItem => {
     const dateEl = eventItem.querySelector('.date span');
@@ -696,23 +758,45 @@ if (activitiesCtx) {
   });
 }
 
-
   // === Youth Demographics Chart ===
   const demoCtx = document.getElementById('demographicsChart')?.getContext('2d');
   if (demoCtx) {
+    // Get data from window object
+    const demographicsData = window.demographicsData || {};
+    
+    console.log('Demographics Data:', demographicsData);
+    
+    // Use actual data from database
+    const labels = demographicsData.labels || [
+      'In-School Youth',
+      'Out-of-School Youth',
+      'Working Youth',
+      'Person with disabilities',
+      'Indigenous'
+    ];
+    
+    const maleData = demographicsData.male_data || [0, 0, 0, 0, 0];
+    const femaleData = demographicsData.female_data || [0, 0, 0, 0, 0];
+
     new Chart(demoCtx, {
       type: 'bar',
       data: {
-        labels: [
-          'In-school Youth',
-          'Out of school Youth',
-          'Working Youth',
-          'Person with disabilities',
-          'Indigenous'
-        ],
+        labels: labels,
         datasets: [
-          { label: 'Male', data: [200, 110, 50, 30, 10], backgroundColor: '#3C87C6' },
-          { label: 'Female', data: [170, 90, 40, 20, 15], backgroundColor: '#E96BA8' }
+          { 
+            label: 'Male', 
+            data: maleData, 
+            backgroundColor: '#3C87C6',
+            barPercentage: 0.6,
+            categoryPercentage: 0.8
+          },
+          { 
+            label: 'Female', 
+            data: femaleData, 
+            backgroundColor: '#E96BA8',
+            barPercentage: 0.6,
+            categoryPercentage: 0.8
+          }
         ]
       },
       options: {
@@ -720,12 +804,45 @@ if (activitiesCtx) {
         maintainAspectRatio: false,
         indexAxis: 'y', 
         scales: {
-          x: { beginAtZero: true, grid: { drawBorder: false } },
-          y: { ticks: { color: '#01214A', font: { weight: 600 } }, grid: { display: false } }
+          x: { 
+            beginAtZero: true, 
+            grid: { 
+              drawBorder: false,
+              color: "rgba(0,0,0,0.1)"
+            },
+            ticks: {
+              color: '#01214A',
+              font: {
+                size: 11
+              }
+            }
+          },
+          y: { 
+            ticks: { 
+              color: '#01214A', 
+              font: { 
+                weight: 600,
+                size: 11
+              } 
+            }, 
+            grid: { 
+              display: false 
+            } 
+          }
         },
         plugins: {
           legend: { display: false },
-          title: { display: false }
+          title: { display: false },
+          tooltip: {
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            titleFont: { size: 12 },
+            bodyFont: { size: 11 },
+            callbacks: {
+              label: function(context) {
+                return `${context.dataset.label}: ${context.raw} youth`;
+              }
+            }
+          }
         }
       }
     });
@@ -734,13 +851,21 @@ if (activitiesCtx) {
   // === Youth Age Chart ===
   const ageCtx = document.getElementById('ageChart')?.getContext('2d');
   if (ageCtx) {
+    // Get age group data from window object - FILTERED BY SAME BARANGAY
+    const ageGroupData = window.ageGroupData || {};
+    const childCount = ageGroupData.child_count || 0;
+    const coreCount = ageGroupData.core_count || 0;
+    const adultCount = ageGroupData.adult_count || 0;
+    
+    console.log('Age Group Data:', ageGroupData);
+    
     new Chart(ageCtx, {
       type: 'pie',
       data: {
         labels: ["Child Youth 15-17", "Core Youth 18-24", "Adult Youth 25-30"],
         datasets: [{
           label: "Age Group",
-          data: [120, 250, 180], 
+          data: [childCount, coreCount, adultCount], 
           backgroundColor: ["#FFCA3A", "#3C87C6", "#8AC926"],
           borderWidth: 1,
           borderColor: "#fff"
@@ -754,25 +879,43 @@ if (activitiesCtx) {
   }
 
   // === Youth Population Chart ===
-  const ctx = document.getElementById('populationChart').getContext('2d');
-  new Chart(ctx, {
-    type: 'doughnut',
-    data: {
-      labels: ['Female', 'Male'],
-      datasets: [{
-        data: [390, 200],
-        backgroundColor: ['#f48fb1', '#114B8C'],
-        borderWidth: 0,
-        cutout: '70%' 
-      }]
-    },
-    options: {
-      plugins: {
-        legend: { display: false }, 
-        tooltip: { enabled: true }
+  const populationChart = document.getElementById('populationChart');
+  if (populationChart) {
+    const ctx = populationChart.getContext('2d');
+    
+    // Get population data from window object - FILTERED BY SAME BARANGAY
+    const populationData = window.populationData || {};
+    const maleCount = populationData.male_count || 0;
+    const femaleCount = populationData.female_count || 0;
+    const totalCount = populationData.total_count || 0;
+    
+    // Update the population numbers in the HTML
+    document.getElementById('populationTotal').textContent = totalCount;
+    document.getElementById('maleCount').textContent = maleCount;
+    document.getElementById('femaleCount').textContent = femaleCount;
+    
+    new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Female', 'Male'],
+        datasets: [{
+          data: [femaleCount, maleCount],
+          backgroundColor: ['#f48fb1', '#114B8C'],
+          borderWidth: 0,
+          cutout: '70%' 
+        }]
+      },
+      options: {
+        plugins: {
+          legend: { display: false }, 
+          tooltip: { enabled: true }
+        }
       }
-    }
-  });
+    });
+  }
+
+  // Load reminders when page loads
+  loadReminders();
 
 document.querySelectorAll('.options-btn, .header-options').forEach(btn => {
   btn.addEventListener('click', (e) => {
@@ -794,15 +937,15 @@ document.addEventListener('click', () => {
   document.querySelectorAll('.options-dropdown.show').forEach(d => d.classList.remove('show'));
 });
 
-
+// Logout confirmation
+window.confirmLogout = function(event) {
+  event.preventDefault();
+  if (confirm('Are you sure you want to logout?')) {
+    document.getElementById('logout-form').submit();
+  }
+};
   
 });
 </script>
-
-
-
-
-
-
 </body>
 </html>

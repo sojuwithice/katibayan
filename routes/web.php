@@ -5,7 +5,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\SKDashboardController; // ADD THIS LINE
+use App\Http\Controllers\SKDashboardController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\AdminController;
@@ -128,9 +128,7 @@ Route::get('/youth-assistance', function () {
     return view('youth-assistance');
 })->name('youth-assistance');
 
-Route::get('/youth-suggestion', function () {
-    return view('youth-suggestion');
-})->name('youth-suggestion');
+Route::get('/youth-suggestion', [SuggestionController::class, 'youthSuggestion'])->name('youth-suggestion');
 
 Route::get('/youth-program-registration', function () {
     return view('youth-program-registration');
@@ -212,6 +210,9 @@ Route::middleware(['auth'])->group(function () {
     
     // SK Evaluation
     Route::get('/sk/evaluation/review/{event_id}', [App\Http\Controllers\SKEvaluationController::class, 'showReview'])->name('sk-eval-review');
+    
+    // SK Suggestions Route - ADD THIS LINE
+    Route::get('/sk-suggestions', [SuggestionController::class, 'getSKSuggestions'])->name('sk.suggestions');
     
     // Protected Poll Routes (for voting)
     Route::post('/polls/{pollId}/vote', [PollsController::class, 'vote'])->name('polls.vote');

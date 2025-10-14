@@ -24,14 +24,16 @@ class EventController extends Controller
         try {
             $user = Auth::user(); // Get the authenticated user
             
-            $events = Event::orderBy('event_date', 'asc')
+            // Get events from the SAME BARANGAY as the SK user
+            $events = Event::where('barangay_id', $user->barangay_id)
+                ->orderBy('event_date', 'asc')
                 ->orderBy('event_time', 'asc')
                 ->get();
 
-            Log::info('Total events found: ' . $events->count());
+            Log::info('Total events found for barangay ' . $user->barangay_id . ': ' . $events->count());
 
             foreach ($events as $event) {
-                Log::info("Event: {$event->id} - {$event->title} - {$event->event_date} - {$event->event_time} - Status: {$event->status}");
+                Log::info("Event: {$event->id} - {$event->title} - {$event->event_date} - {$event->event_time} - Status: {$event->status} - Barangay: {$event->barangay_id}");
             }
 
             $groupedEvents = $events->groupBy(fn($event) => $event->event_date->format('F Y'));
@@ -88,14 +90,18 @@ class EventController extends Controller
     public function show($id): JsonResponse
     {
         try {
+            $user = Auth::user();
             // Convert to integer to ensure type consistency
             $eventId = (int)$id;
-            Log::info("Fetching event with ID: {$eventId}");
+            Log::info("Fetching event with ID: {$eventId} for barangay: {$user->barangay_id}");
 
-            $event = Event::find($eventId);
+            // Only show events from the same barangay
+            $event = Event::where('id', $eventId)
+                        ->where('barangay_id', $user->barangay_id)
+                        ->first();
             
             if (!$event) {
-                Log::warning("Event not found with ID: {$eventId}");
+                Log::warning("Event not found with ID: {$eventId} for barangay: {$user->barangay_id}");
                 return response()->json(['error' => 'Event not found'], 404);
             }
 
@@ -114,6 +120,7 @@ class EventController extends Controller
                 'status' => $event->status,
                 'is_launched' => (bool)$event->is_launched,
                 'passcode' => $event->passcode,
+                'barangay_id' => $event->barangay_id,
             ];
 
             // Safely handle image URL
@@ -213,7 +220,7 @@ class EventController extends Controller
 
         $event = Event::create($eventData);
 
-        Log::info('Event created successfully with ID: ' . $event->id);
+        Log::info('Event created successfully with ID: ' . $event->id . ' for barangay: ' . Auth::user()->barangay_id);
 
         return redirect()->route('sk-eventpage')->with('success', 'Event created successfully!');
     }
@@ -224,9 +231,14 @@ class EventController extends Controller
     public function launchEvent($id): JsonResponse
     {
         try {
+            $user = Auth::user();
             // Convert to integer to ensure type consistency
             $eventId = (int)$id;
-            $event = Event::find($eventId);
+            
+            // Only allow launching events from the same barangay
+            $event = Event::where('id', $eventId)
+                        ->where('barangay_id', $user->barangay_id)
+                        ->first();
             
             if (!$event) {
                 return response()->json(['success' => false, 'error' => 'Event not found'], 404);
@@ -237,7 +249,7 @@ class EventController extends Controller
                 'status' => 'ongoing',
             ]);
 
-            Log::info('Event launched: ' . $eventId);
+            Log::info('Event launched: ' . $eventId . ' for barangay: ' . $user->barangay_id);
             return response()->json(['success' => true]);
         } catch (\Exception $e) {
             Log::error('Error launching event: ' . $e->getMessage());
@@ -251,15 +263,19 @@ class EventController extends Controller
     public function generatePasscode($id, Request $request): JsonResponse
     {
         try {
+            $user = Auth::user();
             // Convert to integer to ensure type consistency
             $eventId = (int)$id;
-            Log::info("Generating passcode for event ID: {$eventId}");
+            Log::info("Generating passcode for event ID: {$eventId} for barangay: {$user->barangay_id}");
             Log::info("Request data: ", $request->all());
 
-            $event = Event::find($eventId);
+            // Only allow generating passcode for events from the same barangay
+            $event = Event::where('id', $eventId)
+                        ->where('barangay_id', $user->barangay_id)
+                        ->first();
             
             if (!$event) {
-                Log::error("Event not found with ID: {$eventId}");
+                Log::error("Event not found with ID: {$eventId} for barangay: {$user->barangay_id}");
                 return response()->json([
                     'success' => false, 
                     'error' => 'Event not found'
@@ -296,9 +312,14 @@ class EventController extends Controller
     public function destroy($id): JsonResponse
     {
         try {
+            $user = Auth::user();
             // Convert to integer to ensure type consistency
             $eventId = (int)$id;
-            $event = Event::find($eventId);
+            
+            // Only allow deleting events from the same barangay
+            $event = Event::where('id', $eventId)
+                        ->where('barangay_id', $user->barangay_id)
+                        ->first();
             
             if (!$event) {
                 return response()->json(['success' => false, 'error' => 'Event not found'], 404);
@@ -310,7 +331,7 @@ class EventController extends Controller
 
             $event->delete();
 
-            Log::info('Event deleted: ' . $eventId);
+            Log::info('Event deleted: ' . $eventId . ' from barangay: ' . $user->barangay_id);
             return response()->json(['success' => true]);
         } catch (\Exception $e) {
             Log::error('Error deleting event: ' . $e->getMessage());
@@ -330,13 +351,14 @@ class EventController extends Controller
 
             Log::info("Loading events for user ID: {$user->id}, Barangay ID: {$user->barangay_id}");
 
-            // Get ALL launched events for now
+            // Get launched events from the SAME BARANGAY as the user
             $events = Event::where('is_launched', true)
+                ->where('barangay_id', $user->barangay_id)
                 ->orderBy('event_date', 'asc')
                 ->orderBy('event_time', 'asc')
                 ->get();
 
-            Log::info("Total launched events found: " . $events->count());
+            Log::info("Total launched events found for barangay {$user->barangay_id}: " . $events->count());
 
             // Filter today's events using Carbon's isSameDay method
             $todayEvents = $events->filter(function($event) use ($today) {
@@ -347,7 +369,7 @@ class EventController extends Controller
                 return $eventDate->isSameDay($today);
             });
 
-            // Get unevaluated events for notifications
+            // Get unevaluated events for notifications (same barangay)
             $unevaluatedEvents = Event::whereHas('attendances', function($query) use ($user) {
                     $query->where('user_id', $user->id)
                           ->whereNotNull('attended_at');
@@ -356,6 +378,7 @@ class EventController extends Controller
                     $query->where('user_id', $user->id);
                 })
                 ->where('is_launched', true)
+                ->where('barangay_id', $user->barangay_id)
                 ->with(['attendances' => function($query) use ($user) {
                     $query->where('user_id', $user->id);
                 }])
@@ -473,8 +496,13 @@ class EventController extends Controller
     public function generateQRCode($id): JsonResponse
     {
         try {
+            $user = Auth::user();
             $eventId = (int)$id;
-            $event = Event::find($eventId);
+            
+            // Only allow QR generation for events from the same barangay
+            $event = Event::where('id', $eventId)
+                        ->where('barangay_id', $user->barangay_id)
+                        ->first();
             
             if (!$event) {
                 return response()->json(['success' => false, 'error' => 'Event not found'], 404);
@@ -519,11 +547,12 @@ class EventController extends Controller
 
             Log::info("Getting attended events for user: {$user->id}");
 
-            // Get events that user has attended but not yet evaluated
+            // Get events that user has attended but not yet evaluated (same barangay)
             $attendedEvents = Event::whereHas('attendances', function($query) use ($user) {
                 $query->where('user_id', $user->id)
                       ->whereNotNull('attended_at');
             })
+            ->where('barangay_id', $user->barangay_id)
             ->with(['attendances' => function($query) use ($user) {
                 $query->where('user_id', $user->id);
             }])
@@ -534,11 +563,11 @@ class EventController extends Controller
             ->orderBy('event_date', 'desc')
             ->get();
 
-            Log::info("Found {$attendedEvents->count()} attended events for user {$user->id}");
+            Log::info("Found {$attendedEvents->count()} attended events for user {$user->id} in barangay {$user->barangay_id}");
 
             // Debug: Log each attended event
             foreach ($attendedEvents as $event) {
-                Log::info("Attended event: {$event->id} - {$event->title} - {$event->event_date}");
+                Log::info("Attended event: {$event->id} - {$event->title} - {$event->event_date} - Barangay: {$event->barangay_id}");
             }
 
             // Compute role badge & age

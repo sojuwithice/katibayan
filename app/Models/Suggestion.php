@@ -13,12 +13,12 @@ class Suggestion extends Model
         'user_id',
         'committee',
         'suggestions',
-        'status'
+        'barangay_id'
+      
     ];
 
     protected $casts = [
         'committee' => 'string',
-        'status' => 'string'
     ];
 
     public function user()

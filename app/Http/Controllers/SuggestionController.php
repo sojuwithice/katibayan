@@ -30,7 +30,6 @@ class SuggestionController extends Controller
                 'user_id' => Auth::id(),
                 'committee' => $validated['committee'],
                 'suggestions' => $validated['suggestions'],
-                'status' => 'pending'
             ]);
 
             return response()->json([
@@ -42,6 +41,40 @@ class SuggestionController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to submit suggestion. Please try again.'
+            ], 500);
+        }
+    }
+
+    public function youthSuggestion()
+    {
+        $user = Auth::user();
+        $age = $user && $user->date_of_birth ? \Carbon\Carbon::parse($user->date_of_birth)->age : 'N/A';
+        $roleBadge = $user && $user->role ? strtoupper($user->role) . '-Member' : 'GUEST';
+
+        return view('youth-suggestion', compact('user', 'age', 'roleBadge'));
+    }
+
+    public function getSKSuggestions()
+    {
+        try {
+            $user = Auth::user();
+            
+            // Get suggestions from the same barangay
+            $suggestions = Suggestion::with('user')
+                ->whereHas('user', function($query) use ($user) {
+                    $query->where('barangay_id', $user->barangay_id);
+                })
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'suggestions' => $suggestions
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch suggestions'
             ], 500);
         }
     }
