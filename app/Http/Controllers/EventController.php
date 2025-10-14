@@ -36,8 +36,8 @@ class EventController extends Controller
 
             $groupedEvents = $events->groupBy(fn($event) => $event->event_date->format('F Y'));
 
-            $today = now()->format('Y-m-d');
-            $todayEvents = $events->filter(fn($event) => $event->event_date->format('Y-m-d') === $today);
+            $today = Carbon::today(); // Keep as Carbon object
+            $todayEvents = $events->filter(fn($event) => $event->event_date->isSameDay($today));
 
             Log::info('Today events count: ' . $todayEvents->count());
             Log::info('Grouped events months: ' . implode(', ', $groupedEvents->keys()->toArray()));
@@ -325,12 +325,12 @@ class EventController extends Controller
     {
         try {
             $user = Auth::user();
-            $today = Carbon::today()->format('Y-m-d');
+            $today = Carbon::today(); // Keep as Carbon object
             $currentDateTime = Carbon::now();
 
             Log::info("Loading events for user ID: {$user->id}, Barangay ID: {$user->barangay_id}");
 
-            // FIXED: Get ALL launched events for now (remove barangay filtering temporarily for testing)
+            // Get ALL launched events for now
             $events = Event::where('is_launched', true)
                 ->orderBy('event_date', 'asc')
                 ->orderBy('event_time', 'asc')
@@ -338,14 +338,13 @@ class EventController extends Controller
 
             Log::info("Total launched events found: " . $events->count());
 
-            // Filter today's events
+            // Filter today's events using Carbon's isSameDay method
             $todayEvents = $events->filter(function($event) use ($today) {
                 $eventDate = $event->event_date instanceof Carbon 
                     ? $event->event_date 
                     : Carbon::parse($event->event_date);
                 
-                $eventDateFormatted = $eventDate->format('Y-m-d');
-                return $eventDateFormatted === $today;
+                return $eventDate->isSameDay($today);
             });
 
             // Get unevaluated events for notifications
@@ -413,10 +412,16 @@ class EventController extends Controller
                 'roleBadge', 
                 'age',
                 'unevaluatedEvents',
-                'notificationCount'
+                'notificationCount',
+                'today',
+                'currentDateTime'
             ));
         } catch (\Exception $e) {
             Log::error('Error loading user events: ' . $e->getMessage());
+
+            // Provide default values for the missing variables
+            $today = Carbon::today();
+            $currentDateTime = Carbon::now();
 
             return view('eventpage', [
                 'events' => collect(),
@@ -426,7 +431,9 @@ class EventController extends Controller
                 'roleBadge' => 'GUEST',
                 'age' => 'N/A',
                 'unevaluatedEvents' => collect(),
-                'notificationCount' => 0
+                'notificationCount' => 0,
+                'today' => $today,
+                'currentDateTime' => $currentDateTime
             ]);
         }
     }
@@ -437,7 +444,7 @@ class EventController extends Controller
     public function publicIndex(): View
     {
         try {
-            $today = now()->format('Y-m-d');
+            $today = Carbon::today();
             
             $events = Event::where('is_launched', true)
                 ->where('event_date', '>=', $today)

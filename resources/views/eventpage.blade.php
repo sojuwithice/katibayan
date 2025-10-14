@@ -181,12 +181,43 @@
 
         @php
           use Carbon\Carbon;
-          $today = Carbon::today()->format('Y-m-d');
-          $currentDateTime = Carbon::now();
+          // Use the variables passed from controller, with fallbacks
+          $today = $today ?? Carbon::today();
+          $currentDateTime = $currentDateTime ?? Carbon::now();
+          
+          // FIXED: Properly filter today's events that haven't ended yet
+          $validTodayEvents = $todayEvents->filter(function($event) use ($currentDateTime, $today) {
+              $eventDate = $event->event_date instanceof Carbon 
+                ? $event->event_date 
+                : Carbon::parse($event->event_date);
+              
+              // Create full datetime object for the event
+              if ($event->event_time) {
+                  try {
+                      $eventTime = Carbon::parse($event->event_time);
+                      $eventDateTime = Carbon::create(
+                          $eventDate->year,
+                          $eventDate->month,
+                          $eventDate->day,
+                          $eventTime->hour,
+                          $eventTime->minute,
+                          $eventTime->second
+                      );
+                  } catch (\Exception $e) {
+                      // If time parsing fails, use end of day
+                      $eventDateTime = $eventDate->endOfDay();
+                  }
+              } else {
+                  $eventDateTime = $eventDate->endOfDay();
+              }
+              
+              // Only show events that are today AND haven't ended yet
+              return $eventDate->isSameDay($today) && $eventDateTime->gt($currentDateTime);
+          });
         @endphp
 
-        @if($todayEvents->count() > 0)
-          @foreach($todayEvents as $event)
+        @if($validTodayEvents->count() > 0)
+          @foreach($validTodayEvents as $event)
             <div class="agenda-card">
               <div class="agenda-banner">
                 <div class="agenda-date">
@@ -256,14 +287,37 @@
       <div class="programs-scroll">
         <div class="programs-container">
           @php
-            // FIXED: Include today's events AND future events in launched events
+            // FIXED: Only show launched events that are in the future (considering date AND time)
             $launchedEvents = $events->filter(function($event) use ($currentDateTime) {
+                if (!$event->is_launched) {
+                    return false;
+                }
+                
                 $eventDate = $event->event_date instanceof Carbon 
                   ? $event->event_date 
                   : Carbon::parse($event->event_date);
                 
-                // Include events that are today OR in the future
-                return $event->is_launched && $eventDate->gte($currentDateTime->startOfDay());
+                // Create full datetime object for the event
+                if ($event->event_time) {
+                    try {
+                        $eventTime = Carbon::parse($event->event_time);
+                        $eventDateTime = Carbon::create(
+                            $eventDate->year,
+                            $eventDate->month,
+                            $eventDate->day,
+                            $eventTime->hour,
+                            $eventTime->minute,
+                            $eventTime->second
+                        );
+                    } catch (\Exception $e) {
+                        $eventDateTime = $eventDate->endOfDay();
+                    }
+                } else {
+                    $eventDateTime = $eventDate->endOfDay();
+                }
+                
+                // Only show events that haven't happened yet
+                return $eventDateTime->gt($currentDateTime);
             });
           @endphp
 
@@ -321,18 +375,20 @@
               
               // Create full datetime object for the event
               if ($event->event_time) {
-                  // Parse the time and combine with event date
-                  $eventTime = Carbon::parse($event->event_time);
-                  $eventDateTime = Carbon::create(
-                      $eventDate->year,
-                      $eventDate->month,
-                      $eventDate->day,
-                      $eventTime->hour,
-                      $eventTime->minute,
-                      $eventTime->second
-                  );
+                  try {
+                      $eventTime = Carbon::parse($event->event_time);
+                      $eventDateTime = Carbon::create(
+                          $eventDate->year,
+                          $eventDate->month,
+                          $eventDate->day,
+                          $eventTime->hour,
+                          $eventTime->minute,
+                          $eventTime->second
+                      );
+                  } catch (\Exception $e) {
+                      $eventDateTime = $eventDate->endOfDay();
+                  }
               } else {
-                  // If no time specified, use end of day
                   $eventDateTime = $eventDate->endOfDay();
               }
               
@@ -347,7 +403,7 @@
               <div class="event-left">
                 <div class="event-thumb upcoming">
                   @if($event->image && Storage::disk('public')->exists($event->image))
-                    <img src="{{ asset('storage/' . $event->image) }}" alt="{{ $event->title }}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0jOTk5IHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5FdmVudCBJbWFnZTwvdGV4dD48L3N2Zz4='">
+                    <img src="{{ asset('storage/' . $event->image) }}" alt="{{ $event->title }}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFmaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0jOTk5IHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5FdmVudCBJbWFnZTwvdGV4dD48L3N2Zz4='">
                   @else
                     <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0jOTk5IHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5FdmVudCBJbWFnZwwvdGV4dD48L3N2Zz4=" alt="Event Image">
                   @endif
@@ -374,7 +430,6 @@
                       {{ $eventDate->format('F d, Y') }} | {{ $event->formatted_time ?? 'Time not specified' }}
                     </div>
                   </div>
-                  <!-- REMOVED: Register Now button from event footer -->
                 </div>
               </div>
             </article>
