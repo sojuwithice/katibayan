@@ -663,100 +663,78 @@
       };
 
       // SIMPLE Launch Event functionality using event delegation
-      document.addEventListener('click', function(e) {
-        // Check if the clicked element is a launch button
-        if (e.target.classList.contains('launch-btn')) {
-          e.preventDefault();
-          e.stopPropagation();
-          
-          // Get the event ID from the button's data attribute
-          const eventId = e.target.getAttribute('data-event-id');
-          console.log('Launch button clicked, event ID:', eventId);
-          
-          if (!eventId) {
-            console.log('Button clicked but no event ID found');
-            return;
-          }
+document.addEventListener('click', function(e) {
+  const launchBtn = e.target.closest('.launch-btn[data-event-id]');
+  if (launchBtn) {
+    e.preventDefault();
+    e.stopPropagation();
 
-          currentEventId = eventId;
-          console.log('Current event ID set to:', currentEventId);
+    const eventId = launchBtn.getAttribute('data-event-id');
+    if (!eventId) return;
 
-          // Fetch and show event details
-          fetchEventDetails(currentEventId, e.target);
-        }
-        
-        // Also handle delete buttons with event delegation
-        if (e.target.classList.contains('delete-btn')) {
-          e.preventDefault();
-          currentEventId = e.target.getAttribute('data-event-id');
-          document.getElementById("deleteModal").style.display = "block";
-        }
-      });
+    currentEventId = eventId;
+    fetchEventDetails(currentEventId, launchBtn);
+  }
 
-      // Function to fetch event details
-      async function fetchEventDetails(eventId, button) {
-        try {
-          // Show loading state
-          const originalText = button.textContent;
-          button.disabled = true;
-          button.textContent = 'Loading...';
+  // Delete button
+  const deleteBtn = e.target.closest('.delete-btn[data-event-id]');
+  if (deleteBtn) {
+    e.preventDefault();
+    currentEventId = deleteBtn.getAttribute('data-event-id');
+    document.getElementById("deleteModal").style.display = "block";
+  }
+});
 
-          console.log('Fetching event details for ID:', eventId);
-          const response = await fetch(`/events/${eventId}`, {
-            headers: {
-              'Accept': 'application/json',
-              'X-Requested-With': 'XMLHttpRequest'
-            },
-            credentials: 'same-origin'
-          });
-          
-          console.log('Response status:', response.status);
-          
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          
-          const event = await response.json();
-          console.log('Event data received:', event);
-          
-          // Populate modal with event data
-          document.getElementById('modalEventTitle').textContent = event.title || 'No title';
-          document.getElementById('modalEventCategory').textContent = event.category ? ucfirst(event.category.replace(/_/g, ' ')) : 'No category';
-          document.getElementById('modalEventDateTime').textContent = event.event_date_time || 'No date/time';
-          document.getElementById('modalEventLocation').textContent = event.location || 'No location';
-          document.getElementById('modalEventDescriptionTitle').textContent = event.title || 'Description';
-          document.getElementById('modalEventDescription').textContent = event.description || 'No description provided.';
-          document.getElementById('modalEventPublisher').textContent = event.published_by || 'Unknown';
-          document.getElementById('modalEventCommittee').textContent = event.category ? ucfirst(event.category.replace(/_/g, ' ')) : 'Unknown';
-          
-          // Handle event image
-          const modalImage = document.getElementById('modalEventImage');
-          if (event.image) {
-            console.log('Event image URL:', event.image);
-            modalImage.src = event.image;
-            modalImage.style.display = 'block';
-            modalImage.alt = event.title || 'Event image';
-            
-            // Add error handling for image load
-            modalImage.onerror = function() {
-              console.error('Failed to load event image:', event.image);
-              this.style.display = 'none';
-            };
-          } else {
-            modalImage.style.display = 'none';
-          }
-          
-          document.getElementById("eventModal").style.display = "block";
-          
-        } catch (error) {
-          console.error('Error fetching event details:', error);
-          alert('Error loading event details: ' . error.message);
-        } finally {
-          // Reset button state
-          button.disabled = false;
-          button.textContent = 'Launch Event';
-        }
-      }
+// Fetch and display modal
+async function fetchEventDetails(eventId, button) {
+  try {
+    const originalText = button.textContent;
+    button.disabled = true;
+    button.textContent = 'Loading...';
+
+    const response = await fetch(`/events/${eventId}`, {
+      headers: {
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      credentials: 'same-origin'
+    });
+
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+    const event = await response.json();
+
+    // Populate modal fields
+    document.getElementById('modalEventTitle').textContent = event.title || 'No title';
+    document.getElementById('modalEventCategory').textContent = event.category?.replace(/_/g, ' ').toUpperCase() || 'No category';
+    document.getElementById('modalEventDateTime').textContent = event.event_date_time || 'No date/time';
+    document.getElementById('modalEventLocation').textContent = event.location || 'No location';
+    document.getElementById('modalEventDescriptionTitle').textContent = event.title || 'Description';
+    document.getElementById('modalEventDescription').textContent = event.description || 'No description provided.';
+    document.getElementById('modalEventPublisher').textContent = event.published_by || 'Unknown';
+    document.getElementById('modalEventCommittee').textContent = event.category?.replace(/_/g, ' ').toUpperCase() || 'Unknown';
+
+    const modalImage = document.getElementById('modalEventImage');
+    if (event.image) {
+      modalImage.src = event.image;
+      modalImage.style.display = 'block';
+      modalImage.onerror = () => modalImage.style.display = 'none';
+    } else {
+      modalImage.style.display = 'none';
+    }
+
+    // ✅ Show the modal now
+    document.getElementById("eventModal").style.display = "block";
+
+  } catch (error) {
+    console.error('Error fetching event details:', error);
+    alert('Error loading event details: ' + error.message); // FIXED
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Launch Event';
+  }
+}
+
 
       // Generate QR & Passcode
 document.getElementById("proceedPasscode").addEventListener("click", async () => {
@@ -822,7 +800,6 @@ function generateRandomPasscode(length = 6) {
   const chars = '0123456789';
   return Array.from({ length }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
 }
-
 
 
       // Create Activity dropdown
@@ -980,6 +957,8 @@ confirmDeleteBtn.addEventListener("click", async () => {
 cancelDeleteBtn.addEventListener("click", () => {
   deleteModal.style.display = "none";
 });
+
+
 
     });
   </script>
