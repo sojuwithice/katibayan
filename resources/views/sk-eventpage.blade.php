@@ -15,8 +15,7 @@
   <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
   <!-- Fixed QR Code library imports -->
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.6.0/lib/qr-code-styling.min.js"></script>
+  
 </head>
 <body>
   
@@ -420,31 +419,13 @@
           Committee on <span id="modalEventCommittee"></span>
         </p>
         <div class="modal-actions">
-          <button id="proceedPasscode" class="launch-btn">Generate QR & Passcode</button>
+          <a id="proceedPasscode" class="launch-btn" href="#">Generate QR & Passcode</a>
+
         </div>
       </div>
     </div>
 
-    <!-- QR Modal -->
-    <div id="qrModal" class="modal">
-      <div class="modal-content qr-content">
-        <span class="close qr-close">&times;</span>
-        <h2>Scan for your attendance</h2>
-        <p><strong>Title:</strong> <span id="qrEventTitle"></span></p>
-        <div id="qrcode" style="width: 250px; height: 250px; margin: 0 auto;"></div>
-        <p class="small-text">
-          Having trouble scanning the QR code?<br>
-          Here's the passcode below.
-        </p>
-        <input type="text" id="generatedPasscode" readonly style="text-align: center; font-weight: bold; font-size: 16px; width: 200px; margin: 10px auto; display: block;" />
-        <p class="footer-text">
-          This will mark your attendance in the program.
-        </p>
-        <div class="modal-actions" style="margin-top: 20px;">
-          <button id="closeQR" class="btn-primary">Close</button>
-        </div>
-      </div>
-    </div>
+    
 
     <!-- Delete Confirmation Modal -->
     <div id="deleteModal" class="modal">
@@ -778,180 +759,71 @@
       }
 
       // Generate QR & Passcode
-      document.getElementById("proceedPasscode").addEventListener("click", async () => {
-        if (!currentEventId) {
-          console.log('No event selected for QR generation');
-          return;
-        }
+document.getElementById("proceedPasscode").addEventListener("click", async () => {
+  if (!currentEventId) {
+    alert('No event selected for QR generation');
+    return;
+  }
 
-        const proceedBtn = document.getElementById("proceedPasscode");
-        
-        try {
-          // Show loading state
-          proceedBtn.disabled = true;
-          proceedBtn.textContent = 'Generating...';
+  const proceedBtn = document.getElementById("proceedPasscode");
 
-          // Generate a random passcode
-          const passcode = generateRandomPasscode();
-          console.log('Generated passcode:', passcode);
-          
-          // Save passcode to database and launch event
-          const passcodeResponse = await fetch(`/events/${currentEventId}/generate-passcode`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-CSRF-TOKEN': '{{ csrf_token() }}',
-              'Accept': 'application/json'
-            },
-            body: JSON.stringify({ passcode: passcode })
-          });
+  try {
+    // Show loading state
+    proceedBtn.disabled = true;
+    proceedBtn.textContent = 'Generating...';
 
-          if (!passcodeResponse.ok) {
-            throw new Error('Failed to save passcode');
-          }
+    // Generate random passcode
+    const passcode = generateRandomPasscode();
+    console.log('Generated passcode:', passcode);
 
-          const passcodeResult = await passcodeResponse.json();
-          if (!passcodeResult.success) {
-            throw new Error(passcodeResult.error || 'Failed to save passcode');
-          }
+    // Save passcode to database
+    const passcodeResponse = await fetch(`/events/${currentEventId}/generate-passcode`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ passcode })
+    });
 
-          // Launch the event
-          const launchResponse = await fetch(`/events/${currentEventId}/launch`, {
-            method: 'POST',
-            headers: {
-              'X-CSRF-TOKEN': '{{ csrf_token() }}',
-              'Content-Type': 'application/json',
-              'Accept': 'application/json'
-            }
-          });
+    if (!passcodeResponse.ok) throw new Error('Failed to save passcode');
+    const passcodeResult = await passcodeResponse.json();
+    if (!passcodeResult.success) throw new Error(passcodeResult.error || 'Failed to save passcode');
 
-          if (!launchResponse.ok) {
-            throw new Error('Failed to launch event');
-          }
+    // Launch the event
+    const launchResponse = await fetch(`/events/${currentEventId}/launch`, {
+      method: 'POST',
+      headers: {
+        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      }
+    });
 
-          const launchResult = await launchResponse.json();
-          if (!launchResult.success) {
-            throw new Error(launchResult.error || 'Failed to launch event');
-          }
+    if (!launchResponse.ok) throw new Error('Failed to launch event');
+    const launchResult = await launchResponse.json();
+    if (!launchResult.success) throw new Error(launchResult.error || 'Failed to launch event');
 
-          // Close Event Modal
-          document.getElementById("eventModal").style.display = "none";
+    // ✅ Redirect directly to qr.blade.php
+    window.location.href = `/events/${currentEventId}/qr`;
 
-          // Open QR Modal
-          document.getElementById("qrModal").style.display = "flex";
-          
-          // Set event title and passcode
-          const eventTitle = document.getElementById('modalEventTitle').textContent;
-          document.getElementById("qrEventTitle").textContent = eventTitle;
-          document.getElementById("generatedPasscode").value = passcode;
+  } catch (error) {
+    console.error('Error generating QR and passcode:', error);
+    alert('Error: ' + error.message);
+  } finally {
+    // Reset button state
+    proceedBtn.disabled = false;
+    proceedBtn.textContent = 'Generate QR & Passcode';
+  }
+});
 
-          // Update event card UI
-          const eventCard = document.querySelector(`[data-event-id="${currentEventId}"]`);
-          if (eventCard) {
-            const launchBtn = eventCard.querySelector('.launch-btn');
-            const actionDiv = eventCard.querySelector('.event-action');
-            
-            if (launchBtn && actionDiv) {
-              launchBtn.remove();
-              const launchedBadge = document.createElement('span');
-              launchedBadge.className = 'launched-badge';
-              launchedBadge.textContent = 'Launched';
-              actionDiv.prepend(launchedBadge);
-              
-              // Update data-status for filtering - but only if it's today's event
-              // For future events, keep status as 'upcoming'
-              const eventDate = new Date(eventCard.querySelector('.event-datetime .value').textContent);
-              const today = new Date();
-              if (eventDate.toDateString() === today.toDateString()) {
-                eventCard.setAttribute('data-status', 'ongoing');
-              } else {
-                // Keep as upcoming for future dates
-                eventCard.setAttribute('data-status', 'upcoming');
-              }
-            }
-          }
+function generateRandomPasscode(length = 6) {
+  const chars = '0123456789';
+  return Array.from({ length }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+}
 
-          // Generate QR Code
-          console.log('Generating QR code for passcode:', passcode);
-          await generateQRCode(passcode);
 
-        } catch (error) {
-          console.error('Error generating QR and passcode:', error);
-          alert('Error: ' . error.message);
-        } finally {
-          // Reset button state
-          proceedBtn.disabled = false;
-          proceedBtn.textContent = 'Generate QR & Passcode';
-        }
-      });
-
-      // Close QR Modal
-      document.getElementById("closeQR").addEventListener("click", () => {
-        document.getElementById("qrModal").style.display = "none";
-        // Clear QR code for next use
-        const qrcodeContainer = document.getElementById("qrcode");
-        if (qrcodeContainer) {
-          qrcodeContainer.innerHTML = "";
-        }
-      });
-
-      // Close QR Modal with X button
-      document.querySelector(".qr-close").addEventListener("click", () => {
-        document.getElementById("qrModal").style.display = "none";
-        const qrcodeContainer = document.getElementById("qrcode");
-        if (qrcodeContainer) {
-          qrcodeContainer.innerHTML = "";
-        }
-      });
-
-      // Confirm delete
-      document.getElementById("confirmDelete").addEventListener("click", async () => {
-        try {
-          const response = await fetch(`/events/${currentEventId}`, {
-            method: 'DELETE',
-            headers: {
-              'X-CSRF-TOKEN': '{{ csrf_token() }}',
-              'Accept': 'application/json'
-            }
-          });
-
-          if (response.ok) {
-            const result = await response.json();
-            if (result.success) {
-              // Remove event card from UI
-              const eventCard = document.querySelector(`[data-event-id="${currentEventId}"]`);
-              if (eventCard) {
-                eventCard.remove();
-              }
-              document.getElementById("deleteModal").style.display = "none";
-              
-              // Reload page if no events left
-              if (document.querySelectorAll('.event-card').length === 0) {
-                window.location.reload();
-              }
-            } else {
-              throw new Error(result.error || 'Delete failed');
-            }
-          } else {
-            throw new Error('Delete failed with status: ' . response.status);
-          }
-        } catch (error) {
-          console.error('Error deleting event:', error);
-          alert('Error deleting event. Please try again.');
-        }
-      });
-
-      // Cancel delete
-      document.getElementById("cancelDelete").addEventListener("click", () => {
-        document.getElementById("deleteModal").style.display = "none";
-      });
-
-      // Close modals
-      document.querySelectorAll(".close").forEach(btn => {
-        btn.addEventListener("click", () => {
-          btn.closest(".modal").style.display = "none";
-        });
-      });
 
       // Create Activity dropdown
       const createActivityDropdown = document.querySelector(".create-activity-dropdown");
@@ -1072,6 +944,43 @@
           }
         });
       }, 60000); // Check every minute
+
+      // Delete Confirmation
+const confirmDeleteBtn = document.getElementById("confirmDelete");
+const cancelDeleteBtn = document.getElementById("cancelDelete");
+const deleteModal = document.getElementById("deleteModal");
+
+confirmDeleteBtn.addEventListener("click", async () => {
+  if (!currentEventId) return;
+
+  try {
+    const response = await fetch(`/events/${currentEventId}`, {
+      method: 'DELETE',
+      headers: {
+        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+        'Accept': 'application/json'
+      }
+    });
+
+    if (!response.ok) throw new Error('Failed to delete event');
+
+    // Close modal
+    deleteModal.style.display = 'none';
+
+    // ✅ Reload page instead of showing success message
+    window.location.reload();
+
+  } catch (error) {
+    console.error('Error deleting event:', error);
+    alert('Error deleting event: ' + error.message);
+  }
+});
+
+// Cancel Delete
+cancelDeleteBtn.addEventListener("click", () => {
+  deleteModal.style.display = "none";
+});
+
     });
   </script>
 </body>

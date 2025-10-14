@@ -224,3 +224,13 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/sk-polls/{pollId}', [SKPollsController::class, 'destroy'])->name('sk-polls.destroy');
 });
 Route::post('/polls/{pollId}/reset-vote', [PollsController::class, 'resetVote'])->name('polls.reset-vote');
+
+Route::get('/events/{id}/qr', [EventController::class, 'showQr'])->name('events.qr');
+Route::get('/attendance/records', [App\Http\Controllers\AttendanceController::class, 'getAllAttendances']);
+Route::get('/attendance/my', [AttendanceController::class, 'myAttendance'])->name('attendance.my');
+
+
+Route::get('/attendance/records', [AttendanceController::class, 'getAllAttendances'])->name('attendance.records');
+
+Route::get('/attendance/records', [AttendanceController::class, 'getEventAttendances'])
+    ->name('attendance.records');

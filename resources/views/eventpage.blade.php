@@ -243,7 +243,7 @@
                     <i class="fa-solid fa-chevron-right"></i>
                   </span>
                 </a>
-                <a href="{{ route('attendancepage') }}" class="attend-btn">Attend Now</a>
+                <a href="{{ route('attendancepage') }}?event_id={{ $event->id }}" class="attend-btn">Attend Now</a>
               </div>
             </div>
           @endforeach

@@ -594,4 +594,20 @@ class EventController extends Controller
             ]);
         }
     }
+
+    public function showQr($id)
+{
+    $event = Event::findOrFail($id);
+
+    // Get event title and passcode (adjust field names if needed)
+    $title = $event->event_title ?? $event->title ?? 'Untitled Event';
+    $passcode = $event->passcode ?? 'N/A';
+
+    return view('qr', [
+        'title' => $title,
+        'passcode' => $passcode,
+        'event' => $event,
+    ]);
+}
+
 }
