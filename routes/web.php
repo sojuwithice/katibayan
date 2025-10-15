@@ -18,6 +18,8 @@ use App\Http\Controllers\SKEvaluationController;
 use App\Http\Controllers\ServicesController;
 use App\Http\Controllers\SuggestionController;
 use App\Http\Controllers\YouthProfileController;
+use App\Http\Controllers\GoogleController;
+use App\Http\Controllers\VerificationController;
 
 Route::get('/', function () {
     return view('landingpage');
@@ -234,3 +236,12 @@ Route::get('/attendance/records', [AttendanceController::class, 'getAllAttendanc
 
 Route::get('/attendance/records', [AttendanceController::class, 'getEventAttendances'])
     ->name('attendance.records');
+
+
+//OTP
+Route::post('/auth/google/token', [GoogleController::class, 'getEmailFromToken']);
+Route::post('/send-otp', [VerificationController::class, 'sendOtp']);
+Route::post('/verify-otp', [VerificationController::class, 'verifyOtp']);
+
+Route::get('/auth/google/redirect', [GoogleController::class, 'redirect'])->name('google.redirect');
+Route::get('/auth/google/callback', [GoogleController::class, 'callback'])->name('google.callback');
