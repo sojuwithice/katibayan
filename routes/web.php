@@ -41,9 +41,8 @@ Route::get('/profilepage', function () {
     return view('profilepage');
 });
 
-Route::get('/certificatepage', function () {
-    return view('certificatepage');
-})->name('certificatepage');
+// UPDATED: Certificate page route
+Route::get('/certificatepage', [EvaluationController::class, 'certificatePage'])->name('certificatepage');
 
 // ========== EVENT ROUTES ==========
 Route::get('/events', [EventController::class, 'index'])->name('sk-eventpage');
@@ -83,6 +82,10 @@ Route::delete('/sk-polls/{pollId}', [SKPollsController::class, 'destroy'])->name
 Route::get('/evaluation', [EvaluationController::class, 'index'])->name('evaluation');
 Route::post('/evaluation', [EvaluationController::class, 'store']);
 Route::get('/evaluation/check/{eventId}', [EvaluationController::class, 'checkEvaluation']);
+
+// NEW: Certificate routes
+Route::get('/evaluation/certificates', [EvaluationController::class, 'getCertificates'])->name('evaluation.certificates');
+Route::post('/evaluation/request-print', [EvaluationController::class, 'requestPrint'])->name('evaluation.request-print');
 
 // FIXED: SK Dashboard route - use controller instead of direct view
 Route::get('/sk-dashboard', [SKDashboardController::class, 'index'])->name('sk.dashboard');

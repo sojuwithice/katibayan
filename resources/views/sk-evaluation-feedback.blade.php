@@ -247,7 +247,7 @@
               <div class="no-evaluations">
                 <i class="fas fa-clipboard-list"></i>
                 <h4>No Evaluations Yet</h4>
-                <p>Evaluations will appear here once users submit feedback for events.</p>
+                <p>Evaluations will appear here once users submit feedback for events in your barangay.</p>
               </div>
             @endif
           </div>

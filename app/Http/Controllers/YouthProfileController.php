@@ -25,9 +25,10 @@ class YouthProfileController extends Controller
         // Determine role badge based on actual enum values
         $roleBadge = $user->role === 'sk' ? 'SK Member' : 'KK Member';
 
-        // Get all users with their location relationships
+        // Get all users (both SK and KK) from the same barangay as the logged-in user
         $users = User::with(['region', 'province', 'city', 'barangay'])
                     ->where('account_status', 'approved')
+                    ->where('barangay_id', $user->barangay_id) // Same barangay only
                     ->orderBy('last_name')
                     ->get();
 

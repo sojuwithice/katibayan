@@ -27,7 +27,9 @@ class SKEvaluationController extends Controller
         // Determine role badge based on actual enum values
         $roleBadge = $user->role === 'sk' ? 'SK Member' : 'KK Member';
 
-        $eventsWithEvaluations = Event::whereHas('evaluations')
+        // Get events from the same barangay as the logged in user that have evaluations
+        $eventsWithEvaluations = Event::where('barangay_id', $user->barangay_id)
+            ->whereHas('evaluations')
             ->withCount('evaluations')
             ->with(['evaluations' => function($query) {
                 $query->latest();
@@ -54,9 +56,12 @@ class SKEvaluationController extends Controller
         // Determine role badge based on actual enum values
         $roleBadge = $user->role === 'sk' ? 'SK Member' : 'KK Member';
 
-        $event = Event::with(['evaluations.user', 'evaluations' => function($query) {
-            $query->latest();
-        }])->findOrFail($eventId);
+        // Get event from the same barangay as the logged in user
+        $event = Event::where('barangay_id', $user->barangay_id)
+            ->with(['evaluations.user', 'evaluations' => function($query) {
+                $query->latest();
+            }])
+            ->findOrFail($eventId);
 
         // Calculate statistics
         $totalEvaluations = $event->evaluations->count();
