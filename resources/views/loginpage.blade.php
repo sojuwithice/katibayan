@@ -42,7 +42,7 @@
 
     <!-- Account Number -->
     <div class="form-group">
-        <input type="text" id="account_number" name="account_number" placeholder="Enter your KK Number" value="{{ old('account_number') }}" required>
+        <input type="text" id="account_number" name="account_number" placeholder="Enter your Account Number" value="{{ old('account_number') }}" required>
         @error('account_number')
             <span class="error-message">{{ $message }}</span>
         @enderror

@@ -123,25 +123,17 @@
 
         <!-- Profile Avatar -->
         <div class="profile-wrapper">
-          @if(auth()->check() && auth()->user()->avatar)
-            <img src="{{ asset('storage/' . auth()->user()->avatar) }}" alt="User" class="avatar" id="profileToggle">
-          @else
-            <img src="https://i.pravatar.cc/80" alt="User" class="avatar" id="profileToggle">
-          @endif
+          <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+               alt="User" class="avatar" id="profileToggle">
           <div class="profile-dropdown">
             <div class="profile-header">
-              @if(auth()->check() && auth()->user()->avatar)
-                <img src="{{ asset('storage/' . auth()->user()->avatar) }}" alt="User" class="profile-avatar">
-              @else
-                <img src="https://i.pravatar.cc/80" alt="User" class="profile-avatar">
-              @endif
+              <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+                   alt="User" class="profile-avatar">
               <div class="profile-info">
-                <h4>{{ auth()->check() ? auth()->user()->given_name . ' ' . auth()->user()->last_name : 'Guest' }}</h4>
+                <h4>{{ $user->given_name }} {{ $user->middle_name ?? '' }} {{ $user->last_name }} {{ $user->suffix ?? '' }}</h4>
                 <div class="profile-badge">
-                  <span class="badge">{{ auth()->check() ? ucfirst(auth()->user()->role) : 'Guest' }}</span>
-                  @if(auth()->check() && auth()->user()->date_of_birth)
-                    <span class="badge">{{ \Carbon\Carbon::parse(auth()->user()->date_of_birth)->age }} yrs old</span>
-                  @endif
+                  <span class="badge">{{ $roleBadge }}</span>
+                  <span class="badge">{{ $age }} yrs old</span>
                 </div>
               </div>
             </div>
@@ -159,7 +151,17 @@
                 </a>
               </li>
               <li><i class="fas fa-star"></i> Send Feedback to Katibayan</li>
+              <li class="logout-item">
+                <a href="loginpage" onclick="confirmLogout(event)">
+                  <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+              </li>
             </ul>
+            
+            <!-- Hidden Logout Form -->
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+              @csrf
+            </form>
           </div>
         </div>
       </div>
@@ -836,6 +838,14 @@
             window.location.href = "/view-youth-profile/" + youthId;
           });
         });
+      }
+
+      // === Logout Confirmation ===
+      function confirmLogout(event) {
+        event.preventDefault();
+        if (confirm('Are you sure you want to logout?')) {
+          document.getElementById('logout-form').submit();
+        }
       }
     });
   </script>

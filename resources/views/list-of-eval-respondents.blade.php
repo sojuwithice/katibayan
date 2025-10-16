@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KatiBayan - Dashboard</title>
+  <title>KatiBayan - Evaluation Respondents</title>
   <link rel="stylesheet" href="{{ asset('css/list-of-eval-respondents.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -13,10 +13,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
-
-
-
+  <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 </head>
 <body>
   
@@ -67,10 +64,8 @@
         <i data-lucide="hand-heart"></i>
         <span class="label">Service Offer</span>
       </a>
-
     </nav>
   </aside>
-
 
   <!-- Main -->
   <div class="main">
@@ -127,15 +122,17 @@
 
         <!-- Profile Avatar -->
         <div class="profile-wrapper">
-          <img src="https://i.pravatar.cc/80" alt="User" class="avatar" id="profileToggle">
+          <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+               alt="User" class="avatar" id="profileToggle">
           <div class="profile-dropdown">
             <div class="profile-header">
-              <img src="https://i.pravatar.cc/80" alt="User" class="profile-avatar">
+              <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+                   alt="User" class="profile-avatar">
               <div class="profile-info">
-                <h4>Marijoy S. Novora</h4>
+                <h4>{{ $user->given_name ?? '' }} {{ $user->middle_name ?? '' }} {{ $user->last_name ?? '' }} {{ $user->suffix ?? '' }}</h4>
                 <div class="profile-badge">
-                  <span class="badge">KK- Member</span>
-                  <span class="badge">19 yrs old</span>
+                  <span class="badge">{{ $roleBadge ?? 'SK Member' }}</span>
+                  <span class="badge">{{ $age ?? 'N/A' }} yrs old</span>
                 </div>
               </div>
             </div>
@@ -153,284 +150,369 @@
                 </a>
               </li>
               <li><i class="fas fa-star"></i> Send Feedback to Katibayan</li>
+              <li class="logout-item">
+                <a href="loginpage" onclick="confirmLogout(event)">
+                  <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+              </li>
             </ul>
+            
+            <!-- Hidden Logout Form -->
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+              @csrf
+            </form>
           </div>
         </div>
       </div>
     </header>
 
     <div class="respondents-container">
-    <div class="respondents-header">
-      <div class="header-left">
-        <button class="back-btn" id="backBtn"><i class="fas fa-arrow-left"></i></button>
-
-
-        <h2>List of Respondents</h2>
+      <div class="respondents-header">
+        <div class="header-left">
+          <button class="back-btn" id="backBtn"><i class="fas fa-arrow-left"></i></button>
+          <div>
+            <h2>List of Respondents - {{ $event->title ?? 'Event' }}</h2>
+            <p class="event-info">Total Respondents: {{ $evaluations->count() ?? 0 }}</p>
+          </div>
+        </div>
+        <div class="header-actions">
+          <button class="export-btn" id="exportBtn">
+            <i class="fas fa-download"></i> Export to Excel
+          </button>
+        </div>
       </div>
-    </div>
 
-    <div class="respondents-table">
-      <table>
-        <thead>
-          <tr>
-            <th>Profile</th>
-            <th>Name</th>
-            <th>KK - Number</th>
-            <th>Age</th>
-            <th>Youth age group</th>
-            <th>Purok</th>
-            <th>Overall Rating</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><img src="https://i.pravatar.cc/50" alt="Profile"></td>
-            <td>Beverly J. Hills</td>
-            <td><a href="#">KKHJB-20251206</a></td>
-            <td>22</td>
-            <td>Core Youth</td>
-            <td>Purok 6</td>
-            <td>5/5</td>
-          </tr>
-          <tr>
-            <td><img src="https://i.pravatar.cc/51" alt="Profile"></td>
-            <td>Beverly J. Hills</td>
-            <td><a href="#">KKHJB-20251206</a></td>
-            <td>22</td>
-            <td>Core Youth</td>
-            <td>Purok 6</td>
-            <td>5/5</td>
-          </tr>
-          <tr>
-            <td><img src="https://i.pravatar.cc/52" alt="Profile"></td>
-            <td>Beverly J. Hills</td>
-            <td><a href="#">KKHJB-20251206</a></td>
-            <td>22</td>
-            <td>Core Youth</td>
-            <td>Purok 6</td>
-            <td>5/5</td>
-          </tr>
-        <tr>
-            <td><img src="https://i.pravatar.cc/52" alt="Profile"></td>
-            <td>Beverly J. Hills</td>
-            <td><a href="#">KKHJB-20251206</a></td>
-            <td>22</td>
-            <td>Core Youth</td>
-            <td>Purok 6</td>
-            <td>5/5</td>
-          </tr>
-          <tr><td><img src="https://i.pravatar.cc/53" alt="Profile"></td><td>Beverly J. Hills</td><td><a href="#">KKHJB-20251206</a></td><td>22</td><td>Core Youth</td><td>Purok 6</td><td>5/5</td></tr>
-          <tr><td><img src="https://i.pravatar.cc/54" alt="Profile"></td><td>Beverly J. Hills</td><td><a href="#">KKHJB-20251206</a></td><td>22</td><td>Core Youth</td><td>Purok 6</td><td>5/5</td></tr>
-          <tr><td><img src="https://i.pravatar.cc/55" alt="Profile"></td><td>Beverly J. Hills</td><td><a href="#">KKHJB-20251206</a></td><td>22</td><td>Core Youth</td><td>Purok 6</td><td>5/5</td></tr>
-          <tr><td><img src="https://i.pravatar.cc/53" alt="Profile"></td><td>Beverly J. Hills</td><td><a href="#">KKHJB-20251206</a></td><td>22</td><td>Core Youth</td><td>Purok 6</td><td>5/5</td></tr>
-          <tr><td><img src="https://i.pravatar.cc/54" alt="Profile"></td><td>Beverly J. Hills</td><td><a href="#">KKHJB-20251206</a></td><td>22</td><td>Core Youth</td><td>Purok 6</td><td>5/5</td></tr>
-          <tr><td><img src="https://i.pravatar.cc/55" alt="Profile"></td><td>Beverly J. Hills</td><td><a href="#">KKHJB-20251206</a></td><td>22</td><td>Core Youth</td><td>Purok 6</td><td>5/5</td></tr>
-        </tbody>
-      </table>
+      <!-- Filters -->
+      <div class="filters-section">
+        <div class="filter-group">
+          <label for="ratingFilter">Filter by Rating:</label>
+          <select id="ratingFilter">
+            <option value="all">All Ratings</option>
+            <option value="5">5 - Strongly Agree</option>
+            <option value="4">4 - Agree</option>
+            <option value="3">3 - Neutral</option>
+            <option value="2">2 - Disagree</option>
+            <option value="1">1 - Strongly Disagree</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="searchFilter">Search:</label>
+          <input type="text" id="searchFilter" placeholder="Search by name...">
+        </div>
+      </div>
+
+      <div class="respondents-table">
+        <table id="respondentsTable">
+          <thead>
+            <tr>
+              <th>Profile</th>
+              <th>Name</th>
+              <th>KK - Number</th>
+              <th>Age</th>
+              <th>Youth Age Group</th>
+              <th>Purok</th>
+              <th>Overall Rating</th>
+              <th>Evaluation Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if(isset($evaluations) && $evaluations->count() > 0)
+              @foreach($evaluations as $evaluation)
+                @php
+                  $user = $evaluation->user;
+                  $ratings = json_decode($evaluation->ratings, true);
+                  $overallRating = $ratings ? round(array_sum($ratings) / count($ratings)) : 0;
+                  
+                  // Calculate age
+                  $age = $user->date_of_birth ? \Carbon\Carbon::parse($user->date_of_birth)->age : 'N/A';
+                  
+                  // Determine youth age group
+                  $youthAgeGroup = 'N/A';
+                  if ($age !== 'N/A') {
+                    if ($age >= 15 && $age <= 30) {
+                      $youthAgeGroup = 'Core Youth';
+                    } elseif ($age >= 31 && $age <= 35) {
+                      $youthAgeGroup = 'Senior Youth';
+                    } else {
+                      $youthAgeGroup = 'Other';
+                    }
+                  }
+                @endphp
+                <tr data-rating="{{ $overallRating }}">
+                  <td>
+                    <img src="{{ $user->avatar ? asset('storage/' . $user->avatar) : 'https://i.pravatar.cc/50?img=' . $loop->index }}" 
+                         alt="Profile" class="profile-img">
+                  </td>
+                  <td>{{ $user->given_name }} {{ $user->middle_name ? $user->middle_name . ' ' : '' }}{{ $user->last_name }} {{ $user->suffix ?? '' }}</td>
+                  <td>
+                    <a href="#" class="account-link">{{ $user->account_number ?? 'N/A' }}</a>
+                  </td>
+                  <td>{{ $age }}</td>
+                  <td>{{ $youthAgeGroup }}</td>
+                  <td>{{ $user->purok_zone ?? 'N/A' }}</td>
+                  <td>
+                    <div class="rating-display">
+                      <span class="stars">
+                        @for($i = 1; $i <= 5; $i++)
+                          @if($i <= $overallRating)
+                            <i class="fas fa-star"></i>
+                          @else
+                            <i class="far fa-star"></i>
+                          @endif
+                        @endfor
+                      </span>
+                      <span class="rating-text">{{ $overallRating }}/5</span>
+                    </div>
+                  </td>
+                  <td>{{ $evaluation->submitted_at->format('M d, Y g:i A') }}</td>
+                </tr>
+              @endforeach
+            @else
+              <tr>
+                <td colspan="8" class="no-data">
+                  <i class="fas fa-clipboard-list"></i>
+                  <p>No respondents found for this event.</p>
+                </td>
+              </tr>
+            @endif
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      @if(isset($evaluations) && $evaluations->count() > 0)
+        <div class="pagination">
+          <button class="page-btn" id="prevPage">Previous</button>
+          <span class="page-info">Page <span id="currentPage">1</span> of <span id="totalPages">1</span></span>
+          <button class="page-btn" id="nextPage">Next</button>
+        </div>
+      @endif
     </div>
   </div>
-    
 
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // === Lucide icons ===
+      if (window.lucide) lucide.createIcons();
 
+      // ================= Sidebar =================
+      const sidebar = document.querySelector('.sidebar');
+      const menuToggle = document.querySelector('.menu-toggle');
+      const navItems = document.querySelectorAll('.nav-item > a');
 
-
-
-
-
-
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-  // === Lucide icons + sidebar toggle ===
-  lucide.createIcons();
-  const menuToggle = document.querySelector('.menu-toggle');
-  const sidebar = document.querySelector('.sidebar');
-  const profileItem = document.querySelector('.profile-item');
-  const profileLink = document.querySelector('.profile-link');
-  const eventsItem = document.querySelector('.events-item');
-  const eventsLink = document.querySelector('.events-link');
-
-  if (menuToggle && sidebar) {
-    menuToggle.addEventListener('click', (e) => {
-      e.stopPropagation();
-      sidebar.classList.toggle('open');
-      if (!sidebar.classList.contains('open')) {
-        profileItem?.classList.remove('open'); 
-      }
-    });
-  }
-
-  // === Submenus ===
-const evaluationItem = document.querySelector('.evaluation-item');
-const evaluationLink = document.querySelector('.evaluation-link');
-
-evaluationLink?.addEventListener('click', (e) => {
-  e.preventDefault();
-
-  const isOpen = evaluationItem.classList.contains('open');
-  evaluationItem.classList.remove('open');
-
-  if (!isOpen) {
-    evaluationItem.classList.add('open');
-  }
-});
-
-
-  // === Calendar ===
-  const weekdays = ["MON","TUE","WED","THU","FRI","SAT","SUN"];
-  const daysContainer = document.querySelector(".calendar .days");
-  const header = document.querySelector(".calendar header h3");
-  let today = new Date();
-  let currentView = new Date();
-
-  const holidays = [
-    "2025-01-01","2025-04-09","2025-04-17","2025-04-18",
-    "2025-05-01","2025-06-06","2025-06-12","2025-08-25",
-    "2025-11-30","2025-12-25","2025-12-30"
-  ];
-
-  function renderCalendar(baseDate) {
-    if (!daysContainer || !header) return;
-    daysContainer.innerHTML = "";
-
-    const startOfWeek = new Date(baseDate);
-    startOfWeek.setDate(baseDate.getDate() - (baseDate.getDay() === 0 ? 6 : baseDate.getDay() - 1));
-
-    const middleDay = new Date(startOfWeek);
-    middleDay.setDate(startOfWeek.getDate() + 3);
-    header.textContent = middleDay.toLocaleDateString("en-US", { month: "long", year: "numeric" });
-
-    for (let i = 0; i < 7; i++) {
-      const thisDay = new Date(startOfWeek);
-      thisDay.setDate(startOfWeek.getDate() + i);
-
-      const dayEl = document.createElement("div");
-      dayEl.classList.add("day");
-
-      const weekdayEl = document.createElement("span");
-      weekdayEl.classList.add("weekday");
-      weekdayEl.textContent = weekdays[i];
-
-      const dateEl = document.createElement("span");
-      dateEl.classList.add("date");
-      dateEl.textContent = thisDay.getDate();
-
-      const month = (thisDay.getMonth() + 1).toString().padStart(2,'0');
-      const day = thisDay.getDate().toString().padStart(2,'0');
-      const dateStr = `${thisDay.getFullYear()}-${month}-${day}`;
-
-      if (holidays.includes(dateStr)) dateEl.classList.add('holiday');
-      if (
-        thisDay.getDate() === today.getDate() &&
-        thisDay.getMonth() === today.getMonth() &&
-        thisDay.getFullYear() === today.getFullYear()
-      ) {
-        dayEl.classList.add("active");
+      function closeAllSubmenus() {
+        document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('open'));
       }
 
-      dayEl.appendChild(weekdayEl);
-      dayEl.appendChild(dateEl);
-      daysContainer.appendChild(dayEl);
-    }
-  }
-
-  renderCalendar(currentView);
-
-  const prevBtn = document.querySelector(".calendar .prev");
-  const nextBtn = document.querySelector(".calendar .next");
-  if (prevBtn) prevBtn.addEventListener("click", () => {
-    currentView.setDate(currentView.getDate() - 7);
-    renderCalendar(currentView);
-  });
-  if (nextBtn) nextBtn.addEventListener("click", () => {
-    currentView.setDate(currentView.getDate() + 7);
-    renderCalendar(currentView);
-  });
-
-  // === Time auto-update ===
-  const timeEl = document.querySelector(".time");
-  function updateTime() {
-    if (!timeEl) return;
-    const now = new Date();
-    const shortWeekdays = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
-    const shortMonths = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
-    const weekday = shortWeekdays[now.getDay()];
-    const month = shortMonths[now.getMonth()];
-    const day = now.getDate();
-    let hours = now.getHours();
-    const minutes = now.getMinutes().toString().padStart(2, "0");
-    const ampm = hours >= 12 ? "PM" : "AM";
-    hours = hours % 12 || 12;
-    timeEl.innerHTML = `${weekday}, ${month} ${day} ${hours}:${minutes} <span>${ampm}</span>`;
-  }
-  updateTime();
-  setInterval(updateTime, 60000);
-
-  // === Notifications ===
-  const notifWrapper = document.querySelector(".notification-wrapper");
-  const profileWrapper = document.querySelector(".profile-wrapper");
-  const profileToggle = document.getElementById("profileToggle");
-  const profileDropdown = document.querySelector(".profile-dropdown");
-
-  if (notifWrapper) {
-    const bell = notifWrapper.querySelector(".fa-bell");
-    if (bell) {
-      bell.addEventListener("click", (e) => {
-        e.stopPropagation();
-        notifWrapper.classList.toggle("active");
-        profileWrapper?.classList.remove("active");
+      // Toggle sidebar open/close
+      menuToggle?.addEventListener('click', () => {
+        sidebar.classList.toggle('open');
+        if (!sidebar.classList.contains('open')) closeAllSubmenus();
       });
-    }
-    const dropdown = notifWrapper.querySelector(".notif-dropdown");
-    if (dropdown) dropdown.addEventListener("click", (e) => e.stopPropagation());
-  }
 
-  if (profileWrapper && profileToggle && profileDropdown) {
-    profileToggle.addEventListener("click", (e) => {
-      e.stopPropagation();
-      profileWrapper.classList.toggle("active");
-      notifWrapper?.classList.remove("active");
+      // Toggle submenus
+      navItems.forEach(link => {
+        link.addEventListener('click', e => {
+          if (!sidebar.classList.contains('open')) return;
+
+          const parentItem = link.parentElement;
+          const isOpen = parentItem.classList.contains('open');
+
+          closeAllSubmenus();
+          if (!isOpen) parentItem.classList.add('open');
+
+          e.preventDefault();
+        });
+      });
+
+      // Close sidebar if clicked outside
+      document.addEventListener('click', e => {
+        if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+          sidebar.classList.remove('open');
+          closeAllSubmenus();
+        }
+      });
+
+      // ================= Profile & Notifications =================
+      const profileWrapper = document.querySelector('.profile-wrapper');
+      const profileToggle = document.getElementById('profileToggle');
+      const profileDropdown = document.querySelector('.profile-dropdown');
+
+      const notifWrapper = document.querySelector(".notification-wrapper");
+      const notifBell = notifWrapper?.querySelector(".fa-bell");
+      const notifDropdown = notifWrapper?.querySelector(".notif-dropdown");
+
+      profileToggle?.addEventListener('click', e => {
+        e.stopPropagation();
+        profileWrapper.classList.toggle('active');
+        notifWrapper?.classList.remove('active');
+      });
+
+      profileDropdown?.addEventListener('click', e => e.stopPropagation());
+
+      notifBell?.addEventListener('click', e => {
+        e.stopPropagation();
+        notifWrapper.classList.toggle('active');
+        profileWrapper?.classList.remove('active');
+      });
+
+      notifDropdown?.addEventListener('click', e => e.stopPropagation());
+
+      document.addEventListener('click', e => {
+        if (profileWrapper && !profileWrapper.contains(e.target)) profileWrapper.classList.remove('active');
+        if (notifWrapper && !notifWrapper.contains(e.target)) notifWrapper.classList.remove('active');
+      });
+
+      // ================= Time auto-update =================
+      const timeEl = document.querySelector(".time");
+      function updateTime() {
+        if (!timeEl) return;
+        const now = new Date();
+
+        const shortWeekdays = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
+        const shortMonths = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+
+        const weekday = shortWeekdays[now.getDay()];
+        const month = shortMonths[now.getMonth()];
+        const day = now.getDate();
+
+        let hours = now.getHours();
+        const minutes = now.getMinutes().toString().padStart(2, "0");
+        const ampm = hours >= 12 ? "PM" : "AM";
+        hours = hours % 12 || 12;
+
+        timeEl.innerHTML = `${weekday}, ${month} ${day} ${hours}:${minutes} <span>${ampm}</span>`;
+      }
+      updateTime();
+      setInterval(updateTime, 60000);
+
+      // ================= Back Button =================
+      document.getElementById("backBtn").addEventListener("click", () => {
+        window.history.back();
+      });
+
+      // ================= Table Filtering =================
+      const ratingFilter = document.getElementById('ratingFilter');
+      const searchFilter = document.getElementById('searchFilter');
+      const tableRows = document.querySelectorAll('#respondentsTable tbody tr');
+
+      function filterTable() {
+        const ratingValue = ratingFilter.value;
+        const searchValue = searchFilter.value.toLowerCase();
+        
+        tableRows.forEach(row => {
+          const rating = row.getAttribute('data-rating');
+          const name = row.cells[1].textContent.toLowerCase();
+          const accountNumber = row.cells[2].textContent.toLowerCase();
+          
+          const ratingMatch = ratingValue === 'all' || rating === ratingValue;
+          const searchMatch = name.includes(searchValue) || accountNumber.includes(searchValue);
+          
+          row.style.display = ratingMatch && searchMatch ? '' : 'none';
+        });
+        
+        updatePagination();
+      }
+
+      ratingFilter.addEventListener('change', filterTable);
+      searchFilter.addEventListener('input', filterTable);
+
+      // ================= Export Functionality =================
+      document.getElementById('exportBtn').addEventListener('click', exportToExcel);
+
+      function exportToExcel() {
+        // Create workbook
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Evaluation Respondents');
+        
+        // Add headers
+        worksheet.addRow([
+          'Name', 
+          'KK Number', 
+          'Age', 
+          'Youth Age Group', 
+          'Purok', 
+          'Overall Rating', 
+          'Evaluation Date'
+        ]);
+        
+        // Add data rows
+        tableRows.forEach(row => {
+          if (row.style.display !== 'none') {
+            const cells = row.cells;
+            worksheet.addRow([
+              cells[1].textContent,
+              cells[2].textContent,
+              cells[3].textContent,
+              cells[4].textContent,
+              cells[5].textContent,
+              cells[6].querySelector('.rating-text').textContent,
+              cells[7].textContent
+            ]);
+          }
+        });
+        
+        // Style headers
+        worksheet.getRow(1).font = { bold: true };
+        
+        // Generate and download
+        workbook.xlsx.writeBuffer().then(buffer => {
+          const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+          saveAs(blob, `Evaluation_Respondents_${new Date().toISOString().split('T')[0]}.xlsx`);
+        });
+      }
+
+      // ================= Pagination =================
+      const rowsPerPage = 10;
+      let currentPage = 1;
+
+      function updatePagination() {
+        const visibleRows = Array.from(tableRows).filter(row => row.style.display !== 'none');
+        const totalPages = Math.ceil(visibleRows.length / rowsPerPage);
+        
+        document.getElementById('totalPages').textContent = totalPages;
+        document.getElementById('currentPage').textContent = currentPage;
+        
+        // Show/hide appropriate rows
+        visibleRows.forEach((row, index) => {
+          const startIndex = (currentPage - 1) * rowsPerPage;
+          const endIndex = startIndex + rowsPerPage;
+          row.style.display = (index >= startIndex && index < endIndex) ? '' : 'none';
+        });
+        
+        // Enable/disable pagination buttons
+        document.getElementById('prevPage').disabled = currentPage === 1;
+        document.getElementById('nextPage').disabled = currentPage === totalPages || totalPages === 0;
+      }
+
+      document.getElementById('prevPage').addEventListener('click', () => {
+        if (currentPage > 1) {
+          currentPage--;
+          updatePagination();
+        }
+      });
+
+      document.getElementById('nextPage').addEventListener('click', () => {
+        const visibleRows = Array.from(tableRows).filter(row => row.style.display !== 'none');
+        const totalPages = Math.ceil(visibleRows.length / rowsPerPage);
+        
+        if (currentPage < totalPages) {
+          currentPage++;
+          updatePagination();
+        }
+      });
+
+      // Initialize pagination
+      updatePagination();
+
+      // ================= Logout Confirmation =================
+      function confirmLogout(event) {
+        event.preventDefault();
+        if (confirm('Are you sure you want to logout?')) {
+          document.getElementById('logout-form').submit();
+        }
+      }
     });
-    profileDropdown.addEventListener("click", (e) => e.stopPropagation());
-  }
-
-  document.addEventListener("click", (e) => {
-    if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
-      sidebar.classList.remove('open');
-      profileItem?.classList.remove('open');
-    }
-    if (profileWrapper && !profileWrapper.contains(e.target)) profileWrapper.classList.remove('active');
-    if (notifWrapper && !notifWrapper.contains(e.target)) notifWrapper.classList.remove('active');
-
-    // Close options dropdown when clicking outside
-    document.querySelectorAll('.options-dropdown').forEach(drop => drop.classList.remove('show'));
-  });
-
-  // === Highlight Holidays in Events ===
-  document.querySelectorAll('.events li').forEach(eventItem => {
-    const dateEl = eventItem.querySelector('.date span');
-    const monthEl = eventItem.querySelector('.date strong');
-    if (!dateEl || !monthEl) return;
-
-    const monthMap = {
-      JAN: "01", FEB: "02", MAR: "03", APR: "04", MAY: "05", JUN: "06",
-      JUL: "07", AUG: "08", SEP: "09", OCT: "10", NOV: "11", DEC: "12"
-    };
-    const monthNum = monthMap[monthEl.textContent.trim().toUpperCase()];
-    const day = dateEl.textContent.trim().padStart(2,'0');
-    const dateStr = `2025-${monthNum}-${day}`;
-
-    if (holidays.includes(dateStr)) {
-      eventItem.querySelector('.date').classList.add('holiday');
-    }
-  });
-
-// Back button functionality
-    document.getElementById("backBtn").addEventListener("click", () => {
-      window.history.back();
-    });
-
-  
-});
-</script>
+  </script>
 </body>
 </html>

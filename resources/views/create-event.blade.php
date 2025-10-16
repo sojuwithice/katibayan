@@ -22,7 +22,7 @@
     <button class="menu-toggle">Menu</button>
     <div class="divider"></div>
     <nav class="nav">
-      <a href="{{ route('sk.dashboard') }}">
+      <a href="{{ route('sk.dashboard') }}" class="active">
         <i data-lucide="layout-dashboard"></i>
         <span class="label">Dashboard</span>
       </a>
@@ -37,7 +37,7 @@
         <span class="label">Youth Profile</span>
       </a>
 
-      <a href="{{ route('sk-eventpage') }}" class="active events-link">
+      <a href="{{ route('sk-eventpage') }}" class="events-link">
         <i data-lucide="calendar"></i>
         <span class="label">Events and Programs</span>
       </a>
@@ -49,13 +49,13 @@
           <i data-lucide="chevron-down" class="submenu-arrow"></i>
         </a>
         <div class="submenu">
-          <a href="#">Feedbacks</a>
-          <a href="#">Polls</a>
-          <a href="#">Suggestion Box</a>
+          <a href="{{ route('sk-evaluation-feedback') }}">Feedbacks</a>
+          <a href="{{ route('sk-polls') }}">Polls</a>
+          <a href="{{ route('youth-suggestion') }}">Suggestion Box</a>
         </div>
       </div>
 
-      <a href="#">
+      <a href="{{ route('reports') }}">
         <i data-lucide="file-chart-column"></i>
         <span class="label">Reports</span>
       </a>
@@ -64,6 +64,7 @@
         <i data-lucide="hand-heart"></i>
         <span class="label">Service Offer</span>
       </a>
+
     </nav>
   </aside>
 
@@ -120,17 +121,19 @@
           </div>
         </div>
 
-        <!-- Profile Avatar -->
+       <!-- Profile Avatar -->
         <div class="profile-wrapper">
-          <img src="https://i.pravatar.cc/80" alt="User" class="avatar" id="profileToggle">
+          <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+               alt="User" class="avatar" id="profileToggle">
           <div class="profile-dropdown">
             <div class="profile-header">
-              <img src="https://i.pravatar.cc/80" alt="User" class="profile-avatar">
+              <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+                   alt="User" class="profile-avatar">
               <div class="profile-info">
-                <h4>Marijoy S. Novora</h4>
+                <h4>{{ $user->given_name }} {{ $user->middle_name }} {{ $user->last_name }} {{ $user->suffix }}</h4>
                 <div class="profile-badge">
-                  <span class="badge">KK- Member</span>
-                  <span class="badge">19 yrs old</span>
+                  <span class="badge">{{ $roleBadge }}</span>
+                  <span class="badge">{{ $age }} yrs old</span>
                 </div>
               </div>
             </div>
@@ -148,7 +151,17 @@
                 </a>
               </li>
               <li><i class="fas fa-star"></i> Send Feedback to Katibayan</li>
+              <li class="logout-item">
+                <a href="loginpage" onclick="confirmLogout(event)">
+                  <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+              </li>
             </ul>
+            
+            <!-- Hidden Logout Form -->
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+              @csrf
+            </form>
           </div>
         </div>
       </div>

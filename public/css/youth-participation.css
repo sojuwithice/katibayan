@@ -87,7 +87,6 @@ body {
   padding: 0.5rem 0;
 }
 
-
 /* Nav link label */
 .sidebar nav a .label {
   display: none;
@@ -150,23 +149,19 @@ body {
   gap: 0.5rem;
 }
 
-
 .submenu a.active {
   background: #fff;
   color: #1C6DD0;
 }
-
 
 .submenu a:hover {
   color: #FFB703;
   background: rgba(255, 255, 255, 0.2);
 }
 
-
 .sidebar.open .nav-item.open .submenu {
   display: flex;
 }
-
 
 .sidebar:not(.open) .submenu {
   display: none !important;
@@ -188,8 +183,6 @@ body {
   transform: rotate(180deg);
 }
 
-
-
 .menu-toggle {
   background: #fff;
   color: #1C6DD0;
@@ -210,11 +203,8 @@ body {
   transition: margin-left 0.3s ease;
   display: flex;
   flex-direction: column;
-  
   gap: 0;
 }
-
-
 
 /* Topbar */
 .topbar {
@@ -230,12 +220,9 @@ body {
   padding: 0.5rem 2rem;
   justify-content: space-between;
   z-index: 2000;       
-  
 }         
 
-
 /* Logo */
-/* === Logo Section === */
 .logo {
   display: flex;
   align-items: center;
@@ -272,7 +259,6 @@ body {
   margin-left: auto;   
 }
 
-
 /* Time Button */
 .topbar-right .time {
   display: inline-flex;          
@@ -294,7 +280,6 @@ body {
   color: #FFB703;
   font-weight: bold;
 }
-
 
 /* Bell + avatar */
 .topbar-right i {
@@ -332,7 +317,6 @@ body {
   display: block;
 }
 
-
 .profile-header {
   display: flex;
   align-items: center;
@@ -346,7 +330,6 @@ body {
   background-color: #3C87C4;  
   margin: 0;                  
 }
-
 
 .profile-avatar {
   width: 55px;
@@ -381,8 +364,6 @@ body {
 .profile-badge span + span {
   border-left: 1px solid #F9CD55; 
 }
-
-
 
 .profile-menu {
   list-style: none;
@@ -452,7 +433,6 @@ body {
   flex-direction: column;
   overflow: hidden;
   z-index: 5000;
-
   opacity: 0;                 
   transform: translateY(-20px); 
   pointer-events: none;        
@@ -567,7 +547,6 @@ body {
   box-shadow: 3px 3px 0 #3C87C4; 
 }
 
-
 /* Layout */
 .participation-section {
   display: grid;
@@ -581,17 +560,19 @@ body {
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-  overflow: hidden; /* para yung table header sagad */
-  padding: 0; /* alisin default padding */
+  overflow: hidden;
+  padding: 0;
 }
 
-/* Committee Filter (align right) */
+/* Committee Filter Dropdown */
 .committee-filter {
   display: flex;
   justify-content: flex-end;
   align-items: center;
   gap: 0.5rem;
-  padding: 1rem 1.2rem; /* sariling padding */
+  padding: 1rem 1.2rem;
+  background: #f8f9fa;
+  border-bottom: 1px solid #eee;
 }
 
 .committee-filter label {
@@ -600,17 +581,102 @@ body {
   color: #333;
 }
 
-.committee-filter input {
-  border: 1px solid #000;
-  border-radius: 6px;
-  padding: 0.3rem 0.6rem;
-  width: 160px;
+/* Custom Select Styles */
+.custom-select {
+  position: relative;
+  width: 200px;
+  cursor: pointer;
+  z-index: 1000;
 }
 
-/* Table */
+.custom-select .selected {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  background: #fff;
+  border: 1.5px solid #3C87C4;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #333;
+  transition: all 0.3s ease;
+}
 
-.participation-card{
-    border: 1px solid #000;
+.custom-select .selected:hover {
+  border-color: #1C6DD0;
+  box-shadow: 0 2px 4px rgba(60, 135, 196, 0.2);
+}
+
+.custom-select .selected-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.custom-select .dropdown-icon {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.3s ease;
+  color: #3C87C4;
+}
+
+.custom-select.open .dropdown-icon {
+  transform: rotate(180deg);
+}
+
+.custom-select .options {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1.5px solid #3C87C4;
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  display: none;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.custom-select.open .options {
+  display: block;
+}
+
+.custom-select .options li {
+  padding: 0.7rem 1rem;
+  list-style: none;
+  font-size: 0.9rem;
+  color: #333;
+  border-bottom: 1px solid #f0f0f0;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.custom-select .options li:hover {
+  background: #f8f9fa;
+  color: #3C87C4;
+}
+
+.custom-select .options li:last-child {
+  border-bottom: none;
+}
+
+.custom-select .options li[data-value="all"] {
+  font-weight: 600;
+  color: #3C87C4;
+  background: #f8f9fa;
+}
+
+/* Ensure the dropdown appears above other elements */
+.participation-card {
+  position: relative;
+  z-index: 1;
+}
+
+.participation-card {
+  border: 1px solid #000;
 }
 
 .participation-table {
@@ -622,7 +688,7 @@ body {
 .participation-table th {
   background: #3C87C4;
   color: #fff;
-  text-align: center; /* 👉 gitna header */
+  text-align: center;
   padding: 1.2rem 1.5rem;
   font-size: 1rem;
   font-weight: 700;
@@ -651,13 +717,12 @@ body {
 }
 
 .participation-table td {
-  text-align: left;       /* 👉 text naka-left */
-  vertical-align: middle; /* 👉 laman gitna taas-baba */
+  text-align: left;
+  vertical-align: middle;
   padding: 1.2rem 1.5rem;
   border-bottom: 1px solid #eee;
   font-size: 1rem;
 }
-
 
 .participation-table td em {
   font-style: italic;
@@ -668,7 +733,6 @@ body {
   color: #444;
   font-size: 0.9rem;
 }
-
 
 /* Button */
 .btn-view {
@@ -689,8 +753,7 @@ body {
   color: #fff;
 }
 
-/* Card */
-/* Card */
+/* Top Youth Card */
 .top-youth-card {
   padding: 0; 
   position: relative;
@@ -700,7 +763,6 @@ body {
 .top-youth-card .card-header {
   border-bottom: 2px solid #3C87C4;
   padding: 1rem 1.2rem 0.5rem 1.2rem;
-
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -732,7 +794,6 @@ body {
   color: #114B8C;              
   text-decoration: underline;  
 }
-
 
 /* Youth List */
 .youth-list {
@@ -767,14 +828,6 @@ body {
   text-decoration: none;
 }
 
-
-
-
-
-
-
-
-
 /* ===============================
    MAIN CONTENT RESPONSIVE
 =================================*/
@@ -791,19 +844,11 @@ body {
     font-size: 1.4rem;
     text-align: center;
   }
-
-  
-
-  
 }
-
 
 /* Mobile (<= 768px) */
 @media (max-width: 768px) {
-
-
-
-.sidebar {
+  .sidebar {
     width: calc(100% - 20px);
     height: 55px;
     min-height: auto !important;
@@ -848,14 +893,13 @@ body {
     border-radius: 50%;
   }
 
-
   .sidebar .menu-toggle,
   .sidebar .divider {
     display: none !important;
   }
 
   /* === TOPBAR === */
-.topbar {
+  .topbar {
     position: fixed;      
     top: 0;
     left: 0;
@@ -863,26 +907,26 @@ body {
     z-index: 1000;        
   }
 
-/* Left group = time, bell, avatar */
-.topbar-left {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
+  /* Left group = time, bell, avatar */
+  .topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
 
-.topbar-left .time {
-  font-size: 12px;
-}
+  .topbar-left .time {
+    font-size: 12px;
+  }
 
-.topbar-left .fa-bell {
-  font-size: 16px;
-}
+  .topbar-left .fa-bell {
+    font-size: 16px;
+  }
 
-.topbar-left .avatar {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-}
+  .topbar-left .avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+  }
 
   .notif-dropdown {
     position: fixed;
@@ -913,7 +957,8 @@ body {
       opacity: 1;
     }
   }
-.main {
+
+  .main {
     margin-left: 0;
     padding: 1rem;
     padding-top: 80px;
@@ -928,9 +973,26 @@ body {
   .participation-section {
     grid-template-columns: 1fr;
   }
-  
 
+  /* Committee Filter Mobile */
+  .committee-filter {
+    justify-content: flex-start;
+    padding: 1rem;
+  }
   
+  .custom-select {
+    width: 180px;
+  }
+  
+  .custom-select .selected {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+  }
+  
+  .custom-select .options li {
+    padding: 0.6rem 0.8rem;
+    font-size: 0.85rem;
+  }
 }  
 
 @media (max-width: 480px) {
@@ -952,5 +1014,13 @@ body {
     text-align: center;
   }
 
+  .committee-filter {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
   
+  .custom-select {
+    width: 100%;
+  }
 }

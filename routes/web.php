@@ -18,8 +18,11 @@ use App\Http\Controllers\SKEvaluationController;
 use App\Http\Controllers\ServicesController;
 use App\Http\Controllers\SuggestionController;
 use App\Http\Controllers\YouthProfileController;
+use App\Http\Controllers\YouthParticipationController;
 use App\Http\Controllers\GoogleController;
 use App\Http\Controllers\VerificationController;
+use App\Http\Controllers\EvaluationRespondentsController;
+
 
 Route::get('/', function () {
     return view('landingpage');
@@ -84,9 +87,8 @@ Route::get('/evaluation/check/{eventId}', [EvaluationController::class, 'checkEv
 // FIXED: SK Dashboard route - use controller instead of direct view
 Route::get('/sk-dashboard', [SKDashboardController::class, 'index'])->name('sk.dashboard');
 
-Route::get('/youth-profilepage', function () {
-    return view('youth-profilepage'); 
-})->name('youth-profilepage');
+// FIXED: Youth Profile route - use controller instead of direct view
+Route::get('/youth-profilepage', [YouthProfileController::class, 'index'])->name('youth-profilepage');
 
 Route::get('/create-program', function () {
     return view('create-program'); 
@@ -104,9 +106,9 @@ Route::get('/certificate-request-list', function () {
     return view('certificate-request-list'); 
 })->name('certificate-request-list');
 
-Route::get('/youth-participation', function () {
-    return view('youth-participation'); 
-})->name('youth-participation');
+Route::get('/youth-participation', [YouthParticipationController::class, 'index'])
+    ->name('youth-participation')
+    ->middleware('auth');
 
 Route::get('/list-of-attendees', function () {
     return view('list-of-attendees'); 
@@ -115,12 +117,6 @@ Route::get('/list-of-attendees', function () {
 Route::get('/youth-status', function () {
     return view('youth-statuspage');
 })->name('youth-statuspage');
-
-
-Route::get('/sk-evaluation-feedback', function () {
-    return view('sk-evaluation-feedback');
-})->name('sk-evaluation-feedback');
-
 
 Route::get('/edit-program', function () {
     return view('edit-program');
@@ -155,14 +151,8 @@ Route::get('/reports', function () {
 Route::get('/view-youth-profile', function () {
     return view('view-youth-profile');
 })->name('view-youth-profile');
-// Replace the existing youth-profilepage route
-Route::get('/youth-profilepage', [YouthProfileController::class, 'index'])->name('youth-profilepage');
 
-
-
-
-//CONTROLLER ROUTES
-
+// CONTROLLER ROUTES
 
 Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
 Route::post('/register/preview', [RegisterController::class, 'preview'])->name('register.preview');
@@ -195,8 +185,14 @@ Route::middleware(['auth'])->group(function () {
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
     
-    // SK Dashboard - ADD THIS INSIDE AUTH MIDDLEWARE
+    // SK Dashboard
     Route::get('/sk-dashboard', [SKDashboardController::class, 'index'])->name('sk.dashboard');
+    
+    // SK Evaluation Feedback - FIXED: Using controller instead of closure
+    Route::get('/sk-evaluation-feedback', [SKEvaluationController::class, 'index'])->name('sk-evaluation-feedback');
+    
+    // SK Evaluation Review
+    Route::get('/sk/evaluation/review/{event_id}', [SKEvaluationController::class, 'showReview'])->name('sk-eval-review');
     
     // Password routes
     Route::post('/profile/change-password', [ProfileController::class, 'changePassword'])->name('profile.change-password');
@@ -210,10 +206,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/attendance/mark', [AttendanceController::class, 'markAttendance'])->name('attendance.mark');
     Route::get('/attendance/my-attendances', [AttendanceController::class, 'getUserAttendances'])->name('attendance.my');
     
-    // SK Evaluation
-    Route::get('/sk/evaluation/review/{event_id}', [App\Http\Controllers\SKEvaluationController::class, 'showReview'])->name('sk-eval-review');
-    
-    // SK Suggestions Route - ADD THIS LINE
+    // SK Suggestions Route
     Route::get('/sk-suggestions', [SuggestionController::class, 'getSKSuggestions'])->name('sk.suggestions');
     
     // Protected Poll Routes (for voting)
@@ -225,23 +218,27 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/sk-polls/{pollId}/respondents', [SKPollsController::class, 'getRespondents'])->name('sk-polls.respondents');
     Route::delete('/sk-polls/{pollId}', [SKPollsController::class, 'destroy'])->name('sk-polls.destroy');
 });
+
 Route::post('/polls/{pollId}/reset-vote', [PollsController::class, 'resetVote'])->name('polls.reset-vote');
 
 Route::get('/events/{id}/qr', [EventController::class, 'showQr'])->name('events.qr');
-Route::get('/attendance/records', [App\Http\Controllers\AttendanceController::class, 'getAllAttendances']);
+Route::get('/attendance/records', [AttendanceController::class, 'getAllAttendances']);
 Route::get('/attendance/my', [AttendanceController::class, 'myAttendance'])->name('attendance.my');
-
 
 Route::get('/attendance/records', [AttendanceController::class, 'getAllAttendances'])->name('attendance.records');
 
 Route::get('/attendance/records', [AttendanceController::class, 'getEventAttendances'])
     ->name('attendance.records');
 
+// List of Attendees Route
+Route::get('/list-of-attendees', [AttendanceController::class, 'showAttendees'])->name('attendees.index');
 
-//OTP
+// OTP Routes
 Route::post('/auth/google/token', [GoogleController::class, 'getEmailFromToken']);
 Route::post('/send-otp', [VerificationController::class, 'sendOtp']);
 Route::post('/verify-otp', [VerificationController::class, 'verifyOtp']);
 
 Route::get('/auth/google/redirect', [GoogleController::class, 'redirect'])->name('google.redirect');
 Route::get('/auth/google/callback', [GoogleController::class, 'callback'])->name('google.callback');
+Route::get('/evaluation/respondents/{event_id}', [EvaluationRespondentsController::class, 'showRespondents'])
+    ->name('evaluation.respondents');

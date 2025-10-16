@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KatiBayan - Dashboard</title>
+  <title>KatiBayan - List of Attendees</title>
   <link rel="stylesheet" href="{{ asset('css/list-of-attendees.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -13,10 +13,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
-
-
-
+  <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 </head>
 <body>
   
@@ -35,12 +32,12 @@
         <span class="label">Analytics</span>
       </a>
 
-      <a href="{{ route('youth-profilepage') }}" class="active">
+      <a href="{{ route('youth-profilepage') }}">
         <i data-lucide="users"></i>
         <span class="label">Youth Profile</span>
       </a>
 
-      <a href="{{ route('sk-eventpage') }}" class="events-link">
+      <a href="{{ route('sk-eventpage') }}">
         <i data-lucide="calendar"></i>
         <span class="label">Events and Programs</span>
       </a>
@@ -67,10 +64,8 @@
         <i data-lucide="hand-heart"></i>
         <span class="label">Service Offer</span>
       </a>
-
     </nav>
   </aside>
-
 
   <!-- Main -->
   <div class="main">
@@ -127,15 +122,17 @@
 
         <!-- Profile Avatar -->
         <div class="profile-wrapper">
-          <img src="https://i.pravatar.cc/80" alt="User" class="avatar" id="profileToggle">
+          <img src="{{ auth()->user() && auth()->user()->avatar ? asset('storage/' . auth()->user()->avatar) : asset('images/default-avatar.png') }}" 
+               alt="User" class="avatar" id="profileToggle">
           <div class="profile-dropdown">
             <div class="profile-header">
-              <img src="https://i.pravatar.cc/80" alt="User" class="profile-avatar">
+              <img src="{{ auth()->user() && auth()->user()->avatar ? asset('storage/' . auth()->user()->avatar) : asset('images/default-avatar.png') }}" 
+                   alt="User" class="profile-avatar">
               <div class="profile-info">
-                <h4>Marijoy S. Novora</h4>
+                <h4>{{ auth()->user()->given_name ?? '' }} {{ auth()->user()->middle_name ?? '' }} {{ auth()->user()->last_name ?? '' }} {{ auth()->user()->suffix ?? '' }}</h4>
                 <div class="profile-badge">
-                  <span class="badge">KK- Member</span>
-                  <span class="badge">19 yrs old</span>
+                  <span class="badge">{{ auth()->user()->role === 'sk' ? 'SK Member' : 'KK Member' }}</span>
+                  <span class="badge">{{ auth()->user()->date_of_birth ? \Carbon\Carbon::parse(auth()->user()->date_of_birth)->age : 'N/A' }} yrs old</span>
                 </div>
               </div>
             </div>
@@ -153,402 +150,436 @@
                 </a>
               </li>
               <li><i class="fas fa-star"></i> Send Feedback to Katibayan</li>
+              <li class="logout-item">
+                <a href="loginpage" onclick="confirmLogout(event)">
+                  <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+              </li>
             </ul>
+            
+            <!-- Hidden Logout Form -->
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+              @csrf
+            </form>
           </div>
         </div>
       </div>
     </header>
 
     <main class="container">
+      <div class="attendees-container">
+        <div class="attendees-card">
 
-<div class="attendees-container">
-  <div class="attendees-card">
+          <!-- Header -->
+          <div class="attendees-header">
+            <a href="{{ route('youth-participation') }}" class="back-btn">
+              <i class="fas fa-arrow-left"></i>
+            </a>
+            <h2>List Of Attendees</h2>
+            @if(isset($event) && $event)
+              <div class="event-info">
+                <h3>{{ $event->title }}</h3>
+                <p class="event-details">
+                  <i class="fas fa-calendar"></i> {{ \Carbon\Carbon::parse($event->event_date)->format('F j, Y') }} 
+                  | <i class="fas fa-clock"></i> {{ $event->formatted_time }}
+                  | <i class="fas fa-map-marker-alt"></i> {{ $event->location }}
+                </p>
+              </div>
+            @endif
+          </div>
 
-    <!-- Header -->
-    <div class="attendees-header">
-      <a href="{{ route('sk-eventpage') }}" class="back-btn">
-        <i class="fas fa-arrow-left"></i>
-      </a>
-      <h2>List Of Attendees</h2>
-    </div>
+          <!-- Search + Filter + Export -->
+          <div class="attendees-controls">
+            <div class="search-box">
+              <i class="fas fa-search"></i>
+              <input type="text" id="searchInput" placeholder="Search attendees...">
+            </div>
+            
+            <div class="filter-export-group">
+              <button class="filter-btn" id="filterBtn">
+                <i class="fas fa-filter"></i> Filter
+              </button>
+              
+              <div class="export-dropdown">
+                <button class="export-btn">
+                  <i class="fas fa-download"></i> Export
+                </button>
+                <div class="export-options">
+                  <a href="#" id="exportPDF">PDF</a>
+                  <a href="#" id="exportExcel">Excel</a>
+                </div>
+              </div>
+            </div>
+          </div>
 
-    <!-- Search + Filter -->
-    <div class="attendees-controls">
-      <div class="search-box">
-        <i class="fas fa-search"></i>
-        <input type="text" placeholder="Search">
+          <!-- Table -->
+          <div class="attendees-table-wrapper">
+            <table class="attendees-table" id="attendeesTable">
+              <thead>
+                <tr>
+                  <th>KK Number</th>
+                  <th>Name</th>
+                  <th>Age</th>
+                  <th>Purok</th>
+                  <th>Youth Age Group</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="attendeesTableBody">
+                @if(isset($attendances) && $attendances->count() > 0)
+                  @foreach($attendances as $attendance)
+                    @php
+                      $user = $attendance->user;
+                      if (!$user) continue;
+                      
+                      // Build full name
+                      $fullnameParts = array_filter([
+                          $user->given_name ?? '',
+                          $user->middle_name ?? '',
+                          $user->last_name ?? '',
+                          $user->suffix ?? ''
+                      ]);
+                      $fullname = implode(' ', $fullnameParts);
+                      
+                      // Calculate age
+                      $age = $user->date_of_birth ? \Carbon\Carbon::parse($user->date_of_birth)->age : '-';
+                      
+                      // Determine youth age group
+                      $youthAgeGroup = 'Unknown';
+                      if ($age !== '-') {
+                          if ($age >= 15 && $age <= 30) {
+                              $youthAgeGroup = 'Core Youth';
+                          } elseif ($age < 15) {
+                              $youthAgeGroup = 'Early Youth';
+                          } else {
+                              $youthAgeGroup = 'Senior Youth';
+                          }
+                      }
+                      
+                      // Determine status
+                      $status = 'Active Youth'; // You can customize this based on your logic
+                    @endphp
+                    <tr class="attendee-row">
+                      <td>{{ $user->account_number ?? 'N/A' }}</td>
+                      <td>{{ $fullname ?: 'Unknown User' }}</td>
+                      <td>{{ $age }}</td>
+                      <td>{{ $user->purok_zone ?? 'N/A' }}</td>
+                      <td>{{ $youthAgeGroup }}</td>
+                      <td>
+                        <span class="status-badge {{ strtolower(str_replace(' ', '-', $status)) }}">
+                          {{ $status }}
+                        </span>
+                      </td>
+                    </tr>
+                  @endforeach
+                @else
+                  <tr>
+                    <td colspan="6" class="no-data">
+                      <i class="fas fa-users-slash"></i>
+                      <p>No attendees found for this event.</p>
+                    </td>
+                  </tr>
+                @endif
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Attendance Summary -->
+          @if(isset($attendances) && $attendances->count() > 0)
+            <div class="attendance-summary">
+              <div class="summary-item">
+                <span class="summary-label">Total Attendees:</span>
+                <span class="summary-value">{{ $attendances->count() }}</span>
+              </div>
+              <div class="summary-item">
+                <span class="summary-label">Core Youth (15-30):</span>
+                <span class="summary-value" id="coreYouthCount">0</span>
+              </div>
+              <div class="summary-item">
+                <span class="summary-label">Active Members:</span>
+                <span class="summary-value" id="activeMembersCount">0</span>
+              </div>
+            </div>
+          @endif
+        </div>
       </div>
-      <button class="filter-btn">
-        <i class="fas fa-filter"></i> Filter
-      </button>
-    </div>
-
-    <!-- Table -->
-    <div class="attendees-table-wrapper">
-      <table class="attendees-table">
-        <thead>
-          <tr>
-            <th>KK Number</th>
-            <th>Name</th>
-            <th>Age</th>
-            <th>Purok</th>
-            <th>Youth age group</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>KKBA-EMS3-2025-0012</td>
-            <td>Aika G. Barin</td>
-            <td>21</td>
-            <td>Purok 6</td>
-            <td>Core Youth</td>
-            <td>Active Youth</td>
-          </tr>
-          <tr>
-            <td>KKBA-EMS3-2025-0012</td>
-            <td>Ethan M. Batumbakal</td>
-            <td>21</td>
-            <td>Purok 6</td>
-            <td>Core Youth</td>
-            <td>Active Youth</td>
-          </tr>
-          <tr>
-            <td>KKBA-EMS3-2025-0012</td>
-            <td>Peter Pan Parker Ron M. Mortega</td>
-            <td>21</td>
-            <td>Purok 2</td>
-            <td>Core Youth</td>
-            <td>Active Youth</td>
-          </tr>
-          <tr>
-            <td>KKBA-EMS3-2025-0012</td>
-            <td>Sarrah Joe</td>
-            <td>21</td>
-            <td>Purok 2</td>
-            <td>Core Youth</td>
-            <td>Active Youth</td>
-          </tr>
-          <tr>
-            <td>KKBA-EMS3-2025-0012</td>
-            <td>Jane Rea May G. Mengorio</td>
-            <td>21</td>
-            <td>Purok 2</td>
-            <td>Core Youth</td>
-            <td>Active Youth</td>
-          </tr>
-          <tr>
-            <td>KKBA-EMS3-2025-0012</td>
-            <td>Juliane Rebecca S. Dayandante</td>
-            <td>21</td>
-            <td>Purok 2</td>
-            <td>Core Youth</td>
-            <td>Active Youth</td>
-          </tr>
-          <tr>
-            <td>KKBA-EMS3-2025-0012</td>
-            <td>Marijoy S. Novora</td>
-            <td>21</td>
-            <td>Purok 2</td>
-            <td>Core Youth</td>
-            <td>Active Youth</td>
-          </tr>
-          <tr>
-            <td>KKBA-EMS3-2025-0012</td>
-            <td>Feliz D. Navidad</td>
-            <td>21</td>
-            <td>Purok 2</td>
-            <td>Core Youth</td>
-            <td>Active Youth</td>
-          </tr>
-          <tr>
-            <td>KKBA-EMS3-2025-0012</td>
-            <td>Jose Mari Chan</td>
-            <td>21</td>
-            <td>Purok 2</td>
-            <td>Core Youth</td>
-            <td>Active Youth</td>
-          </tr>
-          <tr>
-            <td>KKBA-EMS3-2025-0012</td>
-            <td>Felix D. StrayKid</td>
-            <td>21</td>
-            <td>Purok 2</td>
-            <td>Core Youth</td>
-            <td>Active Youth</td>
-          </tr>
-          <tr>
-            <td>KKBA-EMS3-2025-0012</td>
-            <td>Cheolita Marie</td>
-            <td>21</td>
-            <td>Purok 2</td>
-            <td>Core Youth</td>
-            <td>Active Youth</td>
-          </tr>
-          <tr>
-            <td>KKBA-EMS3-2025-0012</td>
-            <td>Poloy D. Yolo</td>
-            <td>21</td>
-            <td>Purok 2</td>
-            <td>Core Youth</td>
-            <td>Active Youth</td>
-          </tr>
-          <tr>
-            <td>KKBA-EMS3-2025-0012</td>
-            <td>Beige N. Poloy</td>
-            <td>21</td>
-            <td>Purok 2</td>
-            <td>Core Youth</td>
-            <td>Active Youth</td>
-          </tr>
-          <tr>
-            <td>KKBA-EMS3-2025-0012</td>
-            <td>Beige N. Poloy</td>
-            <td>21</td>
-            <td>Purok 2</td>
-            <td>Core Youth</td>
-            <td>Active Youth</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    
+    </main>
   </div>
-</div>
 
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // Initialize icons
+      if (typeof lucide !== "undefined" && lucide.createIcons) lucide.createIcons();
 
+      // Global variables - FIXED: Properly handle the PHP variable
+      let currentEventId = <?php echo isset($event) && $event ? $event->id : 'null'; ?>;
+      let allAttendees = [];
 
+      // === UI elements ===
+      const menuToggle = document.querySelector('.menu-toggle');
+      const sidebar = document.querySelector('.sidebar');
+      const profileWrapper = document.querySelector('.profile-wrapper');
+      const profileToggle = document.getElementById('profileToggle');
+      const notifWrapper = document.querySelector(".notification-wrapper");
 
-
-
-
-
-
-
-
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-  // === Lucide icons + sidebar toggle ===
-  lucide.createIcons();
-  const menuToggle = document.querySelector('.menu-toggle');
-  const sidebar = document.querySelector('.sidebar');
-  const profileItem = document.querySelector('.profile-item');
-  const profileLink = document.querySelector('.profile-link');
-  const eventsItem = document.querySelector('.events-item');
-  const eventsLink = document.querySelector('.events-link');
-
-  if (menuToggle && sidebar) {
-    menuToggle.addEventListener('click', (e) => {
-      e.stopPropagation();
-      sidebar.classList.toggle('open');
-      if (!sidebar.classList.contains('open')) {
-        profileItem?.classList.remove('open'); 
-      }
-    });
-  }
-
-  // === Submenus ===
-const evaluationItem = document.querySelector('.evaluation-item');
-const evaluationLink = document.querySelector('.evaluation-link');
-
-evaluationLink?.addEventListener('click', (e) => {
-  e.preventDefault();
-
-  const isOpen = evaluationItem.classList.contains('open');
-  evaluationItem.classList.remove('open');
-
-  if (!isOpen) {
-    evaluationItem.classList.add('open');
-  }
-});
-
-
-  // === Calendar ===
-  const weekdays = ["MON","TUE","WED","THU","FRI","SAT","SUN"];
-  const daysContainer = document.querySelector(".calendar .days");
-  const header = document.querySelector(".calendar header h3");
-  let today = new Date();
-  let currentView = new Date();
-
-  const holidays = [
-    "2025-01-01","2025-04-09","2025-04-17","2025-04-18",
-    "2025-05-01","2025-06-06","2025-06-12","2025-08-25",
-    "2025-11-30","2025-12-25","2025-12-30"
-  ];
-
-  function renderCalendar(baseDate) {
-    if (!daysContainer || !header) return;
-    daysContainer.innerHTML = "";
-
-    const startOfWeek = new Date(baseDate);
-    startOfWeek.setDate(baseDate.getDate() - (baseDate.getDay() === 0 ? 6 : baseDate.getDay() - 1));
-
-    const middleDay = new Date(startOfWeek);
-    middleDay.setDate(startOfWeek.getDate() + 3);
-    header.textContent = middleDay.toLocaleDateString("en-US", { month: "long", year: "numeric" });
-
-    for (let i = 0; i < 7; i++) {
-      const thisDay = new Date(startOfWeek);
-      thisDay.setDate(startOfWeek.getDate() + i);
-
-      const dayEl = document.createElement("div");
-      dayEl.classList.add("day");
-
-      const weekdayEl = document.createElement("span");
-      weekdayEl.classList.add("weekday");
-      weekdayEl.textContent = weekdays[i];
-
-      const dateEl = document.createElement("span");
-      dateEl.classList.add("date");
-      dateEl.textContent = thisDay.getDate();
-
-      const month = (thisDay.getMonth() + 1).toString().padStart(2,'0');
-      const day = thisDay.getDate().toString().padStart(2,'0');
-      const dateStr = `${thisDay.getFullYear()}-${month}-${day}`;
-
-      if (holidays.includes(dateStr)) dateEl.classList.add('holiday');
-      if (
-        thisDay.getDate() === today.getDate() &&
-        thisDay.getMonth() === today.getMonth() &&
-        thisDay.getFullYear() === today.getFullYear()
-      ) {
-        dayEl.classList.add("active");
+      // Initialize attendee data
+      function initializeAttendeeData() {
+        const rows = document.querySelectorAll('.attendee-row');
+        allAttendees = Array.from(rows).map(row => {
+          return {
+            element: row,
+            kkNumber: row.cells[0].textContent.trim(),
+            name: row.cells[1].textContent.trim(),
+            age: parseInt(row.cells[2].textContent) || 0,
+            purok: row.cells[3].textContent.trim(),
+            ageGroup: row.cells[4].textContent.trim(),
+            status: row.cells[5].textContent.trim()
+          };
+        });
+        
+        updateSummaryCounts();
       }
 
-      dayEl.appendChild(weekdayEl);
-      dayEl.appendChild(dateEl);
-      daysContainer.appendChild(dayEl);
-    }
-  }
+      // Update summary counts
+      function updateSummaryCounts() {
+        const coreYouthCount = allAttendees.filter(attendee => attendee.ageGroup === 'Core Youth').length;
+        const activeMembersCount = allAttendees.filter(attendee => attendee.status === 'Active Youth').length;
+        
+        const coreYouthElement = document.getElementById('coreYouthCount');
+        const activeMembersElement = document.getElementById('activeMembersCount');
+        
+        if (coreYouthElement) {
+          coreYouthElement.textContent = coreYouthCount;
+        }
+        if (activeMembersElement) {
+          activeMembersElement.textContent = activeMembersCount;
+        }
+      }
 
-  renderCalendar(currentView);
+      // Search functionality
+      const searchInput = document.getElementById('searchInput');
+      searchInput?.addEventListener('input', function() {
+        const query = this.value.toLowerCase().trim();
+        const rows = document.querySelectorAll('.attendee-row');
+        
+        let visibleCount = 0;
+        
+        rows.forEach(row => {
+          const rowText = row.textContent.toLowerCase();
+          if (rowText.includes(query)) {
+            row.style.display = '';
+            visibleCount++;
+          } else {
+            row.style.display = 'none';
+          }
+        });
 
-  const prevBtn = document.querySelector(".calendar .prev");
-  const nextBtn = document.querySelector(".calendar .next");
-  if (prevBtn) prevBtn.addEventListener("click", () => {
-    currentView.setDate(currentView.getDate() - 7);
-    renderCalendar(currentView);
-  });
-  if (nextBtn) nextBtn.addEventListener("click", () => {
-    currentView.setDate(currentView.getDate() + 7);
-    renderCalendar(currentView);
-  });
-
-  // === Time auto-update ===
-  const timeEl = document.querySelector(".time");
-  function updateTime() {
-    if (!timeEl) return;
-    const now = new Date();
-    const shortWeekdays = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
-    const shortMonths = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
-    const weekday = shortWeekdays[now.getDay()];
-    const month = shortMonths[now.getMonth()];
-    const day = now.getDate();
-    let hours = now.getHours();
-    const minutes = now.getMinutes().toString().padStart(2, "0");
-    const ampm = hours >= 12 ? "PM" : "AM";
-    hours = hours % 12 || 12;
-    timeEl.innerHTML = `${weekday}, ${month} ${day} ${hours}:${minutes} <span>${ampm}</span>`;
-  }
-  updateTime();
-  setInterval(updateTime, 60000);
-
-  // === Notifications ===
-  const notifWrapper = document.querySelector(".notification-wrapper");
-  const profileWrapper = document.querySelector(".profile-wrapper");
-  const profileToggle = document.getElementById("profileToggle");
-  const profileDropdown = document.querySelector(".profile-dropdown");
-
-  if (notifWrapper) {
-    const bell = notifWrapper.querySelector(".fa-bell");
-    if (bell) {
-      bell.addEventListener("click", (e) => {
-        e.stopPropagation();
-        notifWrapper.classList.toggle("active");
-        profileWrapper?.classList.remove("active");
+        // Show no results message if needed
+        const noDataRow = document.querySelector('.no-data');
+        const tbody = document.getElementById('attendeesTableBody');
+        
+        if (visibleCount === 0 && query !== '') {
+          if (!noDataRow && tbody) {
+            tbody.innerHTML = `
+              <tr class="no-data">
+                <td colspan="6">
+                  <i class="fas fa-search"></i>
+                  <p>No attendees match your search.</p>
+                </td>
+              </tr>
+            `;
+          }
+        } else if (visibleCount > 0 && tbody) {
+          // Remove any existing no-data rows if we have results
+          const existingNoData = tbody.querySelector('.no-data');
+          if (existingNoData) {
+            existingNoData.remove();
+          }
+        }
       });
-    }
-    const dropdown = notifWrapper.querySelector(".notif-dropdown");
-    if (dropdown) dropdown.addEventListener("click", (e) => e.stopPropagation());
-  }
 
-  if (profileWrapper && profileToggle && profileDropdown) {
-    profileToggle.addEventListener("click", (e) => {
-      e.stopPropagation();
-      profileWrapper.classList.toggle("active");
-      notifWrapper?.classList.remove("active");
+      // Filter functionality
+      const filterBtn = document.getElementById('filterBtn');
+      filterBtn?.addEventListener('click', function() {
+        const statusFilter = prompt("Filter by Status (ex: Active Youth, type 'all' to show all):", "all");
+        if (statusFilter === null) return;
+
+        const rows = document.querySelectorAll('.attendee-row');
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+          const statusCell = row.cells[5]?.textContent.trim();
+          
+          if (statusFilter.toLowerCase() === 'all' || (statusCell && statusCell.toLowerCase().includes(statusFilter.toLowerCase()))) {
+            row.style.display = '';
+            visibleCount++;
+          } else {
+            row.style.display = 'none';
+          }
+        });
+
+        // Update UI based on filter results
+        if (visibleCount === 0 && statusFilter.toLowerCase() !== 'all') {
+          alert('No attendees match the selected filter.');
+        }
+      });
+
+      // Export functionality
+      const exportPDF = document.getElementById('exportPDF');
+      const exportExcel = document.getElementById('exportExcel');
+
+      exportPDF?.addEventListener('click', function(e) {
+        e.preventDefault();
+        exportToPDF();
+      });
+
+      exportExcel?.addEventListener('click', function(e) {
+        e.preventDefault();
+        exportToExcel();
+      });
+
+      function exportToPDF() {
+        // Check if jsPDF is available
+        if (typeof window.jspdf === 'undefined') {
+          alert('PDF export library not loaded. Please try again.');
+          return;
+        }
+
+        try {
+          const { jsPDF } = window.jspdf;
+          const doc = new jsPDF();
+          
+          const eventTitle = document.querySelector('.event-info h3')?.textContent || 'Event Attendees';
+          const eventDate = document.querySelector('.event-details')?.textContent || '';
+          
+          // Add title
+          doc.setFontSize(16);
+          doc.text(eventTitle, 14, 15);
+          doc.setFontSize(10);
+          doc.text(eventDate, 14, 22);
+          
+          // Add table
+          doc.autoTable({
+            html: '#attendeesTable',
+            startY: 30,
+            styles: { fontSize: 8 },
+            headStyles: { fillColor: [60, 135, 196] }
+          });
+          
+          doc.save('attendees-list.pdf');
+        } catch (error) {
+          console.error('PDF export error:', error);
+          alert('Error generating PDF. Please try again.');
+        }
+      }
+
+      function exportToExcel() {
+        try {
+          const table = document.getElementById('attendeesTable');
+          if (!table) {
+            alert('No data to export.');
+            return;
+          }
+          
+          const ws = XLSX.utils.table_to_sheet(table);
+          const wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, ws, "Attendees");
+          XLSX.writeFile(wb, "attendees-list.xlsx");
+        } catch (error) {
+          console.error('Excel export error:', error);
+          alert('Error generating Excel file. Please try again.');
+        }
+      }
+
+      // Sidebar toggle
+      if (menuToggle && sidebar) {
+        menuToggle.addEventListener('click', (e) => {
+          e.stopPropagation();
+          sidebar.classList.toggle('open');
+        });
+      }
+
+      // Evaluation submenu toggle
+      const evaluationItem = document.querySelector('.evaluation-item');
+      const evaluationLink = document.querySelector('.evaluation-link');
+      evaluationLink?.addEventListener('click', (e) => {
+        e.preventDefault();
+        evaluationItem?.classList.toggle('open');
+      });
+
+      // Time auto-update
+      const timeEl = document.querySelector(".time");
+      function updateTime() {
+        if (!timeEl) return;
+        const now = new Date();
+        const shortWeekdays = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
+        const shortMonths = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+        const weekday = shortWeekdays[now.getDay()];
+        const month = shortMonths[now.getMonth()];
+        const day = now.getDate();
+        let hours = now.getHours();
+        const minutes = now.getMinutes().toString().padStart(2, "0");
+        const ampm = hours >= 12 ? "PM" : "AM";
+        hours = hours % 12 || 12;
+        timeEl.innerHTML = `${weekday}, ${month} ${day} ${hours}:${minutes} <span>${ampm}</span>`;
+      }
+      updateTime();
+      setInterval(updateTime, 60000);
+
+      // Notifications / profile dropdowns
+      if (notifWrapper) {
+        const bell = notifWrapper.querySelector(".fa-bell");
+        bell?.addEventListener("click", (e) => {
+          e.stopPropagation();
+          notifWrapper.classList.toggle("active");
+          profileWrapper?.classList.remove("active");
+        });
+      }
+
+      if (profileWrapper && profileToggle) {
+        profileToggle.addEventListener("click", (e) => {
+          e.stopPropagation();
+          profileWrapper.classList.toggle("active");
+          notifWrapper?.classList.remove("active");
+        });
+      }
+
+      // Export dropdown
+      const exportBtn = document.querySelector('.export-btn');
+      const exportOptions = document.querySelector('.export-options');
+      if (exportBtn && exportOptions) {
+        exportBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          exportOptions.classList.toggle('show');
+        });
+
+        document.addEventListener('click', (e) => {
+          if (!exportBtn.contains(e.target) && !exportOptions.contains(e.target)) {
+            exportOptions.classList.remove('show');
+          }
+        });
+      }
+
+      // Close dropdowns when clicking outside
+      document.addEventListener("click", (e) => {
+        if (sidebar && !sidebar.contains(e.target) && menuToggle && !menuToggle.contains(e.target)) {
+          sidebar.classList.remove('open');
+        }
+        if (profileWrapper && !profileWrapper.contains(e.target)) profileWrapper.classList.remove('active');
+        if (notifWrapper && !notifWrapper.contains(e.target)) notifWrapper.classList.remove('active');
+      });
+
+      // Logout confirmation
+      window.confirmLogout = function(event) {
+        event.preventDefault();
+        if (confirm('Are you sure you want to logout?')) {
+          document.getElementById('logout-form').submit();
+        }
+      };
+
+      // Initialize attendee data when page loads
+      initializeAttendeeData();
     });
-    profileDropdown.addEventListener("click", (e) => e.stopPropagation());
-  }
-
-  document.addEventListener("click", (e) => {
-    if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
-      sidebar.classList.remove('open');
-      profileItem?.classList.remove('open');
-    }
-    if (profileWrapper && !profileWrapper.contains(e.target)) profileWrapper.classList.remove('active');
-    if (notifWrapper && !notifWrapper.contains(e.target)) notifWrapper.classList.remove('active');
-
-    // Close options dropdown when clicking outside
-    document.querySelectorAll('.options-dropdown').forEach(drop => drop.classList.remove('show'));
-  });
-
-  // === Highlight Holidays in Events ===
-  document.querySelectorAll('.events li').forEach(eventItem => {
-    const dateEl = eventItem.querySelector('.date span');
-    const monthEl = eventItem.querySelector('.date strong');
-    if (!dateEl || !monthEl) return;
-
-    const monthMap = {
-      JAN: "01", FEB: "02", MAR: "03", APR: "04", MAY: "05", JUN: "06",
-      JUL: "07", AUG: "08", SEP: "09", OCT: "10", NOV: "11", DEC: "12"
-    };
-    const monthNum = monthMap[monthEl.textContent.trim().toUpperCase()];
-    const day = dateEl.textContent.trim().padStart(2,'0');
-    const dateStr = `2025-${monthNum}-${day}`;
-
-    if (holidays.includes(dateStr)) {
-      eventItem.querySelector('.date').classList.add('holiday');
-    }
-  });
-
-  // === Back Button Fallback ===
-  const backBtn = document.querySelector('.back-btn');
-  backBtn?.addEventListener('click', (e) => {
-    if (backBtn.getAttribute('href') === '#') {
-      e.preventDefault();
-      history.back();
-    }
-  });
-
-  // === Search Attendees ===
-  const searchInput = document.querySelector('.search-box input');
-  const tableRows = document.querySelectorAll('.attendees-table tbody tr');
-
-  searchInput?.addEventListener('input', () => {
-    const query = searchInput.value.toLowerCase();
-    tableRows.forEach(row => {
-      const text = row.textContent.toLowerCase();
-      row.style.display = text.includes(query) ? '' : 'none';
-    });
-  });
-
-  // === Filter Attendees ===
-  const filterBtn = document.querySelector('.filter-btn');
-  filterBtn?.addEventListener('click', () => {
-    const status = prompt("Filter by Status (ex: Active Youth):");
-    if (!status) {
-      tableRows.forEach(row => row.style.display = '');
-      return;
-    }
-    tableRows.forEach(row => {
-      const cell = row.cells[5]?.textContent.toLowerCase(); // Status column
-      row.style.display = cell && cell.includes(status.toLowerCase()) ? '' : 'none';
-    });
-  });
-
-  
-});
-</script>
+  </script>
 </body>
 </html>

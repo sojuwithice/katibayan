@@ -937,13 +937,7 @@ document.addEventListener('click', () => {
   document.querySelectorAll('.options-dropdown.show').forEach(d => d.classList.remove('show'));
 });
 
-// Logout confirmation
-window.confirmLogout = function(event) {
-  event.preventDefault();
-  if (confirm('Are you sure you want to logout?')) {
-    document.getElementById('logout-form').submit();
-  }
-};
+
   
 });
 </script>

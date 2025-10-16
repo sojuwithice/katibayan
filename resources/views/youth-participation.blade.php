@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KatiBayan - Dashboard</title>
+  <title>KatiBayan - Youth Participation</title>
   <link rel="stylesheet" href="{{ asset('css/youth-participation.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -13,10 +13,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
-
-
-
+  <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 </head>
 <body>
   
@@ -67,10 +64,8 @@
         <i data-lucide="hand-heart"></i>
         <span class="label">Service Offer</span>
       </a>
-
     </nav>
   </aside>
-
 
   <!-- Main -->
   <div class="main">
@@ -127,15 +122,17 @@
 
         <!-- Profile Avatar -->
         <div class="profile-wrapper">
-          <img src="https://i.pravatar.cc/80" alt="User" class="avatar" id="profileToggle">
+          <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+               alt="User" class="avatar" id="profileToggle">
           <div class="profile-dropdown">
             <div class="profile-header">
-              <img src="https://i.pravatar.cc/80" alt="User" class="profile-avatar">
+              <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+                   alt="User" class="profile-avatar">
               <div class="profile-info">
-                <h4>Marijoy S. Novora</h4>
+                <h4>{{ $user->given_name }} {{ $user->middle_name }} {{ $user->last_name }} {{ $user->suffix }}</h4>
                 <div class="profile-badge">
-                  <span class="badge">KK- Member</span>
-                  <span class="badge">19 yrs old</span>
+                  <span class="badge">{{ $roleBadge }}</span>
+                  <span class="badge">{{ $age }} yrs old</span>
                 </div>
               </div>
             </div>
@@ -153,361 +150,311 @@
                 </a>
               </li>
               <li><i class="fas fa-star"></i> Send Feedback to Katibayan</li>
+              <li class="logout-item">
+                <a href="loginpage" onclick="confirmLogout(event)">
+                  <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+              </li>
             </ul>
+            
+            <!-- Hidden Logout Form -->
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+              @csrf
+            </form>
           </div>
         </div>
       </div>
     </header>
 
     <main class="container">
-  <!-- Header Title -->
-  <div class="welcome-card">
-  <h2>Youth Participation Record</h2>
-  <span class="year-badge">2025</span>
-</div>
+      <!-- Header Title -->
+      <div class="welcome-card">
+        <h2>Youth Participation Record</h2>
+        <span class="year-badge">{{ date('Y') }}</span>
+      </div>
 
+      <!-- Youth Participation Record Section -->
+      <section class="participation-section">
+        <!-- Left Card -->
+        <div class="card participation-card">
+          <div class="committee-filter">
+            <label for="committee">Committee</label>
+            <div class="custom-select" id="committee" tabindex="0" role="listbox" aria-haspopup="listbox">
+              <div class="selected" data-value="all">
+                <span class="selected-text">All Committees</span>
+                <i data-lucide="chevron-down" class="dropdown-icon"></i>
+              </div>
+              <ul class="options" role="presentation">
+                <li data-value="all" role="option">All Committees</li>
+                <li data-value="active_citizenship" role="option">Active Citizenship</li>
+                <li data-value="economic_empowerment" role="option">Economic Empowerment</li>
+                <li data-value="education" role="option">Education</li>
+                <li data-value="health" role="option">Health</li>
+                <li data-value="sports" role="option">Sports</li>
+              </ul>
+            </div>
+          </div>
 
-  <!-- Youth Participation Record Section -->
-<section class="participation-section">
-  <!-- Left Card -->
-  <div class="card participation-card">
-    <div class="committee-filter">
-      <label for="committee">Committee</label>
-      <input type="text" id="committee" placeholder="">
-    </div>
+          <table class="participation-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Event Name</th>
+                <th>Attendees</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              @if($events->count() > 0)
+                @foreach($events as $event)
+                  @php
+                    $eventDate = \Carbon\Carbon::parse($event->event_date);
+                    $formattedDate = $eventDate->format('F j, Y');
+                    $categorySlug = strtolower(str_replace(' ', '_', $event->category));
+                  @endphp
+                  <tr class="event-row" data-category="{{ $categorySlug }}">
+                    <td><em>{{ $formattedDate }}</em></td>
+                    <td>
+                      {{ $event->title }}<br>
+                      @if($event->description)
+                        <small>({{ Str::limit($event->description, 100) }})</small>
+                      @endif
+                    </td>
+                    <td>{{ $event->attendances_count }} attendees</td>
+                    <td>
+                      <a href="{{ route('attendees.index', ['event_id' => $event->id]) }}" class="btn-view">View Attendees</a>
+                    </td>
+                  </tr>
+                @endforeach
+              @else
+                <tr>
+                  <td colspan="4" style="text-align: center; padding: 20px;">
+                    <i class="fas fa-calendar-times" style="font-size: 48px; color: #ccc; margin-bottom: 10px;"></i>
+                    <p>No launched events found for your barangay.</p>
+                  </td>
+                </tr>
+              @endif
+            </tbody>
+          </table>
+        </div>
 
-    <table class="participation-table">
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Event Name</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><em>September 9, 2025</em></td>
-          <td>Kalinisan sa bagong Pilipinas Program <br>
-            <small>(Kalinga at Inisyatiba para sa malinis na bayan)</small>
-          </td>
-          <td>
-            <a href="{{ route('attendees.index') }}" class="btn-view">View Attendees</a>
-          </td>
-        </tr>
-        <tr>
-          <td><em>September 9, 2025</em></td>
-          <td>Kalinisan sa bagong Pilipinas Program <br>
-            <small>(Kalinga at Inisyatiba para sa malinis na bayan)</small>
-          </td>
-          <td><a href="{{ route('attendees.index') }}" class="btn-view">View Attendees</a></td>
-        </tr>
-        <tr>
-          <td><em>September 9, 2025</em></td>
-          <td>Kalinisan sa bagong Pilipinas Program <br>
-            <small>(Kalinga at Inisyatiba para sa malinis na bayan)</small>
-          </td>
-          <td><a href="{{ route('attendees.index') }}" class="btn-view">View Attendees</a></td>
-        </tr>
-        <tr>
-          <td><em>September 9, 2025</em></td>
-          <td>Kalinisan sa bagong Pilipinas Program <br>
-            <small>(Kalinga at Inisyatiba para sa malinis na bayan)</small>
-          </td>
-          <td><a href="{{ route('attendees.index') }}" class="btn-view">View Attendees</a></td>
-        </tr>
-        <tr>
-          <td><em>September 9, 2025</em></td>
-          <td>Kalinisan sa bagong Pilipinas Program <br>
-            <small>(Kalinga at Inisyatiba para sa malinis na bayan)</small>
-          </td>
-          <td><a href="{{ route('attendees.index') }}" class="btn-view">View Attendees</a></td>
-        </tr>
-      </tbody>
-    </table>
+        <!-- Right Card -->
+        <aside class="card top-youth-card">
+          <!-- Header -->
+          <div class="card-header">
+            <h3>Top Active Youth</h3>
+          </div>
+
+          <!-- See All -->
+          <div class="see-all">
+            <a href="{{ route('youth-statuspage') }}">See All</a>
+          </div>
+
+          <!-- Youth List -->
+          <ul class="youth-list">
+            @if($topYouth->count() > 0)
+              @foreach($topYouth as $index => $youth)
+                <li>
+                  <img src="{{ $youth['avatar'] ? asset('storage/' . $youth['avatar']) : 'https://i.pravatar.cc/40?img=' . ($index + 1) }}" alt="{{ $youth['name'] }}">
+                  <div>
+                    <strong>{{ $youth['name'] }}</strong><br>
+                    <a href="#">{{ $youth['attendance_count'] }} Events and Programs Attended</a>
+                  </div>
+                </li>
+              @endforeach
+            @else
+              <li style="text-align: center; padding: 20px;">
+                <i class="fas fa-users" style="font-size: 24px; color: #ccc; margin-bottom: 10px;"></i>
+                <p>No attendance records found.</p>
+              </li>
+            @endif
+          </ul>
+        </aside>
+      </section>
+    </main>
   </div>
 
- 
-  <!-- Right Card -->
-<aside class="card top-youth-card">
-  <!-- Header (may divider lang para sa title) -->
-  <div class="card-header">
-    <h3>Top Active Youth</h3>
-  </div>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // Initialize icons
+      if (typeof lucide !== "undefined" && lucide.createIcons) lucide.createIcons();
 
-  <!-- See All (hiwalay sa header/divider) -->
-  <div class="see-all">
-  <a href="{{ route('youth-statuspage') }}">See All</a>
-  </div>
+      // Global variables
+      let currentCategoryFilter = 'all';
 
-  <!-- Youth List -->
-  <ul class="youth-list">
-      <li>
-        <img src="https://i.pravatar.cc/40?img=1" alt="">
-        <div>
-          <strong>Alvin N. Dchipmunks</strong><br>
-          <a href="#">7 Events and Programs Attended</a>
-        </div>
-      </li>
-      <li>
-        <img src="https://i.pravatar.cc/40?img=2" alt="">
-        <div>
-          <strong>Ammara L. Jo</strong><br>
-          <a href="#">7 Events and Programs Attended</a>
-        </div>
-      </li>
-      <li>
-        <img src="https://i.pravatar.cc/40?img=3" alt="">
-        <div>
-          <strong>Ammiel N. Lim</strong><br>
-          <a href="#">7 Events and Programs Attended</a>
-        </div>
-      </li>
-      <li>
-        <img src="https://i.pravatar.cc/40?img=4" alt="">
-        <div>
-          <strong>Beverly M. Aios</strong><br>
-          <a href="#">7 Events and Programs Attended</a>
-        </div>
-      </li>
-      <li>
-        <img src="https://i.pravatar.cc/40?img=5" alt="">
-        <div>
-          <strong>Barbara K. Abios</strong><br>
-          <a href="#">7 Events and Programs Attended</a>
-        </div>
-      </li>
-      <li>
-        <img src="https://i.pravatar.cc/40?img=6" alt="">
-        <div>
-          <strong>Christian A. Sy</strong><br>
-          <a href="#">7 Events and Programs Attended</a>
-        </div>
-      </li>
-      <li>
-        <img src="https://i.pravatar.cc/40?img=7" alt="">
-        <div>
-          <strong>Cristian A. Jon</strong><br>
-          <a href="#">6 Events and Programs Attended</a>
-        </div>
-      </li>
-      <li>
-        <img src="https://i.pravatar.cc/40?img=8" alt="">
-        <div>
-          <strong>Czarina A. Sy</strong><br>
-          <a href="#">6 Events and Programs Attended</a>
-        </div>
-      </li>
-      <li>
-        <img src="https://i.pravatar.cc/40?img=9" alt="">
-        <div>
-          <strong>Dane J. Cheese</strong><br>
-          <a href="#">6 Events and Programs Attended</a>
-        </div>
-      </li>
-      <li>
-        <img src="https://i.pravatar.cc/40?img=10" alt="">
-        <div>
-          <strong>Dennise L. Laurel</strong><br>
-          <a href="#">6 Events and Programs Attended</a>
-        </div>
-      </li>
-    </ul>
-  </aside>
-</section>
+      // === UI elements ===
+      const menuToggle = document.querySelector('.menu-toggle');
+      const sidebar = document.querySelector('.sidebar');
+      const profileWrapper = document.querySelector('.profile-wrapper');
+      const profileToggle = document.getElementById('profileToggle');
+      const notifWrapper = document.querySelector(".notification-wrapper");
 
-
-
-
-
-
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-  // === Lucide icons + sidebar toggle ===
-  lucide.createIcons();
-  const menuToggle = document.querySelector('.menu-toggle');
-  const sidebar = document.querySelector('.sidebar');
-  const profileItem = document.querySelector('.profile-item');
-  const profileLink = document.querySelector('.profile-link');
-  const eventsItem = document.querySelector('.events-item');
-  const eventsLink = document.querySelector('.events-link');
-
-  if (menuToggle && sidebar) {
-    menuToggle.addEventListener('click', (e) => {
-      e.stopPropagation();
-      sidebar.classList.toggle('open');
-      if (!sidebar.classList.contains('open')) {
-        profileItem?.classList.remove('open'); 
-      }
-    });
-  }
-
-  // === Submenus ===
-const evaluationItem = document.querySelector('.evaluation-item');
-const evaluationLink = document.querySelector('.evaluation-link');
-
-evaluationLink?.addEventListener('click', (e) => {
-  e.preventDefault();
-
-  const isOpen = evaluationItem.classList.contains('open');
-  evaluationItem.classList.remove('open');
-
-  if (!isOpen) {
-    evaluationItem.classList.add('open');
-  }
-});
-
-
-  // === Calendar ===
-  const weekdays = ["MON","TUE","WED","THU","FRI","SAT","SUN"];
-  const daysContainer = document.querySelector(".calendar .days");
-  const header = document.querySelector(".calendar header h3");
-  let today = new Date();
-  let currentView = new Date();
-
-  const holidays = [
-    "2025-01-01","2025-04-09","2025-04-17","2025-04-18",
-    "2025-05-01","2025-06-06","2025-06-12","2025-08-25",
-    "2025-11-30","2025-12-25","2025-12-30"
-  ];
-
-  function renderCalendar(baseDate) {
-    if (!daysContainer || !header) return;
-    daysContainer.innerHTML = "";
-
-    const startOfWeek = new Date(baseDate);
-    startOfWeek.setDate(baseDate.getDate() - (baseDate.getDay() === 0 ? 6 : baseDate.getDay() - 1));
-
-    const middleDay = new Date(startOfWeek);
-    middleDay.setDate(startOfWeek.getDate() + 3);
-    header.textContent = middleDay.toLocaleDateString("en-US", { month: "long", year: "numeric" });
-
-    for (let i = 0; i < 7; i++) {
-      const thisDay = new Date(startOfWeek);
-      thisDay.setDate(startOfWeek.getDate() + i);
-
-      const dayEl = document.createElement("div");
-      dayEl.classList.add("day");
-
-      const weekdayEl = document.createElement("span");
-      weekdayEl.classList.add("weekday");
-      weekdayEl.textContent = weekdays[i];
-
-      const dateEl = document.createElement("span");
-      dateEl.classList.add("date");
-      dateEl.textContent = thisDay.getDate();
-
-      const month = (thisDay.getMonth() + 1).toString().padStart(2,'0');
-      const day = thisDay.getDate().toString().padStart(2,'0');
-      const dateStr = `${thisDay.getFullYear()}-${month}-${day}`;
-
-      if (holidays.includes(dateStr)) dateEl.classList.add('holiday');
-      if (
-        thisDay.getDate() === today.getDate() &&
-        thisDay.getMonth() === today.getMonth() &&
-        thisDay.getFullYear() === today.getFullYear()
-      ) {
-        dayEl.classList.add("active");
+      // Sidebar toggle
+      if (menuToggle && sidebar) {
+        menuToggle.addEventListener('click', (e) => {
+          e.stopPropagation();
+          sidebar.classList.toggle('open');
+        });
       }
 
-      dayEl.appendChild(weekdayEl);
-      dayEl.appendChild(dateEl);
-      daysContainer.appendChild(dayEl);
-    }
-  }
-
-  renderCalendar(currentView);
-
-  const prevBtn = document.querySelector(".calendar .prev");
-  const nextBtn = document.querySelector(".calendar .next");
-  if (prevBtn) prevBtn.addEventListener("click", () => {
-    currentView.setDate(currentView.getDate() - 7);
-    renderCalendar(currentView);
-  });
-  if (nextBtn) nextBtn.addEventListener("click", () => {
-    currentView.setDate(currentView.getDate() + 7);
-    renderCalendar(currentView);
-  });
-
-  // === Time auto-update ===
-  const timeEl = document.querySelector(".time");
-  function updateTime() {
-    if (!timeEl) return;
-    const now = new Date();
-    const shortWeekdays = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
-    const shortMonths = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
-    const weekday = shortWeekdays[now.getDay()];
-    const month = shortMonths[now.getMonth()];
-    const day = now.getDate();
-    let hours = now.getHours();
-    const minutes = now.getMinutes().toString().padStart(2, "0");
-    const ampm = hours >= 12 ? "PM" : "AM";
-    hours = hours % 12 || 12;
-    timeEl.innerHTML = `${weekday}, ${month} ${day} ${hours}:${minutes} <span>${ampm}</span>`;
-  }
-  updateTime();
-  setInterval(updateTime, 60000);
-
-  // === Notifications ===
-  const notifWrapper = document.querySelector(".notification-wrapper");
-  const profileWrapper = document.querySelector(".profile-wrapper");
-  const profileToggle = document.getElementById("profileToggle");
-  const profileDropdown = document.querySelector(".profile-dropdown");
-
-  if (notifWrapper) {
-    const bell = notifWrapper.querySelector(".fa-bell");
-    if (bell) {
-      bell.addEventListener("click", (e) => {
-        e.stopPropagation();
-        notifWrapper.classList.toggle("active");
-        profileWrapper?.classList.remove("active");
+      // Evaluation submenu toggle
+      const evaluationItem = document.querySelector('.evaluation-item');
+      const evaluationLink = document.querySelector('.evaluation-link');
+      evaluationLink?.addEventListener('click', (e) => {
+        e.preventDefault();
+        evaluationItem?.classList.toggle('open');
       });
-    }
-    const dropdown = notifWrapper.querySelector(".notif-dropdown");
-    if (dropdown) dropdown.addEventListener("click", (e) => e.stopPropagation());
-  }
 
-  if (profileWrapper && profileToggle && profileDropdown) {
-    profileToggle.addEventListener("click", (e) => {
-      e.stopPropagation();
-      profileWrapper.classList.toggle("active");
-      notifWrapper?.classList.remove("active");
+      // Time auto-update
+      const timeEl = document.querySelector(".time");
+      function updateTime() {
+        if (!timeEl) return;
+        const now = new Date();
+        const shortWeekdays = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
+        const shortMonths = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+        const weekday = shortWeekdays[now.getDay()];
+        const month = shortMonths[now.getMonth()];
+        const day = now.getDate();
+        let hours = now.getHours();
+        const minutes = now.getMinutes().toString().padStart(2, "0");
+        const ampm = hours >= 12 ? "PM" : "AM";
+        hours = hours % 12 || 12;
+        timeEl.innerHTML = `${weekday}, ${month} ${day} ${hours}:${minutes} <span>${ampm}</span>`;
+      }
+      updateTime();
+      setInterval(updateTime, 60000);
+
+      // Notifications / profile dropdowns
+      if (notifWrapper) {
+        const bell = notifWrapper.querySelector(".fa-bell");
+        bell?.addEventListener("click", (e) => {
+          e.stopPropagation();
+          notifWrapper.classList.toggle("active");
+          profileWrapper?.classList.remove("active");
+        });
+      }
+
+      if (profileWrapper && profileToggle) {
+        profileToggle.addEventListener("click", (e) => {
+          e.stopPropagation();
+          profileWrapper.classList.toggle("active");
+          notifWrapper?.classList.remove("active");
+        });
+      }
+
+      // Close dropdowns when clicking outside
+      document.addEventListener("click", (e) => {
+        if (sidebar && !sidebar.contains(e.target) && menuToggle && !menuToggle.contains(e.target)) {
+          sidebar.classList.remove('open');
+        }
+        if (profileWrapper && !profileWrapper.contains(e.target)) profileWrapper.classList.remove('active');
+        if (notifWrapper && !notifWrapper.contains(e.target)) notifWrapper.classList.remove('active');
+        document.querySelectorAll('.custom-select.open').forEach(o => o.classList.remove('open'));
+      });
+
+      // Committee Filter Dropdown functionality
+      const committeeSelect = document.querySelector("#committee");
+      if (committeeSelect) {
+        const selected = committeeSelect.querySelector(".selected");
+        const options = committeeSelect.querySelector(".options");
+        const items = options.querySelectorAll("li");
+
+        selected.addEventListener("click", (e) => {
+          e.stopPropagation();
+          committeeSelect.classList.toggle("open");
+        });
+
+        items.forEach(item => {
+          item.addEventListener("click", () => {
+            committeeSelect.querySelector(".selected-text").textContent = item.textContent;
+            committeeSelect.classList.remove("open");
+            
+            // Update category filter
+            currentCategoryFilter = item.getAttribute('data-value');
+            
+            // Apply filters
+            applyCommitteeFilter();
+          });
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener("click", (e) => {
+          if (!committeeSelect.contains(e.target)) {
+            committeeSelect.classList.remove("open");
+          }
+        });
+      }
+
+      // Apply committee filter
+      function applyCommitteeFilter() {
+        const eventRows = document.querySelectorAll('.event-row');
+        let hasVisibleEvents = false;
+
+        eventRows.forEach(row => {
+          const eventCategory = row.getAttribute('data-category');
+          
+          // Check if event matches committee filter
+          const categoryMatch = currentCategoryFilter === 'all' || eventCategory === currentCategoryFilter;
+          
+          if (categoryMatch) {
+            row.style.display = 'table-row';
+            hasVisibleEvents = true;
+          } else {
+            row.style.display = 'none';
+          }
+        });
+
+        // Show no events message if no events match filters
+        const noEventsRow = document.querySelector('.participation-table tbody tr:first-child');
+        if (!hasVisibleEvents && eventRows.length > 0) {
+          if (!document.querySelector('.no-events-message')) {
+            const noEventsHTML = `
+              <tr class="no-events-message">
+                <td colspan="4" style="text-align: center; padding: 20px;">
+                  <i class="fas fa-filter" style="font-size: 48px; color: #ccc; margin-bottom: 10px;"></i>
+                  <p>No events match the selected committee filter.</p>
+                  <button class="btn-reset-filter" onclick="resetCommitteeFilter()" style="margin-top: 10px; padding: 8px 16px; background: #3C87C4; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                    Reset Filter
+                  </button>
+                </td>
+              </tr>
+            `;
+            document.querySelector('.participation-table tbody').insertAdjacentHTML('beforeend', noEventsHTML);
+          }
+        } else {
+          const noEventsMessage = document.querySelector('.no-events-message');
+          if (noEventsMessage) {
+            noEventsMessage.remove();
+          }
+        }
+      }
+
+      // Reset committee filter function
+      window.resetCommitteeFilter = function() {
+        const committeeSelect = document.querySelector("#committee");
+        const selected = committeeSelect.querySelector(".selected");
+        const selectedText = committeeSelect.querySelector(".selected-text");
+        
+        selected.setAttribute('data-value', 'all');
+        selectedText.textContent = 'All Committees';
+        
+        currentCategoryFilter = 'all';
+        applyCommitteeFilter();
+        
+        const noEventsMessage = document.querySelector('.no-events-message');
+        if (noEventsMessage) {
+          noEventsMessage.remove();
+        }
+      };
+
+      // Logout confirmation
+      window.confirmLogout = function(event) {
+        event.preventDefault();
+        if (confirm('Are you sure you want to logout?')) {
+          document.getElementById('logout-form').submit();
+        }
+      };
     });
-    profileDropdown.addEventListener("click", (e) => e.stopPropagation());
-  }
-
-  document.addEventListener("click", (e) => {
-    if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
-      sidebar.classList.remove('open');
-      profileItem?.classList.remove('open');
-    }
-    if (profileWrapper && !profileWrapper.contains(e.target)) profileWrapper.classList.remove('active');
-    if (notifWrapper && !notifWrapper.contains(e.target)) notifWrapper.classList.remove('active');
-
-    // Close options dropdown when clicking outside
-    document.querySelectorAll('.options-dropdown').forEach(drop => drop.classList.remove('show'));
-  });
-
-  // === Highlight Holidays in Events ===
-  document.querySelectorAll('.events li').forEach(eventItem => {
-    const dateEl = eventItem.querySelector('.date span');
-    const monthEl = eventItem.querySelector('.date strong');
-    if (!dateEl || !monthEl) return;
-
-    const monthMap = {
-      JAN: "01", FEB: "02", MAR: "03", APR: "04", MAY: "05", JUN: "06",
-      JUL: "07", AUG: "08", SEP: "09", OCT: "10", NOV: "11", DEC: "12"
-    };
-    const monthNum = monthMap[monthEl.textContent.trim().toUpperCase()];
-    const day = dateEl.textContent.trim().padStart(2,'0');
-    const dateStr = `2025-${monthNum}-${day}`;
-
-    if (holidays.includes(dateStr)) {
-      eventItem.querySelector('.date').classList.add('holiday');
-    }
-  });
-
-  
-});
-</script>
+  </script>
 </body>
 </html>

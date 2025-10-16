@@ -185,34 +185,18 @@
           $today = $today ?? Carbon::today();
           $currentDateTime = $currentDateTime ?? Carbon::now();
           
-          // FIXED: Properly filter today's events that haven't ended yet
-          $validTodayEvents = $todayEvents->filter(function($event) use ($currentDateTime, $today) {
+          // FIXED: Show ALL launched events happening today regardless of time
+          $validTodayEvents = $todayEvents->filter(function($event) use ($today) {
+              if (!$event->is_launched) {
+                  return false;
+              }
+              
               $eventDate = $event->event_date instanceof Carbon 
                 ? $event->event_date 
                 : Carbon::parse($event->event_date);
               
-              // Create full datetime object for the event
-              if ($event->event_time) {
-                  try {
-                      $eventTime = Carbon::parse($event->event_time);
-                      $eventDateTime = Carbon::create(
-                          $eventDate->year,
-                          $eventDate->month,
-                          $eventDate->day,
-                          $eventTime->hour,
-                          $eventTime->minute,
-                          $eventTime->second
-                      );
-                  } catch (\Exception $e) {
-                      // If time parsing fails, use end of day
-                      $eventDateTime = $eventDate->endOfDay();
-                  }
-              } else {
-                  $eventDateTime = $eventDate->endOfDay();
-              }
-              
-              // Only show events that are today AND haven't ended yet
-              return $eventDate->isSameDay($today) && $eventDateTime->gt($currentDateTime);
+              // Simply check if the event date is today and it's launched
+              return $eventDate->isSameDay($today);
           });
         @endphp
 
@@ -243,7 +227,33 @@
                     <i class="fa-solid fa-chevron-right"></i>
                   </span>
                 </a>
-                <a href="{{ route('attendancepage') }}?event_id={{ $event->id }}" class="attend-btn">Attend Now</a>
+                
+                @php
+                  // Check if event has ended to show appropriate button
+                  $eventDate = $event->event_date instanceof Carbon 
+                    ? $event->event_date 
+                    : Carbon::parse($event->event_date);
+                  
+                  $eventDateTime = $eventDate->copy();
+                  if ($event->event_time) {
+                      try {
+                          $eventTime = Carbon::parse($event->event_time);
+                          $eventDateTime->setTime($eventTime->hour, $eventTime->minute, $eventTime->second);
+                      } catch (\Exception $e) {
+                          $eventDateTime->endOfDay();
+                      }
+                  } else {
+                      $eventDateTime->endOfDay();
+                  }
+                  
+                  $hasEventEnded = $eventDateTime->lt($currentDateTime);
+                @endphp
+                
+                @if($hasEventEnded)
+                  <span class="attend-btn ended">Event Ended</span>
+                @else
+                  <a href="{{ route('attendancepage') }}?event_id={{ $event->id }}" class="attend-btn">Attend Now</a>
+                @endif
               </div>
             </div>
           @endforeach
@@ -330,7 +340,7 @@
                   @else
                     <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0jOTk5IHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5FdmVudCBJbWFnZTwvdGV4dD48L3N2Zz4=" alt="Event Image">
                   @endif
-                  <a href="{{ route('attendancepage') }}" class="register-btn">REGISTER NOW!</a>
+                  <a href="{{ route('attendancepage') }}?event_id={{ $event->id }}" class="register-btn">REGISTER NOW!</a>
                 </div>
                 <div class="program-body">
                   <p class="program-title">{{ $event->title }}</p>
@@ -369,6 +379,10 @@
         @php
           // FIXED: Only show events that haven't happened yet (considering date AND time)
           $upcomingEvents = $events->filter(function($event) use ($currentDateTime) {
+              if (!$event->is_launched) {
+                  return false;
+              }
+              
               $eventDate = $event->event_date instanceof Carbon 
                 ? $event->event_date 
                 : Carbon::parse($event->event_date);
@@ -393,7 +407,7 @@
               }
               
               // Only show events that haven't happened yet
-              return $event->is_launched && $eventDateTime->gt($currentDateTime);
+              return $eventDateTime->gt($currentDateTime);
           });
         @endphp
 
@@ -427,7 +441,7 @@
                           ? $event->event_date 
                           : Carbon::parse($event->event_date);
                       @endphp
-                      {{ $eventDate->format('F d, Y') }} | {{ $event->formatted_time ?? 'Time not specified' }}
+                      {{ $eventDate->format('F d, Y') }} | {{ $event->event_time ? \Carbon\Carbon::parse($event->event_time)->format('h:i A') : 'Time not specified' }}
                     </div>
                   </div>
                 </div>
@@ -649,6 +663,12 @@
             modalImage.style.display = 'none';
           }
           
+          // Update register button with event ID
+          const registerBtn = document.querySelector('.register-modal-btn');
+          if (registerBtn) {
+            registerBtn.href = `{{ route('attendancepage') }}?event_id=${eventId}`;
+          }
+          
           eventModal.style.display = 'block';
         } catch (error) {
           console.error('Error fetching event details:', error);
@@ -687,6 +707,8 @@
           el.textContent = text.substring(0, 100) + '...';
         }
       });
+
+      
     });
   </script>
 

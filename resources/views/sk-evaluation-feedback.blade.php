@@ -120,17 +120,19 @@
           </div>
         </div>
 
-        <!-- Profile Avatar -->
+      <!-- Profile Avatar -->
         <div class="profile-wrapper">
-          <img src="https://i.pravatar.cc/80" alt="User" class="avatar" id="profileToggle">
+          <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+               alt="User" class="avatar" id="profileToggle">
           <div class="profile-dropdown">
             <div class="profile-header">
-              <img src="https://i.pravatar.cc/80" alt="User" class="profile-avatar">
+              <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+                   alt="User" class="profile-avatar">
               <div class="profile-info">
-                <h4>Marijoy S. Novora</h4>
+                <h4>{{ $user->given_name }} {{ $user->middle_name ?? '' }} {{ $user->last_name }} {{ $user->suffix ?? '' }}</h4>
                 <div class="profile-badge">
-                  <span class="badge">KK- Member</span>
-                  <span class="badge">19 yrs old</span>
+                  <span class="badge">{{ $roleBadge }}</span>
+                  <span class="badge">{{ $age }} yrs old</span>
                 </div>
               </div>
             </div>
@@ -148,7 +150,17 @@
                 </a>
               </li>
               <li><i class="fas fa-star"></i> Send Feedback to Katibayan</li>
+              <li class="logout-item">
+                <a href="loginpage" onclick="confirmLogout(event)">
+                  <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+              </li>
             </ul>
+            
+            <!-- Hidden Logout Form -->
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+              @csrf
+            </form>
           </div>
         </div>
       </div>
@@ -167,19 +179,6 @@
           <p class="subtitle">Choose an accomplished event or program to see the results.</p>
 
           <div class="accomplishment-list">
-            @php
-              use App\Models\Event;
-              use App\Models\Evaluation;
-              
-              // Get events that have evaluations
-              $eventsWithEvaluations = Event::whereHas('evaluations')
-                ->withCount('evaluations')
-                ->with(['evaluations' => function($query) {
-                  $query->latest();
-                }])
-                ->get();
-            @endphp
-
             @if($eventsWithEvaluations->count() > 0)
               @foreach($eventsWithEvaluations as $event)
                 @php
@@ -197,7 +196,7 @@
                 <div class="accomplishment-card">
                   <!-- Date -->
                   <div class="accomplishment-date">
-                    <span class="day">{{ $event->event_date->format('F') }}</span>
+                    <span class="day">{{ $event->event_date->format('M') }}</span>
                     <span class="num">{{ $event->event_date->format('d') }}</span>
                   </div>
 
@@ -232,7 +231,7 @@
                     <!-- Date & Time -->
                     <div class="accomplishment-datetime">
                       <span class="datetime-label">DATE AND TIME</span>
-                      <span class="datetime-value">{{ $event->event_date->format('F d, Y') }} | {{ $event->formatted_time ?? 'Time not specified' }}</span>
+                      <span class="datetime-value">{{ $event->event_date->format('F d, Y') }} | {{ $event->event_time ?? 'Time not specified' }}</span>
                     </div>
                   </div>
 
@@ -441,6 +440,14 @@
           eventItem.querySelector('.date').classList.add('holiday');
         }
       });
+
+      // === Logout Confirmation ===
+      function confirmLogout(event) {
+        event.preventDefault();
+        if (confirm('Are you sure you want to logout?')) {
+          document.getElementById('logout-form').submit();
+        }
+      }
     });
   </script>
 </body>

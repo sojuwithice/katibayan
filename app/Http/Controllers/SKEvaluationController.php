@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Event;
 use App\Models\Evaluation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class SKEvaluationController extends Controller
 {
@@ -13,6 +15,18 @@ class SKEvaluationController extends Controller
      */
     public function index()
     {
+        $user = Auth::user();
+        
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        // Calculate age from date_of_birth
+        $age = $user->date_of_birth ? Carbon::parse($user->date_of_birth)->age : 'N/A';
+
+        // Determine role badge based on actual enum values
+        $roleBadge = $user->role === 'sk' ? 'SK Member' : 'KK Member';
+
         $eventsWithEvaluations = Event::whereHas('evaluations')
             ->withCount('evaluations')
             ->with(['evaluations' => function($query) {
@@ -20,7 +34,7 @@ class SKEvaluationController extends Controller
             }])
             ->get();
 
-        return view('sk-evaluation-feedback', compact('eventsWithEvaluations'));
+        return view('sk-evaluation-feedback', compact('eventsWithEvaluations', 'user', 'age', 'roleBadge'));
     }
 
     /**
@@ -28,6 +42,18 @@ class SKEvaluationController extends Controller
      */
     public function showReview($eventId)
     {
+        $user = Auth::user();
+        
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        // Calculate age from date_of_birth
+        $age = $user->date_of_birth ? Carbon::parse($user->date_of_birth)->age : 'N/A';
+
+        // Determine role badge based on actual enum values
+        $roleBadge = $user->role === 'sk' ? 'SK Member' : 'KK Member';
+
         $event = Event::with(['evaluations.user', 'evaluations' => function($query) {
             $query->latest();
         }])->findOrFail($eventId);
@@ -61,7 +87,10 @@ class SKEvaluationController extends Controller
             'totalEvaluations', 
             'averageRatings', 
             'overallAverage',
-            'ratingDistribution'
+            'ratingDistribution',
+            'user', 
+            'age', 
+            'roleBadge'
         ));
     }
 }
