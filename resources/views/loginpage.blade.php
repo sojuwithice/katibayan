@@ -7,6 +7,8 @@
   <link rel="stylesheet" href="{{ asset('css/login.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+
 </head>
 <body>
 
@@ -64,7 +66,8 @@
         <label>
             <input type="checkbox" name="remember" {{ old('remember') ? 'checked' : '' }}> Remember me in 7 days
         </label>
-        <a href="#" class="forgot-password">Forgot Password?</a>
+                <a href="#" class="forgot-password">Forgot Password?</a>
+
     </div>
 
     <!-- Submit Button -->
@@ -86,6 +89,55 @@
       </div>
     </div>
   </div>
+
+
+  <div id="forgotModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeForgotModal()">&times;</span>
+
+        <div class="modal-header">
+            <i class="fas fa-lock icon"></i>
+            <h2>Forgot Password</h2>
+            <p id="forgotDescription">Enter your registered email to receive a 6-digit OTP.</p>
+        </div>
+
+        <div id="emailSection" class="form-section">
+            <input type="email" id="emailInput" placeholder="Enter your email" required>
+            <button class="submit-btn" id="sendOtpBtn">Send OTP</button>
+        </div>
+
+        <div id="otpSection" class="form-section" style="display:none;">
+            <div class="otp-container">
+                <input type="text" class="otp-input" maxlength="1">
+                <input type="text" class="otp-input" maxlength="1">
+                <input type="text" class="otp-input" maxlength="1">
+                <input type="text" class="otp-input" maxlength="1">
+                <input type="text" class="otp-input" maxlength="1">
+                <input type="text" class="otp-input" maxlength="1">
+            </div>
+            <div class="resend-container">
+                <span id="timerText"></span>
+                <a href="#" id="resendOtpLink" style="display:none;">Resend OTP</a>
+            </div>
+            <button class="submit-btn" id="verifyOtpBtn">Verify OTP</button>
+        </div>
+
+        <div id="resetSection" class="form-section" style="display:none;">
+            <div class="password-input-container">
+                <input type="password" id="newPassword" placeholder="New Password" required>
+                <i class="fas fa-eye-slash toggle-password-icon" id="toggleNewPassword"></i>
+            </div>
+            <div class="password-input-container">
+                <input type="password" id="password_confirmation" placeholder="Confirm Password" required>
+                <i class="fas fa-eye-slash toggle-password-icon" id="toggleConfirmPassword"></i>
+            </div>
+            <button class="submit-btn" id="resetPasswordBtn">Reset Password</button>
+        </div>
+
+        <p id="forgotMessage" class="form-message"></p>
+    </div>
+</div>
+
 
   <!-- JS -->
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -129,6 +181,197 @@
       themeToggle.innerHTML = `<i data-lucide="${icon}"></i>`;
       lucide.createIcons(); 
     }
+
+    
+
+    // === 1. GLOBAL VARIABLES & ELEMENT SELECTION ===
+let otpTimer;
+const modal = document.getElementById('forgotModal');
+const forgotLink = document.querySelector('.forgot-password');
+const messageBox = document.getElementById("forgotMessage");
+const otpInputs = document.querySelectorAll(".otp-input");
+
+// === 2. HELPER FUNCTIONS ===
+function closeForgotModal() {
+    modal.style.display = 'none';
+    messageBox.textContent = "";
+    messageBox.className = 'form-message';
+    document.getElementById("emailSection").style.display = "block";
+    document.getElementById("otpSection").style.display = "none";
+    document.getElementById("resetSection").style.display = "none";
+    document.getElementById("emailInput").value = "";
+    document.getElementById("newPassword").value = "";
+    document.getElementById("password_confirmation").value = "";
+    otpInputs.forEach(input => input.value = "");
+    clearInterval(otpTimer);
+    if(document.getElementById("timerText")){
+        document.getElementById("timerText").textContent = "";
+        document.getElementById("resendOtpLink").style.display = "none";
+    }
+}
+
+function startOtpTimer() {
+    let seconds = 60;
+    const timerText = document.getElementById("timerText");
+    const resendLink = document.getElementById("resendOtpLink");
+    resendLink.style.display = "none";
+    timerText.style.display = "inline";
+    clearInterval(otpTimer);
+    otpTimer = setInterval(() => {
+        if (seconds > 0) {
+            seconds--;
+            timerText.textContent = `Resend OTP in ${seconds}s`;
+        } else {
+            clearInterval(otpTimer);
+            timerText.style.display = "none";
+            resendLink.style.display = "inline";
+        }
+    }, 1000);
+}
+
+function requestOtp(isResend = false) {
+    const email = document.getElementById("emailInput").value;
+    if (!email) {
+        messageBox.textContent = "Please enter your email address.";
+        messageBox.className = 'form-message error';
+        return;
+    }
+    messageBox.textContent = isResend ? "Resending OTP..." : "Sending OTP...";
+    messageBox.className = 'form-message';
+    fetch("{{ route('forgot-password.send-otp') }}", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content },
+        body: JSON.stringify({ email })
+    })
+    .then(res => res.ok ? res.json() : res.json().then(err => Promise.reject(err)))
+    .then(data => {
+        if (data.success) {
+            messageBox.textContent = "A new OTP has been sent to your email!";
+            messageBox.className = 'form-message success';
+            if (!isResend) {
+                document.getElementById("emailSection").style.display = "none";
+                document.getElementById("otpSection").style.display = "block";
+            }
+            startOtpTimer();
+        }
+    })
+    .catch(err => {
+        messageBox.textContent = err.error || "Server error. Please try again.";
+        messageBox.className = 'form-message error';
+    });
+}
+
+function setupPasswordToggle(inputId, toggleId) {
+    const passwordInput = document.getElementById(inputId);
+    const toggleIcon = document.getElementById(toggleId);
+    toggleIcon.addEventListener('click', function () {
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        this.classList.toggle('fa-eye');
+        this.classList.toggle('fa-eye-slash');
+    });
+}
+
+// === 3. EVENT LISTENERS ===
+forgotLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    modal.style.display = 'block';
+});
+
+window.addEventListener('click', (event) => {
+    if (event.target === modal) closeForgotModal();
+});
+
+document.getElementById("sendOtpBtn").addEventListener("click", () => requestOtp(false));
+document.getElementById("resendOtpLink").addEventListener("click", (e) => {
+    e.preventDefault();
+    requestOtp(true);
+});
+
+document.getElementById("verifyOtpBtn").addEventListener("click", () => {
+    const email = document.getElementById("emailInput").value;
+    const otp = Array.from(otpInputs).map(input => input.value).join('');
+    messageBox.textContent = "Verifying...";
+    messageBox.className = 'form-message';
+    fetch("{{ route('forgot-password.verify-otp') }}", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content },
+        body: JSON.stringify({ email, otp })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            messageBox.textContent = "OTP verified! You can now reset your password.";
+            messageBox.classList.add('success');
+            clearInterval(otpTimer);
+            document.getElementById("otpSection").style.display = "none";
+            document.getElementById("resetSection").style.display = "block";
+        } else {
+            messageBox.textContent = data.error || "Invalid OTP.";
+            messageBox.classList.add('error');
+        }
+    })
+    .catch(() => {
+        messageBox.textContent = "Server error during verification.";
+        messageBox.classList.add('error');
+    });
+});
+
+document.getElementById("resetPasswordBtn").addEventListener("click", () => {
+    const email = document.getElementById("emailInput").value;
+    const password = document.getElementById("newPassword").value;
+    const password_confirmation = document.getElementById("password_confirmation").value;
+    messageBox.textContent = "";
+    messageBox.className = 'form-message';
+    if (password.length < 8) {
+        messageBox.textContent = "Password must be at least 8 characters.";
+        messageBox.classList.add('error');
+        return;
+    }
+    if (password !== password_confirmation) {
+        messageBox.textContent = "Passwords do not match.";
+        messageBox.classList.add('error');
+        return;
+    }
+    fetch("{{ route('forgot-password.reset') }}", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content },
+        body: JSON.stringify({ email, password, password_confirmation })
+    })
+    .then(res => res.json())
+    .then(data => {
+        messageBox.textContent = data.message;
+        if (data.success) {
+            messageBox.classList.add('success');
+            setTimeout(closeForgotModal, 3000);
+        } else {
+            messageBox.classList.add('error');
+        }
+    })
+    .catch(() => {
+        messageBox.textContent = "Error resetting password.";
+        messageBox.classList.add('error');
+    });
+});
+
+otpInputs.forEach((input, index) => {
+    input.addEventListener("input", () => {
+        if (input.value.length === 1 && index < otpInputs.length - 1) {
+            otpInputs[index + 1].focus();
+        }
+    });
+    input.addEventListener("keydown", (e) => {
+        if (e.key === "Backspace" && input.value.length === 0 && index > 0) {
+            otpInputs[index - 1].focus();
+        }
+    });
+});
+
+setupPasswordToggle('newPassword', 'toggleNewPassword');
+setupPasswordToggle('password_confirmation', 'toggleConfirmPassword');
+
+
+
   </script>
 
 </body>

@@ -358,12 +358,14 @@
       <p>Confirmation of your account details.</p>
 
       <div class="form-grid">
-  <div class="input-with-btn">
-    <input 
-      type="text" 
-      id="contactInput" 
-      placeholder="Click here to choose your Google account" 
-      readonly>
+  <div class="input-with-btn" id="googleAccountSelector">
+    <input
+      type="text"
+      id="contactInput"
+      placeholder="Click here to choose your Google account"
+      readonly
+      style="pointer-events: none;"
+    />
     <button type="button" id="openMethodBtn" class="verify-btn">Verify</button>
   </div>
 </div>
@@ -1087,59 +1089,61 @@ function verifyOtp(mobile, otp) {
 
 // === OTP ===
 document.addEventListener("DOMContentLoaded", function () {
+  // === 1. ELEMENT SELECTION ===
+  // Lahat ng kailangan nating element, nandito na sa taas.
   const contactInput = document.getElementById("contactInput");
   const verifyBtn = document.getElementById("openMethodBtn");
+  const googleAccountSelector = document.getElementById("googleAccountSelector"); // <-- Para sa buong clickable box
+
   const codeModal = document.getElementById("codeModal");
   const codeMessage = document.getElementById("codeMessage");
   const codeBoxes = document.querySelectorAll(".code-box");
   const codeVerifyBtn = document.getElementById("codeVerifyBtn");
   const resendLink = document.getElementById("resendLink");
+
   const successModal = document.getElementById("successModal");
   const successOkBtn = document.getElementById("successOkBtn");
 
-  // === GOOGLE OAUTH SETUP ===
-  const clientId = document
-    .querySelector('meta[name="google-signin-client_id"]')
-    ?.getAttribute("content");
+  // === 2. STATE & CONFIGURATION ===
+  const clientId = document.querySelector('meta[name="google-signin-client_id"]')?.getAttribute("content");
+  let resendTimer = 30;
+  let resendInterval;
 
+  // === 3. INITIALIZATION (GOOGLE OAUTH) ===
   const tokenClient = google.accounts.oauth2.initTokenClient({
     client_id: clientId,
     scope: "email profile openid",
     callback: async (response) => {
+      // Itong function ang tatakbo kapag pumili na ng Google account
       if (response.access_token) {
-        const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-          headers: { Authorization: `Bearer ${response.access_token}` },
-        });
-        const userInfo = await res.json();
-        console.log("✅ Google User Info:", userInfo);
-        contactInput.value = userInfo.email;
+        try {
+          const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+            headers: { Authorization: `Bearer ${response.access_token}` },
+          });
+          const userInfo = await res.json();
+          contactInput.value = userInfo.email; // Ilalagay ang email sa input box
+        } catch (error) {
+          console.error("Error fetching user info:", error);
+        }
       }
     },
   });
 
-  contactInput.addEventListener("click", () => {
-    tokenClient.requestAccessToken();
+  // === 4. EVENT LISTENERS ===
+
+  // --- Google Account Selection (FIXED) ---
+  // Pinindot ang buong box, hindi lang ang input
+  googleAccountSelector.addEventListener("click", () => {
+    // Huwag nang buksan ulit kung verified na
+    if (!verifyBtn.disabled) {
+      tokenClient.requestAccessToken();
+    }
   });
 
-  let resendTimer = 30;
-  let resendInterval;
+  // --- Send OTP Button ---
+  verifyBtn.addEventListener("click", (e) => {
+    e.stopPropagation(); // <-- IMPORTANTE: Para hindi mag-trigger ang click ng buong box
 
-  // === AUTO FOCUS NEXT INPUT ===
-  codeBoxes.forEach((box, index) => {
-    box.addEventListener("input", (e) => {
-      const val = e.target.value.replace(/\D/g, "");
-      e.target.value = val;
-      if (val && index < codeBoxes.length - 1) codeBoxes[index + 1].focus();
-    });
-    box.addEventListener("keydown", (e) => {
-      if (e.key === "Backspace" && !e.target.value && index > 0) {
-        codeBoxes[index - 1].focus();
-      }
-    });
-  });
-
-  // === SEND OTP ===
-  verifyBtn.addEventListener("click", () => {
     const email = contactInput.value.trim();
     if (!email) return showMessage("Please select your Google account first.");
 
@@ -1160,20 +1164,21 @@ document.addEventListener("DOMContentLoaded", function () {
           codeBoxes[0].focus();
           startResendTimer();
         } else {
-          showMessage("Failed to send OTP.");
+          showMessage(data.error || "Failed to send OTP.");
         }
       })
       .catch((err) => console.error("Error sending OTP:", err));
   });
 
-  // === RESEND OTP ===
+  // --- Resend OTP Link ---
   resendLink.addEventListener("click", (e) => {
     e.preventDefault();
-    const email = contactInput.value.trim();
-    if (!email) return showMessage("Please select your Google account first.");
     if (resendLink.disabled) return;
 
-    fetch("/send-otp", {
+    const email = contactInput.value.trim();
+    if (!email) return showMessage("Please select your Google account first.");
+
+    fetch("/send-otp", { /* Assuming same endpoint for resend */
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -1189,69 +1194,73 @@ document.addEventListener("DOMContentLoaded", function () {
           codeBoxes[0].focus();
           startResendTimer();
         } else {
-          showMessage("Failed to resend OTP.");
+          showMessage(data.error || "Failed to resend OTP.");
         }
       })
       .catch((err) => console.error("Error resending OTP:", err));
   });
 
-  // === VERIFY OTP & SHOW SUCCESS MODAL ===
-codeVerifyBtn.addEventListener("click", async (e) => {
-  e.preventDefault();
+  // --- Verify OTP Button ---
+  codeVerifyBtn.addEventListener("click", async (e) => {
+    e.preventDefault();
+    const code = Array.from(codeBoxes).map((box) => box.value).join("");
+    const email = contactInput.value.trim();
 
-  const code = Array.from(codeBoxes).map((box) => box.value).join("");
-  const email = contactInput.value.trim();
+    if (code.length !== 6) return showMessage("Please enter the 6-digit code.");
 
-  if (code.length !== 6) return showMessage("Please enter the 6-digit code.");
+    try {
+      const res = await fetch("/verify-otp", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-TOKEN": "{{ csrf_token() }}",
+        },
+        body: JSON.stringify({ email, code: code.split("") }),
+      });
 
-  try {
-    const res = await fetch("/verify-otp", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRF-TOKEN": "{{ csrf_token() }}",
-      },
-      // ⚠️ match the backend structure — it expects `code` not `otp`
-      body: JSON.stringify({ email, code: code.split("") }),
-    });
+      const data = await res.json();
+      if (data.verified === true) {
+        codeModal.style.display = "none";
+        setTimeout(() => {
+          successModal.style.display = "flex";
+        }, 150);
 
-    const data = await res.json();
-    console.log("🔍 Verify OTP response:", data);
-
-    // ✅ Correct key check (your controller returns { verified: true })
-    if (data.verified === true) {
-      codeModal.style.display = "none";
-
-      // Small delay to prevent overlay conflict
-      setTimeout(() => {
-        successModal.style.display = "flex";
-        successModal.style.zIndex = "9999";
-      }, 150);
-
-      verifyBtn.textContent = "Verified";
-      verifyBtn.disabled = true;
-      verifyBtn.classList.add("verified");
-
-    } else {
-      showMessage("Invalid or expired code. Please try again.");
+        verifyBtn.textContent = "Verified";
+        verifyBtn.disabled = true;
+        verifyBtn.classList.add("verified");
+      } else {
+        showMessage(data.error || "Invalid or expired code.");
+      }
+    } catch (err) {
+      console.error("Error verifying OTP:", err);
     }
-  } catch (err) {
-    console.error("Error verifying OTP:", err);
-  }
-});
+  });
 
-
-  // === SUCCESS MODAL OK BUTTON ===
+  // --- Success Modal OK Button ---
   successOkBtn.addEventListener("click", () => {
     successModal.style.display = "none";
   });
 
-  // === CLEAR CODE BOXES ===
+  // --- OTP Input Box Logic (Auto-focus & Backspace) ---
+  codeBoxes.forEach((box, index) => {
+    box.addEventListener("input", (e) => {
+      if (e.target.value && index < codeBoxes.length - 1) {
+        codeBoxes[index + 1].focus();
+      }
+    });
+    box.addEventListener("keydown", (e) => {
+      if (e.key === "Backspace" && !e.target.value && index > 0) {
+        codeBoxes[index - 1].focus();
+      }
+    });
+  });
+
+  // === 5. HELPER FUNCTIONS ===
+
   function clearCodeBoxes() {
     codeBoxes.forEach((box) => (box.value = ""));
   }
 
-  // === TIMER FUNCTION ===
   function startResendTimer() {
     resendLink.disabled = true;
     let timeLeft = resendTimer;
@@ -1269,21 +1278,20 @@ codeVerifyBtn.addEventListener("click", async (e) => {
     }, 1000);
   }
 
-  // === INLINE MESSAGE FUNCTION ===
   function showMessage(msg) {
+    const originalMessage = codeMessage.innerText;
     codeMessage.innerText = msg;
     setTimeout(() => {
-      const email = contactInput.value.trim();
-      codeMessage.innerText = email ? `We sent a code to ${email}` : "";
+      codeMessage.innerText = originalMessage;
     }, 5000);
   }
-
+});
 
 
 
 
   
-});
+
 </script>
 </body>
 </html>

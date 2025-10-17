@@ -27,6 +27,8 @@ use App\Http\Controllers\EvaluationRespondentsController;
 use App\Http\Controllers\AdminLoginController;
 use App\Http\Controllers\UserLoginController;
 use App\Models\Admin;
+use App\Http\Controllers\Auth\ForgotPasswordController;
+
 
 
 Route::get('/', function () {
@@ -205,19 +207,27 @@ Route::post('/login', function (Request $request) {
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 // ========== ADMIN ROUTES ==========
-Route::get('/user-management', [AdminController::class, 'dashboard'])->name('user-management');
-Route::patch('/admin/users/{id}/approve', [AdminController::class, 'approve'])->name('admin.users.approve');
-Route::patch('/admin/users/{id}/reject', [AdminController::class, 'reject'])->name('admin.users.reject');
-
-// ✅ Corrected to use AdminLoginController
-Route::get('/admin/login', [AdminLoginController::class, 'showLoginForm'])->name('admin.login');
-Route::post('/admin/login', [AdminLoginController::class, 'login'])->name('admin.login.post');
-Route::post('/admin/logout', [AdminLoginController::class, 'logout'])->name('admin.logout');
 
 // ✅ Protected admin dashboard
 Route::get('/admin-dashboard', [AdminController::class, 'dashboard'])
     ->name('admin.dashboard')
     ->middleware('auth:admin');
+
+
+Route::get('/user-management', [AdminController::class, 'userManagement']) 
+    ->name('user-management')
+    ->middleware('auth:admin'); 
+
+// User approval and rejection routes
+Route::patch('/admin/users/{id}/approve', [AdminController::class, 'approve'])->name('admin.users.approve')->middleware('auth:admin');
+Route::patch('/admin/users/{id}/reject', [AdminController::class, 'reject'])->name('admin.users.reject')->middleware('auth:admin');
+
+// Admin login and logout routes
+Route::get('/admin/login', [AdminLoginController::class, 'showLoginForm'])->name('admin.login');
+Route::post('/admin/login', [AdminLoginController::class, 'login'])->name('admin.login.post');
+Route::post('/admin/logout', [AdminLoginController::class, 'logout'])->name('admin.logout');
+
+
 // ========== PROTECTED ROUTES ==========
 Route::middleware(['auth'])->group(function () {
     // Profile routes
@@ -286,3 +296,13 @@ Route::get('/auth/google/redirect', [GoogleController::class, 'redirect'])->name
 Route::get('/auth/google/callback', [GoogleController::class, 'callback'])->name('google.callback');
 Route::get('/evaluation/respondents/{event_id}', [EvaluationRespondentsController::class, 'showRespondents'])
     ->name('evaluation.respondents');
+
+
+Route::controller(ForgotPasswordController::class)
+    ->prefix('forgot-password')
+    ->as('forgot-password.')
+    ->group(function () {
+        Route::post('/send-otp', 'sendOtp')->name('send-otp');
+        Route::post('/verify-otp', 'verifyOtp')->name('verify-otp');
+        Route::post('/reset', 'resetPassword')->name('reset'); // Renamed method to resetPassword for clarity
+});
