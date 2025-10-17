@@ -18,54 +18,65 @@
 <body>
   
   <!-- Sidebar -->
+  <!-- Sidebar -->
   <aside class="sidebar">
-    <button class="menu-toggle">Menu</button>
-    <div class="divider"></div>
-    <nav class="nav">
-      <a href="{{ route('sk.dashboard') }}">
-        <i data-lucide="layout-dashboard"></i>
-        <span class="label">Dashboard</span>
-      </a>
+  <button class="menu-toggle">Menu</button>
+  <div class="divider"></div>
+  <nav class="nav">
+    <a href="{{ route('sk.dashboard') }}">
+      <i data-lucide="layout-dashboard"></i>
+      <span class="label">Dashboard</span>
+    </a>
 
-      <a href="#">
-        <i data-lucide="chart-pie"></i>
-        <span class="label">Analytics</span>
-      </a>
+    <a href="#">
+      <i data-lucide="chart-pie"></i>
+      <span class="label">Analytics</span>
+    </a>
 
-      <a href="{{ route('youth-profilepage') }}" class="active">
-        <i data-lucide="users"></i>
-        <span class="label">Youth Profile</span>
-      </a>
+    <a href="{{ route('youth-profilepage') }}">
+      <i data-lucide="users"></i>
+      <span class="label">Youth Profile</span>
+    </a>
 
-      <a href="{{ route('sk-eventpage') }}" class="events-link">
+    <div class="nav-item">
+      <a href="#" class="nav-link">
         <i data-lucide="calendar"></i>
         <span class="label">Events and Programs</span>
+        <i data-lucide="chevron-down" class="submenu-arrow"></i>
       </a>
-
-      <div class="evaluation-item nav-item">
-        <a href="{{ route('sk-evaluation-feedback') }}" class="evaluation-link nav-link">
-          <i data-lucide="user-star"></i>
-          <span class="label">Evaluation</span>
-          <i data-lucide="chevron-down" class="submenu-arrow"></i>
-        </a>
-        <div class="submenu">
-          <a href="#">Feedbacks</a>
-          <a href="#">Polls</a>
-          <a href="#">Suggestion Box</a>
-        </div>
+      <div class="submenu">
+        <a href="{{ route('sk-eventpage') }}">Events List</a>
+        <a href="{{ route('youth-program-registration') }}">Youth Registration</a>
       </div>
+    </div>
 
-      <a href="#">
-        <i data-lucide="file-chart-column"></i>
-        <span class="label">Reports</span>
-      </a>
+    <a href="{{ route('sk-evaluation-feedback') }}">
+      <i data-lucide="message-square-quote"></i>
+      <span class="label">Feedbacks</span>
+    </a>
 
-      <a href="{{ route('serviceoffers') }}">
-        <i data-lucide="hand-heart"></i>
-        <span class="label">Service Offer</span>
-      </a>
-    </nav>
-  </aside>
+    <a href="{{ route('sk-polls') }}">
+      <i data-lucide="vote"></i>
+      <span class="label">Polls</span>
+    </a>
+
+    <a href="{{ route('youth-suggestion') }}">
+      <i data-lucide="lightbulb"></i>
+      <span class="label">Suggestion Box</span>
+    </a>
+    
+    <a href="{{ route('reports') }}">
+      <i data-lucide="file-chart-column"></i>
+      <span class="label">Reports</span>
+    </a>
+
+    <a href="{{ route('sk-services-offer') }}">
+      <i data-lucide="hand-heart"></i>
+      <span class="label">Service Offer</span>
+    </a>
+
+  </nav>
+</aside>
 
   <!-- Main -->
   <div class="main">
@@ -276,34 +287,38 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      // Initialize icons
-      if (typeof lucide !== "undefined" && lucide.createIcons) lucide.createIcons();
+  // === Lucide icons + sidebar toggle ===
+  lucide.createIcons();
+  
+  const menuToggle = document.querySelector('.menu-toggle');
+  const sidebar = document.querySelector('.sidebar');
 
-      // Global variables
-      let currentCategoryFilter = 'all';
+  if (menuToggle && sidebar) {
+    menuToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      sidebar.classList.toggle('open');
+    });
+  }
 
-      // === UI elements ===
-      const menuToggle = document.querySelector('.menu-toggle');
-      const sidebar = document.querySelector('.sidebar');
-      const profileWrapper = document.querySelector('.profile-wrapper');
-      const profileToggle = document.getElementById('profileToggle');
-      const notifWrapper = document.querySelector(".notification-wrapper");
+  // === Submenus ===
+  const submenuTriggers = document.querySelectorAll('.nav-item > .nav-link');
 
-      // Sidebar toggle
-      if (menuToggle && sidebar) {
-        menuToggle.addEventListener('click', (e) => {
-          e.stopPropagation();
-          sidebar.classList.toggle('open');
-        });
-      }
+  submenuTriggers.forEach(trigger => {
+    trigger.addEventListener('click', (e) => {
+      e.preventDefault(); 
+      
+      const parentItem = trigger.closest('.nav-item');
+      const wasOpen = parentItem.classList.contains('open');
 
-      // Evaluation submenu toggle
-      const evaluationItem = document.querySelector('.evaluation-item');
-      const evaluationLink = document.querySelector('.evaluation-link');
-      evaluationLink?.addEventListener('click', (e) => {
-        e.preventDefault();
-        evaluationItem?.classList.toggle('open');
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('open');
       });
+
+      if (!wasOpen) {
+        parentItem.classList.add('open');
+      }
+    });
+  });
 
       // Time auto-update
       const timeEl = document.querySelector(".time");
