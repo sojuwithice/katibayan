@@ -11,7 +11,7 @@ class LoginController extends Controller
     // Show login form
     public function showLoginForm()
     {
-        return view('loginpage'); // dito ang resources/views/login.blade.php
+        return view('loginpage'); 
     }
 
     // Handle login
@@ -27,8 +27,11 @@ class LoginController extends Controller
 
         $user = Auth::user();
 
-        // ✅ Role-based redirect
-        if ($user->role === 'sk') {
+        //Role-based redirect
+        if ($user->role === 'admin') {
+            return redirect()->intended('/admin-dashboard')
+                ->with('success', 'Welcome, Admin!');
+        } elseif ($user->role === 'sk') {
             return redirect()->intended('/sk-dashboard')
                 ->with('success', 'Logged in successfully.');
         } elseif ($user->role === 'kk') {
@@ -36,7 +39,7 @@ class LoginController extends Controller
                 ->with('success', 'Logged in successfully.');
         }
 
-        // fallback (kung may ibang role pa in the future)
+        // fallback (if other roles appear later)
         return redirect()->intended('/')
             ->with('success', 'Logged in successfully.');
     }
@@ -45,6 +48,7 @@ class LoginController extends Controller
         'account_number' => 'Invalid account number or password.',
     ])->withInput();
 }
+
 
 
     // Logout

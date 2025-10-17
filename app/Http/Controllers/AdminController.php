@@ -3,17 +3,19 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Admin; 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\AccountCredentialsMail;
 use Carbon\Carbon;
 use App\Http\Controllers\Auth\RegisterController;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class AdminController extends Controller
 {
     /**
      * Show all SK users for admin review.
-     * KK users are not shown because they auto-approve.
      */
     public function dashboard()
     {
@@ -60,4 +62,44 @@ class AdminController extends Controller
 
         return back()->with('success', 'User rejected.');
     }
+
+    /**
+     * Show admin login page
+     */
+    public function showLoginForm()
+    {
+        return view('admin.login');
+    }
+
+    /**
+     * Handle admin login
+     */
+    public function login(Request $request)
+{
+    $request->validate([
+        'username' => 'required',
+        'password' => 'required',
+    ]);
+
+    $credentials = $request->only('username', 'password');
+
+    // Use the admin guard
+    if (Auth::guard('admin')->attempt($credentials)) {
+        $request->session()->regenerate();
+        return redirect()->route('admin.dashboard')
+            ->with('success', 'Welcome back, Admin!');
+    }
+
+    return back()->withErrors(['Invalid username or password.']);
+}
+
+
+public function logout()
+{
+    \Illuminate\Support\Facades\Auth::guard('admin')->logout();
+
+    return redirect()->route('admin.login')
+        ->with('success', 'You have been logged out.');
+}
+
 }

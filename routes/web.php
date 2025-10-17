@@ -1,6 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
+//use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
+
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\ProfileController;
@@ -22,6 +24,9 @@ use App\Http\Controllers\YouthParticipationController;
 use App\Http\Controllers\GoogleController;
 use App\Http\Controllers\VerificationController;
 use App\Http\Controllers\EvaluationRespondentsController;
+use App\Http\Controllers\AdminLoginController;
+use App\Http\Controllers\UserLoginController;
+use App\Models\Admin;
 
 
 Route::get('/', function () {
@@ -169,14 +174,50 @@ Route::get('/get-barangays/{city_id}', [LocationController::class, 'getBarangays
 
 // ========== AUTH ROUTES ==========
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
+
+Route::post('/login', function (Request $request) {
+    $credentials = $request->validate([
+        'account_number' => 'required|string',
+        'password' => 'required|string',
+    ]);
+
+    if ($credentials['account_number'] === 'Admin-2025') {
+        $admin = Admin::where('username', 'Admin-2025')->first();
+
+        if ($admin && Hash::check($credentials['password'], $admin->password)) {
+            Auth::guard('admin')->login($admin);
+            $request->session()->regenerate();
+
+            return redirect()->intended('/admin-dashboard')
+                ->with('success', 'Welcome, Admin!');
+        }
+
+        return back()->withErrors([
+            'account_number' => 'Invalid admin credentials.',
+        ])->withInput();
+    }
+
+    // ✅ Otherwise, process normal user login
+    return app(LoginController::class)->login($request);
+})->name('login.submit');
+
+
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 // ========== ADMIN ROUTES ==========
-Route::get('/admin-dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+Route::get('/user-management', [AdminController::class, 'dashboard'])->name('user-management');
 Route::patch('/admin/users/{id}/approve', [AdminController::class, 'approve'])->name('admin.users.approve');
 Route::patch('/admin/users/{id}/reject', [AdminController::class, 'reject'])->name('admin.users.reject');
 
+// ✅ Corrected to use AdminLoginController
+Route::get('/admin/login', [AdminLoginController::class, 'showLoginForm'])->name('admin.login');
+Route::post('/admin/login', [AdminLoginController::class, 'login'])->name('admin.login.post');
+Route::post('/admin/logout', [AdminLoginController::class, 'logout'])->name('admin.logout');
+
+// ✅ Protected admin dashboard
+Route::get('/admin-dashboard', [AdminController::class, 'dashboard'])
+    ->name('admin.dashboard')
+    ->middleware('auth:admin');
 // ========== PROTECTED ROUTES ==========
 Route::middleware(['auth'])->group(function () {
     // Profile routes
