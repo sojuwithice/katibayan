@@ -454,523 +454,443 @@
   </div>
 
   <script>
-    document.addEventListener("DOMContentLoaded", () => {
-  // === Lucide icons + sidebar toggle ===
-  lucide.createIcons();
-  
-  const menuToggle = document.querySelector('.menu-toggle');
-  const sidebar = document.querySelector('.sidebar');
+  document.addEventListener("DOMContentLoaded", () => {
+    // === Lucide icons + sidebar toggle ===
+    lucide.createIcons();
+    
+    const menuToggle = document.querySelector('.menu-toggle');
+    const sidebar = document.querySelector('.sidebar');
 
-  if (menuToggle && sidebar) {
-    menuToggle.addEventListener('click', (e) => {
-      e.stopPropagation();
-      sidebar.classList.toggle('open');
-    });
-  }
-
-  // === Submenus ===
-  const submenuTriggers = document.querySelectorAll('.nav-item > .nav-link');
-
-  submenuTriggers.forEach(trigger => {
-    trigger.addEventListener('click', (e) => {
-      e.preventDefault(); 
-      
-      const parentItem = trigger.closest('.nav-item');
-      const wasOpen = parentItem.classList.contains('open');
-
-      document.querySelectorAll('.nav-item').forEach(item => {
-        item.classList.remove('open');
+    if (menuToggle && sidebar) {
+      menuToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        sidebar.classList.toggle('open');
       });
+    }
 
-      if (!wasOpen) {
-        parentItem.classList.add('open');
-      }
-    });
-  });
-      // Time auto-update
-      const timeEl = document.querySelector(".time");
-      function updateTime() {
-        if (!timeEl) return;
-        const now = new Date();
-        const shortWeekdays = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
-        const shortMonths = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
-        const weekday = shortWeekdays[now.getDay()];
-        const month = shortMonths[now.getMonth()];
-        const day = now.getDate();
-        let hours = now.getHours();
-        const minutes = now.getMinutes().toString().padStart(2, "0");
-        const ampm = hours >= 12 ? "PM" : "AM";
-        hours = hours % 12 || 12;
-        timeEl.innerHTML = `${weekday}, ${month} ${day} ${hours}:${minutes} <span>${ampm}</span>`;
-      }
-      updateTime();
-      setInterval(updateTime, 60000);
+    // === Submenus ===
+    const submenuTriggers = document.querySelectorAll('.nav-item > .nav-link');
 
-      // Notifications / profile dropdowns
-      if (notifWrapper) {
-        const bell = notifWrapper.querySelector(".fa-bell");
-        bell?.addEventListener("click", (e) => {
-          e.stopPropagation();
-          notifWrapper.classList.toggle("active");
-          profileWrapper?.classList.remove("active");
+    submenuTriggers.forEach(trigger => {
+      trigger.addEventListener('click', (e) => {
+        e.preventDefault(); 
+        
+        const parentItem = trigger.closest('.nav-item');
+        const wasOpen = parentItem.classList.contains('open');
+
+        document.querySelectorAll('.nav-item').forEach(item => {
+          item.classList.remove('open');
         });
-      }
 
-      if (profileWrapper && profileToggle) {
-        profileToggle.addEventListener("click", (e) => {
-          e.stopPropagation();
-          profileWrapper.classList.toggle("active");
-          notifWrapper?.classList.remove("active");
-        });
-      }
-
-      // Close dropdowns when clicking outside
-      document.addEventListener("click", (e) => {
-        if (sidebar && !sidebar.contains(e.target) && menuToggle && !menuToggle.contains(e.target)) {
-          sidebar.classList.remove('open');
+        if (!wasOpen) {
+          parentItem.classList.add('open');
         }
-        if (profileWrapper && !profileWrapper.contains(e.target)) profileWrapper.classList.remove('active');
-        if (notifWrapper && !notifWrapper.contains(e.target)) notifWrapper.classList.remove('active');
-        document.querySelectorAll('.custom-select .options.show').forEach(o => o.classList.remove('show'));
+      });
+    });
+
+    // === Time auto-update ===
+    const timeEl = document.querySelector(".time");
+    function updateTime() {
+      if (!timeEl) return;
+      const now = new Date();
+      const shortWeekdays = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
+      const shortMonths = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+      const weekday = shortWeekdays[now.getDay()];
+      const month = shortMonths[now.getMonth()];
+      const day = now.getDate();
+      let hours = now.getHours();
+      const minutes = now.getMinutes().toString().padStart(2, "0");
+      const ampm = hours >= 12 ? "PM" : "AM";
+      hours = hours % 12 || 12;
+      timeEl.innerHTML = `${weekday}, ${month} ${day} ${hours}:${minutes} <span>${ampm}</span>`;
+    }
+    updateTime();
+    setInterval(updateTime, 60000);
+
+    
+    const notifWrapper = document.querySelector('.notification-wrapper');
+    const profileWrapper = document.querySelector('.profile-wrapper');
+    const profileToggle = document.getElementById('profileToggle');
+    const createActivityDropdown = document.querySelector(".create-activity-dropdown");
+    const createActivityBtn = createActivityDropdown?.querySelector(".create-activity");
+
+    // Notification Dropdown
+    if (notifWrapper) {
+      const bell = notifWrapper.querySelector(".fa-bell");
+      bell?.addEventListener("click", (e) => {
+        e.stopPropagation();
+        notifWrapper.classList.toggle("active");
+        profileWrapper?.classList.remove("active");
+        createActivityDropdown?.classList.remove("active");
+      });
+    }
+
+    // Profile Dropdown
+    if (profileWrapper && profileToggle) {
+      profileToggle.addEventListener("click", (e) => {
+        e.stopPropagation();
+        profileWrapper.classList.toggle("active");
+        notifWrapper?.classList.remove("active");
+        createActivityDropdown?.classList.remove("active");
+      });
+    }
+
+    // Create Activity Dropdown
+    if (createActivityDropdown && createActivityBtn) {
+      createActivityBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        createActivityDropdown.classList.toggle("active");
+        notifWrapper?.classList.remove("active");
+        profileWrapper?.classList.remove("active");
+      });
+    }
+
+    
+    document.addEventListener("click", (e) => {
+      
+      if (sidebar && !sidebar.contains(e.target) && menuToggle && !menuToggle.contains(e.target)) {
+        sidebar.classList.remove('open');
+      }
+      
+      if (profileWrapper && !profileWrapper.contains(e.target)) profileWrapper.classList.remove('active');
+      if (notifWrapper && !notifWrapper.contains(e.target)) notifWrapper.classList.remove('active');
+      if (createActivityDropdown && !createActivityDropdown.contains(e.target)) {
+        createActivityDropdown.classList.remove("active");
+      }
+      
+      document.querySelectorAll('.custom-select .options').forEach(o => o.style.display = 'none');
+      document.querySelectorAll('.custom-select').forEach(s => s.classList.remove('open'));
+    });
+    
+
+
+    // ========== TAB FILTERING FUNCTIONALITY ==========
+    let currentStatusFilter = 'all'; 
+    let currentCategoryFilter = 'all'; 
+
+    const tabs = document.querySelectorAll('.tab');
+    
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        currentStatusFilter = tab.getAttribute('data-filter');
+        applyFilters();
+      });
+    });
+
+    // Custom Select functionality for category filtering
+    const customSelect = document.querySelector("#category");
+    if (customSelect) {
+      const selected = customSelect.querySelector(".selected");
+      const options = customSelect.querySelector(".options");
+      const items = options.querySelectorAll("li");
+
+      selected.addEventListener("click", (e) => { 
+        e.stopPropagation(); 
+        const isOpen = options.style.display === "block";
+        options.style.display = isOpen ? "none" : "block";
+        customSelect.classList.toggle("open", !isOpen);
       });
 
-      // ========== TAB FILTERING FUNCTIONALITY ==========
-      const tabs = document.querySelectorAll('.tab');
-      
-      tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-          // Remove active class from all tabs
-          tabs.forEach(t => t.classList.remove('active'));
-          // Add active class to clicked tab
-          tab.classList.add('active');
-          
-          // Get the filter value
-          currentStatusFilter = tab.getAttribute('data-filter');
-          
-          // Apply filters
+      items.forEach(item => {
+        item.addEventListener("click", () => {
+          customSelect.querySelector(".selected-text").textContent = item.textContent;
+          options.style.display = "none";
+          customSelect.classList.remove("open");
+          currentCategoryFilter = item.getAttribute('data-value');
           applyFilters();
         });
       });
-
-      // Custom Select functionality for category filtering
-      const customSelect = document.querySelector("#category");
-      if (customSelect) {
-        const selected = customSelect.querySelector(".selected");
-        const options = customSelect.querySelector(".options");
-        const items = options.querySelectorAll("li");
-
-        selected.addEventListener("click", () => {
-          const isOpen = options.style.display === "block";
-          options.style.display = isOpen ? "none" : "block";
-          customSelect.classList.toggle("open", !isOpen);
-        });
-
-        items.forEach(item => {
-          item.addEventListener("click", () => {
-            customSelect.querySelector(".selected-text").textContent = item.textContent;
-            options.style.display = "none";
-            customSelect.classList.remove("open");
-            
-            // Update category filter
-            currentCategoryFilter = item.getAttribute('data-value');
-            
-            // Apply filters
-            applyFilters();
-          });
-        });
-      }
-
-      // Apply both status and category filters
-      function applyFilters() {
-        const eventCards = document.querySelectorAll('.event-card');
-        const eventCategories = document.querySelectorAll('.event-category');
-        
-        let hasVisibleEvents = false;
-
-        eventCategories.forEach(category => {
-          let categoryHasVisibleEvents = false;
-          const categoryEventCards = category.querySelectorAll('.event-card');
-          
-          categoryEventCards.forEach(card => {
-            const eventStatus = card.getAttribute('data-status');
-            const eventCategory = card.getAttribute('data-category');
-            
-            // Check if event matches both status and category filters
-            const statusMatch = currentStatusFilter === 'all' || eventStatus === currentStatusFilter;
-            const categoryMatch = currentCategoryFilter === 'all' || eventCategory === currentCategoryFilter;
-            
-            if (statusMatch && categoryMatch) {
-              card.style.display = 'flex';
-              categoryHasVisibleEvents = true;
-              hasVisibleEvents = true;
-            } else {
-              card.style.display = 'none';
-            }
-          });
-          
-          // Show/hide category header based on visible events
-          const categoryHeader = category.querySelector('h4');
-          const happeningTag = category.querySelector('.tag');
-          
-          if (categoryHeader || happeningTag) {
-            if (categoryHasVisibleEvents) {
-              category.style.display = 'block';
-            } else {
-              category.style.display = 'none';
-            }
-          }
-        });
-
-        // Show no events message if no events match filters
-        const noEventsElement = document.querySelector('.no-events');
-        if (!hasVisibleEvents && eventCards.length > 0) {
-          if (!noEventsElement) {
-            const noEventsHTML = `
-              <div class="no-events">
-                <i class="fas fa-calendar-times"></i>
-                <h3>No Events Match Your Filters</h3>
-                <p>Try adjusting your filter criteria to see more events.</p>
-                <button class="btn-create-event" onclick="resetFilters()">
-                  Reset Filters
-                </button>
-              </div>
-            `;
-            document.querySelector('.event-section').insertAdjacentHTML('beforeend', noEventsHTML);
-          }
-        } else if (noEventsElement && eventCards.length > 0) {
-          noEventsElement.remove();
-        }
-      }
-
-      // Reset filters function
-      window.resetFilters = function() {
-        // Reset tabs
-        tabs.forEach(tab => {
-          tab.classList.remove('active');
-          if (tab.getAttribute('data-filter') === 'all') {
-            tab.classList.add('active');
-          }
-        });
-        
-        // Reset category dropdown
-        const selected = customSelect.querySelector(".selected");
-        const selectedText = customSelect.querySelector(".selected-text");
-        selected.setAttribute('data-value', 'all');
-        selectedText.textContent = 'All';
-        
-        // Reset filter variables
-        currentStatusFilter = 'all';
-        currentCategoryFilter = 'all';
-        
-        // Apply reset
-        applyFilters();
-        
-        // Remove no events message if it exists
-        const noEventsElement = document.querySelector('.no-events');
-        if (noEventsElement) {
-          noEventsElement.remove();
-        }
-      };
-
-      // SIMPLE Launch Event functionality using event delegation
-document.addEventListener('click', function(e) {
-  const launchBtn = e.target.closest('.launch-btn[data-event-id]');
-  if (launchBtn) {
-    e.preventDefault();
-    e.stopPropagation();
-
-    const eventId = launchBtn.getAttribute('data-event-id');
-    if (!eventId) return;
-
-    currentEventId = eventId;
-    fetchEventDetails(currentEventId, launchBtn);
-  }
-
-  // Delete button
-  const deleteBtn = e.target.closest('.delete-btn[data-event-id]');
-  if (deleteBtn) {
-    e.preventDefault();
-    currentEventId = deleteBtn.getAttribute('data-event-id');
-    document.getElementById("deleteModal").style.display = "block";
-  }
-});
-
-// Fetch and display modal
-async function fetchEventDetails(eventId, button) {
-  try {
-    const originalText = button.textContent;
-    button.disabled = true;
-    button.textContent = 'Loading...';
-
-    const response = await fetch(`/events/${eventId}`, {
-      headers: {
-        'Accept': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest'
-      },
-      credentials: 'same-origin'
-    });
-
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
-    const event = await response.json();
-
-    // Populate modal fields
-    document.getElementById('modalEventTitle').textContent = event.title || 'No title';
-    document.getElementById('modalEventCategory').textContent = event.category?.replace(/_/g, ' ').toUpperCase() || 'No category';
-    document.getElementById('modalEventDateTime').textContent = event.event_date_time || 'No date/time';
-    document.getElementById('modalEventLocation').textContent = event.location || 'No location';
-    document.getElementById('modalEventDescriptionTitle').textContent = event.title || 'Description';
-    document.getElementById('modalEventDescription').textContent = event.description || 'No description provided.';
-    document.getElementById('modalEventPublisher').textContent = event.published_by || 'Unknown';
-    document.getElementById('modalEventCommittee').textContent = event.category?.replace(/_/g, ' ').toUpperCase() || 'Unknown';
-
-    const modalImage = document.getElementById('modalEventImage');
-    if (event.image) {
-      modalImage.src = event.image;
-      modalImage.style.display = 'block';
-      modalImage.onerror = () => modalImage.style.display = 'none';
-    } else {
-      modalImage.style.display = 'none';
     }
 
-    // ✅ Show the modal now
-    document.getElementById("eventModal").style.display = "block";
+    // Apply both status and category filters
+    function applyFilters() {
+      const eventCards = document.querySelectorAll('.event-card');
+      const eventCategories = document.querySelectorAll('.event-category');
+      
+      let hasVisibleEvents = false;
 
-  } catch (error) {
-    console.error('Error fetching event details:', error);
-    alert('Error loading event details: ' + error.message); // FIXED
-  } finally {
-    button.disabled = false;
-    button.textContent = 'Launch Event';
-  }
-}
-
-
-      // Generate QR & Passcode
-document.getElementById("proceedPasscode").addEventListener("click", async () => {
-  if (!currentEventId) {
-    alert('No event selected for QR generation');
-    return;
-  }
-
-  const proceedBtn = document.getElementById("proceedPasscode");
-
-  try {
-    // Show loading state
-    proceedBtn.disabled = true;
-    proceedBtn.textContent = 'Generating...';
-
-    // Generate random passcode
-    const passcode = generateRandomPasscode();
-    console.log('Generated passcode:', passcode);
-
-    // Save passcode to database
-    const passcodeResponse = await fetch(`/events/${currentEventId}/generate-passcode`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify({ passcode })
-    });
-
-    if (!passcodeResponse.ok) throw new Error('Failed to save passcode');
-    const passcodeResult = await passcodeResponse.json();
-    if (!passcodeResult.success) throw new Error(passcodeResult.error || 'Failed to save passcode');
-
-    // Launch the event
-    const launchResponse = await fetch(`/events/${currentEventId}/launch`, {
-      method: 'POST',
-      headers: {
-        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      }
-    });
-
-    if (!launchResponse.ok) throw new Error('Failed to launch event');
-    const launchResult = await launchResponse.json();
-    if (!launchResult.success) throw new Error(launchResult.error || 'Failed to launch event');
-
-    // ✅ Redirect directly to qr.blade.php
-    window.location.href = `/events/${currentEventId}/qr`;
-
-  } catch (error) {
-    console.error('Error generating QR and passcode:', error);
-    alert('Error: ' + error.message);
-  } finally {
-    // Reset button state
-    proceedBtn.disabled = false;
-    proceedBtn.textContent = 'Generate QR & Passcode';
-  }
-});
-
-function generateRandomPasscode(length = 6) {
-  const chars = '0123456789';
-  return Array.from({ length }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-}
-
-
-      // Create Activity dropdown
-      const createActivityDropdown = document.querySelector(".create-activity-dropdown");
-      const createActivityBtn = createActivityDropdown?.querySelector(".create-activity");
-
-      if (createActivityDropdown && createActivityBtn) {
-        createActivityBtn.addEventListener("click", (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          createActivityDropdown.classList.toggle("active");
-        });
-
-        document.addEventListener("click", (e) => {
-          if (!createActivityDropdown.contains(e.target)) {
-            createActivityDropdown.classList.remove("active");
+      eventCategories.forEach(category => {
+        let categoryHasVisibleEvents = false;
+        const categoryEventCards = category.querySelectorAll('.event-card');
+        
+        categoryEventCards.forEach(card => {
+          const eventStatus = card.getAttribute('data-status');
+          const eventCategory = card.getAttribute('data-category');
+          
+          const statusMatch = currentStatusFilter === 'all' || eventStatus === currentStatusFilter;
+          const categoryMatch = currentCategoryFilter === 'all' || eventCategory === currentCategoryFilter;
+          
+          if (statusMatch && categoryMatch) {
+            card.style.display = 'flex';
+            categoryHasVisibleEvents = true;
+            hasVisibleEvents = true;
+          } else {
+            card.style.display = 'none';
           }
         });
+        
+        const categoryHeader = category.querySelector('h4');
+        const happeningTag = category.querySelector('.tag');
+        
+        if (categoryHeader || happeningTag) {
+          if (categoryHasVisibleEvents) {
+            category.style.display = 'block';
+          } else {
+            category.style.display = 'none';
+          }
+        }
+      });
+
+      let noEventsElement = document.querySelector('.no-events-filtered'); 
+      if (!hasVisibleEvents && eventCards.length > 0) {
+        if (!noEventsElement) {
+          const noEventsHTML = `
+            <div class="no-events no-events-filtered"> 
+              <i class="fas fa-calendar-times"></i>
+              <h3>No Events Match Your Filters</h3>
+              <p>Try adjusting your filter criteria to see more events.</p>
+              <button class="btn-create-event" onclick="resetFilters()">
+                Reset Filters
+              </button>
+            </div>
+          `;
+          document.querySelector('.event-section').insertAdjacentHTML('beforeend', noEventsHTML);
+        }
+      } else if (noEventsElement) { 
+        noEventsElement.remove();
+      }
+    }
+
+    // Reset filters function
+    window.resetFilters = function() {
+      tabs.forEach(tab => {
+        tab.classList.remove('active');
+        if (tab.getAttribute('data-filter') === 'all') {
+          tab.classList.add('active');
+        }
+      });
+      
+      if (customSelect) { 
+        const selectedText = customSelect.querySelector(".selected-text");
+        selectedText.textContent = 'All';
+        customSelect.querySelector(".selected").setAttribute('data-value', 'all');
+      }
+      
+      currentStatusFilter = 'all';
+      currentCategoryFilter = 'all';
+      applyFilters();
+      
+      const noEventsElement = document.querySelector('.no-events-filtered'); 
+      if (noEventsElement) {
+        noEventsElement.remove();
+      }
+    };
+    
+    
+    const modal = document.getElementById('eventModal');
+    const span = modal?.querySelector('.close');
+    if (span) {
+      span.onclick = function() {
+        modal.style.display = "none";
+      }
+    }
+
+    let currentEventId = null; 
+
+    // SIMPLE Launch Event functionality using event delegation
+    document.addEventListener('click', function(e) {
+      const launchBtn = e.target.closest('.launch-btn[data-event-id]');
+      if (launchBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const eventId = launchBtn.getAttribute('data-event-id');
+        if (!eventId) return;
+
+        currentEventId = eventId;
+        fetchEventDetails(currentEventId, launchBtn);
       }
 
-      // Utility functions
-      function generateRandomPasscode() {
-        return Math.random().toString(36).substring(2, 10).toUpperCase();
+      const deleteBtn = e.target.closest('.delete-btn[data-event-id]');
+      if (deleteBtn) {
+        e.preventDefault();
+        currentEventId = deleteBtn.getAttribute('data-event-id');
+        document.getElementById("deleteModal").style.display = "block";
       }
+    });
 
-      function ucfirst(str) {
-        return str.charAt(0).toUpperCase() . str.slice(1);
+    // Fetch and display modal
+    async function fetchEventDetails(eventId, button) {
+      const originalText = button.textContent;
+      button.disabled = true;
+      button.textContent = 'Loading...';
+
+      try {
+        const response = await fetch(`/events/${eventId}`, {
+          headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+          },
+          credentials: 'same-origin'
+        });
+
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+        const event = await response.json();
+
+        document.getElementById('modalEventTitle').textContent = event.title || 'No title';
+        document.getElementById('modalEventCategory').textContent = event.category?.replace(/_/g, ' ').toUpperCase() || 'No category';
+        document.getElementById('modalEventDateTime').textContent = event.event_date_time || 'No date/time';
+        document.getElementById('modalEventLocation').textContent = event.location || 'No location';
+        document.getElementById('modalEventDescriptionTitle').textContent = event.title || 'Description';
+        document.getElementById('modalEventDescription').textContent = event.description || 'No description provided.';
+        document.getElementById('modalEventPublisher').textContent = event.published_by || 'Unknown';
+        document.getElementById('modalEventCommittee').textContent = event.category?.replace(/_/g, ' ').toUpperCase() || 'Unknown';
+
+        const modalImage = document.getElementById('modalEventImage');
+        if (event.image) {
+          modalImage.src = event.image;
+          modalImage.style.display = 'block';
+          modalImage.onerror = () => modalImage.style.display = 'none';
+        } else {
+          modalImage.style.display = 'none';
+        }
+
+        document.getElementById("eventModal").style.display = "block";
+
+      } catch (error) {
+        console.error('Error fetching event details:', error);
+        alert('Error loading event details: ' + error.message);
+      } finally {
+        button.disabled = false;
+        button.textContent = 'Launch Event'; 
       }
+    }
 
-      // QR Code Generation
-      async function generateQRCode(passcode) {
-        const qrcodeContainer = document.getElementById("qrcode");
-        if (!qrcodeContainer) {
-          console.error('QR code container not found');
+
+    // Generate QR & Passcode
+    const proceedBtn = document.getElementById("proceedPasscode");
+    if (proceedBtn) { 
+      proceedBtn.addEventListener("click", async () => {
+        if (!currentEventId) {
+          alert('No event selected for QR generation');
           return;
         }
         
-        qrcodeContainer.innerHTML = "";
-        
         try {
-          // Method 1: Try QRCodeStyling first
-          if (typeof QRCodeStyling !== 'undefined') {
-            console.log('Using QRCodeStyling library');
-            qrCodeInstance = new QRCodeStyling({
-              width: 250,
-              height: 250,
-              type: "canvas",
-              data: passcode,
-              dotsOptions: {
-                color: "#3C87C4",
-                type: "rounded"
-              },
-              backgroundOptions: {
-                color: "#ffffff",
-              },
-              imageOptions: {
-                crossOrigin: "anonymous",
-                margin: 0
-              }
-            });
+          proceedBtn.disabled = true;
+          proceedBtn.textContent = 'Generating...';
 
-            await qrCodeInstance.append(qrcodeContainer);
-            console.log('QR Code generated successfully with QRCodeStyling');
-            return;
-          }
-          
-          // Method 2: Try basic QRCode library
-          if (typeof QRCode !== 'undefined') {
-            console.log('Using basic QRCode library');
-            new QRCode(qrcodeContainer, {
-              text: passcode,
-              width: 250,
-              height: 250,
-              colorDark: "#3C87C4",
-              colorLight: "#ffffff",
-              correctLevel: QRCode.CorrectLevel.H
-            });
-            console.log('Basic QR Code generated successfully');
-            return;
-          }
-          
-          // Fallback: Create a simple visual representation
-          console.log('Using fallback QR representation');
-          qrcodeContainer.innerHTML = `
-            <div style="text-align: center; padding: 20px; border: 2px dashed #ccc; border-radius: 10px; background: #f9f9f9;">
-              <div style="font-size: 18px; font-weight: bold; color: #3C87C4; margin-bottom: 10px;">QR CODE</div>
-              <div style="font-size: 14px; color: #666; margin-bottom: 15px;">Passcode for attendance:</div>
-              <div style="font-size: 24px; font-weight: bold; color: #333; letter-spacing: 3px; font-family: monospace; background: #fff; padding: 10px; border-radius: 5px; border: 1px solid #ddd;">${passcode}</div>
-              <div style="font-size: 12px; color: #999; margin-top: 15px;">(Scan this code with your device)</div>
-            </div>
-          `;
-          
+          const passcode = generateRandomPasscode(8); 
+          console.log('Generated passcode:', passcode);
+
+          const passcodeResponse = await fetch(`/events/${currentEventId}/generate-passcode`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-TOKEN': '{{ csrf_token() }}',
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify({ passcode })
+          });
+
+          if (!passcodeResponse.ok) throw new Error('Failed to save passcode');
+          const passcodeResult = await passcodeResponse.json();
+          if (!passcodeResult.success) throw new Error(passcodeResult.error || 'Failed to save passcode');
+
+          const launchResponse = await fetch(`/events/${currentEventId}/launch`, {
+            method: 'POST',
+            headers: {
+              'X-CSRF-TOKEN': '{{ csrf_token() }}',
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            }
+          });
+
+          if (!launchResponse.ok) throw new Error('Failed to launch event');
+          const launchResult = await launchResponse.json();
+          if (!launchResult.success) throw new Error(launchResult.error || 'Failed to launch event');
+
+          window.location.href = `/events/${currentEventId}/qr`;
+
         } catch (error) {
-          console.error('Error generating QR code:', error);
-          // Ultimate fallback
-          qrcodeContainer.innerHTML = `
-            <div style="text-align:center; color:#666; padding: 20px;">
-              <i class="fas fa-qrcode" style="font-size: 48px; color: #3C87C4; margin-bottom: 10px;"></i>
-              <div style="font-size: 16px; font-weight: bold; margin-bottom: 10px;">Attendance Passcode</div>
-              <div style="font-size: 20px; font-weight: bold; color: #333; letter-spacing: 2px; font-family: monospace; background: #f0f0f0; padding: 10px; border-radius: 5px;">${passcode}</div>
-              <div style="font-size: 12px; color: #999; margin-top: 10px;">Share this code with attendees</div>
-            </div>
-          `;
+          console.error('Error generating QR and passcode:', error);
+          alert('Error: ' + error.message);
+        } finally {
+          proceedBtn.disabled = false;
+          proceedBtn.textContent = 'Generate QR & Passcode';
         }
+      });
+    }
+
+    function generateRandomPasscode(length = 6) {
+      const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      return Array.from({ length }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+    }
+  
+    setInterval(() => {
+      const eventCards = document.querySelectorAll('.event-card');
+      eventCards.forEach(card => {
+        const currentStatus = card.getAttribute('data-status');
+        if (currentStatus !== 'completed') {
+          applyFilters(); 
+        }
+      });
+    }, 60000); // Check every minute
+
+    // Delete Confirmation
+    const confirmDeleteBtn = document.getElementById("confirmDelete");
+    const cancelDeleteBtn = document.getElementById("cancelDelete");
+    const deleteModal = document.getElementById("deleteModal");
+
+    if (confirmDeleteBtn) { 
+      confirmDeleteBtn.addEventListener("click", async () => {
+        if (!currentEventId) return;
+
+        try {
+          const response = await fetch(`/events/${currentEventId}`, {
+            method: 'DELETE',
+            headers: {
+              'X-CSRF-TOKEN': '{{ csrf_token() }}',
+              'Accept': 'application/json'
+            }
+          });
+
+          if (!response.ok) throw new Error('Failed to delete event');
+          deleteModal.style.display = 'none';
+          window.location.reload();
+
+        } catch (error) {
+          console.error('Error deleting event:', error);
+          alert('Error deleting event: ' + error.message);
+        }
+      });
+    }
+
+    if (cancelDeleteBtn) { 
+      cancelDeleteBtn.addEventListener("click", () => {
+        deleteModal.style.display = "none";
+      });
+    }
+
+    // Close modals when clicking outside of them
+    window.addEventListener('click', (event) => {
+      if (event.target == deleteModal) {
+        deleteModal.style.display = 'none';
       }
-
-      // Auto-update event statuses every minute
-      setInterval(() => {
-        const eventCards = document.querySelectorAll('.event-card');
-        eventCards.forEach(card => {
-          const eventId = card.getAttribute('data-event-id');
-          const currentStatus = card.getAttribute('data-status');
-          
-          // Only check events that are not completed
-          if (currentStatus !== 'completed') {
-            // This would ideally make an API call to check status
-            // For now, we'll just re-apply filters
-            applyFilters();
-          }
-        });
-      }, 60000); // Check every minute
-
-      // Delete Confirmation
-const confirmDeleteBtn = document.getElementById("confirmDelete");
-const cancelDeleteBtn = document.getElementById("cancelDelete");
-const deleteModal = document.getElementById("deleteModal");
-
-confirmDeleteBtn.addEventListener("click", async () => {
-  if (!currentEventId) return;
-
-  try {
-    const response = await fetch(`/events/${currentEventId}`, {
-      method: 'DELETE',
-      headers: {
-        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-        'Accept': 'application/json'
+      if (event.target == modal) {
+        modal.style.display = 'none';
       }
     });
-
-    if (!response.ok) throw new Error('Failed to delete event');
-
-    // Close modal
-    deleteModal.style.display = 'none';
-
-    // ✅ Reload page instead of showing success message
-    window.location.reload();
-
-  } catch (error) {
-    console.error('Error deleting event:', error);
-    alert('Error deleting event: ' + error.message);
-  }
-});
-
-// Cancel Delete
-cancelDeleteBtn.addEventListener("click", () => {
-  deleteModal.style.display = "none";
-});
+    
+  }); // End of DOMContentLoaded
+</script>
 
 
 
-    });
-  </script>
+    
 </body>
 </html>
