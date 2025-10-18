@@ -403,6 +403,381 @@ body {
   width: 100%; 
 }
 
+/* ===== Modal Overlay ===== */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  font-family: 'Montserrat', sans-serif; /* Dinagdag para consistent */
+}
+
+/* ===== Modal Box ===== */
+.modal-content {
+  background: #fff;
+  border-radius: 12px;
+  /* InayOS: Pinalaki 'yung padding at 'yung max-width */
+  padding: 3rem; 
+  width: 90%;
+  max-width: 750px; /* Pinalaki */
+  box-shadow: 0 5px 25px rgba(0,0,0,0.1);
+  position: relative;
+  animation: fadeIn 0.3s ease;
+}
+
+/* --- Typography (Base sa pic) --- */
+.modal-content h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #3C87C4;
+  margin: 0 0 0.5rem 0;
+}
+
+.modal-content p {
+  font-size: .95rem;
+  color: #000;
+  line-height: 1.5;
+  margin-bottom: 1.5rem;
+}
+
+.modal-content h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #3C87C4;
+  margin-top: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.close-btn {
+  position: absolute;
+  /* Inayos 'yung pwesto */
+  top: 20px; right: 25px;
+  font-size: 2rem;
+  font-weight: 300;
+  cursor: pointer;
+  color: #aaa;
+}
+.close-btn:hover {
+  color: #333;
+}
+
+/* --- Option Cards (Base sa pic) --- */
+.feedback-options {
+  display: flex;
+  gap: 1rem;
+  margin: 1.5rem 0;
+  flex-wrap: wrap;
+}
+
+.option-card {
+  flex: 1;
+  min-width: 200px; /* Para 'di masyadong maliit sa mobile */
+  background: #fff; /* Background galing sa pic */
+  border: 1px solid #FBC93F; /* Border galing sa pic */
+  border-radius: 10px;
+  padding: 1rem;
+  text-align: left; /* Inayos para 'di centered */
+  display: flex; /* Ginamit 'yung flex */
+  align-items: center; /* Para gumitna 'yung icon at text */
+  gap: 0.8rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+}
+
+.option-card i {
+  color: #FBC93F;
+  font-size: 1.2rem;
+  /* Tinanggal 'yung margin-bottom */
+}
+
+.option-card p {
+  font-size: 0.75rem;
+  margin-bottom: 0; /* Tinanggal 'yung margin */
+  line-height: 1.4;
+  color: #555;
+}
+.option-card p strong {
+  color: #333;
+}
+
+/* --- Star Rating (Base sa pic) --- */
+.star-rating {
+  display: flex;
+  gap: 10px; /* Pinalaki 'yung gap */
+  justify-content: center; /* Naka-align sa left */
+  margin: 1rem 0;
+}
+
+.star-rating i {
+  font-size: 2.5rem; /* Pinalaki 'yung stars */
+  color: #E0E0E0; /* Mas light na gray 'yung empty */
+  cursor: pointer;
+  transition: color 0.2s ease, transform 0.1s ease;
+}
+.star-rating i:hover {
+  transform: scale(1.1);
+}
+.star-rating i.fas {
+  color: #F3C14B;
+}
+
+/* --- Form Styles (Base sa pic) --- */
+form {
+  margin-top: 1.5rem;
+}
+
+label {
+  display: block;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #000;
+}
+
+/* ================================== */
+/* === INAYOS NA CSS PARA SA FORM === */
+/* ================================== */
+
+/* Style para lang sa textarea */
+textarea {
+  width: 100%;
+  padding: 1rem;
+  border: 1px solid #E0E0E0;
+  border-radius: 12px;
+  margin-top: 0;
+  font-size: .9rem;
+  font-family: 'Montserrat', sans-serif;
+  background: #fff;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.04);
+  box-sizing: border-box;
+}
+
+textarea:focus {
+  outline: none;
+  border-color: #4A90E2;
+}
+
+.custom-select-wrapper {
+  position: relative;
+  width: 100%;
+  cursor: pointer;
+}
+
+.custom-select-trigger {
+  width: 100%;
+  padding: 1rem;
+  border: 1px solid #E0E0E0;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.04);
+  box-sizing: border-box;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: .9rem;
+  color: #777; 
+  transition: all 0.2s ease;
+}
+
+.custom-select-trigger.selected {
+  color: #333;
+}
+
+.custom-arrow {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  background-color: #3C87C4;
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+}
+
+.custom-arrow::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  border-bottom: 2px solid #fff;
+  border-right: 2px solid #fff;
+  transform: translate(-50%, -75%) rotate(45deg);
+  transition: transform 0.3s ease;
+}
+
+.custom-select-wrapper.open .custom-arrow {
+  transform: rotate(180deg);
+}
+
+.custom-options-list {
+  display: none; 
+  position: absolute;
+  top: calc(100% + 8px); 
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid #E0E0E0;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  z-index: 10;
+  padding: 0.5rem;
+}
+
+.custom-select-wrapper.open .custom-options-list {
+  display: block;
+}
+
+.custom-option {
+  padding: 0.8rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: .9rem;
+  color: #000;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+}
+
+.custom-option:hover {
+  background-color: #E0E5EB;
+}
+
+.custom-option .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.custom-option .dot.suggestion { background-color: #D988DE; }
+.custom-option .dot.bug { background-color: #5DADE2; }
+.custom-option .dot.appreciation { background-color: #F4D03F; }
+.custom-option .dot.others { background-color: #58D68D; }
+
+
+/* Form actions (Button) */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 2rem;
+}
+
+.submit-btn {
+  margin-top: 0;
+  background: #4A90E2;
+  color: #fff;
+  padding: 0.8rem 2rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: background-color 0.2s ease;
+}
+
+.submit-btn:hover {
+  background: #3c78c0;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end; 
+  margin-top: 2rem;
+}
+
+.submit-btn {
+  margin-top: 0; 
+  background: #3C87C4; 
+  color: #fff;
+  padding: 0.7rem 1.5rem; 
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: background-color 0.2s ease;
+}
+
+.submit-btn:hover {
+  background: #3c78c0; 
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+
+.simple-alert-modal .modal-content {
+  max-width: 480px; 
+  text-align: center;
+  padding: 3rem;
+  display: block; 
+}
+
+.success-icon {
+  width: 80px;
+  height: 80px;
+  background-color: #4A90E2; 
+  border-radius: 50%;
+  margin: 0 auto 1.5rem auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.success-icon i {
+  color: #fff;
+  font-size: 2.5rem; 
+  font-weight: 600;
+}
+
+.simple-alert-modal h2 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #4A90E2; 
+  margin-bottom: 0.5rem;
+}
+
+.simple-alert-modal p {
+  font-size: 1rem;
+  color: #555;
+  line-height: 1.5;
+  margin-bottom: 2rem;
+}
+
+.ok-btn {
+  background: #4A90E2;
+  color: #fff;
+  padding: 0.8rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  min-width: 120px;
+  transition: background-color 0.2s ease;
+}
+
+.ok-btn:hover {
+  background: #3c78c0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .modal-content {
+    padding: 2rem 1.5rem;
+  }
+  .feedback-options {
+    flex-direction: column;
+  }
+}
+
+
+
+
 /* === Notification === */
 .notification-wrapper {
   position: relative;

@@ -28,6 +28,7 @@ use App\Http\Controllers\AdminLoginController;
 use App\Http\Controllers\UserLoginController;
 use App\Models\Admin;
 use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\FeedbackController;
 
 
 
@@ -306,3 +307,6 @@ Route::controller(ForgotPasswordController::class)
         Route::post('/verify-otp', 'verifyOtp')->name('verify-otp');
         Route::post('/reset', 'resetPassword')->name('reset'); // Renamed method to resetPassword for clarity
 });
+
+
+Route::post('/feedback/submit', [FeedbackController::class, 'store'])->name('feedback.submit');
