@@ -31,7 +31,7 @@ use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\ProgramController; 
 use App\Http\Controllers\YouthProgramRegistrationController; 
-
+use App\Http\Controllers\YouthAssistanceController; 
 Route::get('/', function () {
     return view('landingpage');
 });
@@ -138,9 +138,8 @@ Route::get('/edit-program', function () {
     return view('edit-program');
 })->name('edit-program');
 
-Route::get('/youth-assistance', function () {
-    return view('youth-assistance');
-})->name('youth-assistance');
+Route::get('/youth-assistance', [YouthAssistanceController::class, 'index'])->name('youth-assistance');
+Route::post('/youth-assistance/filter', [YouthAssistanceController::class, 'filter'])->name('youth-assistance.filter');
 
 Route::get('/youth-suggestion', [SuggestionController::class, 'youthSuggestion'])->name('youth-suggestion');
 
