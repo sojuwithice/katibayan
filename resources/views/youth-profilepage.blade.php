@@ -295,6 +295,16 @@
               </div>
             </div>
 
+            <!-- Role Filter -->
+            <div class="dropdown">
+              <button class="dropdown-btn">Role</button>
+              <div class="dropdown-content">
+                <a href="#" data-filter-column="19" data-filter="">All</a>
+                <a href="#" data-filter-column="19" data-filter="sk member">SK Member</a>
+                <a href="#" data-filter-column="19" data-filter="kk member">KK Member</a>
+              </div>
+            </div>
+
             <!-- Download Button -->
             <div class="dropdown">
               <button class="dropdown-btn"><i class="fas fa-download"></i> Download</button>
@@ -309,86 +319,74 @@
           </div>
         </div>
 
-      <!-- Table Wrapper -->
-<div class="table-wrapper">
-  <table id="youthTable" class="youth-table">
-    <thead>
-      <tr>
-        <th>Region</th>
-        <th>Province</th>
-        <th>City/Municipality</th>
-        <th>Barangay</th>
-        <th>Surname</th>
-        <th>Given name</th>
-        <th>Middle name</th>
-        <th>Suffix</th>
-        <th>Age</th>
-        <th>Date of Birth</th>
-        <th>Sex assigned at birth</th>
-        <th>Civil status</th>
-        <th>Youth classification</th>
-        <th>Youth age group</th>
-        <th>Email address</th>
-        <th>Contact number</th>
-        <th>Highest educational attainment</th>
-        <th>Work status</th>
-        <th>Registered voter</th>
-        <th>Role</th>
-      </tr>
-    </thead>
-    <tbody>
-      @forelse($users as $user)
-      <tr data-id="{{ $user->id }}">
-        <td>{{ $user->region->name ?? 'N/A' }}</td>
-        <td>{{ $user->province->name ?? 'N/A' }}</td>
-        <td>{{ $user->city->name ?? 'N/A' }}</td>
-        <td>{{ $user->barangay->name ?? 'N/A' }}</td>
-        <td>{{ $user->last_name }}</td>
-        <td>{{ $user->given_name }}</td>
-        <td>{{ $user->middle_name ?? '' }}</td>
-        <td>{{ $user->suffix ?? '' }}</td>
-        <td>{{ $user->date_of_birth ? \Carbon\Carbon::parse($user->date_of_birth)->age : 'N/A' }}</td>
-        <td>{{ $user->date_of_birth ? \Carbon\Carbon::parse($user->date_of_birth)->format('m/d/Y') : 'N/A' }}</td>
-        <td>{{ ucfirst($user->sex) }}</td>
-        <td>{{ $user->civil_status }}</td>
-        <td>{{ $user->youth_classification }}</td>
-        <td>
-          @php
-            if($user->date_of_birth) {
-              $age = \Carbon\Carbon::parse($user->date_of_birth)->age;
-              if($age >= 15 && $age <= 30) {
-                echo 'Youth (15-30)';
-              } else {
-                echo 'Outside Youth Age';
-              }
-            } else {
-              echo 'N/A';
-            }
-          @endphp
-        </td>
-        <td>{{ $user->email }}</td>
-        <td>{{ $user->contact_no }}</td>
-        <td>{{ $user->education }}</td>
-        <td>{{ $user->work_status }}</td>
-        <td>{{ $user->sk_voter }}</td>
-        <td>
-          <span class="role-badge {{ $user->role === 'sk' ? 'sk-badge' : 'kk-badge' }}">
-            {{ $user->role === 'sk' ? 'SK Member' : 'KK Member' }}
-          </span>
-        </td>
-      </tr>
-      @empty
-      <tr>
-        <td colspan="20" style="text-align: center; padding: 20px;">
-          <i class="fas fa-users" style="font-size: 48px; color: #ccc; margin-bottom: 10px;"></i>
-          <p style="color: #666; font-size: 16px;">No approved members found in your barangay.</p>
-          <p style="color: #999; font-size: 14px;">Only approved members from your barangay are displayed here.</p>
-        </td>
-      </tr>
-      @endforelse
-    </tbody>
-  </table>
-</div>
+        <!-- Table Wrapper -->
+        <div class="table-wrapper">
+          <table id="youthTable" class="youth-table">
+            <thead>
+              <tr>
+                <th>Region</th>
+                <th>Province</th>
+                <th>City/Municipality</th>
+                <th>Barangay</th>
+                <th>Surname</th>
+                <th>Given name</th>
+                <th>Middle name</th>
+                <th>Suffix</th>
+                <th>Age</th>
+                <th>Date of Birth</th>
+                <th>Sex assigned at birth</th>
+                <th>Civil status</th>
+                <th>Youth classification</th>
+                <th>Youth age group</th>
+                <th>Email address</th>
+                <th>Contact number</th>
+                <th>Highest educational attainment</th>
+                <th>Work status</th>
+                <th>Registered voter</th>
+                <th>Role</th>
+              </tr>
+            </thead>
+            <tbody>
+              @forelse($users as $user)
+              <tr data-id="{{ $user->id }}">
+                <td>{{ $user->region->name ?? 'N/A' }}</td>
+                <td>{{ $user->province->name ?? 'N/A' }}</td>
+                <td>{{ $user->city->name ?? 'N/A' }}</td>
+                <td>{{ $user->barangay->name ?? 'N/A' }}</td>
+                <td>{{ $user->last_name }}</td>
+                <td>{{ $user->given_name }}</td>
+                <td>{{ $user->middle_name ?? '' }}</td>
+                <td>{{ $user->suffix ?? '' }}</td>
+                <td>{{ \Carbon\Carbon::parse($user->date_of_birth)->age }}</td>
+                <td>{{ \Carbon\Carbon::parse($user->date_of_birth)->format('m/d/Y') }}</td>
+                <td>{{ ucfirst($user->sex) }}</td>
+                <td>{{ $user->civil_status }}</td>
+                <td>{{ $user->youth_classification }}</td>
+                <td>
+                  @php
+                    $age = \Carbon\Carbon::parse($user->date_of_birth)->age;
+                    if($age >= 15 && $age <= 30) {
+                      echo 'Youth (15-30)';
+                    } else {
+                      echo 'Outside Youth Age';
+                    }
+                  @endphp
+                </td>
+                <td>{{ $user->email }}</td>
+                <td>{{ $user->contact_no }}</td>
+                <td>{{ $user->education }}</td>
+                <td>{{ $user->work_status }}</td>
+                <td>{{ $user->sk_voter }}</td>
+                <td>{{ $user->role === 'sk' ? 'SK Member' : 'KK Member' }}</td>
+              </tr>
+              @empty
+              <tr>
+                <td colspan="20" style="text-align: center;">No youth profiles found.</td>
+              </tr>
+              @endforelse
+            </tbody>
+          </table>
+        </div>
       </div>
     </main>
   </div>

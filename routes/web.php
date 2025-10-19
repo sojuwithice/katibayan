@@ -29,8 +29,8 @@ use App\Http\Controllers\UserLoginController;
 use App\Models\Admin;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\FeedbackController;
-
-
+use App\Http\Controllers\ProgramController; 
+use App\Http\Controllers\YouthProgramRegistrationController; 
 
 Route::get('/', function () {
     return view('landingpage');
@@ -101,9 +101,14 @@ Route::get('/sk-dashboard', [SKDashboardController::class, 'index'])->name('sk.d
 // FIXED: Youth Profile route - use controller instead of direct view
 Route::get('/youth-profilepage', [YouthProfileController::class, 'index'])->name('youth-profilepage');
 
-Route::get('/create-program', function () {
-    return view('create-program'); 
-})->name('create-program');
+// ========== PROGRAM ROUTES ========== ADD THESE ROUTES
+Route::get('/create-program', [ProgramController::class, 'create'])->name('create-program');
+Route::post('/programs', [ProgramController::class, 'store'])->name('programs.store');
+Route::get('/programs', [ProgramController::class, 'index'])->name('programs.index');
+Route::get('/programs/{id}', [ProgramController::class, 'show'])->name('programs.show');
+Route::get('/programs/{id}/edit', [ProgramController::class, 'edit'])->name('programs.edit');
+Route::put('/programs/{id}', [ProgramController::class, 'update'])->name('programs.update');
+Route::delete('/programs/{id}', [ProgramController::class, 'destroy'])->name('programs.destroy');
 
 Route::get('/edit-event', function () {
     return view('edit-event'); 
@@ -272,6 +277,14 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/sk-polls', [SKPollsController::class, 'store'])->name('sk-polls.store');
     Route::get('/sk-polls/{pollId}/respondents', [SKPollsController::class, 'getRespondents'])->name('sk-polls.respondents');
     Route::delete('/sk-polls/{pollId}', [SKPollsController::class, 'destroy'])->name('sk-polls.destroy');
+    
+    // Protected Program Routes ADD THESE INSIDE AUTH MIDDLEWARE
+    Route::post('/programs', [ProgramController::class, 'store'])->name('programs.store');
+    Route::get('/programs', [ProgramController::class, 'index'])->name('programs.index');
+    Route::get('/programs/{id}', [ProgramController::class, 'show'])->name('programs.show');
+    Route::get('/programs/{id}/edit', [ProgramController::class, 'edit'])->name('programs.edit');
+    Route::put('/programs/{id}', [ProgramController::class, 'update'])->name('programs.update');
+    Route::delete('/programs/{id}', [ProgramController::class, 'destroy'])->name('programs.destroy');
 });
 
 Route::post('/polls/{pollId}/reset-vote', [PollsController::class, 'resetVote'])->name('polls.reset-vote');
@@ -310,3 +323,15 @@ Route::controller(ForgotPasswordController::class)
 
 
 Route::post('/feedback/submit', [FeedbackController::class, 'store'])->name('feedback.submit');
+Route::get('/youth-program-registration', [YouthProgramRegistrationController::class, 'index'])
+    ->name('youth-program-registration');
+
+Route::post('/programs', [ProgramController::class, 'store'])
+    ->name('programs.store');
+// Program registration routes
+Route::post('/program-registrations', [ProgramController::class, 'storeRegistration'])->name('programs.store-registration');
+Route::get('/my-program-registrations', [ProgramController::class, 'getUserRegistrations'])->name('programs.my-registrations');
+// Add this route for fetching program registrations
+Route::get('/youth-program-registration/{programId}/registrations', [YouthProgramRegistrationController::class, 'getProgramRegistrations'])
+    ->name('youth-program-registration.registrations')
+    ->middleware('auth');

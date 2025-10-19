@@ -162,13 +162,13 @@
       <!-- LEFT -->
       <div class="events-left">
         <h2>Events and Programs</h2>
-        <p>This page serves as your guide to upcoming events designed to empower the youth, foster engagement, and build stronger communities.</p>
+        <p>This page serves as your guide to upcoming events and programs designed to empower the youth, foster engagement, and build stronger communities.</p>
         
         <!-- Barangay Info -->
         @if($user->barangay)
           <div class="barangay-info">
             <i class="fas fa-map-marker-alt"></i>
-            <span>Showing events from your barangay: <strong>{{ $user->barangay->name }}</strong></span>
+            <span>Showing events and programs from your barangay: <strong>{{ $user->barangay->name }}</strong></span>
           </div>
         @endif
       </div>
@@ -181,6 +181,7 @@
 
         @php
           use Carbon\Carbon;
+          use Illuminate\Support\Facades\Storage;
           // Use the variables passed from controller, with fallbacks
           $today = $today ?? Carbon::today();
           $currentDateTime = $currentDateTime ?? Carbon::now();
@@ -198,9 +199,19 @@
               // Simply check if the event date is today and it's launched
               return $eventDate->isSameDay($today);
           });
+
+          // Get today's programs
+          $todayPrograms = $programs->filter(function($program) use ($today) {
+              $programDate = $program->event_date instanceof Carbon 
+                ? $program->event_date 
+                : Carbon::parse($program->event_date);
+              
+              return $programDate->isSameDay($today);
+          });
         @endphp
 
-        @if($validTodayEvents->count() > 0)
+        @if($validTodayEvents->count() > 0 || $todayPrograms->count() > 0)
+          <!-- Today's Events -->
           @foreach($validTodayEvents as $event)
             <div class="agenda-card">
               <div class="agenda-banner">
@@ -219,6 +230,14 @@
                 @else
                   <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0jOTk5IHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5FdmVudCBJbWFnZTwvdGV4dD48L3N2Zz4=" alt="Event Image">
                 @endif
+              </div>
+              <div class="agenda-content">
+                <h4>{{ $event->title }}</h4>
+                <span class="agenda-type event-type">Event</span>
+                <p class="agenda-time">
+                  <i class="fas fa-clock"></i>
+                  {{ $event->event_time ? Carbon::parse($event->event_time)->format('g:i A') : 'All Day' }}
+                </p>
               </div>
               <div class="agenda-actions">
                 <a href="#" class="details-btn view-event-details" data-event-id="{{ $event->id }}">
@@ -257,12 +276,84 @@
               </div>
             </div>
           @endforeach
+
+          <!-- Today's Programs -->
+          @foreach($todayPrograms as $program)
+            <div class="agenda-card">
+              <div class="agenda-banner">
+                <div class="agenda-date">
+                  @php
+                    $programDate = $program->event_date instanceof Carbon 
+                      ? $program->event_date 
+                      : Carbon::parse($program->event_date);
+                  @endphp
+                  <span class="month">{{ $programDate->format('M') }}.</span>
+                  <span class="day">{{ $programDate->format('d') }}</span>
+                  <span class="year">{{ $programDate->format('Y') }}</span>
+                </div>
+                @if($program->display_image && Storage::disk('public')->exists($program->display_image))
+                  <img src="{{ asset('storage/' . $program->display_image) }}" alt="{{ $program->title }}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0jOTk5IHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5Qcm9ncmFtIEltYWdlPC90ZXh0Pjwvc3ZnPg=='">
+                @else
+                  <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0jOTk5IHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5Qcm9ncmFtIEltYWdlPC90ZXh0Pjwvc3ZnPg==" alt="Program Image">
+                @endif
+              </div>
+              <div class="agenda-content">
+                <h4>{{ $program->title }}</h4>
+                <span class="agenda-type program-type">Program</span>
+                <p class="agenda-time">
+                  <i class="fas fa-clock"></i>
+                  {{ $program->event_time ? Carbon::parse($program->event_time)->format('g:i A') : 'All Day' }}
+                </p>
+              </div>
+              <div class="agenda-actions">
+                <a href="#" class="details-btn view-program-details" data-program-id="{{ $program->id }}">
+                  See full details 
+                  <span class="icon-circle">
+                    <i class="fa-solid fa-chevron-right"></i>
+                  </span>
+                </a>
+                
+                @php
+                  // Check if program has ended to show appropriate button
+                  $programDate = $program->event_date instanceof Carbon 
+                    ? $program->event_date 
+                    : Carbon::parse($program->event_date);
+                  
+                  $programDateTime = $programDate->copy();
+                  if ($program->event_time) {
+                      try {
+                          $programTime = Carbon::parse($program->event_time);
+                          $programDateTime->setTime($programTime->hour, $programTime->minute, $programTime->second);
+                      } catch (\Exception $e) {
+                          $programDateTime->endOfDay();
+                      }
+                  } else {
+                      $programDateTime->endOfDay();
+                  }
+                  
+                  $hasProgramEnded = $programDateTime->lt($currentDateTime);
+                @endphp
+                
+                @if($hasProgramEnded)
+                  <span class="attend-btn ended">Program Ended</span>
+                @else
+                  @if($program->registration_type === 'link' && $program->link_source)
+                    <a href="{{ $program->link_source }}" target="_blank" class="attend-btn">Register Now</a>
+                  @elseif($program->registration_type === 'create')
+                    <a href="#" class="attend-btn program-register" data-program-id="{{ $program->id }}">Register Now</a>
+                  @else
+                    <a href="#" class="attend-btn">Learn More</a>
+                  @endif
+                @endif
+              </div>
+            </div>
+          @endforeach
         @else
           <div class="agenda-card no-events">
             <div class="agenda-banner">
               <div class="no-events-content">
                 <i class="fas fa-calendar-times"></i>
-                <p>No events scheduled for today in your barangay</p>
+                <p>No events or programs scheduled for today in your barangay</p>
               </div>
             </div>
           </div>
@@ -368,10 +459,101 @@
       </div>
     </section>
 
+    <!-- New Programs Section -->
+    <section class="programs-section">
+      <div class="programs-bar">
+        <h3>Available Programs</h3>
+        <a href="#" class="see-all">See All</a>
+      </div>
+
+      <div class="programs-scroll">
+        <div class="programs-container">
+          @php
+            // Get upcoming programs (future dates)
+            $upcomingPrograms = $programs->filter(function($program) use ($currentDateTime) {
+                $programDate = $program->event_date instanceof Carbon 
+                  ? $program->event_date 
+                  : Carbon::parse($program->event_date);
+                
+                // Create full datetime object for the program
+                if ($program->event_time) {
+                    try {
+                        $programTime = Carbon::parse($program->event_time);
+                        $programDateTime = Carbon::create(
+                            $programDate->year,
+                            $programDate->month,
+                            $programDate->day,
+                            $programTime->hour,
+                            $programTime->minute,
+                            $programTime->second
+                        );
+                    } catch (\Exception $e) {
+                        $programDateTime = $programDate->endOfDay();
+                    }
+                } else {
+                    $programDateTime = $programDate->endOfDay();
+                }
+                
+                // Only show programs that haven't happened yet
+                return $programDateTime->gt($currentDateTime);
+            });
+          @endphp
+
+          @if($upcomingPrograms->count() > 0)
+            @foreach($upcomingPrograms as $program)
+              <article class="program-card" data-category="{{ $program->category }}">
+                <div class="program-media">
+                  @if($program->display_image && Storage::disk('public')->exists($program->display_image))
+                    <img src="{{ asset('storage/' . $program->display_image) }}" alt="{{ $program->title }}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0jOTk5IHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5Qcm9ncmFtIEltYWdlPC90ZXh0Pjwvc3ZnPg=='">
+                  @else
+                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI5MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0jOTk5IHRleHQtYW5jaG9yPSJtaWRkbGUiPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==" alt="Program Image">
+                  @endif
+                  
+                  @if($program->registration_type === 'link' && $program->link_source)
+                    <a href="{{ $program->link_source }}" target="_blank" class="register-btn">REGISTER NOW!</a>
+                  @elseif($program->registration_type === 'create')
+                    <a href="#" class="register-btn program-register" data-program-id="{{ $program->id }}">REGISTER NOW!</a>
+                  @else
+                    <a href="#" class="register-btn">LEARN MORE</a>
+                  @endif
+                </div>
+                <div class="program-body">
+                  <p class="program-title">{{ $program->title }}</p>
+                  <p class="program-desc">
+                    {{ $program->description ? Str::limit($program->description, 100) : 'No description available.' }}
+                  </p>
+                  <div class="program-meta">
+                    <span class="program-category-badge">{{ ucfirst($program->category) }}</span>
+                    <span class="program-date">
+                      <i class="fas fa-calendar"></i>
+                      {{ Carbon::parse($program->event_date)->format('M d, Y') }}
+                    </span>
+                  </div>
+                  <div class="program-actions">
+                    <a class="read-more view-program-details" href="#" data-program-id="{{ $program->id }}">
+                      READ MORE 
+                      <span class="circle-btn">
+                        <i class="fas fa-chevron-right"></i>
+                      </span>
+                    </a>
+                  </div>
+                </div>
+              </article>
+            @endforeach
+          @else
+            <div class="no-events-message">
+              <i class="fas fa-calendar-plus"></i>
+              <p>No upcoming programs available in your barangay at the moment.</p>
+            </div>
+          @endif
+        </div>
+      </div>
+    </section>
+
     <!-- List of Events (stacked) -->
     <section class="events-list-section">
       <div class="section-header">
-        <h3>All Upcoming Events</h3>
+        <h3>All Upcoming Events & Programs</h3>
         <a href="#" class="see-all">See All</a>
       </div>
 
@@ -409,27 +591,39 @@
               // Only show events that haven't happened yet
               return $eventDateTime->gt($currentDateTime);
           });
+
+          // Combine events and programs for the stacked list
+          $allUpcomingActivities = $upcomingEvents->merge($upcomingPrograms)->sortBy('event_date');
         @endphp
 
-        @if($upcomingEvents->count() > 0)
-          @foreach($upcomingEvents as $event)
-            <article class="event-card" data-category="{{ $event->category }}">
+        @if($allUpcomingActivities->count() > 0)
+          @foreach($allUpcomingActivities as $activity)
+            <article class="event-card" data-category="{{ $activity->category }}">
               <div class="event-left">
                 <div class="event-thumb upcoming">
-                  @if($event->image && Storage::disk('public')->exists($event->image))
-                    <img src="{{ asset('storage/' . $event->image) }}" alt="{{ $event->title }}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFmaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0jOTk5IHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5FdmVudCBJbWFnZTwvdGV4dD48L3N2Zz4='">
+                  @if(isset($activity->image) && $activity->image && Storage::disk('public')->exists($activity->image))
+                    <img src="{{ asset('storage/' . $activity->image) }}" alt="{{ $activity->title }}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0jOTk5IHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5FdmVudCBJbWFnZTwvdGV4dD48L3N2Zz4='">
+                  @elseif(isset($activity->display_image) && $activity->display_image && Storage::disk('public')->exists($activity->display_image))
+                    <img src="{{ asset('storage/' . $activity->display_image) }}" alt="{{ $activity->title }}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0jOTk5IHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5Qcm9ncmFtIEltYWdlPC90ZXh0Pjwvc3ZnPg=='">
                   @else
-                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0jOTk5IHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5FdmVudCBJbWFnZwwvdGV4dD48L3N2Zz4=" alt="Event Image">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Iy93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0jOTk5IHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5BY3Rpdml0eSBJbWFnZTwvdGV4dD48L3N2Zz4=" alt="Activity Image">
                   @endif
+                  <span class="activity-type">
+                    {{ isset($activity->image) ? 'Event' : 'Program' }}
+                  </span>
                 </div>
               </div>
 
               <div class="event-right">
-                <a class="view-details view-event-details" href="#" data-event-id="{{ $event->id }}">View more details</a>
-                <h4 class="event-title">{{ $event->title }}</h4>
+                @if(isset($activity->image))
+                  <a class="view-details view-event-details" href="#" data-event-id="{{ $activity->id }}">View more details</a>
+                @else
+                  <a class="view-details view-program-details" href="#" data-program-id="{{ $activity->id }}">View more details</a>
+                @endif
+                <h4 class="event-title">{{ $activity->title }}</h4>
                 <div class="event-meta">
-                  <p><i class="fas fa-location-dot"></i> {{ $event->location }}</p>
-                  <p><i class="fas fa-users"></i> Committee on {{ ucfirst(str_replace('_', ' ', $event->category)) }}</p>
+                  <p><i class="fas fa-location-dot"></i> {{ $activity->location }}</p>
+                  <p><i class="fas fa-users"></i> Committee on {{ ucfirst(str_replace('_', ' ', $activity->category)) }}</p>
                 </div>
 
                 <div class="event-footer">
@@ -437,11 +631,11 @@
                     <div class="when-label">WHEN</div>
                     <div class="event-date">
                       @php
-                        $eventDate = $event->event_date instanceof Carbon 
-                          ? $event->event_date 
-                          : Carbon::parse($event->event_date);
+                        $activityDate = $activity->event_date instanceof Carbon 
+                          ? $activity->event_date 
+                          : Carbon::parse($activity->event_date);
                       @endphp
-                      {{ $eventDate->format('F d, Y') }} | {{ $event->event_time ? \Carbon\Carbon::parse($event->event_time)->format('h:i A') : 'Time not specified' }}
+                      {{ $activityDate->format('F d, Y') }} | {{ $activity->event_time ? Carbon::parse($activity->event_time)->format('h:i A') : 'Time not specified' }}
                     </div>
                   </div>
                 </div>
@@ -451,7 +645,7 @@
         @else
           <div class="no-events-message">
             <i class="fas fa-calendar-times"></i>
-            <p>No upcoming events scheduled in your barangay.</p>
+            <p>No upcoming events or programs scheduled in your barangay.</p>
           </div>
         @endif
       </div>
@@ -483,10 +677,163 @@
     </div>
   </div>
 
+  <!-- Enhanced Program Details Modal -->
+  <div id="programModal" class="modal" style="display: none;">
+    <div class="modal-content program-modal-content">
+      <span class="close">&times;</span>
+      <div class="modal-header">
+        <h2 id="modalProgramTitle">Program Title</h2>
+        <span id="modalProgramCategory" class="program-category">Category</span>
+      </div>
+      <div class="modal-body">
+        <!-- Program Image -->
+        <div class="program-image-container">
+          <img id="modalProgramImage" src="" alt="Program Image" class="program-image" style="display: none;">
+          <div class="no-image" style="display: none;">
+            <i class="fas fa-calendar-alt"></i>
+            <span>No Image Available</span>
+          </div>
+        </div>
+
+        <!-- Program Details Grid -->
+        <div class="program-details-grid">
+          <div class="detail-item">
+            <i class="fas fa-calendar-day"></i>
+            <div>
+              <div class="detail-label">DATE & TIME</div>
+              <div class="detail-value" id="modalProgramDateTime"></div>
+            </div>
+          </div>
+          <div class="detail-item">
+            <i class="fas fa-map-marker-alt"></i>
+            <div>
+              <div class="detail-label">LOCATION</div>
+              <div class="detail-value" id="modalProgramLocation"></div>
+            </div>
+          </div>
+          <div class="detail-item">
+            <i class="fas fa-user-tie"></i>
+            <div>
+              <div class="detail-label">PUBLISHED BY</div>
+              <div class="detail-value" id="modalProgramPublisher"></div>
+            </div>
+          </div>
+          <div class="detail-item">
+            <i class="fas fa-tag"></i>
+            <div>
+              <div class="detail-label">CATEGORY</div>
+              <div class="detail-value" id="modalProgramCategoryText"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Registration Type Section -->
+        <div class="registration-section">
+          <h4>Registration Information</h4>
+          
+          <!-- Link Source Registration -->
+          <div id="linkRegistration" class="registration-type-link" style="display: none;">
+            <div class="link-source-box">
+              <i class="fas fa-link"></i>
+              <div>
+                <div class="detail-label">EXTERNAL REGISTRATION</div>
+                <a href="#" id="modalProgramLink" target="_blank" class="external-link">
+                  Click here to register externally
+                  <i class="fas fa-external-link-alt"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Create Registration Form -->
+          <div id="createRegistration" class="registration-type-form" style="display: none;">
+            <div class="registration-form">
+              <h5 id="registrationFormTitle">Registration Form</h5>
+              <p class="registration-description" id="registrationDescription"></p>
+              
+              <!-- Registration Period -->
+              <div class="registration-period-info">
+                <div class="period-group">
+                  <div class="period-label">Registration Opens</div>
+                  <div class="period-value" id="registrationOpenPeriod"></div>
+                </div>
+                <div class="period-group">
+                  <div class="period-label">Registration Closes</div>
+                  <div class="period-value" id="registrationClosePeriod"></div>
+                </div>
+              </div>
+
+              <!-- Registration Form Fields -->
+              <form id="programRegistrationForm" class="registration-form-fields">
+                @csrf
+                <input type="hidden" name="program_id" id="hiddenProgramId">
+                
+                <!-- Auto-filled user data (from user profile) -->
+                <div class="form-group">
+                  <label class="form-label">Full Name</label>
+                  <input type="text" class="form-input" value="{{ $user->given_name }} {{ $user->middle_name }} {{ $user->last_name }} {{ $user->suffix }}" readonly>
+                </div>
+                
+                <div class="form-group">
+                  <label class="form-label">Email Address</label>
+                  <input type="email" class="form-input" value="{{ $user->email }}" readonly>
+                </div>
+                
+                <div class="form-group">
+                  <label class="form-label">Contact Number</label>
+                  <input type="tel" class="form-input" value="{{ $user->contact_no }}" readonly>
+                </div>
+                
+                <div class="form-group">
+                  <label class="form-label">Age</label>
+                  <input type="text" class="form-input" value="{{ $age }} years old" readonly>
+                </div>
+                
+                <div class="form-group">
+                  <label class="form-label">Barangay</label>
+                  <input type="text" class="form-input" value="{{ $user->barangay->name ?? 'N/A' }}" readonly>
+                </div>
+
+                <!-- Dynamic custom fields from program creation -->
+                <div id="dynamicCustomFields"></div>
+
+                <div class="form-actions">
+                  <button type="submit" class="submit-btn">
+                    <i class="fas fa-paper-plane"></i>
+                    Submit Registration
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- No Registration Available -->
+          <div id="noRegistration" class="no-registration" style="display: none;">
+            <div class="no-registration-message">
+              <i class="fas fa-info-circle"></i>
+              <p>Registration details are not available for this program.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Program Description -->
+        <div class="description-section">
+          <h4>About This Program</h4>
+          <div class="description-content" id="modalProgramDescription"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="close-btn">Close</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       // === Lucide icons ===
-      lucide.createIcons();
+      if (typeof lucide !== "undefined" && lucide.createIcons) {
+        lucide.createIcons();
+      }
 
       // === Elements ===
       const menuToggle = document.querySelector('.menu-toggle');
@@ -506,14 +853,16 @@
       const notifDropdown = notifWrapper?.querySelector(".notif-dropdown");
 
       // === Sidebar toggle ===
-      menuToggle.addEventListener('click', (e) => {
-        e.stopPropagation();
-        sidebar.classList.toggle('open');
+      if (menuToggle && sidebar) {
+        menuToggle.addEventListener('click', (e) => {
+          e.stopPropagation();
+          sidebar.classList.toggle('open');
 
-        if (!sidebar.classList.contains('open')) {
-          profileItem?.classList.remove('open');
-        }
-      });
+          if (!sidebar.classList.contains('open')) {
+            profileItem?.classList.remove('open');
+          }
+        });
+      }
 
       // Helper: close all submenus
       function closeAllSubmenus() {
@@ -534,7 +883,7 @@
 
       // === Close sidebar when clicking outside ===
       document.addEventListener('click', (e) => {
-        if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+        if (sidebar && !sidebar.contains(e.target) && menuToggle && !menuToggle.contains(e.target)) {
           sidebar.classList.remove('open');
           closeAllSubmenus();
         }
@@ -557,7 +906,9 @@
         });
       }
 
-      profileDropdown?.addEventListener('click', e => e.stopPropagation());
+      if (profileDropdown) {
+        profileDropdown.addEventListener('click', e => e.stopPropagation());
+      }
 
       // === Notifications dropdown toggle ===
       if (notifBell) {
@@ -568,7 +919,9 @@
         });
       }
 
-      notifDropdown?.addEventListener('click', e => e.stopPropagation());
+      if (notifDropdown) {
+        notifDropdown.addEventListener('click', e => e.stopPropagation());
+      }
 
       // === Committee Filtering ===
       const committeeTabs = document.querySelectorAll('.committee-tab');
@@ -629,9 +982,11 @@
 
       // === Event Details Modal ===
       const eventModal = document.getElementById('eventModal');
-      const closeModal = document.querySelector('.close');
-      const closeBtn = document.querySelector('.close-btn');
+      const programModal = document.getElementById('programModal');
+      const closeModal = document.querySelectorAll('.close');
+      const closeBtn = document.querySelectorAll('.close-btn');
       const viewDetailsButtons = document.querySelectorAll('.view-event-details');
+      const viewProgramButtons = document.querySelectorAll('.view-program-details');
 
       // Function to fetch and display event details
       async function showEventDetails(eventId) {
@@ -676,6 +1031,387 @@
         }
       }
 
+      // Helper function to create custom field HTML
+      function createCustomFieldHTML(field, index) {
+        const fieldId = `custom_field_${index}`;
+        const fieldName = `registration_data[${fieldId}]`;
+        
+        switch (field.field_type) {
+          case 'text':
+            return `
+              <div class="form-group">
+                <label class="form-label">${field.label} ${field.required ? '*' : ''}</label>
+                <input type="text" 
+                       class="form-input" 
+                       name="${fieldName}" 
+                       placeholder="${field.label}"
+                       ${field.required ? 'required' : ''}>
+              </div>
+            `;
+            
+          case 'radio':
+            let radioOptions = '';
+            if (field.options && field.options.length > 0) {
+              field.options.forEach((option, optIndex) => {
+                radioOptions += `
+                  <div class="radio-option">
+                    <input type="radio" 
+                           id="${fieldId}_${optIndex}" 
+                           name="${fieldName}" 
+                           value="${option}"
+                           ${field.required ? 'required' : ''}>
+                    <label for="${fieldId}_${optIndex}">${option}</label>
+                  </div>
+                `;
+              });
+            }
+            return `
+              <div class="form-group">
+                <label class="form-label">${field.label} ${field.required ? '*' : ''}</label>
+                <div class="radio-group">
+                  ${radioOptions}
+                </div>
+              </div>
+            `;
+            
+          case 'select':
+            let selectOptions = '<option value="">Select an option</option>';
+            if (field.options && field.options.length > 0) {
+              field.options.forEach(option => {
+                selectOptions += `<option value="${option}">${option}</option>`;
+              });
+            }
+            return `
+              <div class="form-group">
+                <label class="form-label">${field.label} ${field.required ? '*' : ''}</label>
+                <select class="form-input" 
+                        name="${fieldName}"
+                        ${field.required ? 'required' : ''}>
+                  ${selectOptions}
+                </select>
+              </div>
+            `;
+            
+          case 'file':
+            return `
+              <div class="form-group">
+                <label class="form-label">${field.label} ${field.required ? '*' : ''}</label>
+                <input type="file" 
+                       class="form-input" 
+                       name="${fieldName}"
+                       ${field.required ? 'required' : ''}>
+              </div>
+            `;
+            
+          default:
+            return '';
+        }
+      }
+
+      // Enhanced Program Details Modal Functionality - FIXED VERSION
+      async function showProgramDetails(programId) {
+        try {
+          // Show loading state
+          const programModal = document.getElementById('programModal');
+          programModal.style.display = 'block';
+          
+          // Create loading element if it doesn't exist
+          let loadingElement = programModal.querySelector('.loading-program');
+          if (!loadingElement) {
+            loadingElement = document.createElement('div');
+            loadingElement.className = 'loading-program';
+            loadingElement.innerHTML = `
+              <i class="fas fa-spinner fa-spin"></i>
+              <p>Loading program details...</p>
+            `;
+            programModal.querySelector('.modal-body').appendChild(loadingElement);
+          } else {
+            loadingElement.style.display = 'block';
+          }
+
+          const response = await fetch(`/programs/${programId}`);
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          
+          const program = await response.json();
+          
+          // Hide loading
+          loadingElement.style.display = 'none';
+
+          // SAFELY populate modal with program data - check if elements exist first
+          const modalProgramTitle = document.getElementById('modalProgramTitle');
+          const modalProgramCategory = document.getElementById('modalProgramCategory');
+          const modalProgramCategoryText = document.getElementById('modalProgramCategoryText');
+          const modalProgramDateTime = document.getElementById('modalProgramDateTime');
+          const modalProgramLocation = document.getElementById('modalProgramLocation');
+          const modalProgramPublisher = document.getElementById('modalProgramPublisher');
+          const modalProgramDescription = document.getElementById('modalProgramDescription');
+
+          if (modalProgramTitle) modalProgramTitle.textContent = program.title || 'No title';
+          if (modalProgramCategory) modalProgramCategory.textContent = program.category ? 
+            program.category.replace(/_/g, ' ').toUpperCase() : 'No category';
+          if (modalProgramCategoryText) modalProgramCategoryText.textContent = program.category ? 
+            program.category.replace(/_/g, ' ') : 'Not specified';
+
+          // Format date and time
+          const eventDate = program.event_date ? new Date(program.event_date) : null;
+          const eventTime = program.event_time ? new Date(`1970-01-01T${program.event_time}`) : null;
+          let dateTimeString = 'Date not specified';
+          
+          if (eventDate) {
+            dateTimeString = eventDate.toLocaleDateString('en-US', { 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            }) + (eventTime ? ` at ${eventTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}` : ' (All Day)');
+          }
+          
+          if (modalProgramDateTime) modalProgramDateTime.textContent = dateTimeString;
+          if (modalProgramLocation) modalProgramLocation.textContent = program.location || 'Location not specified';
+          if (modalProgramPublisher) modalProgramPublisher.textContent = program.published_by || 'Publisher not specified';
+          if (modalProgramDescription) modalProgramDescription.textContent = program.description || 'No description available.';
+
+          // Handle program image
+          const modalImage = document.getElementById('modalProgramImage');
+          const noImage = document.querySelector('.no-image');
+          if (modalImage && noImage) {
+            if (program.display_image) {
+              modalImage.src = program.display_image;
+              modalImage.style.display = 'block';
+              noImage.style.display = 'none';
+              modalImage.alt = program.title || 'Program Image';
+              
+              modalImage.onerror = function() {
+                this.style.display = 'none';
+                noImage.style.display = 'flex';
+              };
+            } else {
+              modalImage.style.display = 'none';
+              noImage.style.display = 'flex';
+            }
+          }
+
+          // Handle registration type
+          const linkRegistration = document.getElementById('linkRegistration');
+          const createRegistration = document.getElementById('createRegistration');
+          const noRegistration = document.getElementById('noRegistration');
+
+          // Hide all registration sections first
+          if (linkRegistration) linkRegistration.style.display = 'none';
+          if (createRegistration) createRegistration.style.display = 'none';
+          if (noRegistration) noRegistration.style.display = 'none';
+
+          if (program.registration_type === 'link' && program.link_source) {
+            // Show link registration
+            if (linkRegistration) {
+              linkRegistration.style.display = 'block';
+              const programLink = document.getElementById('modalProgramLink');
+              if (programLink) {
+                programLink.href = program.link_source;
+                programLink.textContent = program.link_source;
+              }
+            }
+          } else if (program.registration_type === 'create') {
+            // Show create registration form
+            if (createRegistration) {
+              createRegistration.style.display = 'block';
+              
+              // Set hidden program ID
+              const hiddenProgramId = document.getElementById('hiddenProgramId');
+              if (hiddenProgramId) hiddenProgramId.value = program.id;
+              
+              // Set registration form title and description
+              const registrationFormTitle = document.getElementById('registrationFormTitle');
+              const registrationDescription = document.getElementById('registrationDescription');
+              
+              if (registrationFormTitle) {
+                registrationFormTitle.textContent = 
+                  program.registration_title || `${program.title} - Registration Form`;
+              }
+              if (registrationDescription) {
+                registrationDescription.textContent = 
+                  program.registration_description || 'Please fill out the form below to register for this program.';
+              }
+
+              // Set registration period
+              const registrationOpenPeriod = document.getElementById('registrationOpenPeriod');
+              const registrationClosePeriod = document.getElementById('registrationClosePeriod');
+              
+              if (registrationOpenPeriod && registrationClosePeriod) {
+                if (program.registration_open_date && program.registration_close_date) {
+                  const openDate = new Date(program.registration_open_date);
+                  const closeDate = new Date(program.registration_close_date);
+                  
+                  const openTime = program.registration_open_time ? 
+                    new Date(`1970-01-01T${program.registration_open_time}`) : null;
+                  const closeTime = program.registration_close_time ? 
+                    new Date(`1970-01-01T${program.registration_close_time}`) : null;
+
+                  const openPeriod = openDate.toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  }) + (openTime ? ` at ${openTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}` : '');
+                  
+                  const closePeriod = closeDate.toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  }) + (closeTime ? ` at ${closeTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}` : '');
+
+                  registrationOpenPeriod.textContent = openPeriod || 'Not specified';
+                  registrationClosePeriod.textContent = closePeriod || 'Not specified';
+                } else {
+                  registrationOpenPeriod.textContent = 'Not specified';
+                  registrationClosePeriod.textContent = 'Not specified';
+                }
+              }
+
+              // Render custom fields - FIXED: Check for custom_fields structure
+              const dynamicFieldsContainer = document.getElementById('dynamicCustomFields');
+              if (dynamicFieldsContainer) {
+                dynamicFieldsContainer.innerHTML = '';
+                
+                // Check if custom_fields exists and is an array
+                if (program.custom_fields && Array.isArray(program.custom_fields)) {
+                  let hasCustomFields = false;
+                  
+                  program.custom_fields.forEach((field, index) => {
+                    // Check if this is a custom field (not auto-filled)
+                    if (field.type === 'custom' || field.editable === true) {
+                      const fieldHtml = createCustomFieldHTML(field, index);
+                      dynamicFieldsContainer.innerHTML += fieldHtml;
+                      hasCustomFields = true;
+                    }
+                  });
+                  
+                  if (!hasCustomFields) {
+                    dynamicFieldsContainer.innerHTML = '<p class="no-custom-fields">No additional registration fields required.</p>';
+                  }
+                } else {
+                  dynamicFieldsContainer.innerHTML = '<p class="no-custom-fields">No additional registration fields required.</p>';
+                }
+              }
+
+              // Reset form
+              const registrationForm = document.getElementById('programRegistrationForm');
+              if (registrationForm) {
+                registrationForm.reset();
+                registrationForm.style.display = 'block';
+                
+                // Remove any existing success messages
+                const successMessage = registrationForm.querySelector('.registration-success');
+                if (successMessage) {
+                  successMessage.remove();
+                }
+
+                // Handle form submission
+                registrationForm.onsubmit = function(e) {
+                  e.preventDefault();
+                  submitProgramRegistration(program.id, new FormData(this));
+                };
+              }
+            }
+          } else {
+            // No registration available
+            if (noRegistration) noRegistration.style.display = 'block';
+          }
+
+        } catch (error) {
+          console.error('Error fetching program details:', error);
+          const programModal = document.getElementById('programModal');
+          if (programModal) {
+            const modalBody = programModal.querySelector('.modal-body');
+            if (modalBody) {
+              modalBody.innerHTML = `
+                <div class="loading-program">
+                  <i class="fas fa-exclamation-triangle"></i>
+                  <p>Error loading program details. Please try again.</p>
+                  <small>${error.message}</small>
+                </div>
+              `;
+            }
+          }
+        }
+      }
+
+      // Program Registration Form Submission - FIXED VERSION
+      async function submitProgramRegistration(programId, formData) {
+        try {
+          const submitBtn = document.querySelector('#programRegistrationForm .submit-btn');
+          if (!submitBtn) {
+            throw new Error('Submit button not found');
+          }
+          
+          const originalText = submitBtn.innerHTML;
+          
+          // Show loading state
+          submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+          submitBtn.disabled = true;
+
+          // Prepare registration data for JSON storage
+          const registrationData = {};
+          
+          // Collect all custom field values
+          const customFields = {};
+          for (let [key, value] of formData.entries()) {
+            if (key.startsWith('registration_data[')) {
+              const fieldName = key.replace('registration_data[', '').replace(']', '');
+              customFields[fieldName] = value;
+            }
+          }
+          
+          registrationData.custom_fields = customFields;
+
+          // Create final form data with proper structure
+          const finalFormData = new FormData();
+          finalFormData.append('program_id', programId);
+          finalFormData.append('registration_data', JSON.stringify(registrationData));
+          finalFormData.append('_token', '{{ csrf_token() }}');
+
+          const response = await fetch('/program-registrations', {
+            method: 'POST',
+            body: finalFormData,
+            headers: {
+              'X-CSRF-TOKEN': '{{ csrf_token() }}',
+              'Accept': 'application/json'
+            }
+          });
+
+          const result = await response.json();
+
+          if (response.ok && result.success) {
+            // Show success message
+            const registrationForm = document.querySelector('.registration-form-fields');
+            if (registrationForm) {
+              registrationForm.innerHTML = `
+                <div class="registration-success">
+                  <i class="fas fa-check-circle"></i>
+                  <h4>Registration Submitted Successfully!</h4>
+                  <p>Thank you for registering for this program. We'll contact you with further details.</p>
+                  <p><strong>Reference ID:</strong> ${result.reference_id || 'N/A'}</p>
+                  <p><strong>Submitted on:</strong> ${result.registration?.submitted_at || 'Just now'}</p>
+                </div>
+              `;
+            }
+          } else {
+            throw new Error(result.message || 'Failed to submit registration');
+          }
+
+        } catch (error) {
+          console.error('Error submitting registration:', error);
+          alert('Error submitting registration: ' + error.message);
+          
+          // Reset button
+          const submitBtn = document.querySelector('#programRegistrationForm .submit-btn');
+          if (submitBtn) {
+            submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Registration';
+            submitBtn.disabled = false;
+          }
+        }
+      }
+
       // Add click event to all view details buttons
       viewDetailsButtons.forEach(button => {
         button.addEventListener('click', (e) => {
@@ -685,20 +1421,53 @@
         });
       });
 
+      viewProgramButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+          e.preventDefault();
+          const programId = button.getAttribute('data-program-id');
+          showProgramDetails(programId);
+        });
+      });
+
+      // Program register buttons
+      document.querySelectorAll('.program-register').forEach(button => {
+        button.addEventListener('click', (e) => {
+          e.preventDefault();
+          const programId = button.getAttribute('data-program-id');
+          showProgramDetails(programId);
+        });
+      });
+
       // Close modal functions
-      closeModal?.addEventListener('click', () => {
-        eventModal.style.display = 'none';
+      closeModal.forEach(close => {
+        close.addEventListener('click', () => {
+          if (eventModal) eventModal.style.display = 'none';
+          if (programModal) programModal.style.display = 'none';
+        });
       });
 
-      closeBtn?.addEventListener('click', () => {
-        eventModal.style.display = 'none';
+      closeBtn.forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (eventModal) eventModal.style.display = 'none';
+          if (programModal) programModal.style.display = 'none';
+        });
       });
 
-      eventModal?.addEventListener('click', (e) => {
-        if (e.target === eventModal) {
-          eventModal.style.display = 'none';
-        }
-      });
+      if (eventModal) {
+        eventModal.addEventListener('click', (e) => {
+          if (e.target === eventModal) {
+            eventModal.style.display = 'none';
+          }
+        });
+      }
+
+      if (programModal) {
+        programModal.addEventListener('click', (e) => {
+          if (e.target === programModal) {
+            programModal.style.display = 'none';
+          }
+        });
+      }
 
       // Truncate program descriptions
       document.querySelectorAll('.program-desc').forEach(el => {

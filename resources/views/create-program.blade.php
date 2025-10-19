@@ -3,21 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KatiBayan - Dashboard</title>
+  <title>KatiBayan - Create Program</title>
   <link rel="stylesheet" href="{{ asset('css/create-program.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
-
-
-
-
 </head>
 <body>
   
@@ -68,10 +58,8 @@
         <i data-lucide="hand-heart"></i>
         <span class="label">Service Offer</span>
       </a>
-
     </nav>
   </aside>
-
 
   <!-- Main -->
   <div class="main">
@@ -128,15 +116,17 @@
 
         <!-- Profile Avatar -->
         <div class="profile-wrapper">
-          <img src="https://i.pravatar.cc/80" alt="User" class="avatar" id="profileToggle">
+          <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+               alt="User" class="avatar" id="profileToggle">
           <div class="profile-dropdown">
             <div class="profile-header">
-              <img src="https://i.pravatar.cc/80" alt="User" class="profile-avatar">
+              <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+                   alt="User" class="profile-avatar">
               <div class="profile-info">
-                <h4>Marijoy S. Novora</h4>
+                <h4>{{ $user->given_name }} {{ $user->middle_name }} {{ $user->last_name }} {{ $user->suffix }}</h4>
                 <div class="profile-badge">
-                  <span class="badge">KK- Member</span>
-                  <span class="badge">19 yrs old</span>
+                  <span class="badge">{{ $roleBadge }}</span>
+                  <span class="badge">{{ $age }} yrs old</span>
                 </div>
               </div>
             </div>
@@ -154,7 +144,17 @@
                 </a>
               </li>
               <li><i class="fas fa-star"></i> Send Feedback to Katibayan</li>
+              <li class="logout-item">
+                <a href="loginpage" onclick="confirmLogout(event)">
+                  <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+              </li>
             </ul>
+            
+            <!-- Hidden Logout Form -->
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+              @csrf
+            </form>
           </div>
         </div>
       </div>
@@ -165,42 +165,42 @@
   <h2>Create Program</h2>
   <p class="subtitle">Set up events or programs designed for youth involvement.</p>
 
-  <form>
+  <form id="programForm" action="{{ route('programs.store') }}" method="POST" enctype="multipart/form-data">
+    @csrf
     <!-- Title -->
     <div class="form-group">
-  <label for="title" style="display:block; font-weight:700; margin-bottom:0.5rem;">Title</label>
-  <input type="text" id="title">
-</div>
+      <label for="title" style="display:block; font-weight:700; margin-bottom:0.5rem;">Title</label>
+      <input type="text" id="title" name="title" required>
+    </div>
 
     <!-- Row: Date, Time, Category -->
     <div class="form-row">
       <!-- Date -->
       <div class="form-group date">
         <label for="date">Event Date</label>
-        <input type="date" id="date">
+        <input type="date" id="date" name="event_date" required>
       </div>
 
       <!-- Time -->
       <div class="form-group time">
         <label for="time">Time</label>
         <div class="input-with-icon">
-          <input type="text" id="time" readonly>
+          <input type="text" id="time" readonly name="event_time" required>
           <i data-lucide="clock" class="icon"></i>
         </div>
       </div>
-
 
       <!-- Category -->
       <div class="form-group category">
         <label for="category">Select Event Category</label>
         <div class="custom-select" id="category" tabindex="0" role="listbox" aria-haspopup="listbox">
           <div class="selected" data-value="">
-        <span class="selected-text">Select Category</span>
-        <div class="icon-circle small">
-          <i data-lucide="chevron-down" class="dropdown-icon"></i>
-        </div>
-      </div>
-
+            <span class="selected-text">Select Category</span>
+            <div class="icon-circle small">
+              <i data-lucide="chevron-down" class="dropdown-icon"></i>
+            </div>
+          </div>
+          <input type="hidden" id="categoryInput" name="category" required>
           <ul class="options" role="presentation">
             <li data-value="active citizenship" role="option">Active Citizenship</li>
             <li data-value="economic empowerment" role="option">Economic Empowerment</li>
@@ -215,31 +215,28 @@
 
     <!-- Note -->
     <div class="notification-item">
-  <div class="icon-circle">
-    <i class="fa-solid fa-bell"></i>
-  </div>
-  <p class="note">This event will take place on September 13, 2025, beginning at 1:00 PM.</p>
-</div>
-
+      <div class="icon-circle">
+        <i class="fa-solid fa-bell"></i>
+      </div>
+      <p class="note">This event will take place on September 13, 2025, beginning at 1:00 PM.</p>
+    </div>
 
     <!-- Location -->
     <div class="form-group">
-  <label for="location" style="display:block; font-weight:700; margin-bottom:0.5rem;">Location</label>
-  <input type="text" id="location">
-</div>
+      <label for="location" style="display:block; font-weight:700; margin-bottom:0.5rem;">Location</label>
+      <input type="text" id="location" name="location" required>
+    </div>
 
     <!-- Description -->
     <div class="form-group">
-  <label for="description" style="display:block; font-weight:700; margin-bottom:0.5rem;">Add Description</label>
-  <textarea id="description" rows="4"></textarea>
-</div>
-
-    
+      <label for="description" style="display:block; font-weight:700; margin-bottom:0.5rem;">Add Description</label>
+      <textarea id="description" rows="4" name="description"></textarea>
+    </div>
 
     <!-- Upload -->
     <label>Upload Display</label>
     <div class="upload-box" id="uploadBox">
-      <input type="file" id="upload" hidden accept="image/*">
+      <input type="file" id="upload" hidden accept="image/*" name="display_image">
 
       <!-- Browse UI -->
       <label for="upload" class="upload-label" id="uploadLabel">
@@ -256,212 +253,194 @@
 
     <!-- Publisher -->
     <div class="form-group">
-  <label for="publisher" style="display:block; font-weight:700; margin-bottom:0.5rem;">Published By:</label>
-  <input type="text" id="publisher">
-</div>
+      <label for="publisher" style="display:block; font-weight:700; margin-bottom:0.5rem;">Published By:</label>
+      <input type="text" id="publisher" name="published_by" required>
+    </div>
 
-<!-- Youth Registration Option -->
+    <!-- Youth Registration Option -->
     <div class="form-group">
       <label style="display:block; font-weight:100; margin-bottom:0.7rem;">
         Choose an option (for youth registration)
       </label>
       <div class="registration-options">
         <label>
-          <input type="radio" name="registrationOption" value="create">
+          <input type="radio" name="registration_type" value="create">
           Create Registration
         </label>
         <label style="margin-left: 1rem;">
-          <input type="radio" name="registrationOption" value="link">
+          <input type="radio" name="registration_type" value="link">
           Add link source
         </label>
       </div>
     </div>
 
     <!-- Link Source Field -->
-<div id="linkSourceField" class="form-group" style="display:none;">
-  <div class="link-source-wrapper">
-    <i class="fas fa-link link-icon"></i>
-    <input type="url" id="linkSource" placeholder="Link Source">
-  </div>
+    <div id="linkSourceField" class="form-group" style="display:none;">
+      <div class="link-source-wrapper">
+        <i class="fas fa-link link-icon"></i>
+        <input type="url" id="linkSource" placeholder="Link Source" name="link_source">
+      </div>
 
-  <!-- Post Program Button for Link Source -->
-  <div class="form-actions">
-  <button type="submit" class="btn-submit postProgramBtn">Post Program</button>
-</div>
-</div>
-
+      <!-- Post Program Button for Link Source -->
+      <div class="form-actions">
+        <button type="submit" class="btn-submit postProgramBtn">Post Program</button>
+      </div>
+    </div>
 
     <!-- Create Registration Fields -->
-<div id="createRegistrationFields" class="regform-container">
-  <h3 class="regform-title">Registration Form</h3>
+    <div id="createRegistrationFields" class="regform-container" style="display:none;">
+      <h3 class="regform-title">Registration Form</h3>
 
-  <!-- Title -->
-<div class="regform-block-wide">
-  <label class="regform-label">Title</label>
-  <input type="text" class="regform-input" value="2025 BADMINTON REGISTRATION FORM">
-</div>
-
-<!-- Description -->
-<div class="regform-block-wide">
-  <label class="regform-label">Add description</label>
-  <textarea class="regform-textarea" rows="3">Open to all bona fide residents of Barangay 3, EM's Bo. East, Legazpi City, Albay. Slots are limited, and once all slots are filled, we will make an official announcement. Slot allocation will be based on the timestamp of registration.</textarea>
-</div>
-
-  <!-- Registration Period -->
-<div class="regform-period">
-  <h4>Registration Period (Set date and time)</h4>
-  <div class="regform-dates">
-    <!-- Opens -->
-    <div class="regform-block">
-      <label class="regform-label">Registration Opens</label>
-      <div class="regform-datetime">
-        <div class="regform-datetime-icon">
-          <input type="date" id="openDate" />
-          <i class="fas fa-calendar-alt"></i>
-        </div>
-        <div class="regform-datetime-icon">
-          <input type="time" id="openTime" />
-          <i class="fas fa-clock"></i>
-        </div>
+      <!-- Title -->
+      <div class="regform-block-wide">
+        <label class="regform-label">Title</label>
+        <input type="text" class="regform-input" id="registrationTitle" name="registration_title">
       </div>
-    </div>
 
-    <!-- Closes -->
-    <div class="regform-block">
-      <label class="regform-label">Registration Closes</label>
-      <div class="regform-datetime">
-        <div class="regform-datetime-icon">
-          <input type="date" id="closeDate" />
-          <i class="fas fa-calendar-alt"></i>
-        </div>
-        <div class="regform-datetime-icon">
-      <input type="time" id="closeTime" name="closeTime" />
-      <i class="fas fa-clock"></i>
-    </div>
+      <!-- Description -->
+      <div class="regform-block-wide">
+        <label class="regform-label">Add description</label>
+        <textarea class="regform-textarea" rows="3" id="registrationDescription" name="registration_description"></textarea>
       </div>
-    </div>
-  </div>
 
-  <p class="regform-note" id="regNote">
-    Registration opens: —<br>
-    Registration closes: —
-  </p>
-</div>
+      <!-- Registration Period -->
+      <div class="regform-period">
+        <h4>Registration Period (Set date and time)</h4>
+        <div class="regform-dates">
+          <!-- Opens -->
+          <div class="regform-block">
+            <label class="regform-label">Registration Opens</label>
+            <div class="regform-datetime">
+              <div class="regform-datetime-icon">
+                <input type="date" id="openDate" name="registration_open_date" />
+                <i class="fas fa-calendar-alt"></i>
+              </div>
+              <div class="regform-datetime-icon">
+                <input type="time" id="openTime" name="registration_open_time" />
+                <i class="fas fa-clock"></i>
+              </div>
+            </div>
+          </div>
 
-
-<!-- Registration Fields -->
-<div class="regform-fields">
-  <h4>Registration Fields</h4>
-
-  <div>
-    <label class="regform-label">Name</label>
-    <input type="text" class="regform-input">
-  </div>
-
-  <div>
-    <label class="regform-label">Age</label>
-    <input type="number" class="regform-input">
-  </div>
-  
-  <div class="regform-gender">
-  <label class="regform-label">Gender</label>
-  <div class="regform-gender-options">
-    <label><input type="radio" name="gender"><span>Female</span></label>
-    <label><input type="radio" name="gender"><span>Male</span></label>
-    <label><input type="radio" name="gender"><span>Other</span></label>
-  </div>
-</div>
-
-
-  <div>
-    <label class="regform-label">Contact Number</label>
-    <input type="text" class="regform-input">
-  </div>
-
-  <div>
-    <label class="regform-label">Purok</label>
-    <input type="text" class="regform-input">
-  </div>
-
-  <!-- Extra question fields (container for all fields) -->
-<div id="extra-fields">
-  <!-- One field -->
-  <div class="regform-field">
-    <!-- 3 dots sa labas -->
-<span class="regform-dots">⋯</span>
-
-<!-- Dropdown menu -->
-<div class="dots-menu hidden">
-  <p class="edit-option"><i class="fas fa-edit"></i> Edit</p>
-  <p class="delete-option"><i class="fas fa-trash"></i> Delete</p>
-</div>
-
-
-
-    <!-- Card -->
-    <div class="regform-extra">
-      <!-- Card content -->
-      <div class="regform-main">
-        <div class="regform-top">
-          <!-- Question input -->
-          <input type="text" placeholder="Add question" />
-
-          <!-- Answer type dropdown (upper right) -->
-          <div class="answer-type-wrapper">
-            <span class="answer-type" onclick="toggleDropdown(this)">
-              Choose type of answer
-            </span>
-            <div class="answer-dropdown">
-              <p onclick="selectAnswerType(this, 'short')">Short answer</p>
-              <p onclick="selectAnswerType(this, 'radio')">Radio button</p>
-              <p onclick="selectAnswerType(this, 'file')">File upload</p>
+          <!-- Closes -->
+          <div class="regform-block">
+            <label class="regform-label">Registration Closes</label>
+            <div class="regform-datetime">
+              <div class="regform-datetime-icon">
+                <input type="date" id="closeDate" name="registration_close_date" />
+                <i class="fas fa-calendar-alt"></i>
+              </div>
+              <div class="regform-datetime-icon">
+                <input type="time" id="closeTime" name="registration_close_time" />
+                <i class="fas fa-clock"></i>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Answer preview (short) -->
-<div class="answer-preview hidden" data-type="short">
-  <input type="text" placeholder="Short answer" disabled />
-</div>
+        <p class="regform-note" id="regNote">
+          Registration opens: —<br>
+          Registration closes: —
+        </p>
+      </div>
 
-<!-- Radio button preview -->
-<div class="answer-radio hidden" data-type="radio">
-  <div class="options-box">
-    <div class="option-item">
-      <input type="radio" name="sampleRadio">
-      <span contenteditable="true" class="editable">Option 1</span>
-    </div>
-    <div class="option-item">
-      <input type="radio" name="sampleRadio">
-      <span contenteditable="true" class="editable">Option 2</span>
-    </div>
-  </div>
-  <a href="#" class="add-option">+ Add option</a>
-</div>
+      <!-- Registration Fields -->
+      <div class="regform-fields">
+        <h4>Registration Fields</h4>
 
+        <!-- Default Fields Container -->
+        <div id="defaultFields">
+          <!-- Default fields will be added here dynamically -->
+        </div>
 
-<!-- File upload preview -->
-<div class="answer-file hidden" data-type="file">
-  <input type="file" disabled />
-</div>
+        <!-- Extra question fields (container for all fields) -->
+        <div id="extra-fields">
+          <!-- One field -->
+          <div class="regform-field" data-field-id="field_1">
+            <!-- 3 dots sa labas -->
+            <span class="regform-dots">⋯</span>
 
+            <!-- Dropdown menu -->
+            <div class="dots-menu hidden">
+              <p class="edit-option"><i class="fas fa-edit"></i> Edit</p>
+              <p class="delete-option"><i class="fas fa-trash"></i> Delete</p>
+            </div>
+
+            <!-- Card -->
+            <div class="regform-extra">
+              <!-- Card content -->
+              <div class="regform-main">
+                <div class="regform-top">
+                  <!-- Question input -->
+                  <input type="text" placeholder="Add question" class="field-label" />
+
+                  <!-- Answer type dropdown (upper right) -->
+                  <div class="answer-type-wrapper">
+                    <span class="answer-type">Choose type of answer</span>
+                    <div class="answer-dropdown">
+                      <p data-type="text">Short answer</p>
+                      <p data-type="radio">Radio button</p>
+                      <p data-type="select">Dropdown</p>
+                      <p data-type="file">File upload</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Answer preview (short) -->
+                <div class="answer-preview hidden" data-type="text">
+                  <input type="text" placeholder="Short answer" disabled />
+                </div>
+
+                <!-- Radio button preview -->
+                <div class="answer-radio hidden" data-type="radio">
+                  <div class="options-box">
+                    <div class="option-item">
+                      <input type="radio" name="sampleRadio_1" disabled>
+                      <span contenteditable="true" class="editable">Option 1</span>
+                    </div>
+                    <div class="option-item">
+                      <input type="radio" name="sampleRadio_1" disabled>
+                      <span contenteditable="true" class="editable">Option 2</span>
+                    </div>
+                  </div>
+                  <a href="#" class="add-option">+ Add option</a>
+                </div>
+
+                <!-- Dropdown preview -->
+                <div class="answer-select hidden" data-type="select">
+                  <div class="options-box">
+                    <div class="option-item">
+                      <span contenteditable="true" class="editable">Option 1</span>
+                    </div>
+                    <div class="option-item">
+                      <span contenteditable="true" class="editable">Option 2</span>
+                    </div>
+                  </div>
+                  <a href="#" class="add-option">+ Add option</a>
+                </div>
+
+                <!-- File upload preview -->
+                <div class="answer-file hidden" data-type="file">
+                  <input type="file" disabled />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add button -->
+        <div class="add-btn-wrapper">
+          <button type="button" class="regform-add-btn" id="addFieldBtn">
+            + Add Another Field
+          </button>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-submit postProgramBtn">Post Program</button>
+        </div>
       </div>
     </div>
-  </div>
-</div>
-
-<!-- Add button -->
-<div class="add-btn-wrapper">
-  <button type="button" class="regform-add-btn" id="addFieldBtn">
-    + Add Another Field
-  </button>
-</div>
-
-<div class="form-actions">
-  <button type="submit" class="btn-submit postProgramBtn">Post Program</button>
-
-</div>
-
+  </form>
 </section>
 
 <!-- Time Picker Modal -->
@@ -504,28 +483,17 @@
   </div>
 </div>
 
-
 <!-- Posted Modal -->
 <div id="postedModal" class="posted-modal">
   <div class="posted-modal-content">
     <div class="posted-icon">
-  <i class="fa-solid fa-circle-check"></i>
-</div>
+      <i class="fa-solid fa-circle-check"></i>
+    </div>
     <h2>Posted</h2>
     <p>The program has already been created and posted.</p>
     <button id="closePostedModal">OK</button>
   </div>
 </div>
-
-
-
-
-
-
-
-
-
-
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
@@ -553,111 +521,28 @@ document.addEventListener("DOMContentLoaded", () => {
     evaluationItem?.classList.toggle("open");
   });
 
-  // --- CALENDAR ---
-  const weekdays = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
-  const daysContainer = document.querySelector(".calendar .days");
-  const header = document.querySelector(".calendar header h3");
-  let today = new Date();
-  let currentView = new Date();
-  const holidays = [
-    "2025-01-01","2025-04-09","2025-04-17","2025-04-18",
-    "2025-05-01","2025-06-06","2025-06-12","2025-08-25",
-    "2025-11-30","2025-12-25","2025-12-30"
-  ];
-
-  function renderCalendar(baseDate) {
-    if (!daysContainer || !header) return;
-    daysContainer.innerHTML = "";
-
-    const startOfWeek = new Date(baseDate);
-    startOfWeek.setDate(baseDate.getDate() - (baseDate.getDay() === 0 ? 6 : baseDate.getDay() - 1));
-    const middleDay = new Date(startOfWeek);
-    middleDay.setDate(startOfWeek.getDate() + 3);
-    header.textContent = middleDay.toLocaleDateString("en-US", { month: "long", year: "numeric" });
-
-    for (let i = 0; i < 7; i++) {
-      const thisDay = new Date(startOfWeek);
-      thisDay.setDate(startOfWeek.getDate() + i);
-
-      const dayEl = document.createElement("div");
-      dayEl.classList.add("day");
-
-      const weekdayEl = document.createElement("span");
-      weekdayEl.classList.add("weekday");
-      weekdayEl.textContent = weekdays[i];
-
-      const dateEl = document.createElement("span");
-      dateEl.classList.add("date");
-      dateEl.textContent = thisDay.getDate();
-
-      const month = (thisDay.getMonth() + 1).toString().padStart(2, "0");
-      const day = thisDay.getDate().toString().padStart(2, "0");
-      const dateStr = `${thisDay.getFullYear()}-${month}-${day}`;
-
-      if (holidays.includes(dateStr)) dateEl.classList.add("holiday");
-      if (
-        thisDay.getDate() === today.getDate() &&
-        thisDay.getMonth() === today.getMonth() &&
-        thisDay.getFullYear() === today.getFullYear()
-      ) {
-        dayEl.classList.add("active");
-      }
-
-      dayEl.appendChild(weekdayEl);
-      dayEl.appendChild(dateEl);
-      daysContainer.appendChild(dayEl);
-    }
-  }
-  renderCalendar(currentView);
-  document.querySelector(".calendar .prev")?.addEventListener("click", () => {
-    currentView.setDate(currentView.getDate() - 7);
-    renderCalendar(currentView);
-  });
-  document.querySelector(".calendar .next")?.addEventListener("click", () => {
-    currentView.setDate(currentView.getDate() + 7);
-    renderCalendar(currentView);
-  });
-
-  // --- TIME AUTO UPDATE ---
-  const timeEl = document.querySelector(".time");
-  function updateTime() {
-    if (!timeEl) return;
-    const now = new Date();
-    const shortWeekdays = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
-    const shortMonths = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
-    const weekday = shortWeekdays[now.getDay()];
-    const month = shortMonths[now.getMonth()];
-    const day = now.getDate();
-    let hours = now.getHours();
-    const minutes = now.getMinutes().toString().padStart(2, "0");
-    const ampm = hours >= 12 ? "PM" : "AM";
-    hours = hours % 12 || 12;
-    timeEl.innerHTML = `${weekday}, ${month} ${day} ${hours}:${minutes} <span>${ampm}</span>`;
-  }
-  updateTime();
-  setInterval(updateTime, 60000);
-
-  // --- NOTIFICATIONS + PROFILE ---
-  const notifWrapper = document.querySelector(".notification-wrapper");
+  // --- PROFILE DROPDOWN FIX ---
   const profileWrapper = document.querySelector(".profile-wrapper");
   const profileToggle = document.getElementById("profileToggle");
   const profileDropdown = document.querySelector(".profile-dropdown");
 
-  if (notifWrapper) {
-    notifWrapper.querySelector(".fa-bell")?.addEventListener("click", (e) => {
-      e.stopPropagation();
-      notifWrapper.classList.toggle("active");
-      profileWrapper?.classList.remove("active");
-    });
-    notifWrapper.querySelector(".notif-dropdown")?.addEventListener("click", (e) => e.stopPropagation());
-  }
   if (profileWrapper && profileToggle && profileDropdown) {
     profileToggle.addEventListener("click", (e) => {
       e.stopPropagation();
       profileWrapper.classList.toggle("active");
-      notifWrapper?.classList.remove("active");
     });
-    profileDropdown.addEventListener("click", (e) => e.stopPropagation());
+
+    // Close dropdown when clicking outside
+    document.addEventListener("click", (e) => {
+      if (!profileWrapper.contains(e.target)) {
+        profileWrapper.classList.remove("active");
+      }
+    });
+
+    // Prevent dropdown from closing when clicking inside it
+    profileDropdown.addEventListener("click", (e) => {
+      e.stopPropagation();
+    });
   }
 
   // === CUSTOM SELECT WITH MODAL ===
@@ -665,6 +550,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (customSelect) {
     const selected = customSelect.querySelector(".selected");
     const optionsContainer = customSelect.querySelector(".options");
+    const categoryInput = document.getElementById("categoryInput");
     const addCategoryBtn = optionsContainer.querySelector(".add-category");
 
     const modal = document.getElementById("addCategoryModal");
@@ -682,6 +568,7 @@ document.addEventListener("DOMContentLoaded", () => {
       option.addEventListener("click", () => {
         selected.querySelector(".selected-text").textContent = option.textContent;
         selected.setAttribute("data-value", option.dataset.value);
+        categoryInput.value = option.dataset.value;
         optionsContainer.classList.remove("show");
         optionsContainer.style.display = "none";
       });
@@ -719,6 +606,7 @@ document.addEventListener("DOMContentLoaded", () => {
         optionsContainer.insertBefore(newOption, addCategoryBtn);
         selected.querySelector(".selected-text").textContent = newValue;
         selected.setAttribute("data-value", newOption.dataset.value);
+        categoryInput.value = newOption.dataset.value;
         modal.style.display = "none";
       }
     };
@@ -765,98 +653,150 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // === TIME PICKER MODAL ===
-const timeInput = document.getElementById("time");
-const timeModal = document.getElementById("timePickerModal");
-const hourEl = document.getElementById("hour");
-const minuteEl = document.getElementById("minute");
-const amBtn = document.getElementById("amBtn");
-const pmBtn = document.getElementById("pmBtn");
-const cancelTimeBtn = document.getElementById("cancelTime");
-const setTimeBtn = document.getElementById("setTime");
+  const timeInput = document.getElementById("time");
+  const timeModal = document.getElementById("timePickerModal");
+  const hourEl = document.getElementById("hour");
+  const minuteEl = document.getElementById("minute");
+  const amBtn = document.getElementById("amBtn");
+  const pmBtn = document.getElementById("pmBtn");
+  const cancelTimeBtn = document.getElementById("cancelTime");
+  const setTimeBtn = document.getElementById("setTime");
 
-// --- Open modal
-function openTimeModal(e) {
-  e.stopPropagation();
-  timeModal.style.display = "flex";
-}
-timeInput.addEventListener("click", openTimeModal);
-
-// --- Cancel button
-cancelTimeBtn.addEventListener("click", () => {
-  timeModal.style.display = "none";
-});
-
-// --- Set button
-setTimeBtn.addEventListener("click", () => {
-  const hour = hourEl.textContent;
-  const minute = minuteEl.textContent;
-  const ampm = amBtn.classList.contains("active") ? "AM" : "PM";
-  timeInput.value = `${hour}:${minute} ${ampm}`;
-  timeModal.style.display = "none";
-});
-
-// --- Increment / Decrement
-document.querySelectorAll(".arrow").forEach(btn => {
-  btn.addEventListener("click", () => {
-    const type = btn.dataset.type;
-    if (type === "hour") {
-      let val = parseInt(hourEl.textContent, 10);
-      val = btn.classList.contains("up") ? (val >= 12 ? 1 : val + 1) : (val <= 1 ? 12 : val - 1);
-      hourEl.textContent = String(val).padStart(2, "0");
-    }
-    if (type === "minute") {
-      let val = parseInt(minuteEl.textContent, 10);
-      val = btn.classList.contains("up") ? (val >= 59 ? 0 : val + 1) : (val <= 0 ? 59 : val - 1);
-      minuteEl.textContent = String(val).padStart(2, "0");
-    }
-  });
-});
-
-// --- AM/PM toggle
-amBtn.addEventListener("click", () => {
-  amBtn.classList.add("active");
-  pmBtn.classList.remove("active");
-});
-pmBtn.addEventListener("click", () => {
-  pmBtn.classList.add("active");
-  amBtn.classList.remove("active");
-});
-
-// --- Backdrop close
-timeModal.addEventListener("click", (e) => {
-  if (e.target === timeModal) timeModal.style.display = "none";
-});
-
-// --- ESC close
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && timeModal.style.display === "flex") {
-    timeModal.style.display = "none";
+  // --- Open modal
+  function openTimeModal(e) {
+    e.stopPropagation();
+    timeModal.style.display = "flex";
   }
-});
+  timeInput.addEventListener("click", openTimeModal);
 
-    // === YOUTH REGISTRATION OPTION TOGGLE ===
-const registrationOptions = document.querySelectorAll('input[name="registrationOption"]');
-const createRegSection = document.getElementById("createRegistrationFields");
-const linkSourceField = document.getElementById("linkSourceField");
+  // --- Cancel button
+  cancelTimeBtn.addEventListener("click", () => {
+    timeModal.style.display = "none";
+  });
 
-registrationOptions.forEach(option => {
-  option.addEventListener("change", () => {
-    if (option.value === "create") {
-      createRegSection.style.display = "block";
-      linkSourceField.style.display = "none";
-    } else if (option.value === "link") {
-      createRegSection.style.display = "none";
-      linkSourceField.style.display = "block";
+  // --- Set button
+  setTimeBtn.addEventListener("click", () => {
+    const hour = hourEl.textContent;
+    const minute = minuteEl.textContent;
+    const ampm = amBtn.classList.contains("active") ? "AM" : "PM";
+    timeInput.value = `${hour}:${minute} ${ampm}`;
+    timeModal.style.display = "none";
+  });
+
+  // --- Increment / Decrement
+  document.querySelectorAll(".arrow").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const type = btn.dataset.type;
+      if (type === "hour") {
+        let val = parseInt(hourEl.textContent, 10);
+        val = btn.classList.contains("up") ? (val >= 12 ? 1 : val + 1) : (val <= 1 ? 12 : val - 1);
+        hourEl.textContent = String(val).padStart(2, "0");
+      }
+      if (type === "minute") {
+        let val = parseInt(minuteEl.textContent, 10);
+        val = btn.classList.contains("up") ? (val >= 59 ? 0 : val + 1) : (val <= 0 ? 59 : val - 1);
+        minuteEl.textContent = String(val).padStart(2, "0");
+      }
+    });
+  });
+
+  // --- AM/PM toggle
+  amBtn.addEventListener("click", () => {
+    amBtn.classList.add("active");
+    pmBtn.classList.remove("active");
+  });
+  pmBtn.addEventListener("click", () => {
+    pmBtn.classList.add("active");
+    amBtn.classList.remove("active");
+  });
+
+  // --- Backdrop close
+  timeModal.addEventListener("click", (e) => {
+    if (e.target === timeModal) timeModal.style.display = "none";
+  });
+
+  // --- ESC close
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && timeModal.style.display === "flex") {
+      timeModal.style.display = "none";
     }
   });
-});
 
+  // === YOUTH REGISTRATION OPTION TOGGLE ===
+  const registrationOptions = document.querySelectorAll('input[name="registration_type"]');
+  const createRegSection = document.getElementById("createRegistrationFields");
+  const linkSourceField = document.getElementById("linkSourceField");
+  const titleInput = document.getElementById("title");
+  const registrationTitleInput = document.getElementById("registrationTitle");
+  const registrationDescriptionInput = document.getElementById("registrationDescription");
+
+  // Function to update registration title
+  function updateRegistrationTitle() {
+    const title = titleInput.value.trim();
+    if (title) {
+      registrationTitleInput.value = `${title} Registration Form`;
+    } else {
+      registrationTitleInput.value = "Registration Form";
+    }
+  }
+
+  // Function to update registration description with user's barangay
+  function updateRegistrationDescription() {
+    const barangayName = `{!! $barangay->name ?? 'Barangay' !!}`;
+    const defaultDescription = `Open to all bona fide residents of ${barangayName}. Slots are limited, and once all slots are filled, we will make an official announcement. Slot allocation will be based on the timestamp of registration.`;
+    
+    registrationDescriptionInput.value = defaultDescription;
+  }
+
+  // Listen for changes to the main title
+  titleInput.addEventListener("input", updateRegistrationTitle);
+
+  // Handle registration option changes
+  registrationOptions.forEach(option => {
+    option.addEventListener("change", () => {
+      if (option.value === "create") {
+        createRegSection.style.display = "block";
+        linkSourceField.style.display = "none";
+        
+        // Update registration title and description when switching to create registration
+        updateRegistrationTitle();
+        updateRegistrationDescription();
+        
+        // Initialize default fields
+        initializeDefaultFields();
+      } else if (option.value === "link") {
+        createRegSection.style.display = "none";
+        linkSourceField.style.display = "block";
+      }
+    });
+  });
+
+  // === DEFAULT FIELDS INITIALIZATION ===
+  function initializeDefaultFields() {
+    const defaultFieldsContainer = document.getElementById('defaultFields');
+    const defaultFields = [
+      { type: 'full_name', label: 'Full Name' },
+      { type: 'email', label: 'Email Address' },
+      { type: 'contact_no', label: 'Contact Number' },
+      { type: 'age', label: 'Age' },
+      { type: 'barangay', label: 'Barangay' }
+    ];
+
+    defaultFieldsContainer.innerHTML = '';
+    
+    defaultFields.forEach(field => {
+      const fieldHtml = `
+        <div class="default-field" data-field-type="${field.type}">
+          <label class="regform-label">${field.label}</label>
+          <input type="text" class="regform-input" readonly style="background-color: #f5f5f5;">
+          <input type="hidden" name="default_fields[]" value="${field.type}">
+        </div>
+      `;
+      defaultFieldsContainer.innerHTML += fieldHtml;
+    });
+  }
 
   // === DATE + NOTE AUTO UPDATE ===
-  document.querySelectorAll('.datetime-input i').forEach(icon => {
-    icon.addEventListener('click', () => { icon.previousElementSibling.showPicker?.(); });
-  });
-
   const openDate = document.getElementById("openDate");
   const openTime = document.getElementById("openTime");
   const closeDate = document.getElementById("closeDate");
@@ -908,8 +848,8 @@ registrationOptions.forEach(option => {
     if (editBtn) {
       editBtn.addEventListener("click", (e) => {
         e.stopPropagation();
-        const input = field.querySelector("input[type='text'], textarea");
-        if (input) input.removeAttribute("disabled");
+        const input = field.querySelector(".field-label");
+        if (input) input.focus();
         menu.classList.add("hidden");
       });
     }
@@ -929,179 +869,280 @@ registrationOptions.forEach(option => {
   const extraFieldsContainer = document.getElementById("extra-fields");
   const templateField = extraFieldsContainer.firstElementChild?.cloneNode(true);
 
+  let fieldCounter = 1;
+
   addFieldBtn.addEventListener("click", () => {
     if (!templateField) return;
+    fieldCounter++;
     const clone = templateField.cloneNode(true);
-
-    // Reset
-    clone.querySelectorAll("input[type='text'], textarea").forEach(input => input.value = "");
-    clone.querySelectorAll(".answer-preview, .answer-radio, .answer-file").forEach(el => el.classList.add("hidden"));
-    clone.querySelector(".answer-type").textContent = "Choose type of answer";
-    clone.querySelectorAll(".answer-dropdown p").forEach(p => p.classList.remove("selected"));
+    const fieldId = `field_${fieldCounter}`;
+    
+    clone.setAttribute('data-field-id', fieldId);
+    
+    // Reset and update field
+    const questionInput = clone.querySelector(".field-label");
+    questionInput.value = "";
+    
+    const answerType = clone.querySelector(".answer-type");
+    answerType.textContent = "Choose type of answer";
+    
+    // Reset all previews
+    clone.querySelectorAll(".answer-preview, .answer-radio, .answer-select, .answer-file").forEach(el => {
+      el.classList.add("hidden");
+    });
+    
+    // Update radio button names
+    const radioInputs = clone.querySelectorAll('input[type="radio"]');
+    radioInputs.forEach(input => {
+      input.name = `sampleRadio_${fieldCounter}`;
+    });
+    
+    // Reset dropdown menu
     clone.querySelectorAll(".dots-menu").forEach(menu => menu.classList.add("hidden"));
+    
+    // Reset options
+    const optionsBoxes = clone.querySelectorAll(".options-box");
+    optionsBoxes.forEach(box => {
+      const firstTwo = box.querySelectorAll(".option-item:not(:nth-child(-n+2))");
+      firstTwo.forEach(item => item.remove());
+      
+      const editableSpans = box.querySelectorAll(".editable");
+      editableSpans[0].textContent = "Option 1";
+      editableSpans[1].textContent = "Option 2";
+    });
 
     extraFieldsContainer.appendChild(clone);
     initDotsMenu(clone);
+    initAnswerTypeDropdown(clone);
+    initAddOptionButtons(clone);
   });
 
-  document.querySelectorAll("#extra-fields .regform-field").forEach(initDotsMenu);
+  // Initialize existing fields
+  document.querySelectorAll("#extra-fields .regform-field").forEach(field => {
+    initDotsMenu(field);
+    initAnswerTypeDropdown(field);
+    initAddOptionButtons(field);
+  });
 
   document.addEventListener("click", () => {
     document.querySelectorAll(".dots-menu").forEach(menu => menu.classList.add("hidden"));
+    document.querySelectorAll(".answer-dropdown").forEach(dropdown => dropdown.classList.remove("open"));
   });
 
-  // === DROPDOWN FUNCTIONALITY ===
-  document.addEventListener("click", (e) => {
-    const typeBtn = e.target.closest(".answer-type");
-    const optionP = e.target.closest(".answer-dropdown p");
+  // === ANSWER TYPE DROPDOWN FUNCTIONALITY ===
+  function initAnswerTypeDropdown(field) {
+    const answerType = field.querySelector(".answer-type");
+    const dropdown = field.querySelector(".answer-dropdown");
+    const options = dropdown.querySelectorAll("p");
 
-    if (typeBtn) {
-      const wrapper = typeBtn.closest(".answer-type-wrapper");
-      const dropdown = wrapper.querySelector(".answer-dropdown");
-
-      document.querySelectorAll(".answer-dropdown.open").forEach(d => { if (d !== dropdown) d.classList.remove("open"); });
+    answerType.addEventListener("click", (e) => {
+      e.stopPropagation();
+      document.querySelectorAll(".answer-dropdown.open").forEach(d => {
+        if (d !== dropdown) d.classList.remove("open");
+      });
       dropdown.classList.toggle("open");
-      return;
-    }
+    });
 
-    if (optionP) {
-      const extra = optionP.closest(".regform-extra");
-      const preview = extra.querySelector(".answer-preview");
-      const typeText = extra.querySelector(".answer-type");
-      const dropdown = optionP.closest(".answer-dropdown");
-
-      typeText.style.display = "none";
-      dropdown.classList.remove("open");
-      extra.querySelectorAll(".answer-preview, .answer-radio, .answer-file").forEach(el => el.classList.add("hidden"));
-
-      if (optionP.textContent === "Short answer") {
-        preview.classList.remove("hidden");
-        preview.innerHTML = `<textarea placeholder="Short answer" rows="1" style="width:100%; resize: both; min-height: 30px; padding:6px; font-size:0.9rem;"></textarea>`;
-      }
-
-      if (optionP.textContent === "Radio button") {
-        extra.querySelector(".answer-radio").classList.remove("hidden");
-      }
-
-      if (optionP.textContent === "File upload") {
-        const fileBox = extra.querySelector(".answer-file");
-        fileBox.classList.remove("hidden");
-        fileBox.innerHTML = `<input type="file" style="font-size:0.9rem;" />`;
-      }
-      return;
-    }
-
-    if (!e.target.closest(".answer-type-wrapper")) {
-      document.querySelectorAll(".answer-dropdown.open").forEach(d => d.classList.remove("open"));
-    }
-  });
-
-  // === RADIO DYNAMIC OPTIONS ===
-  document.addEventListener("click", (e) => {
-    if (e.target.classList.contains("add-option")) {
-      e.preventDefault();
-      const optionsBox = e.target.previousElementSibling;
-      const newOption = document.createElement("div");
-      newOption.className = "option-item";
-      newOption.innerHTML = `<input type="radio" name="sampleRadio"><span contenteditable="true" class="editable">New option</span>`;
-      optionsBox.appendChild(newOption);
-    }
-  });
-
-  // === Posted Modal ===
-const postedModal = document.getElementById("postedModal");
-const closePostedModal = document.getElementById("closePostedModal");
-
-// Target both Post Program buttons
-const postProgramBtn = document.getElementById("postProgramBtn");
-const postProgramLinkBtn = document.getElementById("postProgramLinkBtn");
-
-// Show modal on click
-const postButtons = document.querySelectorAll(".postProgramBtn");
-
-postButtons.forEach(btn => {
-  btn.addEventListener("click", (e) => {
-    e.preventDefault(); // stop form submission
-    postedModal.style.display = "flex";
-  });
-});
-
-
-// Close modal
-closePostedModal.addEventListener("click", () => {
-  postedModal.style.display = "none";
-});
-
-// Close when clicking outside
-window.addEventListener("click", (e) => {
-  if (e.target === postedModal) {
-    postedModal.style.display = "none";
+    options.forEach(option => {
+      option.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const type = option.getAttribute("data-type");
+        const typeText = option.textContent;
+        
+        answerType.textContent = typeText;
+        dropdown.classList.remove("open");
+        
+        // Hide all previews
+        field.querySelectorAll(".answer-preview, .answer-radio, .answer-select, .answer-file").forEach(el => {
+          el.classList.add("hidden");
+        });
+        
+        // Show selected preview
+        const selectedPreview = field.querySelector(`[data-type="${type}"]`);
+        if (selectedPreview) {
+          selectedPreview.classList.remove("hidden");
+        }
+      });
+    });
   }
-});
 
-document.addEventListener("DOMContentLoaded", () => {
-  const addCategoryBtn = document.querySelector(".add-category");
-  const addCategoryModal = document.getElementById("addCategoryModal");
-  const newCategoryInput = document.getElementById("newCategoryInput");
-  const cancelAddCategory = document.getElementById("cancelAddCategory");
-  const saveAddCategory = document.getElementById("saveAddCategory");
-  const categoryOptions = document.querySelector(".custom-select .options");
-  const selectedText = document.querySelector(".selected-text");
+  // === ADD OPTION BUTTONS ===
+  function initAddOptionButtons(field) {
+    const addOptionButtons = field.querySelectorAll(".add-option");
+    
+    addOptionButtons.forEach(button => {
+      button.addEventListener("click", (e) => {
+        e.preventDefault();
+        const optionsBox = e.target.previousElementSibling;
+        const optionCount = optionsBox.querySelectorAll(".option-item").length + 1;
+        
+        const newOption = document.createElement("div");
+        newOption.className = "option-item";
+        
+        if (optionsBox.classList.contains("answer-radio")) {
+          newOption.innerHTML = `<input type="radio" name="sampleRadio_${fieldCounter}" disabled><span contenteditable="true" class="editable">Option ${optionCount}</span>`;
+        } else {
+          newOption.innerHTML = `<span contenteditable="true" class="editable">Option ${optionCount}</span>`;
+        }
+        
+        optionsBox.appendChild(newOption);
+      });
+    });
+  }
 
-  // Open modal
-  addCategoryBtn?.addEventListener("click", (e) => {
+  // === COMPLETE FORM SUBMISSION ===
+  const programForm = document.getElementById("programForm");
+  const postedModal = document.getElementById("postedModal");
+  const closePostedModal = document.getElementById("closePostedModal");
+
+  programForm.addEventListener("submit", function(e) {
     e.preventDefault();
-    addCategoryModal.style.display = "flex";
-    newCategoryInput.value = "";
-    newCategoryInput.focus();
-  });
-
-  // Cancel modal
-  cancelAddCategory?.addEventListener("click", () => {
-    addCategoryModal.style.display = "none";
-  });
-
-  // Add category
-  saveAddCategory?.addEventListener("click", () => {
-    const newCategory = newCategoryInput.value.trim();
-    if (!newCategory) {
-      alert("Please enter a category name.");
-      return;
+    
+    // Collect custom fields data
+    const customFields = [];
+    const customFieldElements = document.querySelectorAll('#extra-fields .regform-field');
+    
+    customFieldElements.forEach((field, index) => {
+      const labelInput = field.querySelector('.field-label');
+      const answerType = field.querySelector('.answer-type');
+      const options = [];
+      
+      // Get options for radio/select fields
+      const optionsBox = field.querySelector('.options-box');
+      if (optionsBox) {
+        const optionItems = optionsBox.querySelectorAll('.editable');
+        optionItems.forEach(item => {
+          if (item.textContent.trim()) {
+            options.push(item.textContent.trim());
+          }
+        });
+      }
+      
+      if (labelInput && labelInput.value.trim() && answerType.textContent !== 'Choose type of answer') {
+        const fieldType = getFieldTypeFromText(answerType.textContent);
+        
+        // Create field data in the format expected by the backend
+        const fieldData = {
+          type: 'custom',
+          field_type: fieldType,
+          label: labelInput.value.trim(),
+          options: options.length > 0 ? options : null,
+          required: true,
+          editable: true
+        };
+        
+        customFields.push(fieldData);
+      }
+    });
+    
+    // Create form data
+    const formData = new FormData(this);
+    
+    // Add custom fields as JSON string - this is the key fix
+    if (customFields.length > 0) {
+      formData.set('custom_fields', JSON.stringify(customFields));
+    } else {
+      formData.set('custom_fields', '[]'); // Empty array as JSON string
     }
 
-    // Create new <li>
-    const newOption = document.createElement("li");
-    newOption.textContent = newCategory;
-    newOption.dataset.value = newCategory.toLowerCase();
-    newOption.setAttribute("role", "option");
+    // Remove any array fields that might be causing the error
+    formData.delete('registration_fields[]');
+    formData.delete('default_fields[]');
 
-    // Insert before "+ Add another category"
-    const addBtn = categoryOptions.querySelector(".add-category");
-    categoryOptions.insertBefore(newOption, addBtn);
+    // Show loading state
+    const submitBtn = document.querySelector('.postProgramBtn');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Posting...';
+    submitBtn.disabled = true;
 
-    // Select the new category automatically
-    selectedText.textContent = newCategory;
-
-    // Close modal
-    addCategoryModal.style.display = "none";
+    // Submit form via AJAX
+    fetch(this.action, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+        'Accept': 'application/json'
+      }
+    })
+    .then(response => {
+      // Check if response is JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        // If not JSON, try to parse as text first to get error details
+        return response.text().then(text => {
+          throw new Error(`Server returned HTML instead of JSON. Status: ${response.status}. The server might have validation errors or be experiencing issues.`);
+        });
+      }
+      return response.json();
+    })
+    .then(data => {
+      if (data.success) {
+        postedModal.style.display = "flex";
+        // Reset form
+        programForm.reset();
+        // Reset custom select
+        document.querySelector('.selected-text').textContent = 'Select Category';
+        document.getElementById('categoryInput').value = '';
+        // Reset registration sections
+        createRegSection.style.display = "none";
+        linkSourceField.style.display = "none";
+        // Reset radio buttons
+        document.querySelectorAll('input[name="registration_type"]').forEach(radio => {
+          radio.checked = false;
+        });
+        // Reset image preview
+        previewImg.src = "";
+        previewContainer.style.display = "none";
+        uploadLabel.style.display = "flex";
+        // Reset custom fields
+        document.querySelectorAll('#extra-fields .regform-field').forEach(field => {
+          if (field !== templateField) field.remove();
+        });
+      } else {
+        throw new Error(data.message || 'Unknown error occurred');
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Error creating program: ' + error.message);
+    })
+    .finally(() => {
+      // Reset button state
+      submitBtn.innerHTML = originalText;
+      submitBtn.disabled = false;
+    });
   });
 
-  // Click outside modal closes it
+  // Helper function to convert answer type text to field type
+  function getFieldTypeFromText(text) {
+    const typeMap = {
+      'Short answer': 'text',
+      'Radio button': 'radio',
+      'Dropdown': 'select',
+      'File upload': 'file'
+    };
+    return typeMap[text] || 'text';
+  }
+
+  // Close modal
+  closePostedModal.addEventListener("click", () => {
+    postedModal.style.display = "none";
+    // Redirect to programs list after successful creation
+    window.location.href = "{{ route('youth-program-registration') }}";
+  });
+
+  // Close when clicking outside
   window.addEventListener("click", (e) => {
-    if (e.target === addCategoryModal) {
-      addCategoryModal.style.display = "none";
+    if (e.target === postedModal) {
+      postedModal.style.display = "none";
+      window.location.href = "{{ route('youth-program-registration') }}";
     }
   });
+
+  // Initialize the registration description on page load
+  updateRegistrationDescription();
 });
-
-
-  
-
-  });
 </script>
-
-
-
 
 </body>
 </html>

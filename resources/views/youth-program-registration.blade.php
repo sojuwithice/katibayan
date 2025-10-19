@@ -3,81 +3,72 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KatiBayan - Dashboard</title>
+  <title>KatiBayan - Youth Registration</title>
   <link rel="stylesheet" href="{{ asset('css/youth-program-registration.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
-
-
-
-
 </head>
 <body>
   
   <!-- Sidebar -->
-  <!-- Sidebar -->
   <aside class="sidebar">
-  <button class="menu-toggle">Menu</button>
-  <div class="divider"></div>
-  <nav class="nav">
-    <a href="{{ route('sk.dashboard') }}">
-      <i data-lucide="layout-dashboard"></i>
-      <span class="label">Dashboard</span>
-    </a>
-
-    <a href="#">
-      <i data-lucide="chart-pie"></i>
-      <span class="label">Analytics</span>
-    </a>
-
-    <a href="{{ route('youth-profilepage') }}">
-      <i data-lucide="users"></i>
-      <span class="label">Youth Profile</span>
-    </a>
-
-    <div class="nav-item">
-      <a href="#" class="nav-link active">
-        <i data-lucide="calendar"></i>
-        <span class="label">Events and Programs</span>
-        <i data-lucide="chevron-down" class="submenu-arrow"></i>
+    <button class="menu-toggle">Menu</button>
+    <div class="divider"></div>
+    <nav class="nav">
+      <a href="{{ route('sk.dashboard') }}">
+        <i data-lucide="layout-dashboard"></i>
+        <span class="label">Dashboard</span>
       </a>
-      <div class="submenu">
-        <a href="{{ route('sk-eventpage') }}">Events List</a>
-        <a href="{{ route('youth-program-registration') }}" class="active">Youth Registration</a>
+
+      <a href="#">
+        <i data-lucide="chart-pie"></i>
+        <span class="label">Analytics</span>
+      </a>
+
+      <a href="{{ route('youth-profilepage') }}">
+        <i data-lucide="users"></i>
+        <span class="label">Youth Profile</span>
+      </a>
+
+      <div class="nav-item">
+        <a href="#" class="nav-link active">
+          <i data-lucide="calendar"></i>
+          <span class="label">Events and Programs</span>
+          <i data-lucide="chevron-down" class="submenu-arrow"></i>
+        </a>
+        <div class="submenu">
+          <a href="{{ route('sk-eventpage') }}">Events List</a>
+          <a href="{{ route('youth-program-registration') }}" class="active">Youth Registration</a>
+        </div>
       </div>
-    </div>
 
-    <a href="{{ route('sk-evaluation-feedback') }}">
-      <i data-lucide="message-square-quote"></i>
-      <span class="label">Feedbacks</span>
-    </a>
+      <a href="{{ route('sk-evaluation-feedback') }}">
+        <i data-lucide="message-square-quote"></i>
+        <span class="label">Feedbacks</span>
+      </a>
 
-    <a href="{{ route('sk-polls') }}">
-      <i data-lucide="vote"></i>
-      <span class="label">Polls</span>
-    </a>
+      <a href="{{ route('sk-polls') }}">
+        <i data-lucide="vote"></i>
+        <span class="label">Polls</span>
+      </a>
 
-    <a href="{{ route('youth-suggestion') }}">
-      <i data-lucide="lightbulb"></i>
-      <span class="label">Suggestion Box</span>
-    </a>
-    
-    <a href="{{ route('reports') }}">
-      <i data-lucide="file-chart-column"></i>
-      <span class="label">Reports</span>
-    </a>
+      <a href="{{ route('youth-suggestion') }}">
+        <i data-lucide="lightbulb"></i>
+        <span class="label">Suggestion Box</span>
+      </a>
+      
+      <a href="{{ route('reports') }}">
+        <i data-lucide="file-chart-column"></i>
+        <span class="label">Reports</span>
+      </a>
 
-    <a href="{{ route('sk-services-offer') }}">
-      <i data-lucide="hand-heart"></i>
-      <span class="label">Service Offer</span>
-    </a>
-
-  </nav>
-</aside>
-
+      <a href="{{ route('sk-services-offer') }}">
+        <i data-lucide="hand-heart"></i>
+        <span class="label">Service Offer</span>
+      </a>
+    </nav>
+  </aside>
 
   <!-- Main -->
   <div class="main">
@@ -134,15 +125,17 @@
 
         <!-- Profile Avatar -->
         <div class="profile-wrapper">
-          <img src="https://i.pravatar.cc/80" alt="User" class="avatar" id="profileToggle">
+          <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+               alt="User" class="avatar" id="profileToggle">
           <div class="profile-dropdown">
             <div class="profile-header">
-              <img src="https://i.pravatar.cc/80" alt="User" class="profile-avatar">
+              <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+                   alt="User" class="profile-avatar">
               <div class="profile-info">
-                <h4>Marijoy S. Novora</h4>
+                <h4>{{ $user->given_name }} {{ $user->middle_name }} {{ $user->last_name }} {{ $user->suffix }}</h4>
                 <div class="profile-badge">
-                  <span class="badge">KK- Member</span>
-                  <span class="badge">19 yrs old</span>
+                  <span class="badge">{{ $roleBadge }}</span>
+                  <span class="badge">{{ $age }} yrs old</span>
                 </div>
               </div>
             </div>
@@ -160,165 +153,149 @@
                 </a>
               </li>
               <li><i class="fas fa-star"></i> Send Feedback to Katibayan</li>
+              <li class="logout-item">
+                <a href="loginpage" onclick="confirmLogout(event)">
+                  <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+              </li>
             </ul>
+            
+            <!-- Hidden Logout Form -->
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+              @csrf
+            </form>
           </div>
         </div>
       </div>
     </header>
 
     <main class="container">
-  <!-- Header Title -->
-  <div class="welcome-card">
-    <h2>Youth Registration</h2>
-    <p>
-      The evaluation and feedback of the youth in accomplished events and programs 
-      will help you improve and generate new ideas for future activities.
-    </p>
+      <!-- Header Title -->
+      <div class="welcome-card">
+        <h2>Youth Registration</h2>
+        <p>
+          View and manage youth registrations for programs. See all the information submitted by youth during registration.
+        </p>
+      </div>
+
+      <!-- Success Message -->
+      @if(session('success'))
+        <div class="alert alert-success">
+          <i class="fas fa-check-circle"></i>
+          {{ session('success') }}
+        </div>
+      @endif
+
+      <!-- Program Registrations Modal -->
+      <div id="registrationsModal" class="modal" style="display: none;">
+        <div class="modal-content">
+          <span class="close">&times;</span>
+          <div class="modal-header">
+            <h2 id="modalProgramTitle">Program Registrations</h2>
+            <div class="program-meta">
+              <span id="modalProgramDate" class="program-date"></span>
+              <span id="modalProgramCategory" class="program-category"></span>
+              <span id="modalTotalRegistrations" class="total-registrations"></span>
+            </div>
+          </div>
+          <div class="modal-body">
+            <div class="registrations-container">
+              <div id="registrationsList" class="registrations-list">
+                <!-- Registrations will be loaded here -->
+              </div>
+              <div id="noRegistrations" class="no-registrations" style="display: none;">
+                <i class="fas fa-users-slash"></i>
+                <h3>No Registrations Yet</h3>
+                <p>No youth have registered for this program yet.</p>
+              </div>
+              <div id="loadingRegistrations" class="loading-registrations">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Loading registrations...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Current Month Programs Section -->
+      <section class="programs-section">
+        <div class="month-badge">Program for this month ({{ date('F Y') }})</div>
+        
+        <div class="programs-row">
+          @forelse($currentMonthPrograms as $program)
+            <div class="program-card">
+              @if($program->display_image)
+                <img src="{{ asset('storage/' . $program->display_image) }}" alt="{{ $program->title }}" class="program-img">
+              @else
+                <img src="{{ asset('images/default-program.jpg') }}" alt="{{ $program->title }}" class="program-img">
+              @endif
+              <h4>{{ $program->title }}</h4>
+              <p class="program-date">
+                <i class="fas fa-calendar"></i>
+                {{ \Carbon\Carbon::parse($program->event_date)->format('M d, Y') }} at 
+                {{ \Carbon\Carbon::parse($program->event_time)->format('g:i A') }}
+              </p>
+              <p class="program-category">
+                <i class="fas fa-tag"></i>
+                {{ ucfirst($program->category) }}
+              </p>
+              <button type="button" class="program-btn view-registrations" data-program-id="{{ $program->id }}">
+                <span>View Youth Registration</span>
+                <i class="fa-solid fa-chevron-right"></i>
+              </button>
+            </div>
+          @empty
+            <div class="no-programs">
+              <i class="fas fa-calendar-times"></i>
+              <p>No programs scheduled for this month</p>
+            </div>
+          @endforelse
+        </div>
+      </section>
+
+      <!-- Upcoming Programs Section -->
+      <section class="upcoming-section">
+        <h2>Upcoming Programs</h2>
+
+        @foreach($upcomingProgramsByMonth as $month => $programs)
+          <div class="month-badge">{{ $month }}</div>
+
+          <div class="programs-row">
+            @foreach($programs as $program)
+              <div class="program-card">
+                @if($program->display_image)
+                  <img src="{{ asset('storage/' . $program->display_image) }}" alt="{{ $program->title }}" class="program-img">
+                @else
+                  <img src="{{ asset('images/default-program.jpg') }}" alt="{{ $program->title }}" class="program-img">
+                @endif
+                <h4>{{ $program->title }}</h4>
+                <p class="program-date">
+                  <i class="fas fa-calendar"></i>
+                  {{ \Carbon\Carbon::parse($program->event_date)->format('M d, Y') }} at 
+                  {{ \Carbon\Carbon::parse($program->event_time)->format('g:i A') }}
+                </p>
+                <p class="program-category">
+                  <i class="fas fa-tag"></i>
+                  {{ ucfirst($program->category) }}
+                </p>
+                <button type="button" class="program-btn view-registrations" data-program-id="{{ $program->id }}">
+                  <span>View Youth Registration</span>
+                  <i class="fa-solid fa-chevron-right"></i>
+                </button>
+              </div>
+            @endforeach
+          </div>
+        @endforeach
+
+        @if($upcomingProgramsByMonth->isEmpty())
+          <div class="no-programs">
+            <i class="fas fa-calendar-plus"></i>
+            <p>No upcoming programs scheduled</p>
+          </div>
+        @endif
+      </section>
+    </main>
   </div>
-
-  <!-- Programs Section -->
-  <section class="programs-section">
-    <div class="month-badge">Program for this month</div>
-    
-    <div class="programs-row">
-      <!-- Active Card -->
-      <div class="program-card">
-        <img src="{{ asset('images/basketball.jpg') }}" alt="Basketball Tryout" class="program-img">
-        <h4>Basketball League</h4>
-        <form action="{{ route('youth-registration-list') }}">
-  <button type="submit" class="program-btn">
-    <span>View Youth Registration</span>
-    <i class="fa-solid fa-chevron-right"></i>
-  </button>
-</form>
-
-      </div>
-
-      <!-- Other Cards -->
-      <div class="program-card">
-        <img src="{{ asset('images/badminton.jpg') }}" alt="Badminton Tryout" class="program-img">
-        <h4>Badminton League</h4>
-        <form action="{{ route('youth-registration-list') }}">
-  <button type="submit" class="program-btn">
-    <span>View Youth Registration</span>
-    <i class="fa-solid fa-chevron-right"></i>
-  </button>
-</form>
-      </div>
-
-      <div class="program-card">
-        <img src="{{ asset('images/volleyball.jpg') }}" alt="Volleyball Tryout" class="program-img">
-        <h4>Volleyball League</h4>
-        <form action="{{ route('youth-registration-list') }}">
-  <button type="submit" class="program-btn">
-    <span>View Youth Registration</span>
-    <i class="fa-solid fa-chevron-right"></i>
-  </button>
-</form>
-      </div>
-
-      <div class="program-card">
-        <img src="{{ asset('images/volleyball.jpg') }}" alt="Volleyball Tryout" class="program-img">
-        <h4>Volleyball League</h4>
-        <form action="{{ route('youth-registration-list') }}">
-  <button type="submit" class="program-btn">
-    <span>View Youth Registration</span>
-    <i class="fa-solid fa-chevron-right"></i>
-  </button>
-</form>
-      </div>
-
-      <div class="program-card">
-        <img src="{{ asset('images/volleyball.jpg') }}" alt="Volleyball Tryout" class="program-img">
-        <h4>Volleyball League</h4>
-        <form action="{{ route('youth-registration-list') }}">
-  <button type="submit" class="program-btn">
-    <span>View Youth Registration</span>
-    <i class="fa-solid fa-chevron-right"></i>
-  </button>
-</form>
-      </div>
-    </div>
-  </section>
-
-  <!-- Upcoming Programs Section -->
-<section class="upcoming-section">
-  <h2>Upcoming Programs</h2>
-
-  <div class="month-badge">November</div>
-
-  <div class="programs-row">
-      <!-- Active Card -->
-      <div class="program-card">
-        <img src="{{ asset('images/basketball.jpg') }}" alt="Basketball Tryout" class="program-img">
-        <h4>Basketball League</h4>
-        <form action="{{ route('youth-registration-list') }}">
-  <button type="submit" class="program-btn">
-    <span>View Youth Registration</span>
-    <i class="fa-solid fa-chevron-right"></i>
-  </button>
-</form>
-      </div>
-
-      <!-- Other Cards -->
-      <div class="program-card">
-        <img src="{{ asset('images/badminton.jpg') }}" alt="Badminton Tryout" class="program-img">
-        <h4>Badminton League</h4>
-        <form action="{{ route('youth-registration-list') }}">
-  <button type="submit" class="program-btn">
-    <span>View Youth Registration</span>
-    <i class="fa-solid fa-chevron-right"></i>
-  </button>
-</form>
-      </div>
-
-      <div class="program-card">
-        <img src="{{ asset('images/volleyball.jpg') }}" alt="Volleyball Tryout" class="program-img">
-        <h4>Volleyball League</h4>
-        <form action="{{ route('youth-registration-list') }}">
-  <button type="submit" class="program-btn">
-    <span>View Youth Registration</span>
-    <i class="fa-solid fa-chevron-right"></i>
-  </button>
-</form>
-      </div>
-
-      <div class="program-card">
-        <img src="{{ asset('images/volleyball.jpg') }}" alt="Volleyball Tryout" class="program-img">
-        <h4>Volleyball League</h4>
-        <form action="{{ route('youth-registration-list') }}">
-  <button type="submit" class="program-btn">
-    <span>View Youth Registration</span>
-    <i class="fa-solid fa-chevron-right"></i>
-  </button>
-</form>
-      </div>
-
-      <div class="program-card">
-        <img src="{{ asset('images/volleyball.jpg') }}" alt="Volleyball Tryout" class="program-img">
-        <h4>Volleyball League</h4>
-        <form action="{{ route('youth-registration-list') }}">
-  <button type="submit" class="program-btn">
-    <span>View Youth Registration</span>
-    <i class="fa-solid fa-chevron-right"></i>
-  </button>
-</form>
-      </div>
-    </div>
-</section>
-
-    
-   
-
-
-
-  
- 
-  
-
-
-
-
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
@@ -353,78 +330,6 @@ document.addEventListener("DOMContentLoaded", () => {
         parentItem.classList.add('open');
       }
     });
-  });
-
-
-  // === Calendar ===
-  const weekdays = ["MON","TUE","WED","THU","FRI","SAT","SUN"];
-  const daysContainer = document.querySelector(".calendar .days");
-  const header = document.querySelector(".calendar header h3");
-  let today = new Date();
-  let currentView = new Date();
-
-  const holidays = [
-    "2025-01-01","2025-04-09","2025-04-17","2025-04-18",
-    "2025-05-01","2025-06-06","2025-06-12","2025-08-25",
-    "2025-11-30","2025-12-25","2025-12-30"
-  ];
-
-  function renderCalendar(baseDate) {
-    if (!daysContainer || !header) return;
-    daysContainer.innerHTML = "";
-
-    const startOfWeek = new Date(baseDate);
-    startOfWeek.setDate(baseDate.getDate() - (baseDate.getDay() === 0 ? 6 : baseDate.getDay() - 1));
-
-    const middleDay = new Date(startOfWeek);
-    middleDay.setDate(startOfWeek.getDate() + 3);
-    header.textContent = middleDay.toLocaleDateString("en-US", { month: "long", year: "numeric" });
-
-    for (let i = 0; i < 7; i++) {
-      const thisDay = new Date(startOfWeek);
-      thisDay.setDate(startOfWeek.getDate() + i);
-
-      const dayEl = document.createElement("div");
-      dayEl.classList.add("day");
-
-      const weekdayEl = document.createElement("span");
-      weekdayEl.classList.add("weekday");
-      weekdayEl.textContent = weekdays[i];
-
-      const dateEl = document.createElement("span");
-      dateEl.classList.add("date");
-      dateEl.textContent = thisDay.getDate();
-
-      const month = (thisDay.getMonth() + 1).toString().padStart(2,'0');
-      const day = thisDay.getDate().toString().padStart(2,'0');
-      const dateStr = `${thisDay.getFullYear()}-${month}-${day}`;
-
-      if (holidays.includes(dateStr)) dateEl.classList.add('holiday');
-      if (
-        thisDay.getDate() === today.getDate() &&
-        thisDay.getMonth() === today.getMonth() &&
-        thisDay.getFullYear() === today.getFullYear()
-      ) {
-        dayEl.classList.add("active");
-      }
-
-      dayEl.appendChild(weekdayEl);
-      dayEl.appendChild(dateEl);
-      daysContainer.appendChild(dayEl);
-    }
-  }
-
-  renderCalendar(currentView);
-
-  const prevBtn = document.querySelector(".calendar .prev");
-  const nextBtn = document.querySelector(".calendar .next");
-  if (prevBtn) prevBtn.addEventListener("click", () => {
-    currentView.setDate(currentView.getDate() - 7);
-    renderCalendar(currentView);
-  });
-  if (nextBtn) nextBtn.addEventListener("click", () => {
-    currentView.setDate(currentView.getDate() + 7);
-    renderCalendar(currentView);
   });
 
   // === Time auto-update ===
@@ -477,41 +382,166 @@ document.addEventListener("DOMContentLoaded", () => {
   document.addEventListener("click", (e) => {
     if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
       sidebar.classList.remove('open');
-      profileItem?.classList.remove('open');
     }
     if (profileWrapper && !profileWrapper.contains(e.target)) profileWrapper.classList.remove('active');
     if (notifWrapper && !notifWrapper.contains(e.target)) notifWrapper.classList.remove('active');
-
-    // Close options dropdown when clicking outside
-    document.querySelectorAll('.options-dropdown').forEach(drop => drop.classList.remove('show'));
   });
 
-  // === Highlight Holidays in Events ===
-  document.querySelectorAll('.events li').forEach(eventItem => {
-    const dateEl = eventItem.querySelector('.date span');
-    const monthEl = eventItem.querySelector('.date strong');
-    if (!dateEl || !monthEl) return;
+  // Auto-hide success message after 5 seconds
+  const successAlert = document.querySelector('.alert-success');
+  if (successAlert) {
+    setTimeout(() => {
+      successAlert.style.display = 'none';
+    }, 5000);
+  }
 
-    const monthMap = {
-      JAN: "01", FEB: "02", MAR: "03", APR: "04", MAY: "05", JUN: "06",
-      JUL: "07", AUG: "08", SEP: "09", OCT: "10", NOV: "11", DEC: "12"
+  // === Program Registrations Modal ===
+  const registrationsModal = document.getElementById('registrationsModal');
+  const closeModal = document.querySelector('.close');
+  const viewRegistrationButtons = document.querySelectorAll('.view-registrations');
+
+  // Function to load and display program registrations
+  async function showProgramRegistrations(programId) {
+    const registrationsList = document.getElementById('registrationsList');
+    const noRegistrations = document.getElementById('noRegistrations');
+    const loadingRegistrations = document.getElementById('loadingRegistrations');
+    
+    // Show loading
+    registrationsList.innerHTML = '';
+    noRegistrations.style.display = 'none';
+    loadingRegistrations.style.display = 'block';
+    
+    // Show modal
+    registrationsModal.style.display = 'block';
+
+    try {
+      const response = await fetch(`/youth-program-registration/${programId}/registrations`);
+      const data = await response.json();
+
+      loadingRegistrations.style.display = 'none';
+
+      if (data.success) {
+        // Update modal header with program info
+        document.getElementById('modalProgramTitle').textContent = data.program.title;
+        document.getElementById('modalProgramDate').textContent = 
+          `Date: ${new Date(data.program.event_date).toLocaleDateString()} at ${data.program.event_time}`;
+        document.getElementById('modalProgramCategory').textContent = 
+          `Category: ${data.program.category}`;
+        document.getElementById('modalTotalRegistrations').textContent = 
+          `Total: ${data.program.total_registrations} registration(s)`;
+
+        if (data.registrations.length > 0) {
+          // Display registrations
+          registrationsList.innerHTML = data.registrations.map(registration => `
+            <div class="registration-card">
+              <div class="registration-header">
+                <div class="user-info">
+                  <h4>${registration.user_name}</h4>
+                  <div class="user-meta">
+                    <span><i class="fas fa-envelope"></i> ${registration.email}</span>
+                    <span><i class="fas fa-phone"></i> ${registration.contact_no}</span>
+                    <span><i class="fas fa-birthday-cake"></i> ${registration.age} years old</span>
+                    <span><i class="fas fa-map-marker-alt"></i> ${registration.barangay}</span>
+                  </div>
+                </div>
+                <div class="registration-meta">
+                  <span class="reference-id">Ref: ${registration.reference_id}</span>
+                  <span class="registration-date">${registration.registered_at}</span>
+                  <span class="status ${registration.status}">${registration.status}</span>
+                </div>
+              </div>
+              
+              <div class="registration-content">
+                <!-- Motivation -->
+                <div class="field-group">
+                  <label>Motivation for Joining:</label>
+                  <div class="field-value">${registration.motivation || 'Not provided'}</div>
+                </div>
+                
+                <!-- Expectations -->
+                <div class="field-group">
+                  <label>Expectations:</label>
+                  <div class="field-value">${registration.expectations || 'Not provided'}</div>
+                </div>
+                
+                <!-- Special Requirements -->
+                ${registration.special_requirements ? `
+                <div class="field-group">
+                  <label>Special Requirements:</label>
+                  <div class="field-value">${registration.special_requirements}</div>
+                </div>
+                ` : ''}
+                
+                <!-- Custom Fields -->
+                ${registration.custom_fields && Object.keys(registration.custom_fields).length > 0 ? `
+                <div class="custom-fields">
+                  <h5>Additional Information:</h5>
+                  ${Object.entries(registration.custom_fields).map(([fieldId, value]) => `
+                    <div class="field-group">
+                      <label>${getFieldLabel(fieldId)}:</label>
+                      <div class="field-value">${value || 'Not provided'}</div>
+                    </div>
+                  `).join('')}
+                </div>
+                ` : ''}
+              </div>
+            </div>
+          `).join('');
+        } else {
+          noRegistrations.style.display = 'block';
+        }
+      } else {
+        throw new Error(data.message);
+      }
+    } catch (error) {
+      console.error('Error loading registrations:', error);
+      loadingRegistrations.style.display = 'none';
+      registrationsList.innerHTML = `
+        <div class="error-message">
+          <i class="fas fa-exclamation-triangle"></i>
+          <p>Error loading registrations: ${error.message}</p>
+        </div>
+      `;
+    }
+  }
+
+  // Helper function to get field labels
+  function getFieldLabel(fieldId) {
+    const fieldLabels = {
+      'custom_field_1': 'Additional Question 1',
+      'custom_field_2': 'Additional Question 2',
+      'custom_field_3': 'Additional Question 3'
+      // Add more field mappings as needed
     };
-    const monthNum = monthMap[monthEl.textContent.trim().toUpperCase()];
-    const day = dateEl.textContent.trim().padStart(2,'0');
-    const dateStr = `2025-${monthNum}-${day}`;
+    return fieldLabels[fieldId] || fieldId.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  }
 
-    if (holidays.includes(dateStr)) {
-      eventItem.querySelector('.date').classList.add('holiday');
+  // Add click event to view registration buttons
+  viewRegistrationButtons.forEach(button => {
+    button.addEventListener('click', (e) => {
+      e.preventDefault();
+      const programId = button.getAttribute('data-program-id');
+      showProgramRegistrations(programId);
+    });
+  });
+
+  // Close modal
+  closeModal.addEventListener('click', () => {
+    registrationsModal.style.display = 'none';
+  });
+
+  registrationsModal.addEventListener('click', (e) => {
+    if (e.target === registrationsModal) {
+      registrationsModal.style.display = 'none';
     }
   });
 
-
-
-
-
-
-
-  
+  // Close modal with Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && registrationsModal.style.display === 'block') {
+      registrationsModal.style.display = 'none';
+    }
+  });
 });
 </script>
 </body>

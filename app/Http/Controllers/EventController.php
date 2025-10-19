@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
+use App\Models\Program;
 use App\Models\Attendance;
 use App\Models\Evaluation;
 use Illuminate\Http\JsonResponse;
@@ -11,7 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
-use Illuminate\Support\Carbon;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
 class EventController extends Controller
@@ -36,10 +37,14 @@ class EventController extends Controller
                 Log::info("Event: {$event->id} - {$event->title} - {$event->event_date} - {$event->event_time} - Status: {$event->status} - Barangay: {$event->barangay_id}");
             }
 
-            $groupedEvents = $events->groupBy(fn($event) => $event->event_date->format('F Y'));
+            $groupedEvents = $events->groupBy(function($event) {
+                return Carbon::parse($event->event_date)->format('F Y');
+            });
 
             $today = Carbon::today(); // Keep as Carbon object
-            $todayEvents = $events->filter(fn($event) => $event->event_date->isSameDay($today));
+            $todayEvents = $events->filter(function($event) use ($today) {
+                return Carbon::parse($event->event_date)->isSameDay($today);
+            });
 
             Log::info('Today events count: ' . $todayEvents->count());
             Log::info('Grouped events months: ' . implode(', ', $groupedEvents->keys()->toArray()));
@@ -95,6 +100,7 @@ class EventController extends Controller
 
     return view('create-event', compact('user', 'age', 'roleBadge'));
 }
+
     /**
      * Display the specified event.
      */
@@ -123,7 +129,7 @@ class EventController extends Controller
                 'id' => $event->id,
                 'title' => $event->title,
                 'description' => $event->description,
-                'event_date' => $event->event_date ? $event->event_date->format('Y-m-d') : null,
+                'event_date' => $event->event_date ? Carbon::parse($event->event_date)->format('Y-m-d') : null,
                 'event_time' => $event->event_time,
                 'location' => $event->location,
                 'category' => $event->category,
@@ -156,14 +162,14 @@ class EventController extends Controller
             // Safely handle event_date_time
             try {
                 if ($event->event_date && $event->event_time) {
-                    $formattedDate = $event->event_date->format('F j, Y');
+                    $formattedDate = Carbon::parse($event->event_date)->format('F j, Y');
                     $formattedTime = $event->event_time;
                     
                     // Convert time to 12-hour format if needed
                     if (preg_match('/^\d{2}:\d{2}:\d{2}$/', $event->event_time)) {
-                        $formattedTime = \Carbon\Carbon::createFromFormat('H:i:s', $event->event_time)->format('h:i A');
+                        $formattedTime = Carbon::createFromFormat('H:i:s', $event->event_time)->format('h:i A');
                     } elseif (preg_match('/^\d{2}:\d{2}$/', $event->event_time)) {
-                        $formattedTime = \Carbon\Carbon::createFromFormat('H:i', $event->event_time)->format('h:i A');
+                        $formattedTime = Carbon::createFromFormat('H:i', $event->event_time)->format('h:i A');
                     }
                     
                     $responseData['event_date_time'] = $formattedDate . ' | ' . $formattedTime;
@@ -350,38 +356,46 @@ class EventController extends Controller
         }
     }
 
-  /**
- * Display events page for regular users
- */
-public function userEvents(): View
-{
-    try {
-        $user = Auth::user();
-        $today = Carbon::today();
-        $currentDateTime = Carbon::now();
+    /**
+     * Display events page for regular users
+     */
+    public function userEvents(): View
+    {
+        try {
+            $user = Auth::user();
+            $today = Carbon::today();
+            $currentDateTime = Carbon::now();
 
-        Log::info("Loading events for user ID: {$user->id}, Barangay ID: {$user->barangay_id}");
+            Log::info("Loading events for user ID: {$user->id}, Barangay ID: {$user->barangay_id}");
 
-        // Get LAUNCHED events from the SAME BARANGAY as the user
-        $events = Event::where('is_launched', true)
-            ->where('barangay_id', $user->barangay_id)
-            ->orderBy('event_date', 'asc')
-            ->orderBy('event_time', 'asc')
-            ->get();
+            // Get LAUNCHED events from the SAME BARANGAY as the user
+            $events = Event::where('is_launched', true)
+                ->where('barangay_id', $user->barangay_id)
+                ->orderBy('event_date', 'asc')
+                ->orderBy('event_time', 'asc')
+                ->get();
 
-        Log::info("Total launched events found for barangay {$user->barangay_id}: " . $events->count());
+            // Get PROGRAMS from the SAME BARANGAY as the user
+            $programs = Program::where('barangay_id', $user->barangay_id)
+                ->orderBy('event_date', 'asc')
+                ->orderBy('event_time', 'asc')
+                ->get();
 
-        // Filter today's events - show ALL launched events happening today
-        $todayEvents = $events->filter(function($event) use ($today) {
-            $eventDate = $event->event_date instanceof Carbon 
-                ? $event->event_date 
-                : Carbon::parse($event->event_date);
-            
-            return $eventDate->isSameDay($today);
-        });
+            Log::info("Total launched events found for barangay {$user->barangay_id}: " . $events->count());
+            Log::info("Total programs found for barangay {$user->barangay_id}: " . $programs->count());
 
-        // Get unevaluated events for notifications (same barangay)
-        $unevaluatedEvents = Event::whereHas('attendances', function($query) use ($user) {
+            // Filter today's events - show ALL launched events happening today
+            $todayEvents = $events->filter(function($event) use ($today) {
+                return Carbon::parse($event->event_date)->isSameDay($today);
+            });
+
+            // Get today's programs
+            $todayPrograms = $programs->filter(function($program) use ($today) {
+                return Carbon::parse($program->event_date)->isSameDay($today);
+            });
+
+            // Get unevaluated events for notifications (same barangay)
+            $unevaluatedEvents = Event::whereHas('attendances', function($query) use ($user) {
                 $query->where('user_id', $user->id)
                       ->whereNotNull('attended_at');
             })
@@ -396,105 +410,146 @@ public function userEvents(): View
             ->orderBy('event_date', 'desc')
             ->get();
 
-        $notificationCount = $unevaluatedEvents->count();
+            $notificationCount = $unevaluatedEvents->count();
 
-        // Filter upcoming events (considering date AND time) - only future launched events
-        $upcomingEvents = $events->filter(function($event) use ($currentDateTime) {
-            $eventDate = $event->event_date instanceof Carbon 
-                ? $event->event_date 
-                : Carbon::parse($event->event_date);
-            
-            // Create full datetime object for the event
-            if ($event->event_time) {
-                // Parse the time and combine with event date
-                $eventTime = Carbon::parse($event->event_time);
-                $eventDateTime = Carbon::create(
-                    $eventDate->year,
-                    $eventDate->month,
-                    $eventDate->day,
-                    $eventTime->hour,
-                    $eventTime->minute,
-                    $eventTime->second
-                );
-            } else {
-                // If no time specified, use end of day
-                $eventDateTime = $eventDate->endOfDay();
+            // Filter upcoming events (considering date AND time) - only future launched events
+            $upcomingEvents = $events->filter(function($event) use ($currentDateTime) {
+                $eventDate = Carbon::parse($event->event_date);
+                
+                // Create full datetime object for the event
+                if ($event->event_time) {
+                    // Parse the time and combine with event date
+                    $eventTime = Carbon::parse($event->event_time);
+                    $eventDateTime = Carbon::create(
+                        $eventDate->year,
+                        $eventDate->month,
+                        $eventDate->day,
+                        $eventTime->hour,
+                        $eventTime->minute,
+                        $eventTime->second
+                    );
+                } else {
+                    // If no time specified, use end of day
+                    $eventDateTime = $eventDate->endOfDay();
+                }
+                
+                // Only show events that haven't happened yet
+                return $eventDateTime->gt($currentDateTime);
+            });
+
+            // Filter upcoming programs (considering date AND time) - only future programs
+            $upcomingPrograms = $programs->filter(function($program) use ($currentDateTime) {
+                $programDate = Carbon::parse($program->event_date);
+                
+                // Create full datetime object for the program
+                if ($program->event_time) {
+                    // Parse the time and combine with program date
+                    $programTime = Carbon::parse($program->event_time);
+                    $programDateTime = Carbon::create(
+                        $programDate->year,
+                        $programDate->month,
+                        $programDate->day,
+                        $programTime->hour,
+                        $programTime->minute,
+                        $programTime->second
+                    );
+                } else {
+                    // If no time specified, use end of day
+                    $programDateTime = $programDate->endOfDay();
+                }
+                
+                // Only show programs that haven't happened yet
+                return $programDateTime->gt($currentDateTime);
+            });
+
+            // Compute role badge & age
+            $roleBadge = $user && $user->role ? strtoupper($user->role) . '-Member' : 'GUEST';
+            $age = $user && $user->date_of_birth 
+                ? Carbon::parse($user->date_of_birth)->age 
+                : 'N/A';
+
+            // Debug logging - VERY DETAILED
+            Log::info("=== EVENT DEBUG INFO ===");
+            Log::info("User barangay_id: " . $user->barangay_id);
+            Log::info("Today's date: " . $today->format('Y-m-d'));
+            Log::info("Current datetime: " . $currentDateTime->format('Y-m-d H:i:s'));
+            Log::info("Total launched events found: " . $events->count());
+            Log::info("Total programs found: " . $programs->count());
+            Log::info("Today's events count: " . $todayEvents->count());
+            Log::info("Today's programs count: " . $todayPrograms->count());
+            Log::info("Upcoming events count: " . $upcomingEvents->count());
+            Log::info("Upcoming programs count: " . $upcomingPrograms->count());
+            Log::info("Unevaluated events count: " . $unevaluatedEvents->count());
+
+            // Log ALL events for debugging
+            foreach ($events as $event) {
+                $eventDate = Carbon::parse($event->event_date);
+                $isToday = $eventDate->isSameDay($today) ? 'YES' : 'NO';
+                $isLaunched = $event->is_launched ? 'YES' : 'NO';
+                
+                Log::info("Event: {$event->id} - '{$event->title}' - Date: {$eventDate->format('Y-m-d')} - Today: {$isToday} - Launched: {$isLaunched} - Barangay: {$event->barangay_id}");
             }
-            
-            // Only show events that haven't happened yet
-            return $eventDateTime->gt($currentDateTime);
-        });
 
-        // Compute role badge & age
-        $roleBadge = $user && $user->role ? strtoupper($user->role) . '-Member' : 'GUEST';
-        $age = $user && $user->date_of_birth 
-            ? Carbon::parse($user->date_of_birth)->age 
-            : 'N/A';
+            // Log ALL programs for debugging
+            foreach ($programs as $program) {
+                $programDate = Carbon::parse($program->event_date);
+                $isToday = $programDate->isSameDay($today) ? 'YES' : 'NO';
+                
+                Log::info("Program: {$program->id} - '{$program->title}' - Date: {$programDate->format('Y-m-d')} - Today: {$isToday} - Barangay: {$program->barangay_id}");
+            }
 
-        // Debug logging - VERY DETAILED
-        Log::info("=== EVENT DEBUG INFO ===");
-        Log::info("User barangay_id: " . $user->barangay_id);
-        Log::info("Today's date: " . $today->format('Y-m-d'));
-        Log::info("Current datetime: " . $currentDateTime->format('Y-m-d H:i:s'));
-        Log::info("Total launched events found: " . $events->count());
-        Log::info("Today's events count: " . $todayEvents->count());
-        Log::info("Upcoming events count: " . $upcomingEvents->count());
-        Log::info("Unevaluated events count: " . $unevaluatedEvents->count());
+            // Log today's events specifically
+            foreach ($todayEvents as $event) {
+                $eventDate = Carbon::parse($event->event_date);
+                Log::info("TODAY'S EVENT: {$event->id} - '{$event->title}' - Date: {$eventDate->format('Y-m-d')} - Time: {$event->event_time}");
+            }
 
-        // Log ALL events for debugging
-        foreach ($events as $event) {
-            $eventDate = $event->event_date instanceof Carbon 
-                ? $event->event_date 
-                : Carbon::parse($event->event_date);
-            
-            $isToday = $eventDate->isSameDay($today) ? 'YES' : 'NO';
-            $isLaunched = $event->is_launched ? 'YES' : 'NO';
-            
-            Log::info("Event: {$event->id} - '{$event->title}' - Date: {$eventDate->format('Y-m-d')} - Today: {$isToday} - Launched: {$isLaunched} - Barangay: {$event->barangay_id}");
+            // Log today's programs specifically
+            foreach ($todayPrograms as $program) {
+                $programDate = Carbon::parse($program->event_date);
+                Log::info("TODAY'S PROGRAM: {$program->id} - '{$program->title}' - Date: {$programDate->format('Y-m-d')} - Time: {$program->event_time}");
+            }
+
+            return view('eventpage', compact(
+                'events', 
+                'programs',
+                'todayEvents', 
+                'todayPrograms',
+                'upcomingEvents', 
+                'upcomingPrograms',
+                'user', 
+                'roleBadge', 
+                'age',
+                'unevaluatedEvents',
+                'notificationCount',
+                'today',
+                'currentDateTime'
+            ));
+        } catch (\Exception $e) {
+            Log::error('Error loading user events: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+
+            // Provide default values for the missing variables
+            $today = Carbon::today();
+            $currentDateTime = Carbon::now();
+
+            return view('eventpage', [
+                'events' => collect(),
+                'programs' => collect(),
+                'todayEvents' => collect(),
+                'todayPrograms' => collect(),
+                'upcomingEvents' => collect(),
+                'upcomingPrograms' => collect(),
+                'user' => Auth::user(),
+                'roleBadge' => 'GUEST',
+                'age' => 'N/A',
+                'unevaluatedEvents' => collect(),
+                'notificationCount' => 0,
+                'today' => $today,
+                'currentDateTime' => $currentDateTime
+            ]);
         }
-
-        // Log today's events specifically
-        foreach ($todayEvents as $event) {
-            $eventDate = $event->event_date instanceof Carbon 
-                ? $event->event_date 
-                : Carbon::parse($event->event_date);
-            Log::info("TODAY'S EVENT: {$event->id} - '{$event->title}' - Date: {$eventDate->format('Y-m-d')} - Time: {$event->event_time}");
-        }
-
-        return view('eventpage', compact(
-            'events', 
-            'todayEvents', 
-            'upcomingEvents', 
-            'user', 
-            'roleBadge', 
-            'age',
-            'unevaluatedEvents',
-            'notificationCount',
-            'today',
-            'currentDateTime'
-        ));
-    } catch (\Exception $e) {
-        Log::error('Error loading user events: ' . $e->getMessage());
-        Log::error('Stack trace: ' . $e->getTraceAsString());
-
-        // Provide default values for the missing variables
-        $today = Carbon::today();
-        $currentDateTime = Carbon::now();
-
-        return view('eventpage', [
-            'events' => collect(),
-            'todayEvents' => collect(),
-            'upcomingEvents' => collect(),
-            'user' => Auth::user(),
-            'roleBadge' => 'GUEST',
-            'age' => 'N/A',
-            'unevaluatedEvents' => collect(),
-            'notificationCount' => 0,
-            'today' => $today,
-            'currentDateTime' => $currentDateTime
-        ]);
     }
-}
 
     /**
      * Display events for public viewing (launched events only)
@@ -631,18 +686,88 @@ public function userEvents(): View
     }
 
     public function showQr($id)
-{
-    $event = Event::findOrFail($id);
+    {
+        $event = Event::findOrFail($id);
 
-    // Get event title and passcode (adjust field names if needed)
-    $title = $event->event_title ?? $event->title ?? 'Untitled Event';
-    $passcode = $event->passcode ?? 'N/A';
+        // Get event title and passcode - FIXED: use 'title' instead of 'event_title'
+        $title = $event->title ?? 'Untitled Event';
+        $passcode = $event->passcode ?? 'N/A';
 
-    return view('qr', [
-        'title' => $title,
-        'passcode' => $passcode,
-        'event' => $event,
-    ]);
-}
+        return view('qr', [
+            'title' => $title,
+            'passcode' => $passcode,
+            'event' => $event,
+        ]);
+    }
 
+    /**
+     * Display program details for modal
+     */
+    public function showProgram($id): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            $programId = (int)$id;
+            Log::info("Fetching program with ID: {$programId} for barangay: {$user->barangay_id}");
+
+            // Only show programs from the same barangay
+            $program = Program::where('id', $programId)
+                        ->where('barangay_id', $user->barangay_id)
+                        ->first();
+            
+            if (!$program) {
+                Log::warning("Program not found with ID: {$programId} for barangay: {$user->barangay_id}");
+                return response()->json(['error' => 'Program not found'], 404);
+            }
+
+            Log::info("Program found: {$program->title}");
+
+            // Build response data safely
+            $responseData = [
+                'id' => $program->id,
+                'title' => $program->title,
+                'description' => $program->description,
+                'event_date' => $program->event_date ? Carbon::parse($program->event_date)->format('Y-m-d') : null,
+                'event_time' => $program->event_time,
+                'location' => $program->location,
+                'category' => $program->category,
+                'published_by' => $program->published_by,
+                'registration_type' => $program->registration_type,
+                'link_source' => $program->link_source,
+                'registration_description' => $program->registration_description,
+                'barangay_id' => $program->barangay_id,
+            ];
+
+            // Safely handle display_image URL
+            if ($program->display_image) {
+                try {
+                    // Check if file exists in storage
+                    if (Storage::disk('public')->exists($program->display_image)) {
+                        $responseData['display_image'] = asset('storage/' . $program->display_image);
+                    } else {
+                        $responseData['display_image'] = null;
+                        Log::warning("Display image file not found: " . $program->display_image);
+                    }
+                    Log::info("Display image URL: " . $responseData['display_image']);
+                } catch (\Exception $e) {
+                    Log::error("Error generating display image URL: " . $e->getMessage());
+                    $responseData['display_image'] = null;
+                }
+            } else {
+                $responseData['display_image'] = null;
+            }
+
+            Log::info("Successfully prepared program data for ID: {$programId}");
+            
+            return response()->json($responseData);
+            
+        } catch (\Exception $e) {
+            Log::error('Error fetching program: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            return response()->json([
+                'error' => 'Internal server error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
