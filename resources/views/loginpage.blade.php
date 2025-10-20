@@ -8,7 +8,33 @@
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-
+  <style>
+    .lockout-message {
+      background: #f8d7da;
+      border: 1px solid #f5c6cb;
+      color: #721c24;
+      padding: 12px;
+      border-radius: 5px;
+      margin-bottom: 15px;
+      font-size: 0.9rem;
+    }
+    
+    .attempts-warning {
+      color: #856404;
+      background: #fff3cd;
+      padding: 10px;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      margin-bottom: 10px;
+      border: 1px solid #ffeaa7;
+    }
+    
+    .disabled-field {
+      background-color: #f8f9fa;
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+  </style>
 </head>
 <body>
 
@@ -39,44 +65,71 @@
         </div>
         @endif
 
+        <!-- Lockout Message -->
+        @if (session('lockout_message'))
+        <div class="lockout-message">
+            <i class="fas fa-exclamation-triangle"></i> {{ session('lockout_message') }}
+        </div>
+        @endif
+
+        <!-- Success Message -->
+        @if (session('success'))
+        <div class="success-message" style="background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
+            <i class="fas fa-check-circle"></i> {{ session('success') }}
+        </div>
+        @endif
+
         <form action="{{ route('login.submit') }}" method="POST">
-    @csrf
+            @csrf
 
-    <!-- Account Number -->
-    <div class="form-group">
-        <input type="text" id="account_number" name="account_number" placeholder="Enter your Account Number" value="{{ old('account_number') }}" required>
-        @error('account_number')
-            <span class="error-message">{{ $message }}</span>
-        @enderror
-    </div>
+            <!-- Account Number -->
+            <div class="form-group">
+                <input type="text" id="account_number" name="account_number" placeholder="Enter your Account Number" value="{{ old('account_number') }}" required 
+                    class="@if(session('lockout_message')) disabled-field @endif">
+                @error('account_number')
+                    <span class="error-message">{{ $message }}</span>
+                @enderror
+            </div>
 
-    <!-- Password -->
-    <div class="form-group password-group">
-        <input type="password" id="password" name="password" placeholder="Password" required>
-        <span class="toggle-password" onclick="togglePassword()">
-            <i id="eyeIcon" class="fa fa-eye-slash"></i>
-        </span>
-        @error('password')
-            <span class="error-message">{{ $message }}</span>
-        @enderror
-    </div>
+            <!-- Password -->
+            <div class="form-group password-group">
+                <input type="password" id="password" name="password" placeholder="Password" required 
+                    class="@if(session('lockout_message')) disabled-field @endif">
+                <span class="toggle-password" onclick="togglePassword()">
+                    <i id="eyeIcon" class="fa fa-eye-slash"></i>
+                </span>
+                @error('password')
+                    <span class="error-message">{{ $message }}</span>
+                @enderror
+            </div>
 
-    <!-- Remember me / Forgot password -->
-    <div class="remember-forgot">
-        <label>
-            <input type="checkbox" name="remember" {{ old('remember') ? 'checked' : '' }}> Remember me in 7 days
-        </label>
+            <!-- Attempts Counter -->
+            @if(session('attempts_remaining'))
+            <div class="attempts-warning">
+                <i class="fas fa-exclamation-circle"></i> 
+                {{ session('attempts_remaining') }}
+            </div>
+            @endif
+
+            <!-- Remember me / Forgot password -->
+            <div class="remember-forgot">
+                <label>
+                    <input type="checkbox" name="remember" {{ old('remember') ? 'checked' : '' }}
+                        class="@if(session('lockout_message')) disabled-field @endif"> 
+                    Remember me in 7 days
+                </label>
                 <a href="#" class="forgot-password">Forgot Password?</a>
+            </div>
 
-    </div>
-
-    <!-- Submit Button -->
-    <button type="submit" class="login-button">Login</button>
-</form>
-
+            <!-- Submit Button -->
+            <button type="submit" class="login-button @if(session('lockout_message')) disabled-field @endif" 
+                @if(session('lockout_message')) disabled @endif>
+                Login
+            </button>
+        </form>
 
         <div class="register-section">
-          <p>Don’t have an account? Please register first. 
+          <p>Don't have an account? Please register first. 
             <a href="{{ url('/register') }}" class="register-link">Register</a>
           </p>
         </div>
@@ -90,7 +143,7 @@
     </div>
   </div>
 
-
+  <!-- Forgot Password Modal (same as your existing code) -->
   <div id="forgotModal" class="modal">
     <div class="modal-content">
         <span class="close-btn" onclick="closeForgotModal()">&times;</span>
@@ -136,8 +189,7 @@
 
         <p id="forgotMessage" class="form-message"></p>
     </div>
-</div>
-
+  </div>
 
   <!-- JS -->
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -182,196 +234,198 @@
       lucide.createIcons(); 
     }
 
-    
+    // Auto-remove lockout after 2 minutes
+    <?php if(session('lockout_message')): ?>
+    setTimeout(() => {
+        window.location.reload();
+    }, 120000); // 2 minutes
+    <?php endif; ?>
 
     // === 1. GLOBAL VARIABLES & ELEMENT SELECTION ===
-let otpTimer;
-const modal = document.getElementById('forgotModal');
-const forgotLink = document.querySelector('.forgot-password');
-const messageBox = document.getElementById("forgotMessage");
-const otpInputs = document.querySelectorAll(".otp-input");
+    let otpTimer;
+    const modal = document.getElementById('forgotModal');
+    const forgotLink = document.querySelector('.forgot-password');
+    const messageBox = document.getElementById("forgotMessage");
+    const otpInputs = document.querySelectorAll(".otp-input");
 
-// === 2. HELPER FUNCTIONS ===
-function closeForgotModal() {
-    modal.style.display = 'none';
-    messageBox.textContent = "";
-    messageBox.className = 'form-message';
-    document.getElementById("emailSection").style.display = "block";
-    document.getElementById("otpSection").style.display = "none";
-    document.getElementById("resetSection").style.display = "none";
-    document.getElementById("emailInput").value = "";
-    document.getElementById("newPassword").value = "";
-    document.getElementById("password_confirmation").value = "";
-    otpInputs.forEach(input => input.value = "");
-    clearInterval(otpTimer);
-    if(document.getElementById("timerText")){
-        document.getElementById("timerText").textContent = "";
-        document.getElementById("resendOtpLink").style.display = "none";
-    }
-}
-
-function startOtpTimer() {
-    let seconds = 60;
-    const timerText = document.getElementById("timerText");
-    const resendLink = document.getElementById("resendOtpLink");
-    resendLink.style.display = "none";
-    timerText.style.display = "inline";
-    clearInterval(otpTimer);
-    otpTimer = setInterval(() => {
-        if (seconds > 0) {
-            seconds--;
-            timerText.textContent = `Resend OTP in ${seconds}s`;
-        } else {
-            clearInterval(otpTimer);
-            timerText.style.display = "none";
-            resendLink.style.display = "inline";
+    // === 2. HELPER FUNCTIONS ===
+    function closeForgotModal() {
+        modal.style.display = 'none';
+        messageBox.textContent = "";
+        messageBox.className = 'form-message';
+        document.getElementById("emailSection").style.display = "block";
+        document.getElementById("otpSection").style.display = "none";
+        document.getElementById("resetSection").style.display = "none";
+        document.getElementById("emailInput").value = "";
+        document.getElementById("newPassword").value = "";
+        document.getElementById("password_confirmation").value = "";
+        otpInputs.forEach(input => input.value = "");
+        clearInterval(otpTimer);
+        if(document.getElementById("timerText")){
+            document.getElementById("timerText").textContent = "";
+            document.getElementById("resendOtpLink").style.display = "none";
         }
-    }, 1000);
-}
-
-function requestOtp(isResend = false) {
-    const email = document.getElementById("emailInput").value;
-    if (!email) {
-        messageBox.textContent = "Please enter your email address.";
-        messageBox.className = 'form-message error';
-        return;
     }
-    messageBox.textContent = isResend ? "Resending OTP..." : "Sending OTP...";
-    messageBox.className = 'form-message';
-    fetch("{{ route('forgot-password.send-otp') }}", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content },
-        body: JSON.stringify({ email })
-    })
-    .then(res => res.ok ? res.json() : res.json().then(err => Promise.reject(err)))
-    .then(data => {
-        if (data.success) {
-            messageBox.textContent = "A new OTP has been sent to your email!";
-            messageBox.className = 'form-message success';
-            if (!isResend) {
-                document.getElementById("emailSection").style.display = "none";
-                document.getElementById("otpSection").style.display = "block";
+
+    function startOtpTimer() {
+        let seconds = 60;
+        const timerText = document.getElementById("timerText");
+        const resendLink = document.getElementById("resendOtpLink");
+        resendLink.style.display = "none";
+        timerText.style.display = "inline";
+        clearInterval(otpTimer);
+        otpTimer = setInterval(() => {
+            if (seconds > 0) {
+                seconds--;
+                timerText.textContent = `Resend OTP in ${seconds}s`;
+            } else {
+                clearInterval(otpTimer);
+                timerText.style.display = "none";
+                resendLink.style.display = "inline";
             }
-            startOtpTimer();
-        }
-    })
-    .catch(err => {
-        messageBox.textContent = err.error || "Server error. Please try again.";
-        messageBox.className = 'form-message error';
-    });
-}
-
-function setupPasswordToggle(inputId, toggleId) {
-    const passwordInput = document.getElementById(inputId);
-    const toggleIcon = document.getElementById(toggleId);
-    toggleIcon.addEventListener('click', function () {
-        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-        passwordInput.setAttribute('type', type);
-        this.classList.toggle('fa-eye');
-        this.classList.toggle('fa-eye-slash');
-    });
-}
-
-// === 3. EVENT LISTENERS ===
-forgotLink.addEventListener('click', (e) => {
-    e.preventDefault();
-    modal.style.display = 'block';
-});
-
-window.addEventListener('click', (event) => {
-    if (event.target === modal) closeForgotModal();
-});
-
-document.getElementById("sendOtpBtn").addEventListener("click", () => requestOtp(false));
-document.getElementById("resendOtpLink").addEventListener("click", (e) => {
-    e.preventDefault();
-    requestOtp(true);
-});
-
-document.getElementById("verifyOtpBtn").addEventListener("click", () => {
-    const email = document.getElementById("emailInput").value;
-    const otp = Array.from(otpInputs).map(input => input.value).join('');
-    messageBox.textContent = "Verifying...";
-    messageBox.className = 'form-message';
-    fetch("{{ route('forgot-password.verify-otp') }}", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content },
-        body: JSON.stringify({ email, otp })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            messageBox.textContent = "OTP verified! You can now reset your password.";
-            messageBox.classList.add('success');
-            clearInterval(otpTimer);
-            document.getElementById("otpSection").style.display = "none";
-            document.getElementById("resetSection").style.display = "block";
-        } else {
-            messageBox.textContent = data.error || "Invalid OTP.";
-            messageBox.classList.add('error');
-        }
-    })
-    .catch(() => {
-        messageBox.textContent = "Server error during verification.";
-        messageBox.classList.add('error');
-    });
-});
-
-document.getElementById("resetPasswordBtn").addEventListener("click", () => {
-    const email = document.getElementById("emailInput").value;
-    const password = document.getElementById("newPassword").value;
-    const password_confirmation = document.getElementById("password_confirmation").value;
-    messageBox.textContent = "";
-    messageBox.className = 'form-message';
-    if (password.length < 8) {
-        messageBox.textContent = "Password must be at least 8 characters.";
-        messageBox.classList.add('error');
-        return;
+        }, 1000);
     }
-    if (password !== password_confirmation) {
-        messageBox.textContent = "Passwords do not match.";
-        messageBox.classList.add('error');
-        return;
+
+    function requestOtp(isResend = false) {
+        const email = document.getElementById("emailInput").value;
+        if (!email) {
+            messageBox.textContent = "Please enter your email address.";
+            messageBox.className = 'form-message error';
+            return;
+        }
+        messageBox.textContent = isResend ? "Resending OTP..." : "Sending OTP...";
+        messageBox.className = 'form-message';
+        fetch("{{ route('forgot-password.send-otp') }}", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content },
+            body: JSON.stringify({ email })
+        })
+        .then(res => res.ok ? res.json() : res.json().then(err => Promise.reject(err)))
+        .then(data => {
+            if (data.success) {
+                messageBox.textContent = "A new OTP has been sent to your email!";
+                messageBox.className = 'form-message success';
+                if (!isResend) {
+                    document.getElementById("emailSection").style.display = "none";
+                    document.getElementById("otpSection").style.display = "block";
+                }
+                startOtpTimer();
+            }
+        })
+        .catch(err => {
+            messageBox.textContent = err.error || "Server error. Please try again.";
+            messageBox.className = 'form-message error';
+        });
     }
-    fetch("{{ route('forgot-password.reset') }}", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content },
-        body: JSON.stringify({ email, password, password_confirmation })
-    })
-    .then(res => res.json())
-    .then(data => {
-        messageBox.textContent = data.message;
-        if (data.success) {
-            messageBox.classList.add('success');
-            setTimeout(closeForgotModal, 3000);
-        } else {
+
+    function setupPasswordToggle(inputId, toggleId) {
+        const passwordInput = document.getElementById(inputId);
+        const toggleIcon = document.getElementById(toggleId);
+        toggleIcon.addEventListener('click', function () {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
+        });
+    }
+
+    // === 3. EVENT LISTENERS ===
+    forgotLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        modal.style.display = 'block';
+    });
+
+    window.addEventListener('click', (event) => {
+        if (event.target === modal) closeForgotModal();
+    });
+
+    document.getElementById("sendOtpBtn").addEventListener("click", () => requestOtp(false));
+    document.getElementById("resendOtpLink").addEventListener("click", (e) => {
+        e.preventDefault();
+        requestOtp(true);
+    });
+
+    document.getElementById("verifyOtpBtn").addEventListener("click", () => {
+        const email = document.getElementById("emailInput").value;
+        const otp = Array.from(otpInputs).map(input => input.value).join('');
+        messageBox.textContent = "Verifying...";
+        messageBox.className = 'form-message';
+        fetch("{{ route('forgot-password.verify-otp') }}", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content },
+            body: JSON.stringify({ email, otp })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                messageBox.textContent = "OTP verified! You can now reset your password.";
+                messageBox.classList.add('success');
+                clearInterval(otpTimer);
+                document.getElementById("otpSection").style.display = "none";
+                document.getElementById("resetSection").style.display = "block";
+            } else {
+                messageBox.textContent = data.error || "Invalid OTP.";
+                messageBox.classList.add('error');
+            }
+        })
+        .catch(() => {
+            messageBox.textContent = "Server error during verification.";
             messageBox.classList.add('error');
-        }
-    })
-    .catch(() => {
-        messageBox.textContent = "Error resetting password.";
-        messageBox.classList.add('error');
+        });
     });
-});
 
-otpInputs.forEach((input, index) => {
-    input.addEventListener("input", () => {
-        if (input.value.length === 1 && index < otpInputs.length - 1) {
-            otpInputs[index + 1].focus();
+    document.getElementById("resetPasswordBtn").addEventListener("click", () => {
+        const email = document.getElementById("emailInput").value;
+        const password = document.getElementById("newPassword").value;
+        const password_confirmation = document.getElementById("password_confirmation").value;
+        messageBox.textContent = "";
+        messageBox.className = 'form-message';
+        if (password.length < 8) {
+            messageBox.textContent = "Password must be at least 8 characters.";
+            messageBox.classList.add('error');
+            return;
         }
-    });
-    input.addEventListener("keydown", (e) => {
-        if (e.key === "Backspace" && input.value.length === 0 && index > 0) {
-            otpInputs[index - 1].focus();
+        if (password !== password_confirmation) {
+            messageBox.textContent = "Passwords do not match.";
+            messageBox.classList.add('error');
+            return;
         }
+        fetch("{{ route('forgot-password.reset') }}", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content },
+            body: JSON.stringify({ email, password, password_confirmation })
+        })
+        .then(res => res.json())
+        .then(data => {
+            messageBox.textContent = data.message;
+            if (data.success) {
+                messageBox.classList.add('success');
+                setTimeout(closeForgotModal, 3000);
+            } else {
+                messageBox.classList.add('error');
+            }
+        })
+        .catch(() => {
+            messageBox.textContent = "Error resetting password.";
+            messageBox.classList.add('error');
+        });
     });
-});
 
-setupPasswordToggle('newPassword', 'toggleNewPassword');
-setupPasswordToggle('password_confirmation', 'toggleConfirmPassword');
+    otpInputs.forEach((input, index) => {
+        input.addEventListener("input", () => {
+            if (input.value.length === 1 && index < otpInputs.length - 1) {
+                otpInputs[index + 1].focus();
+            }
+        });
+        input.addEventListener("keydown", (e) => {
+            if (e.key === "Backspace" && input.value.length === 0 && index > 0) {
+                otpInputs[index - 1].focus();
+            }
+        });
+    });
 
-
-
+    setupPasswordToggle('newPassword', 'toggleNewPassword');
+    setupPasswordToggle('password_confirmation', 'toggleConfirmPassword');
   </script>
 
 </body>

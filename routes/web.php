@@ -32,6 +32,7 @@ use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\ProgramController; 
 use App\Http\Controllers\YouthProgramRegistrationController; 
 use App\Http\Controllers\YouthAssistanceController; 
+
 Route::get('/', function () {
     return view('landingpage');
 });
@@ -182,32 +183,8 @@ Route::get('/get-barangays/{city_id}', [LocationController::class, 'getBarangays
 // ========== AUTH ROUTES ==========
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 
-Route::post('/login', function (Request $request) {
-    $credentials = $request->validate([
-        'account_number' => 'required|string',
-        'password' => 'required|string',
-    ]);
-
-    if ($credentials['account_number'] === 'Admin-2025') {
-        $admin = Admin::where('username', 'Admin-2025')->first();
-
-        if ($admin && Hash::check($credentials['password'], $admin->password)) {
-            Auth::guard('admin')->login($admin);
-            $request->session()->regenerate();
-
-            return redirect()->intended('/admin-dashboard')
-                ->with('success', 'Welcome, Admin!');
-        }
-
-        return back()->withErrors([
-            'account_number' => 'Invalid admin credentials.',
-        ])->withInput();
-    }
-
-    // ✅ Otherwise, process normal user login
-    return app(LoginController::class)->login($request);
-})->name('login.submit');
-
+// UPDATED: Login route with rate limiting
+Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
 
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
