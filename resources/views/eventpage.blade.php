@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KatiBayan - Events</title>
+  <title>KatiBayan - Events & Programs</title>
   <link rel="stylesheet" href="{{ asset('css/eventpage.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -1034,7 +1034,7 @@
       // Helper function to create custom field HTML
       function createCustomFieldHTML(field, index) {
         const fieldId = `custom_field_${index}`;
-        const fieldName = `registration_data[${fieldId}]`;
+        const fieldName = `registration_data[custom_fields][${fieldId}]`;
         
         switch (field.field_type) {
           case 'text':
@@ -1154,17 +1154,43 @@
           if (modalProgramCategoryText) modalProgramCategoryText.textContent = program.category ? 
             program.category.replace(/_/g, ' ') : 'Not specified';
 
-          // Format date and time
-          const eventDate = program.event_date ? new Date(program.event_date) : null;
-          const eventTime = program.event_time ? new Date(`1970-01-01T${program.event_time}`) : null;
+          // Format date and time - FIXED: Proper date parsing
           let dateTimeString = 'Date not specified';
-          
-          if (eventDate) {
-            dateTimeString = eventDate.toLocaleDateString('en-US', { 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            }) + (eventTime ? ` at ${eventTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}` : ' (All Day)');
+          if (program.event_date) {
+            try {
+              const eventDate = new Date(program.event_date);
+              if (!isNaN(eventDate.getTime())) {
+                dateTimeString = eventDate.toLocaleDateString('en-US', { 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                });
+                
+                // Add time if available
+                if (program.event_time) {
+                  try {
+                    // Parse time properly - handle different time formats
+                    let timeString = program.event_time;
+                    // If time is in 24-hour format, convert to 12-hour
+                    if (timeString.includes(':')) {
+                      const [hours, minutes] = timeString.split(':');
+                      const hour = parseInt(hours);
+                      const ampm = hour >= 12 ? 'PM' : 'AM';
+                      const displayHour = hour % 12 || 12;
+                      timeString = `${displayHour}:${minutes} ${ampm}`;
+                    }
+                    dateTimeString += ` at ${timeString}`;
+                  } catch (timeError) {
+                    console.warn('Error parsing time:', timeError);
+                    // If time parsing fails, just use the date
+                  }
+                } else {
+                  dateTimeString += ' (All Day)';
+                }
+              }
+            } catch (dateError) {
+              console.warn('Error parsing date:', dateError);
+            }
           }
           
           if (modalProgramDateTime) modalProgramDateTime.textContent = dateTimeString;
@@ -1234,38 +1260,79 @@
                   program.registration_description || 'Please fill out the form below to register for this program.';
               }
 
-              // Set registration period
+              // Set registration period - FIXED: Proper date/time parsing
               const registrationOpenPeriod = document.getElementById('registrationOpenPeriod');
               const registrationClosePeriod = document.getElementById('registrationClosePeriod');
               
               if (registrationOpenPeriod && registrationClosePeriod) {
-                if (program.registration_open_date && program.registration_close_date) {
-                  const openDate = new Date(program.registration_open_date);
-                  const closeDate = new Date(program.registration_close_date);
-                  
-                  const openTime = program.registration_open_time ? 
-                    new Date(`1970-01-01T${program.registration_open_time}`) : null;
-                  const closeTime = program.registration_close_time ? 
-                    new Date(`1970-01-01T${program.registration_close_time}`) : null;
-
-                  const openPeriod = openDate.toLocaleDateString('en-US', { 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
-                  }) + (openTime ? ` at ${openTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}` : '');
-                  
-                  const closePeriod = closeDate.toLocaleDateString('en-US', { 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
-                  }) + (closeTime ? ` at ${closeTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}` : '');
-
-                  registrationOpenPeriod.textContent = openPeriod || 'Not specified';
-                  registrationClosePeriod.textContent = closePeriod || 'Not specified';
-                } else {
-                  registrationOpenPeriod.textContent = 'Not specified';
-                  registrationClosePeriod.textContent = 'Not specified';
+                // Format open period
+                let openPeriod = 'Not specified';
+                if (program.registration_open_date) {
+                  try {
+                    const openDate = new Date(program.registration_open_date);
+                    if (!isNaN(openDate.getTime())) {
+                      openPeriod = openDate.toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      });
+                      
+                      if (program.registration_open_time) {
+                        try {
+                          let openTimeString = program.registration_open_time;
+                          if (openTimeString.includes(':')) {
+                            const [hours, minutes] = openTimeString.split(':');
+                            const hour = parseInt(hours);
+                            const ampm = hour >= 12 ? 'PM' : 'AM';
+                            const displayHour = hour % 12 || 12;
+                            openTimeString = `${displayHour}:${minutes} ${ampm}`;
+                          }
+                          openPeriod += ` at ${openTimeString}`;
+                        } catch (timeError) {
+                          console.warn('Error parsing open time:', timeError);
+                        }
+                      }
+                    }
+                  } catch (dateError) {
+                    console.warn('Error parsing open date:', dateError);
+                  }
                 }
+                
+                // Format close period
+                let closePeriod = 'Not specified';
+                if (program.registration_close_date) {
+                  try {
+                    const closeDate = new Date(program.registration_close_date);
+                    if (!isNaN(closeDate.getTime())) {
+                      closePeriod = closeDate.toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      });
+                      
+                      if (program.registration_close_time) {
+                        try {
+                          let closeTimeString = program.registration_close_time;
+                          if (closeTimeString.includes(':')) {
+                            const [hours, minutes] = closeTimeString.split(':');
+                            const hour = parseInt(hours);
+                            const ampm = hour >= 12 ? 'PM' : 'AM';
+                            const displayHour = hour % 12 || 12;
+                            closeTimeString = `${displayHour}:${minutes} ${ampm}`;
+                          }
+                          closePeriod += ` at ${closeTimeString}`;
+                        } catch (timeError) {
+                          console.warn('Error parsing close time:', timeError);
+                        }
+                      }
+                    }
+                  } catch (dateError) {
+                    console.warn('Error parsing close date:', dateError);
+                  }
+                }
+
+                registrationOpenPeriod.textContent = openPeriod;
+                registrationClosePeriod.textContent = closePeriod;
               }
 
               // Render custom fields - FIXED: Check for custom_fields structure
@@ -1336,7 +1403,7 @@
         }
       }
 
-      // Program Registration Form Submission - FIXED VERSION
+      // Enhanced Program Registration Form Submission - COMPLETELY FIXED VERSION
       async function submitProgramRegistration(programId, formData) {
         try {
           const submitBtn = document.querySelector('#programRegistrationForm .submit-btn');
@@ -1356,13 +1423,18 @@
           // Collect all custom field values
           const customFields = {};
           for (let [key, value] of formData.entries()) {
-            if (key.startsWith('registration_data[')) {
-              const fieldName = key.replace('registration_data[', '').replace(']', '');
-              customFields[fieldName] = value;
+            if (key.startsWith('registration_data[custom_fields]')) {
+              // Extract field name from the key
+              const fieldMatch = key.match(/registration_data\[custom_fields\]\[(.*?)\]/);
+              if (fieldMatch && fieldMatch[1]) {
+                customFields[fieldMatch[1]] = value;
+              }
             }
           }
           
           registrationData.custom_fields = customFields;
+
+          console.log('Registration data to submit:', registrationData);
 
           // Create final form data with proper structure
           const finalFormData = new FormData();
@@ -1392,9 +1464,16 @@
                   <p>Thank you for registering for this program. We'll contact you with further details.</p>
                   <p><strong>Reference ID:</strong> ${result.reference_id || 'N/A'}</p>
                   <p><strong>Submitted on:</strong> ${result.registration?.submitted_at || 'Just now'}</p>
+                  <div class="success-actions">
+                    <button type="button" class="close-success-btn" onclick="closeProgramModal()">Close</button>
+                  </div>
                 </div>
               `;
             }
+            
+            // The registration will now appear in the youth registration list
+            console.log('Registration successful! Reference ID:', result.reference_id);
+            
           } else {
             throw new Error(result.message || 'Failed to submit registration');
           }
@@ -1409,6 +1488,14 @@
             submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Registration';
             submitBtn.disabled = false;
           }
+        }
+      }
+
+      // Helper function to close program modal
+      function closeProgramModal() {
+        const programModal = document.getElementById('programModal');
+        if (programModal) {
+          programModal.style.display = 'none';
         }
       }
 
@@ -1477,7 +1564,16 @@
         }
       });
 
-      
+      // Logout confirmation
+      function confirmLogout(event) {
+        event.preventDefault();
+        if (confirm('Are you sure you want to logout?')) {
+          document.getElementById('logout-form').submit();
+        }
+      }
+
+      // Make closeProgramModal available globally
+      window.closeProgramModal = closeProgramModal;
     });
   </script>
 

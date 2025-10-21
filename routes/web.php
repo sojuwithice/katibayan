@@ -144,13 +144,13 @@ Route::post('/youth-assistance/filter', [YouthAssistanceController::class, 'filt
 
 Route::get('/youth-suggestion', [SuggestionController::class, 'youthSuggestion'])->name('youth-suggestion');
 
-Route::get('/youth-program-registration', function () {
-    return view('youth-program-registration');
-})->name('youth-program-registration');
+// UPDATED: Youth Program Registration Routes - Remove the closure and use controller
+Route::get('/youth-program-registration', [YouthProgramRegistrationController::class, 'index'])
+    ->name('youth-program-registration');
 
-Route::get('/youth-registration-list', function () {
-    return view('youth-registration-list');
-})->name('youth-registration-list');
+// NEW: Youth Registration List Route
+Route::get('/youth-registration-list/{programId}', [YouthProgramRegistrationController::class, 'showRegistrationList'])
+    ->name('youth-registration-list');
 
 Route::get('/list-of-eval-respondents', function () {
     return view('list-of-eval-respondents');
@@ -224,7 +224,7 @@ Route::middleware(['auth'])->group(function () {
     // SK Dashboard
     Route::get('/sk-dashboard', [SKDashboardController::class, 'index'])->name('sk.dashboard');
     
-    // SK Evaluation Feedback - FIXED: Using controller instead of closure
+    // SK Evaluation Feedback - FIXED: Using controller instead of direct view
     Route::get('/sk-evaluation-feedback', [SKEvaluationController::class, 'index'])->name('sk-evaluation-feedback');
     
     // SK Evaluation Review
@@ -261,6 +261,19 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/programs/{id}/edit', [ProgramController::class, 'edit'])->name('programs.edit');
     Route::put('/programs/{id}', [ProgramController::class, 'update'])->name('programs.update');
     Route::delete('/programs/{id}', [ProgramController::class, 'destroy'])->name('programs.destroy');
+    
+    // Protected Youth Registration List Route
+    Route::get('/youth-registration-list/{programId}', [YouthProgramRegistrationController::class, 'showRegistrationList'])
+        ->name('youth-registration-list');
+        
+    // ========== ATTENDANCE MANAGEMENT ROUTES ==========
+    // Update attendance status for program registrations
+    Route::post('/program-registration/{registrationId}/attendance', [YouthProgramRegistrationController::class, 'updateAttendance'])
+        ->name('program-registration.update-attendance');
+        
+    // Get attendance statistics for a program
+    Route::get('/program/{programId}/attendance-stats', [YouthProgramRegistrationController::class, 'getAttendanceStats'])
+        ->name('program.attendance-stats');
 });
 
 Route::post('/polls/{pollId}/reset-vote', [PollsController::class, 'resetVote'])->name('polls.reset-vote');
@@ -299,8 +312,6 @@ Route::controller(ForgotPasswordController::class)
 
 
 Route::post('/feedback/submit', [FeedbackController::class, 'store'])->name('feedback.submit');
-Route::get('/youth-program-registration', [YouthProgramRegistrationController::class, 'index'])
-    ->name('youth-program-registration');
 
 Route::post('/programs', [ProgramController::class, 'store'])
     ->name('programs.store');

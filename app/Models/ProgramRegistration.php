@@ -58,4 +58,27 @@ class ProgramRegistration extends Model
         
         return array_merge($autoFilled, $customFields);
     }
+     /**
+     * Get the user who marked the attendance
+     */
+    public function markedBy()
+    {
+        return $this->belongsTo(User::class, 'marked_by_user_id');
+    }
+
+    /**
+     * Scope to get attended registrations
+     */
+    public function scopeAttended($query)
+    {
+        return $query->where('attended', true);
+    }
+
+    /**
+     * Scope to get absent registrations
+     */
+    public function scopeAbsent($query)
+    {
+        return $query->where('attended', false);
+    }
 }
