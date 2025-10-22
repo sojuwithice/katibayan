@@ -770,4 +770,112 @@ class EventController extends Controller
             ], 500);
         }
     }
+
+    /**
+ * Show the form for editing the specified event.
+ */
+public function edit($id): View|RedirectResponse
+{
+    try {
+        $user = Auth::user();
+        
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        // Convert to integer to ensure type consistency
+        $eventId = (int)$id;
+        
+        // Only allow editing events from the same barangay
+        $event = Event::where('id', $eventId)
+                    ->where('barangay_id', $user->barangay_id)
+                    ->first();
+        
+        if (!$event) {
+            Log::warning("Event not found for editing with ID: {$eventId} for barangay: {$user->barangay_id}");
+            return redirect()->route('sk-eventpage')->with('error', 'Event not found.');
+        }
+
+        // Calculate role badge and age for the user
+        $roleBadge = $user && $user->role ? strtoupper($user->role) . '-Member' : 'GUEST';
+        $age = $user && $user->date_of_birth 
+            ? Carbon::parse($user->date_of_birth)->age 
+            : 'N/A';
+
+        return view('edit-event', compact('event', 'user', 'roleBadge', 'age'));
+
+    } catch (\Exception $e) {
+        Log::error('Error loading edit event form: ' . $e->getMessage());
+        return redirect()->route('sk-eventpage')->with('error', 'Error loading edit form.');
+    }
+}
+
+/**
+ * Update the specified event in storage.
+ */
+public function update(Request $request, $id): RedirectResponse
+{
+    try {
+        $user = Auth::user();
+        
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        // Convert to integer to ensure type consistency
+        $eventId = (int)$id;
+        
+        // Only allow updating events from the same barangay
+        $event = Event::where('id', $eventId)
+                    ->where('barangay_id', $user->barangay_id)
+                    ->first();
+        
+        if (!$event) {
+            Log::warning("Event not found for updating with ID: {$eventId} for barangay: {$user->barangay_id}");
+            return redirect()->route('sk-eventpage')->with('error', 'Event not found.');
+        }
+
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'event_date' => 'required|date',
+            'event_time' => 'required|string',
+            'location' => 'required|string|max:255',
+            'category' => 'required|string|max:255',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'published_by' => 'required|string|max:255',
+        ]);
+
+        Log::info('Updating event with data:', $validated);
+
+        // Handle image upload
+        if ($request->hasFile('image')) {
+            // Delete old image if exists
+            if ($event->image) {
+                Storage::disk('public')->delete($event->image);
+            }
+            $validated['image'] = $request->file('image')->store('events', 'public');
+        }
+
+        // Update event data
+        $event->update([
+            'title' => $validated['title'],
+            'description' => $validated['description'] ?? null,
+            'event_date' => $validated['event_date'],
+            'event_time' => $validated['event_time'],
+            'location' => $validated['location'],
+            'category' => $validated['category'],
+            'published_by' => $validated['published_by'],
+            'image' => $validated['image'] ?? $event->image, // Keep existing image if not updated
+        ]);
+
+        Log::info('Event updated successfully with ID: ' . $event->id . ' for barangay: ' . $user->barangay_id);
+
+        return redirect()->route('sk-eventpage')->with('success', 'Event updated successfully!');
+
+    } catch (\Exception $e) {
+        Log::error('Error updating event: ' . $e->getMessage());
+        return back()->withInput()->with('error', 'Error updating event: ' . $e->getMessage());
+    }
+}
 }

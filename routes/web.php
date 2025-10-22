@@ -322,3 +322,6 @@ Route::get('/my-program-registrations', [ProgramController::class, 'getUserRegis
 Route::get('/youth-program-registration/{programId}/registrations', [YouthProgramRegistrationController::class, 'getProgramRegistrations'])
     ->name('youth-program-registration.registrations')
     ->middleware('auth');
+    
+Route::get('/events/{id}/edit', [EventController::class, 'edit'])->name('edit-event');
+Route::put('/events/{id}', [EventController::class, 'update'])->name('events.update');

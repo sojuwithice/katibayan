@@ -315,6 +315,13 @@
                     <span class="completed-badge">Completed</span>
                   @endif
                   
+                  <!-- View QR Code Button for Launched Events -->
+                  @if($event->is_launched && $currentStatus !== 'completed')
+                    <a href="{{ route('events.qr', $event->id) }}" class="view-qr-btn">
+                      <i class="fas fa-qrcode"></i> View QR
+                    </a>
+                  @endif
+                  
                   @if($currentStatus !== 'completed')
                     <a href="{{ route('edit-event', $event->id) }}" class="edit-btn">
                       Edit <i class="fa-solid fa-pen"></i>
@@ -385,6 +392,13 @@
                     <span class="completed-badge">Completed</span>
                   @endif
                   
+                  <!-- View QR Code Button for Launched Events -->
+                  @if($event->is_launched && $currentStatus !== 'completed')
+                    <a href="{{ route('events.qr', $event->id) }}" class="view-qr-btn">
+                      <i class="fas fa-qrcode"></i> View QR
+                    </a>
+                  @endif
+                  
                   @if($currentStatus !== 'completed')
                     <a href="{{ route('edit-event', $event->id) }}" class="edit-btn">
                       Edit <i class="fa-solid fa-pen"></i>
@@ -430,12 +444,9 @@
         </p>
         <div class="modal-actions">
           <a id="proceedPasscode" class="launch-btn" href="#">Generate QR & Passcode</a>
-
         </div>
       </div>
     </div>
-
-    
 
     <!-- Delete Confirmation Modal -->
     <div id="deleteModal" class="modal">
@@ -886,7 +897,7 @@
       }
     });
     
-  }); // End of DOMContentLoaded
+  }); 
 </script>
 
 

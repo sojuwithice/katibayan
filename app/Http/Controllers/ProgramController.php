@@ -180,11 +180,9 @@ class ProgramController extends Controller
         }
     }
 
-    /**
-     * Store program registration - COMPLETELY REWRITTEN TO FIX DATETIME ISSUES
-     */
+  
    /**
- * Store program registration - FIXED DATETIME PARSING
+ * Store program registration 
  */
 public function storeRegistration(Request $request): JsonResponse
 {

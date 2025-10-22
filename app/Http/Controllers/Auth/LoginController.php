@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Cache\RateLimiter;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 class LoginController extends Controller
 {
@@ -112,7 +113,7 @@ class LoginController extends Controller
      */
     protected function throttleKey(Request $request)
     {
-        return Str::lower($request->input('account_number')).'|'.$request->ip();
+        return Str::lower($request->input('account_number'));
     }
 
     /**
@@ -148,7 +149,10 @@ class LoginController extends Controller
      */
     protected function fireLockoutEvent(Request $request)
     {
-        // Optional: You can add custom lockout event here
+        Log::warning('Lockout: Too many login attempts.', [
+            'account_number' => $request->input('account_number'),
+            'ip_address' => $request->ip()
+        ]);
     }
 
     /**

@@ -3,38 +3,30 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self'; 
+        font-src 'self' https://fonts.gstatic.com; 
+        style-src 'self' https://fonts.googleapis.com https://cdnjs.cloudflare.com 'unsafe-inline';
+        script-src 'self' https://unpkg.com 'unsafe-inline';
+        img-src 'self' data:;
+        connect-src 'self';
+    ">
   <title>KatiBayan - Login</title>
   <link rel="stylesheet" href="{{ asset('css/login.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <style>
-    .lockout-message {
-      background: #f8d7da;
-      border: 1px solid #f5c6cb;
-      color: #721c24;
-      padding: 12px;
-      border-radius: 5px;
-      margin-bottom: 15px;
-      font-size: 0.9rem;
-    }
+  <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    .attempts-warning {
-      color: #856404;
-      background: #fff3cd;
-      padding: 10px;
-      border-radius: 4px;
-      font-size: 0.9rem;
-      margin-bottom: 10px;
-      border: 1px solid #ffeaa7;
-    }
-    
-    .disabled-field {
-      background-color: #f8f9fa;
-      cursor: not-allowed;
-      opacity: 0.7;
-    }
-  </style>
+ 
+  
 </head>
 <body>
 
