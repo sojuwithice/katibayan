@@ -16,6 +16,7 @@
     window.populationData = <?php echo json_encode($populationData ?? []); ?>;
     window.ageGroupData = <?php echo json_encode($ageGroupData ?? []); ?>;
     window.remindersData = <?php echo json_encode($remindersData ?? []); ?>;
+    window.csrfToken = '{{ csrf_token() }}';
   </script>
 </head>
 <body>
@@ -99,37 +100,16 @@
 
         <!-- Notifications -->
         <div class="notification-wrapper">
-          <i class="fas fa-bell"></i>
-          <span class="notif-count">3</span>
+          <i class="fas fa-bell" id="notificationBell"></i>
+          <span class="notif-count" id="notificationCount">0</span>
           <div class="notif-dropdown">
             <div class="notif-header">
-              <strong>Notification</strong> <span>3</span>
+              <strong>Notifications</strong> 
+              <span id="notificationsHeaderCount">0</span>
+              <button class="mark-all-read" id="markAllRead">Mark all as read</button>
             </div>
-            <ul class="notif-list">
-              <li>
-                <div class="notif-icon"></div>
-                <div class="notif-content">
-                  <strong>Program Evaluation</strong>
-                  <p>We need evaluation for the KK-Assembly Event</p>
-                </div>
-                <span class="notif-dot"></span>
-              </li>
-              <li>
-                <div class="notif-icon"></div>
-                <div class="notif-content">
-                  <strong>Program Evaluation</strong>
-                  <p>We need evaluation for the KK-Assembly Event</p>
-                </div>
-                <span class="notif-dot"></span>
-              </li>
-              <li>
-                <div class="notif-icon"></div>
-                <div class="notif-content">
-                  <strong>Program Evaluation</strong>
-                  <p>We need evaluation for the KK-Assembly Event</p>
-                </div>
-                <span class="notif-dot"></span>
-              </li>
+            <ul class="notif-list" id="notificationsList">
+              <li class="notif-loading">Loading notifications...</li>
             </ul>
           </div>
         </div>
@@ -452,12 +432,10 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // === Submenus ===
-  // BAGO: Generic na code para sa lahat ng submenus
   const submenuTriggers = document.querySelectorAll('.nav-item > .nav-link');
 
   submenuTriggers.forEach(trigger => {
     trigger.addEventListener('click', (e) => {
-      // Para hindi mag-navigate sa ibang page pag-click ng link na may submenu
       e.preventDefault(); 
       
       const parentItem = trigger.closest('.nav-item');
@@ -475,8 +453,134 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
+  // === Notifications System ===
+  let notifications = [];
 
+  // Load notifications
+  async function loadNotifications() {
+      try {
+          const response = await fetch('{{ route("notifications.list") }}');
+          const data = await response.json();
+          
+          if (data.notifications) {
+              notifications = data.notifications;
+              updateNotificationUI();
+          }
+      } catch (error) {
+          console.error('Error loading notifications:', error);
+      }
+  }
 
+  // Update notification count
+  async function updateNotificationCount() {
+      try {
+          const response = await fetch('{{ route("notifications.count") }}');
+          const data = await response.json();
+          
+          const notifCount = document.getElementById('notificationCount');
+          const headerCount = document.getElementById('notificationsHeaderCount');
+          
+          if (notifCount) notifCount.textContent = data.count;
+          if (headerCount) headerCount.textContent = data.count;
+      } catch (error) {
+          console.error('Error updating notification count:', error);
+      }
+  }
+
+  // Update notifications UI
+  function updateNotificationUI() {
+      const notificationsList = document.getElementById('notificationsList');
+      if (!notificationsList) return;
+
+      if (notifications.length === 0) {
+          notificationsList.innerHTML = '<li class="no-notifications">No notifications</li>';
+          return;
+      }
+
+      notificationsList.innerHTML = notifications.map(notif => `
+          <li class="notification-item ${notif.is_read ? 'read' : 'unread'}" data-id="${notif.id}">
+              <div class="notif-icon">
+                  <i class="fas fa-star ${notif.is_read ? 'read' : 'unread'}"></i>
+              </div>
+              <div class="notif-content">
+                  <strong>${notif.message}</strong>
+                  <p>${notif.created_at}</p>
+              </div>
+              ${!notif.is_read ? '<span class="notif-dot"></span>' : ''}
+          </li>
+      `).join('');
+
+      // Add click events to notification items
+      document.querySelectorAll('.notification-item').forEach(item => {
+          item.addEventListener('click', async (e) => {
+              e.stopPropagation();
+              const notificationId = item.dataset.id;
+              
+              // Mark as read
+              await markNotificationAsRead(notificationId);
+              
+              // Remove highlight immediately
+              item.classList.add('read');
+              item.classList.remove('unread');
+              const dot = item.querySelector('.notif-dot');
+              if (dot) dot.remove();
+              
+              // Update count
+              await updateNotificationCount();
+          });
+      });
+  }
+
+  // Mark notification as read
+  async function markNotificationAsRead(notificationId) {
+      try {
+          const response = await fetch(`/notifications/${notificationId}/read`, {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'X-CSRF-TOKEN': window.csrfToken
+              }
+          });
+          
+          const data = await response.json();
+          return data.success;
+      } catch (error) {
+          console.error('Error marking notification as read:', error);
+          return false;
+      }
+  }
+
+  // Mark all as read
+  async function markAllAsRead() {
+      try {
+          const response = await fetch('{{ route("notifications.read-all") }}', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'X-CSRF-TOKEN': window.csrfToken
+              }
+          });
+          
+          const data = await response.json();
+          if (data.success) {
+              // Update UI immediately
+              document.querySelectorAll('.notification-item').forEach(item => {
+                  item.classList.add('read');
+                  item.classList.remove('unread');
+                  const dot = item.querySelector('.notif-dot');
+                  if (dot) dot.remove();
+              });
+              
+              await updateNotificationCount();
+          }
+      } catch (error) {
+          console.error('Error marking all as read:', error);
+      }
+  }
+
+  // Initialize notifications
+  loadNotifications();
+  updateNotificationCount();
 
   // === Calendar ===
   const weekdays = ["MON","TUE","WED","THU","FRI","SAT","SUN"];
@@ -568,7 +672,7 @@ document.addEventListener("DOMContentLoaded", () => {
   updateTime();
   setInterval(updateTime, 60000);
 
-  // === Notifications ===
+  // === Notifications Toggle ===
   const notifWrapper = document.querySelector(".notification-wrapper");
   const profileWrapper = document.querySelector(".profile-wrapper");
   const profileToggle = document.getElementById("profileToggle");
@@ -599,7 +703,6 @@ document.addEventListener("DOMContentLoaded", () => {
   document.addEventListener("click", (e) => {
     if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
       sidebar.classList.remove('open');
-      profileItem?.classList.remove('open');
     }
     if (profileWrapper && !profileWrapper.contains(e.target)) profileWrapper.classList.remove('active');
     if (notifWrapper && !notifWrapper.contains(e.target)) notifWrapper.classList.remove('active');
@@ -607,6 +710,15 @@ document.addEventListener("DOMContentLoaded", () => {
     // Close options dropdown when clicking outside
     document.querySelectorAll('.options-dropdown').forEach(drop => drop.classList.remove('show'));
   });
+
+  // === Set up mark all as read button ===
+  const markAllReadBtn = document.getElementById('markAllRead');
+  if (markAllReadBtn) {
+      markAllReadBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          markAllAsRead();
+      });
+  }
 
   // === Load Reminders from Backend ===
   function loadReminders() {
@@ -928,6 +1040,12 @@ if (activitiesCtx) {
 
   // Load reminders when page loads
   loadReminders();
+
+  // Refresh notifications every 30 seconds
+  setInterval(() => {
+      loadNotifications();
+      updateNotificationCount();
+  }, 30000);
 
 document.querySelectorAll('.options-btn, .header-options').forEach(btn => {
   btn.addEventListener('click', (e) => {

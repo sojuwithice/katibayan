@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Event;
 use App\Models\Attendance;
 use App\Models\Evaluation;
+use App\Models\Notification;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -25,9 +27,9 @@ class EvaluationController extends Controller
             return redirect()->route('login');
         }
 
-        // Calculate role badge and age for the user
-        $roleBadge = $user && $user->role ? strtoupper($user->role) . '-Member' : 'GUEST';
-        $age = $user && $user->date_of_birth 
+        // Calculate role badge and age for the user - FIXED
+        $roleBadge = $user->role ? strtoupper($user->role) . '-Member' : 'GUEST';
+        $age = $user->date_of_birth 
             ? Carbon::parse($user->date_of_birth)->age 
             : 'N/A';
 
@@ -41,6 +43,10 @@ class EvaluationController extends Controller
     {
         $user = Auth::user();
         
+        if (!$user) {
+            abort(403, 'Unauthorized');
+        }
+
         // Get events that user attended
         $attendedEvents = Event::whereHas('attendances', function($query) use ($user) {
             $query->where('user_id', $user->id)
@@ -51,11 +57,11 @@ class EvaluationController extends Controller
         }])
         ->get();
 
-        // Calculate age if needed
-        $age = $user->birthday ? now()->diffInYears($user->birthday) : null;
-        
-        // Role badge
-        $roleBadge = $user->role ?? 'GUEST';
+        // Calculate role badge and age - FIXED
+        $roleBadge = $user->role ? strtoupper($user->role) . '-Member' : 'GUEST';
+        $age = $user->date_of_birth 
+            ? Carbon::parse($user->date_of_birth)->age 
+            : 'N/A';
 
         return view('evaluationpage', compact('attendedEvents', 'user', 'age', 'roleBadge'));
     }
@@ -109,6 +115,12 @@ class EvaluationController extends Controller
                 'submitted_at' => now(),
             ]);
 
+            // Get event details
+            $event = Event::find($validated['event_id']);
+            
+            // Create notifications for SK users in the same barangay
+            $this->createEvaluationNotification($user, $event, $evaluation);
+
             Log::info("Evaluation submitted for event {$validated['event_id']} by user {$user->id}");
 
             return response()->json([
@@ -122,6 +134,35 @@ class EvaluationController extends Controller
                 'success' => false,
                 'error' => 'Failed to submit evaluation'
             ], 500);
+        }
+    }
+
+    /**
+     * Create notification for SK users when KK evaluates an event
+     */
+    private function createEvaluationNotification($kkUser, $event, $evaluation)
+    {
+        try {
+         
+            $skUsers = User::where('barangay_id', $kkUser->barangay_id)
+                          ->where('role', 'sk')
+                          ->where('account_status', 'approved')
+                          ->get();
+
+            foreach ($skUsers as $skUser) {
+                Notification::create([
+                    'user_id' => $skUser->id,
+                    'evaluation_id' => $evaluation->id,
+                    'type' => 'evaluation_submitted',
+                    'message' => "{$kkUser->given_name} {$kkUser->last_name} evaluated the event \"{$event->title}\"",
+                    'is_read' => false,
+                ]);
+            }
+
+            Log::info("Created evaluation notifications for SK users in barangay {$kkUser->barangay_id}");
+
+        } catch (\Exception $e) {
+            Log::error('Error creating evaluation notification: ' . $e->getMessage());
         }
     }
 

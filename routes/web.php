@@ -32,6 +32,7 @@ use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\ProgramController; 
 use App\Http\Controllers\YouthProgramRegistrationController; 
 use App\Http\Controllers\YouthAssistanceController; 
+use App\Http\Controllers\NotificationController; 
 
 Route::get('/', function () {
     return view('landingpage');
@@ -325,3 +326,8 @@ Route::get('/youth-program-registration/{programId}/registrations', [YouthProgra
     
 Route::get('/events/{id}/edit', [EventController::class, 'edit'])->name('edit-event');
 Route::put('/events/{id}', [EventController::class, 'update'])->name('events.update');
+// Notifications
+Route::get('/notifications/count', [NotificationController::class, 'getUnreadCount'])->name('notifications.count');
+Route::get('/notifications', [NotificationController::class, 'getNotifications'])->name('notifications.list');
+Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
