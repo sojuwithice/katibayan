@@ -10,59 +10,76 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+  <!-- Pass PHP data to JavaScript -->
+  <script>
+    window.demographicsData = <?php echo json_encode($demographicsData ?? []); ?>;
+    window.populationData = <?php echo json_encode($populationData ?? []); ?>;
+    window.ageGroupData = <?php echo json_encode($ageGroupData ?? []); ?>;
+    window.remindersData = <?php echo json_encode($remindersData ?? []); ?>;
+    window.csrfToken = '{{ csrf_token() }}';
+  </script>
 </head>
 <body>
   
   <!-- Sidebar -->
   <aside class="sidebar">
-    <button class="menu-toggle">Menu</button>
-    <div class="divider"></div>
-    <nav class="nav">
-      <a href="{{ route('sk.dashboard') }}" class="active">
-        <i data-lucide="layout-dashboard"></i>
-        <span class="label">Dashboard</span>
-      </a>
+  <button class="menu-toggle">Menu</button>
+  <div class="divider"></div>
+  <nav class="nav">
+    <a href="{{ route('sk.dashboard') }}" class="active">
+      <i data-lucide="layout-dashboard"></i>
+      <span class="label">Dashboard</span>
+    </a>
 
-      <a href="#">
-        <i data-lucide="chart-pie"></i>
-        <span class="label">Analytics</span>
-      </a>
+    <a href="#">
+      <i data-lucide="chart-pie"></i>
+      <span class="label">Analytics</span>
+    </a>
 
-      <a href="{{ route('youth-profilepage') }}">
-        <i data-lucide="users"></i>
-        <span class="label">Youth Profile</span>
-      </a>
+    <a href="{{ route('youth-profilepage') }}">
+      <i data-lucide="users"></i>
+      <span class="label">Youth Profile</span>
+    </a>
 
-      <a href="{{ route('sk-eventpage') }}" class="events-link">
+    <div class="nav-item">
+      <a href="#" class="nav-link">
         <i data-lucide="calendar"></i>
         <span class="label">Events and Programs</span>
+        <i data-lucide="chevron-down" class="submenu-arrow"></i>
       </a>
-
-      <div class="evaluation-item nav-item">
-        <a href="{{ route('sk-evaluation-feedback') }}" class="evaluation-link nav-link">
-          <i data-lucide="user-star"></i>
-          <span class="label">Evaluation</span>
-          <i data-lucide="chevron-down" class="submenu-arrow"></i>
-        </a>
-        <div class="submenu">
-          <a href="{{ route('sk-evaluation-feedback') }}">Feedbacks</a>
-          <a href="{{ route('sk-polls') }}">Polls</a>
-          <a href="{{ route('youth-suggestion') }}">Suggestion Box</a>
-        </div>
+      <div class="submenu">
+        <a href="{{ route('sk-eventpage') }}">Events List</a>
+        <a href="{{ route('youth-program-registration') }}">Youth Registration</a>
       </div>
+    </div>
 
-      <a href="#">
-        <i data-lucide="file-chart-column"></i>
-        <span class="label">Reports</span>
-      </a>
+    <a href="{{ route('sk-evaluation-feedback') }}">
+      <i data-lucide="message-square-quote"></i>
+      <span class="label">Feedbacks</span>
+    </a>
 
-      <a href="{{ route('serviceoffers') }}">
-        <i data-lucide="hand-heart"></i>
-        <span class="label">Service Offer</span>
-      </a>
+    <a href="{{ route('sk-polls') }}">
+      <i data-lucide="vote"></i>
+      <span class="label">Polls</span>
+    </a>
 
-    </nav>
-  </aside>
+    <a href="{{ route('youth-suggestion') }}">
+      <i data-lucide="lightbulb"></i>
+      <span class="label">Suggestion Box</span>
+    </a>
+    
+    <a href="{{ route('reports') }}">
+      <i data-lucide="file-chart-column"></i>
+      <span class="label">Reports</span>
+    </a>
+
+    <a href="{{ route('sk-services-offer') }}">
+      <i data-lucide="hand-heart"></i>
+      <span class="label">Service Offer</span>
+    </a>
+
+  </nav>
+</aside>
 
 
   <!-- Main -->
@@ -83,64 +100,34 @@
 
         <!-- Notifications -->
         <div class="notification-wrapper">
-          <i class="fas fa-bell"></i>
-          <span class="notif-count">3</span>
+          <i class="fas fa-bell" id="notificationBell"></i>
+          <span class="notif-count" id="notificationCount">0</span>
           <div class="notif-dropdown">
             <div class="notif-header">
-              <strong>Notification</strong> <span>3</span>
+              <strong>Notifications</strong> 
+              <span id="notificationsHeaderCount">0</span>
+              <button class="mark-all-read" id="markAllRead">Mark all as read</button>
             </div>
-            <ul class="notif-list">
-              <li>
-                <div class="notif-icon"></div>
-                <div class="notif-content">
-                  <strong>Program Evaluation</strong>
-                  <p>We need evaluation for the KK-Assembly Event</p>
-                </div>
-                <span class="notif-dot"></span>
-              </li>
-              <li>
-                <div class="notif-icon"></div>
-                <div class="notif-content">
-                  <strong>Program Evaluation</strong>
-                  <p>We need evaluation for the KK-Assembly Event</p>
-                </div>
-                <span class="notif-dot"></span>
-              </li>
-              <li>
-                <div class="notif-icon"></div>
-                <div class="notif-content">
-                  <strong>Program Evaluation</strong>
-                  <p>We need evaluation for the KK-Assembly Event</p>
-                </div>
-                <span class="notif-dot"></span>
-              </li>
+            <ul class="notif-list" id="notificationsList">
+              <li class="notif-loading">Loading notifications...</li>
             </ul>
           </div>
         </div>
 
         <!-- Profile Avatar -->
         <div class="profile-wrapper">
-          <img src="https://i.pravatar.cc/80" alt="User" class="avatar" id="profileToggle">
+          <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+               alt="User" class="avatar" id="profileToggle">
           <div class="profile-dropdown">
             <div class="profile-header">
-              <img src="https://i.pravatar.cc/80" alt="User" class="profile-avatar">
+              <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+                   alt="User" class="profile-avatar">
               <div class="profile-info">
-                <h4>
-                {{ Auth::user()->given_name ?? '' }}
-                {{ Auth::user()->middle_name ?? '' }}
-                {{ Auth::user()->last_name ?? '' }}
-                {{ Auth::user()->suffix ?? '' }}
-              </h4>
-
-              <div class="profile-badge">
-                <span class="badge">
-                  {{ Auth::user()->role === 'sk' ? 'SK Official' : (Auth::user()->role === 'kk' ? 'KK Member' : ucfirst(Auth::user()->role)) }}
-                </span>
-                <span class="badge">
-                  {{ Auth::user()->date_of_birth ? \Carbon\Carbon::parse(Auth::user()->date_of_birth)->age : 'N/A' }} yrs old
-                </span>
-              </div>
-
+                <h4>{{ $user->given_name }} {{ $user->middle_name }} {{ $user->last_name }} {{ $user->suffix }}</h4>
+                <div class="profile-badge">
+                  <span class="badge">{{ $roleBadge }}</span>
+                  <span class="badge">{{ $age }} yrs old</span>
+                </div>
               </div>
             </div>
             <hr>
@@ -159,17 +146,15 @@
               <li><i class="fas fa-star"></i> Send Feedback to Katibayan</li>
               <li class="logout-item">
                 <a href="loginpage" onclick="confirmLogout(event)">
-                    <i class="fas fa-sign-out-alt"></i> Logout
+                  <i class="fas fa-sign-out-alt"></i> Logout
                 </a>
-            </li>
-        </ul>
-        
-        <!-- Hidden Logout Form -->
-        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-            @csrf
-        </form>
-            </li>
+              </li>
             </ul>
+            
+            <!-- Hidden Logout Form -->
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+              @csrf
+            </form>
           </div>
         </div>
       </div>
@@ -387,45 +372,42 @@
   <!-- Today Section -->
   <div class="reminders-section">
     <h4 class="section-label">Today</h4>
-    <div class="reminder-item">
-      <div class="reminder-date">08/09/2025</div>
-      <div class="reminder-text">
-        Event Today: International Day Against Drug Abuse and Illicit Trafficking
-      </div>
+    <div id="todayReminders">
+      <!-- Today's events will be loaded here dynamically -->
+      <div class="no-reminders">No events for today</div>
     </div>
   </div>
 
   <!-- Upcoming Section -->
   <div class="reminders-section">
     <h4 class="section-label">Upcoming</h4>
-    <div class="reminder-item">
-      <div class="reminder-date">08/09/2025</div>
-      <div class="reminder-text">
-        Event Today: International Day Against Drug Abuse and Illicit Trafficking
-      </div>
+    <div id="upcomingReminders">
+      <!-- Upcoming events will be loaded here dynamically -->
+      <div class="no-reminders">No upcoming events</div>
+    </div>
   </div>
 </div>
-</div>
+
 <!-- Youth Population -->
 <div class="youth-population card">
   <h3 class="population-title">Youth Population</h3>
   <div class="population-chart">
     <canvas id="populationChart"></canvas>
     <div class="population-center">
-      <span class="population-total">600</span>
-      <p>Overall population of the barangay</p>
+      <span class="population-total" id="populationTotal">0</span>
+      <p>Youth population in your barangay</p>
     </div>
   </div>
 
   <div class="population-legend">
     <div class="legend-item">
       <span>Female</span>
-      <span>390</span>
+      <span id="femaleCount">0</span>
       <span class="dot female"></span>
     </div>
     <div class="legend-item">
       <span>Male</span>
-      <span>200</span>
+      <span id="maleCount">0</span>
       <span class="dot male"></span>
     </div>
   </div>
@@ -434,55 +416,171 @@
   </div>
 </div>
 
-
-
-
-
-
-
-
-
-
-
-
 <script>
 document.addEventListener("DOMContentLoaded", () => {
   // === Lucide icons + sidebar toggle ===
   lucide.createIcons();
+  
   const menuToggle = document.querySelector('.menu-toggle');
   const sidebar = document.querySelector('.sidebar');
-  const profileItem = document.querySelector('.profile-item');
-  const profileLink = document.querySelector('.profile-link');
-  const eventsItem = document.querySelector('.events-item');
-  const eventsLink = document.querySelector('.events-link');
 
   if (menuToggle && sidebar) {
     menuToggle.addEventListener('click', (e) => {
       e.stopPropagation();
       sidebar.classList.toggle('open');
-      if (!sidebar.classList.contains('open')) {
-        profileItem?.classList.remove('open'); 
-      }
     });
   }
 
-  
-
   // === Submenus ===
-const evaluationItem = document.querySelector('.evaluation-item');
-const evaluationLink = document.querySelector('.evaluation-link');
+  const submenuTriggers = document.querySelectorAll('.nav-item > .nav-link');
 
-evaluationLink?.addEventListener('click', (e) => {
-  e.preventDefault();
+  submenuTriggers.forEach(trigger => {
+    trigger.addEventListener('click', (e) => {
+      e.preventDefault(); 
+      
+      const parentItem = trigger.closest('.nav-item');
+      const wasOpen = parentItem.classList.contains('open');
 
-  const isOpen = evaluationItem.classList.contains('open');
-  evaluationItem.classList.remove('open');
+      // Isara muna lahat ng ibang bukas na submenu
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('open');
+      });
 
-  if (!isOpen) {
-    evaluationItem.classList.add('open');
+      // Kung hindi pa bukas yung pinindot mo, buksan mo siya.
+      if (!wasOpen) {
+        parentItem.classList.add('open');
+      }
+    });
+  });
+
+  // === Notifications System ===
+  let notifications = [];
+
+  // Load notifications
+  async function loadNotifications() {
+      try {
+          const response = await fetch('{{ route("notifications.list") }}');
+          const data = await response.json();
+          
+          if (data.notifications) {
+              notifications = data.notifications;
+              updateNotificationUI();
+          }
+      } catch (error) {
+          console.error('Error loading notifications:', error);
+      }
   }
-});
 
+  // Update notification count
+  async function updateNotificationCount() {
+      try {
+          const response = await fetch('{{ route("notifications.count") }}');
+          const data = await response.json();
+          
+          const notifCount = document.getElementById('notificationCount');
+          const headerCount = document.getElementById('notificationsHeaderCount');
+          
+          if (notifCount) notifCount.textContent = data.count;
+          if (headerCount) headerCount.textContent = data.count;
+      } catch (error) {
+          console.error('Error updating notification count:', error);
+      }
+  }
+
+  // Update notifications UI
+  function updateNotificationUI() {
+      const notificationsList = document.getElementById('notificationsList');
+      if (!notificationsList) return;
+
+      if (notifications.length === 0) {
+          notificationsList.innerHTML = '<li class="no-notifications">No notifications</li>';
+          return;
+      }
+
+      notificationsList.innerHTML = notifications.map(notif => `
+          <li class="notification-item ${notif.is_read ? 'read' : 'unread'}" data-id="${notif.id}">
+              <div class="notif-icon">
+                  <i class="fas fa-star ${notif.is_read ? 'read' : 'unread'}"></i>
+              </div>
+              <div class="notif-content">
+                  <strong>${notif.message}</strong>
+                  <p>${notif.created_at}</p>
+              </div>
+              ${!notif.is_read ? '<span class="notif-dot"></span>' : ''}
+          </li>
+      `).join('');
+
+      // Add click events to notification items
+      document.querySelectorAll('.notification-item').forEach(item => {
+          item.addEventListener('click', async (e) => {
+              e.stopPropagation();
+              const notificationId = item.dataset.id;
+              
+              // Mark as read
+              await markNotificationAsRead(notificationId);
+              
+              // Remove highlight immediately
+              item.classList.add('read');
+              item.classList.remove('unread');
+              const dot = item.querySelector('.notif-dot');
+              if (dot) dot.remove();
+              
+              // Update count
+              await updateNotificationCount();
+          });
+      });
+  }
+
+  // Mark notification as read
+  async function markNotificationAsRead(notificationId) {
+      try {
+          const response = await fetch(`/notifications/${notificationId}/read`, {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'X-CSRF-TOKEN': window.csrfToken
+              }
+          });
+          
+          const data = await response.json();
+          return data.success;
+      } catch (error) {
+          console.error('Error marking notification as read:', error);
+          return false;
+      }
+  }
+
+  // Mark all as read
+  async function markAllAsRead() {
+      try {
+          const response = await fetch('{{ route("notifications.read-all") }}', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'X-CSRF-TOKEN': window.csrfToken
+              }
+          });
+          
+          const data = await response.json();
+          if (data.success) {
+              // Update UI immediately
+              document.querySelectorAll('.notification-item').forEach(item => {
+                  item.classList.add('read');
+                  item.classList.remove('unread');
+                  const dot = item.querySelector('.notif-dot');
+                  if (dot) dot.remove();
+              });
+              
+              await updateNotificationCount();
+          }
+      } catch (error) {
+          console.error('Error marking all as read:', error);
+      }
+  }
+
+  // Initialize notifications
+  loadNotifications();
+  updateNotificationCount();
 
   // === Calendar ===
   const weekdays = ["MON","TUE","WED","THU","FRI","SAT","SUN"];
@@ -574,7 +672,7 @@ evaluationLink?.addEventListener('click', (e) => {
   updateTime();
   setInterval(updateTime, 60000);
 
-  // === Notifications ===
+  // === Notifications Toggle ===
   const notifWrapper = document.querySelector(".notification-wrapper");
   const profileWrapper = document.querySelector(".profile-wrapper");
   const profileToggle = document.getElementById("profileToggle");
@@ -605,7 +703,6 @@ evaluationLink?.addEventListener('click', (e) => {
   document.addEventListener("click", (e) => {
     if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
       sidebar.classList.remove('open');
-      profileItem?.classList.remove('open');
     }
     if (profileWrapper && !profileWrapper.contains(e.target)) profileWrapper.classList.remove('active');
     if (notifWrapper && !notifWrapper.contains(e.target)) notifWrapper.classList.remove('active');
@@ -613,6 +710,84 @@ evaluationLink?.addEventListener('click', (e) => {
     // Close options dropdown when clicking outside
     document.querySelectorAll('.options-dropdown').forEach(drop => drop.classList.remove('show'));
   });
+
+  // === Set up mark all as read button ===
+  const markAllReadBtn = document.getElementById('markAllRead');
+  if (markAllReadBtn) {
+      markAllReadBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          markAllAsRead();
+      });
+  }
+
+  // === Load Reminders from Backend ===
+  function loadReminders() {
+    const remindersData = window.remindersData || {};
+    const todayEvents = remindersData.today || [];
+    const upcomingEvents = remindersData.upcoming || [];
+
+    // Load Today's Events
+    const todayContainer = document.getElementById('todayReminders');
+    if (todayEvents.length > 0) {
+      todayContainer.innerHTML = '';
+      todayEvents.forEach(event => {
+        const reminderItem = createReminderItem(event, 'today');
+        todayContainer.appendChild(reminderItem);
+      });
+    } else {
+      todayContainer.innerHTML = '<div class="no-reminders">No events for today</div>';
+    }
+
+    // Load Upcoming Events
+    const upcomingContainer = document.getElementById('upcomingReminders');
+    if (upcomingEvents.length > 0) {
+      upcomingContainer.innerHTML = '';
+      upcomingEvents.forEach(event => {
+        const reminderItem = createReminderItem(event, 'upcoming');
+        upcomingContainer.appendChild(reminderItem);
+      });
+    } else {
+      upcomingContainer.innerHTML = '<div class="no-reminders">No upcoming events</div>';
+    }
+  }
+
+  // Function to create reminder item
+  function createReminderItem(event, type) {
+    const reminderItem = document.createElement('div');
+    reminderItem.className = 'reminder-item';
+    reminderItem.setAttribute('data-event-id', event.id);
+    
+    const categoryClass = event.category ? `category-${event.category.replace('_', '-')}` : '';
+    
+    reminderItem.innerHTML = `
+      <div class="reminder-date ${categoryClass}">${event.date}</div>
+      <div class="reminder-text">
+        <strong>${event.title}</strong>
+        <p>${event.full_date_time} • ${event.location}</p>
+        ${event.category ? `<span class="event-category-badge">${formatCategory(event.category)}</span>` : ''}
+      </div>
+    `;
+
+    // Add click event to navigate to events page
+    reminderItem.style.cursor = 'pointer';
+    reminderItem.addEventListener('click', () => {
+      window.location.href = "{{ route('sk-eventpage') }}";
+    });
+
+    return reminderItem;
+  }
+
+  // Format category for display
+  function formatCategory(category) {
+    const categoryMap = {
+      'active_citizenship': 'Active Citizenship',
+      'economic_empowerment': 'Economic Empowerment',
+      'education': 'Education',
+      'health': 'Health',
+      'sports': 'Sports'
+    };
+    return categoryMap[category] || category.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+  }
 
   // === Highlight Holidays in Events ===
   document.querySelectorAll('.events li').forEach(eventItem => {
@@ -707,23 +882,45 @@ if (activitiesCtx) {
   });
 }
 
-
   // === Youth Demographics Chart ===
   const demoCtx = document.getElementById('demographicsChart')?.getContext('2d');
   if (demoCtx) {
+    // Get data from window object
+    const demographicsData = window.demographicsData || {};
+    
+    console.log('Demographics Data:', demographicsData);
+    
+    // Use actual data from database
+    const labels = demographicsData.labels || [
+      'In-School Youth',
+      'Out-of-School Youth',
+      'Working Youth',
+      'Person with disabilities',
+      'Indigenous'
+    ];
+    
+    const maleData = demographicsData.male_data || [0, 0, 0, 0, 0];
+    const femaleData = demographicsData.female_data || [0, 0, 0, 0, 0];
+
     new Chart(demoCtx, {
       type: 'bar',
       data: {
-        labels: [
-          'In-school Youth',
-          'Out of school Youth',
-          'Working Youth',
-          'Person with disabilities',
-          'Indigenous'
-        ],
+        labels: labels,
         datasets: [
-          { label: 'Male', data: [200, 110, 50, 30, 10], backgroundColor: '#3C87C6' },
-          { label: 'Female', data: [170, 90, 40, 20, 15], backgroundColor: '#E96BA8' }
+          { 
+            label: 'Male', 
+            data: maleData, 
+            backgroundColor: '#3C87C6',
+            barPercentage: 0.6,
+            categoryPercentage: 0.8
+          },
+          { 
+            label: 'Female', 
+            data: femaleData, 
+            backgroundColor: '#E96BA8',
+            barPercentage: 0.6,
+            categoryPercentage: 0.8
+          }
         ]
       },
       options: {
@@ -731,12 +928,45 @@ if (activitiesCtx) {
         maintainAspectRatio: false,
         indexAxis: 'y', 
         scales: {
-          x: { beginAtZero: true, grid: { drawBorder: false } },
-          y: { ticks: { color: '#01214A', font: { weight: 600 } }, grid: { display: false } }
+          x: { 
+            beginAtZero: true, 
+            grid: { 
+              drawBorder: false,
+              color: "rgba(0,0,0,0.1)"
+            },
+            ticks: {
+              color: '#01214A',
+              font: {
+                size: 11
+              }
+            }
+          },
+          y: { 
+            ticks: { 
+              color: '#01214A', 
+              font: { 
+                weight: 600,
+                size: 11
+              } 
+            }, 
+            grid: { 
+              display: false 
+            } 
+          }
         },
         plugins: {
           legend: { display: false },
-          title: { display: false }
+          title: { display: false },
+          tooltip: {
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            titleFont: { size: 12 },
+            bodyFont: { size: 11 },
+            callbacks: {
+              label: function(context) {
+                return `${context.dataset.label}: ${context.raw} youth`;
+              }
+            }
+          }
         }
       }
     });
@@ -745,13 +975,21 @@ if (activitiesCtx) {
   // === Youth Age Chart ===
   const ageCtx = document.getElementById('ageChart')?.getContext('2d');
   if (ageCtx) {
+    // Get age group data from window object - FILTERED BY SAME BARANGAY
+    const ageGroupData = window.ageGroupData || {};
+    const childCount = ageGroupData.child_count || 0;
+    const coreCount = ageGroupData.core_count || 0;
+    const adultCount = ageGroupData.adult_count || 0;
+    
+    console.log('Age Group Data:', ageGroupData);
+    
     new Chart(ageCtx, {
       type: 'pie',
       data: {
         labels: ["Child Youth 15-17", "Core Youth 18-24", "Adult Youth 25-30"],
         datasets: [{
           label: "Age Group",
-          data: [120, 250, 180], 
+          data: [childCount, coreCount, adultCount], 
           backgroundColor: ["#FFCA3A", "#3C87C6", "#8AC926"],
           borderWidth: 1,
           borderColor: "#fff"
@@ -765,25 +1003,49 @@ if (activitiesCtx) {
   }
 
   // === Youth Population Chart ===
-  const ctx = document.getElementById('populationChart').getContext('2d');
-  new Chart(ctx, {
-    type: 'doughnut',
-    data: {
-      labels: ['Female', 'Male'],
-      datasets: [{
-        data: [390, 200],
-        backgroundColor: ['#f48fb1', '#114B8C'],
-        borderWidth: 0,
-        cutout: '70%' 
-      }]
-    },
-    options: {
-      plugins: {
-        legend: { display: false }, 
-        tooltip: { enabled: true }
+  const populationChart = document.getElementById('populationChart');
+  if (populationChart) {
+    const ctx = populationChart.getContext('2d');
+    
+    // Get population data from window object - FILTERED BY SAME BARANGAY
+    const populationData = window.populationData || {};
+    const maleCount = populationData.male_count || 0;
+    const femaleCount = populationData.female_count || 0;
+    const totalCount = populationData.total_count || 0;
+    
+    // Update the population numbers in the HTML
+    document.getElementById('populationTotal').textContent = totalCount;
+    document.getElementById('maleCount').textContent = maleCount;
+    document.getElementById('femaleCount').textContent = femaleCount;
+    
+    new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Female', 'Male'],
+        datasets: [{
+          data: [femaleCount, maleCount],
+          backgroundColor: ['#f48fb1', '#114B8C'],
+          borderWidth: 0,
+          cutout: '70%' 
+        }]
+      },
+      options: {
+        plugins: {
+          legend: { display: false }, 
+          tooltip: { enabled: true }
+        }
       }
-    }
-  });
+    });
+  }
+
+  // Load reminders when page loads
+  loadReminders();
+
+  // Refresh notifications every 30 seconds
+  setInterval(() => {
+      loadNotifications();
+      updateNotificationCount();
+  }, 30000);
 
 document.querySelectorAll('.options-btn, .header-options').forEach(btn => {
   btn.addEventListener('click', (e) => {
@@ -809,11 +1071,5 @@ document.addEventListener('click', () => {
   
 });
 </script>
-
-
-
-
-
-
 </body>
 </html>

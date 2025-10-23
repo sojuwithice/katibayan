@@ -18,55 +18,65 @@
 <body>
   
   <!-- Sidebar -->
+  <!-- Sidebar -->
   <aside class="sidebar">
-    <button class="menu-toggle">Menu</button>
-    <div class="divider"></div>
-    <nav class="nav">
-      <a href="{{ route('sk.dashboard') }}">
-        <i data-lucide="layout-dashboard"></i>
-        <span class="label">Dashboard</span>
-      </a>
+  <button class="menu-toggle">Menu</button>
+  <div class="divider"></div>
+  <nav class="nav">
+    <a href="{{ route('sk.dashboard') }}">
+      <i data-lucide="layout-dashboard"></i>
+      <span class="label">Dashboard</span>
+    </a>
 
-      <a href="#">
-        <i data-lucide="chart-pie"></i>
-        <span class="label">Analytics</span>
-      </a>
+    <a href="#">
+      <i data-lucide="chart-pie"></i>
+      <span class="label">Analytics</span>
+    </a>
 
-      <a href="{{ route('youth-profilepage') }}" class="active">
-        <i data-lucide="users"></i>
-        <span class="label">Youth Profile</span>
-      </a>
+    <a href="{{ route('youth-profilepage') }}" class="active">
+      <i data-lucide="users"></i>
+      <span class="label">Youth Profile</span>
+    </a>
 
-      <a href="{{ route('sk-eventpage') }}" class="events-link">
+    <div class="nav-item">
+      <a href="#" class="nav-link">
         <i data-lucide="calendar"></i>
         <span class="label">Events and Programs</span>
+        <i data-lucide="chevron-down" class="submenu-arrow"></i>
       </a>
-
-      <div class="evaluation-item nav-item">
-        <a href="{{ route('sk-evaluation-feedback') }}" class="evaluation-link nav-link">
-          <i data-lucide="user-star"></i>
-          <span class="label">Evaluation</span>
-          <i data-lucide="chevron-down" class="submenu-arrow"></i>
-        </a>
-        <div class="submenu">
-          <a href="#">Feedbacks</a>
-          <a href="#">Polls</a>
-          <a href="#">Suggestion Box</a>
-        </div>
+      <div class="submenu">
+        <a href="{{ route('sk-eventpage') }}">Events List</a>
+        <a href="{{ route('youth-program-registration') }}">Youth Registration</a>
       </div>
+    </div>
 
-      <a href="#">
-        <i data-lucide="file-chart-column"></i>
-        <span class="label">Reports</span>
-      </a>
+    <a href="{{ route('sk-evaluation-feedback') }}">
+      <i data-lucide="message-square-quote"></i>
+      <span class="label">Feedbacks</span>
+    </a>
 
-      <a href="{{ route('serviceoffers') }}">
-        <i data-lucide="hand-heart"></i>
-        <span class="label">Service Offer</span>
-      </a>
+    <a href="{{ route('sk-polls') }}">
+      <i data-lucide="vote"></i>
+      <span class="label">Polls</span>
+    </a>
 
-    </nav>
-  </aside>
+    <a href="{{ route('youth-suggestion') }}">
+      <i data-lucide="lightbulb"></i>
+      <span class="label">Suggestion Box</span>
+    </a>
+    
+    <a href="{{ route('reports') }}">
+      <i data-lucide="file-chart-column"></i>
+      <span class="label">Reports</span>
+    </a>
+
+    <a href="{{ route('sk-services-offer') }}">
+      <i data-lucide="hand-heart"></i>
+      <span class="label">Service Offer</span>
+    </a>
+
+  </nav>
+</aside>
 
   <!-- Main -->
   <div class="main">
@@ -123,25 +133,17 @@
 
         <!-- Profile Avatar -->
         <div class="profile-wrapper">
-          @if(auth()->check() && auth()->user()->avatar)
-            <img src="{{ asset('storage/' . auth()->user()->avatar) }}" alt="User" class="avatar" id="profileToggle">
-          @else
-            <img src="https://i.pravatar.cc/80" alt="User" class="avatar" id="profileToggle">
-          @endif
+          <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+               alt="User" class="avatar" id="profileToggle">
           <div class="profile-dropdown">
             <div class="profile-header">
-              @if(auth()->check() && auth()->user()->avatar)
-                <img src="{{ asset('storage/' . auth()->user()->avatar) }}" alt="User" class="profile-avatar">
-              @else
-                <img src="https://i.pravatar.cc/80" alt="User" class="profile-avatar">
-              @endif
+              <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+                   alt="User" class="profile-avatar">
               <div class="profile-info">
-                <h4>{{ auth()->check() ? auth()->user()->given_name . ' ' . auth()->user()->last_name : 'Guest' }}</h4>
+                <h4>{{ $user->given_name }} {{ $user->middle_name ?? '' }} {{ $user->last_name }} {{ $user->suffix ?? '' }}</h4>
                 <div class="profile-badge">
-                  <span class="badge">{{ auth()->check() ? ucfirst(auth()->user()->role) : 'Guest' }}</span>
-                  @if(auth()->check() && auth()->user()->date_of_birth)
-                    <span class="badge">{{ \Carbon\Carbon::parse(auth()->user()->date_of_birth)->age }} yrs old</span>
-                  @endif
+                  <span class="badge">{{ $roleBadge }}</span>
+                  <span class="badge">{{ $age }} yrs old</span>
                 </div>
               </div>
             </div>
@@ -159,7 +161,17 @@
                 </a>
               </li>
               <li><i class="fas fa-star"></i> Send Feedback to Katibayan</li>
+              <li class="logout-item">
+                <a href="loginpage" onclick="confirmLogout(event)">
+                  <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+              </li>
             </ul>
+            
+            <!-- Hidden Logout Form -->
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+              @csrf
+            </form>
           </div>
         </div>
       </div>
@@ -200,7 +212,7 @@
         </a>
 
         <!-- Card 3 -->
-        <button class="btn">
+        <a href="{{ route('youth-assistance') }}" class="btn">
           <div class="content">
             <h3>Youth Assistance</h3>
             <div class="bottom-row">
@@ -210,6 +222,7 @@
               </span>
             </div>
           </div>
+        </a>
         </button>
       </div>
 
@@ -282,6 +295,16 @@
               </div>
             </div>
 
+            <!-- Role Filter -->
+            <div class="dropdown">
+              <button class="dropdown-btn">Role</button>
+              <div class="dropdown-content">
+                <a href="#" data-filter-column="19" data-filter="">All</a>
+                <a href="#" data-filter-column="19" data-filter="sk member">SK Member</a>
+                <a href="#" data-filter-column="19" data-filter="kk member">KK Member</a>
+              </div>
+            </div>
+
             <!-- Download Button -->
             <div class="dropdown">
               <button class="dropdown-btn"><i class="fas fa-download"></i> Download</button>
@@ -320,6 +343,7 @@
                 <th>Highest educational attainment</th>
                 <th>Work status</th>
                 <th>Registered voter</th>
+                <th>Role</th>
               </tr>
             </thead>
             <tbody>
@@ -353,10 +377,11 @@
                 <td>{{ $user->education }}</td>
                 <td>{{ $user->work_status }}</td>
                 <td>{{ $user->sk_voter }}</td>
+                <td>{{ $user->role === 'sk' ? 'SK Member' : 'KK Member' }}</td>
               </tr>
               @empty
               <tr>
-                <td colspan="19" style="text-align: center;">No youth profiles found.</td>
+                <td colspan="20" style="text-align: center;">No youth profiles found.</td>
               </tr>
               @endforelse
             </tbody>
@@ -368,39 +393,38 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      // === Lucide icons + sidebar toggle ===
-      lucide.createIcons();
-      const menuToggle = document.querySelector('.menu-toggle');
-      const sidebar = document.querySelector('.sidebar');
-      const profileItem = document.querySelector('.profile-item');
-      const profileLink = document.querySelector('.profile-link');
-      const eventsItem = document.querySelector('.events-item');
-      const eventsLink = document.querySelector('.events-link');
+  // === Lucide icons + sidebar toggle ===
+  lucide.createIcons();
+  
+  const menuToggle = document.querySelector('.menu-toggle');
+  const sidebar = document.querySelector('.sidebar');
 
-      if (menuToggle && sidebar) {
-        menuToggle.addEventListener('click', (e) => {
-          e.stopPropagation();
-          sidebar.classList.toggle('open');
-          if (!sidebar.classList.contains('open')) {
-            profileItem?.classList.remove('open'); 
-          }
-        });
-      }
+  if (menuToggle && sidebar) {
+    menuToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      sidebar.classList.toggle('open');
+    });
+  }
 
-      // === Submenus ===
-      const evaluationItem = document.querySelector('.evaluation-item');
-      const evaluationLink = document.querySelector('.evaluation-link');
+  // === Submenus ===
+  const submenuTriggers = document.querySelectorAll('.nav-item > .nav-link');
 
-      evaluationLink?.addEventListener('click', (e) => {
-        e.preventDefault();
+  submenuTriggers.forEach(trigger => {
+    trigger.addEventListener('click', (e) => {
+      e.preventDefault(); 
+      
+      const parentItem = trigger.closest('.nav-item');
+      const wasOpen = parentItem.classList.contains('open');
 
-        const isOpen = evaluationItem.classList.contains('open');
-        evaluationItem.classList.remove('open');
-
-        if (!isOpen) {
-          evaluationItem.classList.add('open');
-        }
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('open');
       });
+
+      if (!wasOpen) {
+        parentItem.classList.add('open');
+      }
+    });
+  });
 
       // === Calendar ===
       const weekdays = ["MON","TUE","WED","THU","FRI","SAT","SUN"];
@@ -836,6 +860,14 @@
             window.location.href = "/view-youth-profile/" + youthId;
           });
         });
+      }
+
+      // === Logout Confirmation ===
+      function confirmLogout(event) {
+        event.preventDefault();
+        if (confirm('Are you sure you want to logout?')) {
+          document.getElementById('logout-form').submit();
+        }
       }
     });
   </script>

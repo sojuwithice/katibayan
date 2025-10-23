@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Event;
 use App\Models\Evaluation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class SKEvaluationController extends Controller
 {
@@ -13,14 +15,28 @@ class SKEvaluationController extends Controller
      */
     public function index()
     {
-        $eventsWithEvaluations = Event::whereHas('evaluations')
+        $user = Auth::user();
+        
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        // Calculate age from date_of_birth
+        $age = $user->date_of_birth ? Carbon::parse($user->date_of_birth)->age : 'N/A';
+
+        // Determine role badge based on actual enum values
+        $roleBadge = $user->role === 'sk' ? 'SK Member' : 'KK Member';
+
+        // Get events from the same barangay as the logged in user that have evaluations
+        $eventsWithEvaluations = Event::where('barangay_id', $user->barangay_id)
+            ->whereHas('evaluations')
             ->withCount('evaluations')
             ->with(['evaluations' => function($query) {
                 $query->latest();
             }])
             ->get();
 
-        return view('sk-evaluation-feedback', compact('eventsWithEvaluations'));
+        return view('sk-evaluation-feedback', compact('eventsWithEvaluations', 'user', 'age', 'roleBadge'));
     }
 
     /**
@@ -28,9 +44,24 @@ class SKEvaluationController extends Controller
      */
     public function showReview($eventId)
     {
-        $event = Event::with(['evaluations.user', 'evaluations' => function($query) {
-            $query->latest();
-        }])->findOrFail($eventId);
+        $user = Auth::user();
+        
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        // Calculate age from date_of_birth
+        $age = $user->date_of_birth ? Carbon::parse($user->date_of_birth)->age : 'N/A';
+
+        // Determine role badge based on actual enum values
+        $roleBadge = $user->role === 'sk' ? 'SK Member' : 'KK Member';
+
+        // Get event from the same barangay as the logged in user
+        $event = Event::where('barangay_id', $user->barangay_id)
+            ->with(['evaluations.user', 'evaluations' => function($query) {
+                $query->latest();
+            }])
+            ->findOrFail($eventId);
 
         // Calculate statistics
         $totalEvaluations = $event->evaluations->count();
@@ -61,7 +92,10 @@ class SKEvaluationController extends Controller
             'totalEvaluations', 
             'averageRatings', 
             'overallAverage',
-            'ratingDistribution'
+            'ratingDistribution',
+            'user', 
+            'age', 
+            'roleBadge'
         ));
     }
 }

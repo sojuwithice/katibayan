@@ -5,12 +5,37 @@ namespace App\Http\Controllers;
 use App\Models\Event;
 use App\Models\Attendance;
 use App\Models\Evaluation;
+use App\Models\Notification;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon;
 
 class EvaluationController extends Controller
 {
+    /**
+     * Show certificate page
+     */
+    public function certificatePage()
+    {
+        $user = Auth::user();
+        
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        // Calculate role badge and age for the user - FIXED
+        $roleBadge = $user->role ? strtoupper($user->role) . '-Member' : 'GUEST';
+        $age = $user->date_of_birth 
+            ? Carbon::parse($user->date_of_birth)->age 
+            : 'N/A';
+
+        return view('certificatepage', compact('user', 'roleBadge', 'age'));
+    }
+
     /**
      * Show evaluation page with attended events
      */
@@ -18,6 +43,10 @@ class EvaluationController extends Controller
     {
         $user = Auth::user();
         
+        if (!$user) {
+            abort(403, 'Unauthorized');
+        }
+
         // Get events that user attended
         $attendedEvents = Event::whereHas('attendances', function($query) use ($user) {
             $query->where('user_id', $user->id)
@@ -28,11 +57,11 @@ class EvaluationController extends Controller
         }])
         ->get();
 
-        // Calculate age if needed
-        $age = $user->birthday ? now()->diffInYears($user->birthday) : null;
-        
-        // Role badge
-        $roleBadge = $user->role ?? 'GUEST';
+        // Calculate role badge and age - FIXED
+        $roleBadge = $user->role ? strtoupper($user->role) . '-Member' : 'GUEST';
+        $age = $user->date_of_birth 
+            ? Carbon::parse($user->date_of_birth)->age 
+            : 'N/A';
 
         return view('evaluationpage', compact('attendedEvents', 'user', 'age', 'roleBadge'));
     }
@@ -86,6 +115,12 @@ class EvaluationController extends Controller
                 'submitted_at' => now(),
             ]);
 
+            // Get event details
+            $event = Event::find($validated['event_id']);
+            
+            // Create notifications for SK users in the same barangay
+            $this->createEvaluationNotification($user, $event, $evaluation);
+
             Log::info("Evaluation submitted for event {$validated['event_id']} by user {$user->id}");
 
             return response()->json([
@@ -99,6 +134,35 @@ class EvaluationController extends Controller
                 'success' => false,
                 'error' => 'Failed to submit evaluation'
             ], 500);
+        }
+    }
+
+    /**
+     * Create notification for SK users when KK evaluates an event
+     */
+    private function createEvaluationNotification($kkUser, $event, $evaluation)
+    {
+        try {
+         
+            $skUsers = User::where('barangay_id', $kkUser->barangay_id)
+                          ->where('role', 'sk')
+                          ->where('account_status', 'approved')
+                          ->get();
+
+            foreach ($skUsers as $skUser) {
+                Notification::create([
+                    'user_id' => $skUser->id,
+                    'evaluation_id' => $evaluation->id,
+                    'type' => 'evaluation_submitted',
+                    'message' => "{$kkUser->given_name} {$kkUser->last_name} evaluated the event \"{$event->title}\"",
+                    'is_read' => false,
+                ]);
+            }
+
+            Log::info("Created evaluation notifications for SK users in barangay {$kkUser->barangay_id}");
+
+        } catch (\Exception $e) {
+            Log::error('Error creating evaluation notification: ' . $e->getMessage());
         }
     }
 
@@ -121,6 +185,91 @@ class EvaluationController extends Controller
         } catch (\Exception $e) {
             Log::error('Error checking evaluation: ' . $e->getMessage());
             return response()->json(['evaluated' => false]);
+        }
+    }
+
+    /**
+     * Get certificates for evaluated events
+     */
+    public function getCertificates(): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            
+            Log::info("Fetching certificates for user: {$user->id}, Barangay: {$user->barangay_id}");
+
+            // Get events that user has evaluated
+            $evaluatedEvents = Event::whereHas('evaluations', function($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })
+            ->with(['evaluations' => function($query) use ($user) {
+                $query->where('user_id', $user->id)
+                      ->select('id', 'event_id', 'submitted_at', 'created_at');
+            }])
+            ->where('barangay_id', $user->barangay_id)
+            ->orderBy('event_date', 'desc')
+            ->get()
+            ->map(function ($event) {
+                $evaluation = $event->evaluations->first();
+                
+                // Safely handle event_date
+                $eventDate = 'Date not available';
+                if ($event->event_date) {
+                    try {
+                        $eventDate = $event->event_date instanceof Carbon 
+                            ? $event->event_date->format('F d, Y')
+                            : Carbon::parse($event->event_date)->format('F d, Y');
+                    } catch (\Exception $e) {
+                        Log::error("Error parsing event date for event {$event->id}: " . $e->getMessage());
+                    }
+                }
+                
+                // Safely handle evaluated_at
+                $evaluatedAt = $evaluation->submitted_at ?? $evaluation->created_at ?? now();
+                $evaluationDate = $evaluatedAt instanceof Carbon 
+                    ? $evaluatedAt->format('F d, Y')
+                    : Carbon::parse($evaluatedAt)->format('F d, Y');
+                
+                // Build image URL safely
+                $eventImage = null;
+                if ($event->image) {
+                    try {
+                        if (Storage::disk('public')->exists($event->image)) {
+                            $eventImage = asset('storage/' . $event->image);
+                        } else {
+                            Log::warning("Event image not found: " . $event->image);
+                        }
+                    } catch (\Exception $e) {
+                        Log::error("Error generating image URL for event {$event->id}: " . $e->getMessage());
+                    }
+                }
+
+                return [
+                    'event_id' => $event->id,
+                    'event_title' => $event->title,
+                    'event_date' => $eventDate,
+                    'event_image' => $eventImage,
+                    'evaluated_at' => $evaluatedAt,
+                    'evaluation_date' => $evaluationDate
+                ];
+            });
+
+            Log::info("Found {$evaluatedEvents->count()} certificates for user {$user->id}");
+
+            return response()->json([
+                'success' => true,
+                'certificates' => $evaluatedEvents,
+                'total_count' => $evaluatedEvents->count()
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error fetching certificates: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to load certificates',
+                'message' => $e->getMessage()
+            ], 500);
         }
     }
 }

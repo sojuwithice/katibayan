@@ -8,6 +8,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+
 </head>
 <body>
   
@@ -162,29 +164,7 @@
       <p class="note">This will mark your attendance in the program.</p>
     </div>
 
-    <!-- Attendance Records Section -->
-    <section class="attendance-records">
-      <h2>My Attendance Records</h2>
-      <div class="records-container">
-        <table class="attendance-table">
-          <thead>
-            <tr>
-              <th>Event Name</th>
-              <th>Event Date</th>
-              <th>Event Time</th>
-              <th>Location</th>
-              <th>Attended At</th>
-            </tr>
-          </thead>
-          <tbody id="attendanceRecordsBody">
-            <tr>
-              <td colspan="5" class="loading-text">Loading attendance records...</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
+  
     <!-- Success Modal -->
     <div id="successModal" class="modal">
       <div class="modal-content">
@@ -415,30 +395,34 @@
 
       // === Attendance Function ===
       async function markAttendance(passcode) {
-        try {
-          const response = await fetch("{{ route('attendance.mark') }}", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "X-CSRF-TOKEN": "{{ csrf_token() }}"
-            },
-            body: JSON.stringify({ passcode: passcode })
-          });
+  try {
+    const response = await fetch('/attendance/mark', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+      },
+      body: JSON.stringify({ passcode })
+    });
 
-          const data = await response.json();
+    const data = await response.json();
 
-          if (data.success) {
-            showSuccessModal(data.event);
-            manualInput.value = ''; // Clear input
-            loadAttendanceRecords(); // Refresh records
-          } else {
-            showErrorModal(data.error || "Failed to mark attendance.");
-          }
-        } catch (error) {
-          console.error("Error marking attendance:", error);
-          showErrorModal("Network error. Please try again.");
-        }
-      }
+    if (data.success) {
+      showSuccessModal({
+        title: data.event?.title || '',
+        date: data.event?.date || '',
+        time: data.event?.time || ''
+      });
+    } else {
+      showErrorModal(data.error || data.message || 'Failed to mark attendance.');
+    }
+  } catch (err) {
+    console.error('Fetch error:', err);
+    showErrorModal('Network error. Please try again.');
+  }
+}
+
+
 
       // === Load Attendance Records ===
       async function loadAttendanceRecords() {

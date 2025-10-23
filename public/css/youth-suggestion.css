@@ -87,7 +87,6 @@ body {
   padding: 0.5rem 0;
 }
 
-
 /* Nav link label */
 .sidebar nav a .label {
   display: none;
@@ -150,23 +149,19 @@ body {
   gap: 0.5rem;
 }
 
-
 .submenu a.active {
   background: #fff;
   color: #1C6DD0;
 }
-
 
 .submenu a:hover {
   color: #FFB703;
   background: rgba(255, 255, 255, 0.2);
 }
 
-
 .sidebar.open .nav-item.open .submenu {
   display: flex;
 }
-
 
 .sidebar:not(.open) .submenu {
   display: none !important;
@@ -188,8 +183,6 @@ body {
   transform: rotate(180deg);
 }
 
-
-
 .menu-toggle {
   background: #fff;
   color: #1C6DD0;
@@ -210,11 +203,8 @@ body {
   transition: margin-left 0.3s ease;
   display: flex;
   flex-direction: column;
-  
   gap: 0;
 }
-
-
 
 /* Topbar */
 .topbar {
@@ -230,12 +220,9 @@ body {
   padding: 0.5rem 2rem;
   justify-content: space-between;
   z-index: 2000;       
-  
 }         
 
-
 /* Logo */
-/* === Logo Section === */
 .logo {
   display: flex;
   align-items: center;
@@ -272,7 +259,6 @@ body {
   margin-left: auto;   
 }
 
-
 /* Time Button */
 .topbar-right .time {
   display: inline-flex;          
@@ -290,11 +276,11 @@ body {
   white-space: nowrap;           
   max-width: 100%;               
 }
+
 .topbar-right .time span {
   color: #FFB703;
   font-weight: bold;
 }
-
 
 /* Bell + avatar */
 .topbar-right i {
@@ -332,7 +318,6 @@ body {
   display: block;
 }
 
-
 .profile-header {
   display: flex;
   align-items: center;
@@ -347,7 +332,6 @@ body {
   margin: 0;                  
 }
 
-
 .profile-avatar {
   width: 55px;
   height: 55px;
@@ -361,6 +345,7 @@ body {
   margin-bottom: .3rem;
 }
 
+/* === Profile Badges (Fixed) === */
 .profile-badge {
   display: inline-flex;
   align-items: center;
@@ -372,17 +357,27 @@ body {
   font-size: 11px;
   font-weight: 600;
   color: #fff;
+  margin-top: 0.3rem;
 }
 
-.profile-badge span {
+.profile-badge .badge {
+  position: static;
+  font-size: 11px;
+  font-weight: 600;
   padding: 3px 9px;
+  border-radius: 0;
+  text-transform: uppercase;
+  display: inline-block;
+  margin: 0;
+  background: transparent !important;
+  color: #fff !important;
+  top: auto;
+  right: auto;
 }
 
-.profile-badge span + span {
+.profile-badge .badge + .badge {
   border-left: 1px solid #F9CD55; 
 }
-
-
 
 .profile-menu {
   list-style: none;
@@ -452,7 +447,6 @@ body {
   flex-direction: column;
   overflow: hidden;
   z-index: 5000;
-
   opacity: 0;                 
   transform: translateY(-20px); 
   pointer-events: none;        
@@ -485,6 +479,7 @@ body {
   max-height: 300px;
   overflow-y: auto;
 }
+
 .notif-list li {
   display: flex;
   align-items: flex-start;
@@ -493,6 +488,7 @@ body {
   border-bottom: 1px solid #eee;
   position: relative;
 }
+
 .notif-list li:last-child {
   border-bottom: none;
 }
@@ -510,6 +506,7 @@ body {
   font-weight: 700;
   color: #114B8C;
 }
+
 .notif-content p {
   font-size: 13px;
   color: #444;
@@ -534,73 +531,72 @@ body {
 }
 
 /* --- Header Card --- */
-    .suggestions-card {
-      background: #fff;
-      padding: 1.5rem 2rem;
-      border-radius: 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 3px 8px rgba(0,0,0,0.08);
-      margin-bottom: 2rem;
-    }
+.suggestions-card {
+  background: #fff;
+  padding: 1.5rem 2rem;
+  border-radius: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+  margin-bottom: 2rem;
+}
 
-    .suggestions-card h2 {
-      margin: 0;
-      font-size: 2rem;
-      font-weight: 700;
-      color: #2b3a55;
-    }
+.suggestions-card h2 {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2b3a55;
+}
 
-    .total-suggestions {
-      display: flex;
-      align-items: center;
-      font-weight: 600;
-      color: #4776c8;
-      font-size: 1.3rem;
-    }
+.total-suggestions {
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  color: #4776c8;
+  font-size: 1.3rem;
+}
 
-    .total-suggestions span {
-      background: #fddc6c;
-      color: #2b3a55;
-      font-size: 1rem;
-      font-weight: 700;
-      border-radius: 50%;
-      width: 35px;
-      height: 35px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin-left: 0.5rem;
-    }
+.total-suggestions span {
+  background: #fddc6c;
+  color: #2b3a55;
+  font-size: 1rem;
+  font-weight: 700;
+  border-radius: 50%;
+  width: 35px;
+  height: 35px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-left: 0.5rem;
+}
 
-    /* --- Overview Card --- */
-    .overview-card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 1rem 2rem;
-      box-shadow: 0 3px 8px rgba(0,0,0,0.08);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 2rem;
-      border-left: 5px solid #3C87C4;
-    }
+/* --- Overview Card --- */
+.overview-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1rem 2rem;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  border-left: 5px solid #3C87C4;
+}
 
-    .overview-title {
-      font-weight: 700;
-      font-size: 2.3rem;
-      margin: 0;
-      flex: 1;
-    }
+.overview-title {
+  font-weight: 700;
+  font-size: 2.3rem;
+  margin: 0;
+  flex: 1;
+}
 
-    .chart-container {
-      flex: 2;
-      max-width: 600px;
-    }
+.chart-container {
+  flex: 2;
+  max-width: 600px;
+}
 
-
-    /* --- Main Section --- */
+/* --- Main Section --- */
 .suggestions-section {
   margin: 2rem 0;
   padding: 1rem 2rem;
@@ -678,14 +674,13 @@ body {
   margin-left: 6px;
   vertical-align: middle;
   cursor: pointer;
-  font-size: 10px; /* size ng icon */
+  font-size: 10px;
 }
 
 .icon-circle.rotate i {
   transform: rotate(180deg);
   transition: transform 0.3s ease;
 }
-
 
 /* Dropdown options */
 .dropdown-options {
@@ -738,7 +733,7 @@ body {
 
 .suggestion-card {
   display: flex;
-  align-items: flex-start; /* ✅ pantay sa taas */
+  align-items: flex-start;
   background: #fff;
   border: 2px solid #b7d0f5;
   border-radius: 16px;
@@ -763,12 +758,12 @@ body {
   flex-shrink: 0;
   border: 2px solid #5d8ac9;
   object-fit: cover;
-  align-self: flex-start; /* ✅ align sa taas ng card */
+  align-self: flex-start;
 }
 
 .suggestion-content {
   flex: 1;
-  margin-top: 0; /* ✅ tanggalin na yung 1rem para pantay sa avatar */
+  margin-top: 0;
 }
 
 .suggestion-content h5 {
@@ -791,8 +786,8 @@ body {
   line-height: 1.5;
 }
 
-/* --- Badge sa upper right --- */
-.badge {
+/* === Suggestion Card Badges === */
+.suggestion-card .badge {
   position: absolute;
   top: 10px;
   right: 12px;
@@ -803,17 +798,17 @@ body {
   text-transform: uppercase;
 }
 
-.badge.event {
+.suggestion-card .badge.event {
   background-color: #d7e9d0;
   color: #3a6b2d;
 }
 
-.badge.program {
+.suggestion-card .badge.program {
   background-color: #d0e3f5;
   color: #235c96;
 }
 
-.badge.other {
+.suggestion-card .badge.other {
   background-color: #f4d8eb;
   color: #a13b75;
 }
@@ -821,23 +816,17 @@ body {
 /* --- Footer (date/time sa kanan) --- */
 .suggestion-footer {
   display: flex;
-  justify-content: flex-end; /* nasa kanan */
+  justify-content: flex-end;
   align-items: center;
   font-size: 0.85rem;
   color: #666;
-  margin-top: 10px; /* dagdag space sa ilalim ng badge */
+  margin-top: 10px;
 }
 
 /* Date/Time text */
 .date {
   text-align: right;
 }
-
-
-
-
-
-
 
 /* ===============================
    MAIN CONTENT RESPONSIVE
@@ -881,17 +870,11 @@ body {
     flex: 0 1 auto;
     white-space: nowrap;   
   }
-
-  
 }
-
 
 /* Mobile (<= 768px) */
 @media (max-width: 768px) {
-
-
-
-.sidebar {
+  .sidebar {
     width: calc(100% - 20px);
     height: 55px;
     min-height: auto !important;
@@ -936,14 +919,13 @@ body {
     border-radius: 50%;
   }
 
-
   .sidebar .menu-toggle,
   .sidebar .divider {
     display: none !important;
   }
 
   /* === TOPBAR === */
-.topbar {
+  .topbar {
     position: fixed;      
     top: 0;
     left: 0;
@@ -951,26 +933,26 @@ body {
     z-index: 1000;        
   }
 
-/* Left group = time, bell, avatar */
-.topbar-left {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
+  /* Left group = time, bell, avatar */
+  .topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
 
-.topbar-left .time {
-  font-size: 12px;
-}
+  .topbar-left .time {
+    font-size: 12px;
+  }
 
-.topbar-left .fa-bell {
-  font-size: 16px;
-}
+  .topbar-left .fa-bell {
+    font-size: 16px;
+  }
 
-.topbar-left .avatar {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-}
+  .topbar-left .avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+  }
 
   .notif-dropdown {
     position: fixed;
@@ -1001,7 +983,8 @@ body {
       opacity: 1;
     }
   }
-.main {
+
+  .main {
     margin-left: 0;
     padding: 1rem;
     padding-top: 80px;
@@ -1090,8 +1073,6 @@ body {
     height: 28px;
     font-size: 0.75rem;
   }
-
-  
 }  
 
 @media (max-width: 480px) {
@@ -1112,6 +1093,4 @@ body {
     font-size: 1rem;
     text-align: center;
   }
-
-  
 }

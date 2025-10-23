@@ -15,60 +15,69 @@
   <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
   <!-- Fixed QR Code library imports -->
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.6.0/lib/qr-code-styling.min.js"></script>
+  
 </head>
 <body>
   
   <!-- Sidebar -->
   <aside class="sidebar">
-    <button class="menu-toggle">Menu</button>
-    <div class="divider"></div>
-    <nav class="nav">
-      <a href="{{ route('sk.dashboard') }}">
-        <i data-lucide="layout-dashboard"></i>
-        <span class="label">Dashboard</span>
-      </a>
+  <button class="menu-toggle">Menu</button>
+  <div class="divider"></div>
+  <nav class="nav">
+    <a href="{{ route('sk.dashboard') }}">
+      <i data-lucide="layout-dashboard"></i>
+      <span class="label">Dashboard</span>
+    </a>
 
-      <a href="#">
-        <i data-lucide="chart-pie"></i>
-        <span class="label">Analytics</span>
-      </a>
+    <a href="#">
+      <i data-lucide="chart-pie"></i>
+      <span class="label">Analytics</span>
+    </a>
 
-      <a href="{{ route('youth-profilepage') }}">
-        <i data-lucide="users"></i>
-        <span class="label">Youth Profile</span>
-      </a>
+    <a href="{{ route('youth-profilepage') }}">
+      <i data-lucide="users"></i>
+      <span class="label">Youth Profile</span>
+    </a>
 
-      <a href="{{ route('sk-eventpage') }}" class="active">
+    <div class="nav-item">
+      <a href="#" class="nav-link active">
         <i data-lucide="calendar"></i>
         <span class="label">Events and Programs</span>
+        <i data-lucide="chevron-down" class="submenu-arrow"></i>
       </a>
-
-      <div class="evaluation-item nav-item">
-        <a href="{{ route('sk-evaluation-feedback') }}" class="evaluation-link nav-link">
-          <i data-lucide="user-star"></i>
-          <span class="label">Evaluation</span>
-          <i data-lucide="chevron-down" class="submenu-arrow"></i>
-        </a>
-        <div class="submenu">
-          <a href="#">Feedbacks</a>
-          <a href="#">Polls</a>
-          <a href="#">Suggestion Box</a>
-        </div>
+      <div class="submenu">
+        <a href="{{ route('sk-eventpage') }}" class="active">Events List</a>
+        <a href="{{ route('youth-program-registration') }}">Youth Registration</a>
       </div>
+    </div>
 
-      <a href="#">
-        <i data-lucide="file-chart-column"></i>
-        <span class="label">Reports</span>
-      </a>
+    <a href="{{ route('sk-evaluation-feedback') }}">
+      <i data-lucide="message-square-quote"></i>
+      <span class="label">Feedbacks</span>
+    </a>
 
-      <a href="{{ route('serviceoffers') }}">
-        <i data-lucide="hand-heart"></i>
-        <span class="label">Service Offer</span>
-      </a>
-    </nav>
-  </aside>
+    <a href="{{ route('sk-polls') }}">
+      <i data-lucide="vote"></i>
+      <span class="label">Polls</span>
+    </a>
+
+    <a href="{{ route('youth-suggestion') }}">
+      <i data-lucide="lightbulb"></i>
+      <span class="label">Suggestion Box</span>
+    </a>
+    
+    <a href="{{ route('reports') }}">
+      <i data-lucide="file-chart-column"></i>
+      <span class="label">Reports</span>
+    </a>
+
+    <a href="{{ route('sk-services-offer') }}">
+      <i data-lucide="hand-heart"></i>
+      <span class="label">Service Offer</span>
+    </a>
+
+  </nav>
+</aside>
 
   <!-- Main -->
   <div class="main">
@@ -125,15 +134,17 @@
 
         <!-- Profile Avatar -->
         <div class="profile-wrapper">
-          <img src="https://i.pravatar.cc/80" alt="User" class="avatar" id="profileToggle">
+          <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+               alt="User" class="avatar" id="profileToggle">
           <div class="profile-dropdown">
             <div class="profile-header">
-              <img src="https://i.pravatar.cc/80" alt="User" class="profile-avatar">
+              <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+                   alt="User" class="profile-avatar">
               <div class="profile-info">
-                <h4>Marijoy S. Novora</h4>
+                <h4>{{ $user->given_name }} {{ $user->middle_name }} {{ $user->last_name }} {{ $user->suffix }}</h4>
                 <div class="profile-badge">
-                  <span class="badge">KK- Member</span>
-                  <span class="badge">19 yrs old</span>
+                  <span class="badge">{{ $roleBadge }}</span>
+                  <span class="badge">{{ $age }} yrs old</span>
                 </div>
               </div>
             </div>
@@ -151,7 +162,17 @@
                 </a>
               </li>
               <li><i class="fas fa-star"></i> Send Feedback to Katibayan</li>
+              <li class="logout-item">
+                <a href="loginpage" onclick="confirmLogout(event)">
+                  <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+              </li>
             </ul>
+            
+            <!-- Hidden Logout Form -->
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+              @csrf
+            </form>
           </div>
         </div>
       </div>
@@ -162,6 +183,12 @@
       <!-- Event Header -->
       <div class="event-header">
         <h2>Event and Program</h2>
+        
+        <!-- Barangay Filter Indicator -->
+        <div class="barangay-indicator">
+          <i class="fas fa-map-marker-alt"></i>
+          <span>Showing events for your barangay</span>
+        </div>
 
         <div class="create-activity-dropdown">
           <a href="#" class="create-activity">
@@ -288,6 +315,13 @@
                     <span class="completed-badge">Completed</span>
                   @endif
                   
+                  <!-- View QR Code Button for Launched Events -->
+                  @if($event->is_launched && $currentStatus !== 'completed')
+                    <a href="{{ route('events.qr', $event->id) }}" class="view-qr-btn">
+                      <i class="fas fa-qrcode"></i> View QR
+                    </a>
+                  @endif
+                  
                   @if($currentStatus !== 'completed')
                     <a href="{{ route('edit-event', $event->id) }}" class="edit-btn">
                       Edit <i class="fa-solid fa-pen"></i>
@@ -358,6 +392,13 @@
                     <span class="completed-badge">Completed</span>
                   @endif
                   
+                  <!-- View QR Code Button for Launched Events -->
+                  @if($event->is_launched && $currentStatus !== 'completed')
+                    <a href="{{ route('events.qr', $event->id) }}" class="view-qr-btn">
+                      <i class="fas fa-qrcode"></i> View QR
+                    </a>
+                  @endif
+                  
                   @if($currentStatus !== 'completed')
                     <a href="{{ route('edit-event', $event->id) }}" class="edit-btn">
                       Edit <i class="fa-solid fa-pen"></i>
@@ -377,8 +418,8 @@
         <!-- No Events State -->
         <div class="no-events">
           <i class="fas fa-calendar-times"></i>
-          <h3>No Events Yet</h3>
-          <p>Get started by creating your first event or program.</p>
+          <h3>No Events Yet in Your Barangay</h3>
+          <p>Get started by creating your first event or program for your barangay.</p>
           <a href="{{ route('create-event') }}" class="btn-create-event">
             Create Your First Event
           </a>
@@ -402,28 +443,7 @@
           Committee on <span id="modalEventCommittee"></span>
         </p>
         <div class="modal-actions">
-          <button id="proceedPasscode" class="launch-btn">Generate QR & Passcode</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- QR Modal -->
-    <div id="qrModal" class="modal">
-      <div class="modal-content qr-content">
-        <span class="close qr-close">&times;</span>
-        <h2>Scan for your attendance</h2>
-        <p><strong>Title:</strong> <span id="qrEventTitle"></span></p>
-        <div id="qrcode" style="width: 250px; height: 250px; margin: 0 auto;"></div>
-        <p class="small-text">
-          Having trouble scanning the QR code?<br>
-          Here's the passcode below.
-        </p>
-        <input type="text" id="generatedPasscode" readonly style="text-align: center; font-weight: bold; font-size: 16px; width: 200px; margin: 10px auto; display: block;" />
-        <p class="footer-text">
-          This will mark your attendance in the program.
-        </p>
-        <div class="modal-actions" style="margin-top: 20px;">
-          <button id="closeQR" class="btn-primary">Close</button>
+          <a id="proceedPasscode" class="launch-btn" href="#">Generate QR & Passcode</a>
         </div>
       </div>
     </div>
@@ -445,339 +465,339 @@
   </div>
 
   <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      // Initialize icons
-      if (typeof lucide !== "undefined" && lucide.createIcons) lucide.createIcons();
+  document.addEventListener("DOMContentLoaded", () => {
+    // === Lucide icons + sidebar toggle ===
+    lucide.createIcons();
+    
+    const menuToggle = document.querySelector('.menu-toggle');
+    const sidebar = document.querySelector('.sidebar');
 
-      // Global variables
-      let currentEventId = null;
-      let currentStatusFilter = 'all';
-      let currentCategoryFilter = 'all';
-      let qrCodeInstance = null;
-
-      // --- UI elements ---
-      const menuToggle = document.querySelector('.menu-toggle');
-      const sidebar = document.querySelector('.sidebar');
-      const profileWrapper = document.querySelector('.profile-wrapper');
-      const profileToggle = document.getElementById('profileToggle');
-      const notifWrapper = document.querySelector(".notification-wrapper");
-
-      // Sidebar toggle
-      if (menuToggle && sidebar) {
-        menuToggle.addEventListener('click', (e) => {
-          e.stopPropagation();
-          sidebar.classList.toggle('open');
-        });
-      }
-
-      // Evaluation submenu toggle
-      const evaluationItem = document.querySelector('.evaluation-item');
-      const evaluationLink = document.querySelector('.evaluation-link');
-      evaluationLink?.addEventListener('click', (e) => {
-        e.preventDefault();
-        evaluationItem?.classList.toggle('open');
+    if (menuToggle && sidebar) {
+      menuToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        sidebar.classList.toggle('open');
       });
+    }
 
-      // Time auto-update
-      const timeEl = document.querySelector(".time");
-      function updateTime() {
-        if (!timeEl) return;
-        const now = new Date();
-        const shortWeekdays = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
-        const shortMonths = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
-        const weekday = shortWeekdays[now.getDay()];
-        const month = shortMonths[now.getMonth()];
-        const day = now.getDate();
-        let hours = now.getHours();
-        const minutes = now.getMinutes().toString().padStart(2, "0");
-        const ampm = hours >= 12 ? "PM" : "AM";
-        hours = hours % 12 || 12;
-        timeEl.innerHTML = `${weekday}, ${month} ${day} ${hours}:${minutes} <span>${ampm}</span>`;
-      }
-      updateTime();
-      setInterval(updateTime, 60000);
+    // === Submenus ===
+    const submenuTriggers = document.querySelectorAll('.nav-item > .nav-link');
 
-      // Notifications / profile dropdowns
-      if (notifWrapper) {
-        const bell = notifWrapper.querySelector(".fa-bell");
-        bell?.addEventListener("click", (e) => {
-          e.stopPropagation();
-          notifWrapper.classList.toggle("active");
-          profileWrapper?.classList.remove("active");
+    submenuTriggers.forEach(trigger => {
+      trigger.addEventListener('click', (e) => {
+        e.preventDefault(); 
+        
+        const parentItem = trigger.closest('.nav-item');
+        const wasOpen = parentItem.classList.contains('open');
+
+        document.querySelectorAll('.nav-item').forEach(item => {
+          item.classList.remove('open');
         });
-      }
 
-      if (profileWrapper && profileToggle) {
-        profileToggle.addEventListener("click", (e) => {
-          e.stopPropagation();
-          profileWrapper.classList.toggle("active");
-          notifWrapper?.classList.remove("active");
-        });
-      }
-
-      // Close dropdowns when clicking outside
-      document.addEventListener("click", (e) => {
-        if (sidebar && !sidebar.contains(e.target) && menuToggle && !menuToggle.contains(e.target)) {
-          sidebar.classList.remove('open');
+        if (!wasOpen) {
+          parentItem.classList.add('open');
         }
-        if (profileWrapper && !profileWrapper.contains(e.target)) profileWrapper.classList.remove('active');
-        if (notifWrapper && !notifWrapper.contains(e.target)) notifWrapper.classList.remove('active');
-        document.querySelectorAll('.custom-select .options.show').forEach(o => o.classList.remove('show'));
+      });
+    });
+
+    // === Time auto-update ===
+    const timeEl = document.querySelector(".time");
+    function updateTime() {
+      if (!timeEl) return;
+      const now = new Date();
+      const shortWeekdays = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
+      const shortMonths = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+      const weekday = shortWeekdays[now.getDay()];
+      const month = shortMonths[now.getMonth()];
+      const day = now.getDate();
+      let hours = now.getHours();
+      const minutes = now.getMinutes().toString().padStart(2, "0");
+      const ampm = hours >= 12 ? "PM" : "AM";
+      hours = hours % 12 || 12;
+      timeEl.innerHTML = `${weekday}, ${month} ${day} ${hours}:${minutes} <span>${ampm}</span>`;
+    }
+    updateTime();
+    setInterval(updateTime, 60000);
+
+    
+    const notifWrapper = document.querySelector('.notification-wrapper');
+    const profileWrapper = document.querySelector('.profile-wrapper');
+    const profileToggle = document.getElementById('profileToggle');
+    const createActivityDropdown = document.querySelector(".create-activity-dropdown");
+    const createActivityBtn = createActivityDropdown?.querySelector(".create-activity");
+
+    // Notification Dropdown
+    if (notifWrapper) {
+      const bell = notifWrapper.querySelector(".fa-bell");
+      bell?.addEventListener("click", (e) => {
+        e.stopPropagation();
+        notifWrapper.classList.toggle("active");
+        profileWrapper?.classList.remove("active");
+        createActivityDropdown?.classList.remove("active");
+      });
+    }
+
+    // Profile Dropdown
+    if (profileWrapper && profileToggle) {
+      profileToggle.addEventListener("click", (e) => {
+        e.stopPropagation();
+        profileWrapper.classList.toggle("active");
+        notifWrapper?.classList.remove("active");
+        createActivityDropdown?.classList.remove("active");
+      });
+    }
+
+    // Create Activity Dropdown
+    if (createActivityDropdown && createActivityBtn) {
+      createActivityBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        createActivityDropdown.classList.toggle("active");
+        notifWrapper?.classList.remove("active");
+        profileWrapper?.classList.remove("active");
+      });
+    }
+
+    
+    document.addEventListener("click", (e) => {
+      
+      if (sidebar && !sidebar.contains(e.target) && menuToggle && !menuToggle.contains(e.target)) {
+        sidebar.classList.remove('open');
+      }
+      
+      if (profileWrapper && !profileWrapper.contains(e.target)) profileWrapper.classList.remove('active');
+      if (notifWrapper && !notifWrapper.contains(e.target)) notifWrapper.classList.remove('active');
+      if (createActivityDropdown && !createActivityDropdown.contains(e.target)) {
+        createActivityDropdown.classList.remove("active");
+      }
+      
+      document.querySelectorAll('.custom-select .options').forEach(o => o.style.display = 'none');
+      document.querySelectorAll('.custom-select').forEach(s => s.classList.remove('open'));
+    });
+    
+
+
+    // ========== TAB FILTERING FUNCTIONALITY ==========
+    let currentStatusFilter = 'all'; 
+    let currentCategoryFilter = 'all'; 
+
+    const tabs = document.querySelectorAll('.tab');
+    
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        currentStatusFilter = tab.getAttribute('data-filter');
+        applyFilters();
+      });
+    });
+
+    // Custom Select functionality for category filtering
+    const customSelect = document.querySelector("#category");
+    if (customSelect) {
+      const selected = customSelect.querySelector(".selected");
+      const options = customSelect.querySelector(".options");
+      const items = options.querySelectorAll("li");
+
+      selected.addEventListener("click", (e) => { 
+        e.stopPropagation(); 
+        const isOpen = options.style.display === "block";
+        options.style.display = isOpen ? "none" : "block";
+        customSelect.classList.toggle("open", !isOpen);
       });
 
-      // ========== TAB FILTERING FUNCTIONALITY ==========
-      const tabs = document.querySelectorAll('.tab');
-      
-      tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-          // Remove active class from all tabs
-          tabs.forEach(t => t.classList.remove('active'));
-          // Add active class to clicked tab
-          tab.classList.add('active');
-          
-          // Get the filter value
-          currentStatusFilter = tab.getAttribute('data-filter');
-          
-          // Apply filters
+      items.forEach(item => {
+        item.addEventListener("click", () => {
+          customSelect.querySelector(".selected-text").textContent = item.textContent;
+          options.style.display = "none";
+          customSelect.classList.remove("open");
+          currentCategoryFilter = item.getAttribute('data-value');
           applyFilters();
         });
       });
+    }
 
-      // Custom Select functionality for category filtering
-      const customSelect = document.querySelector("#category");
-      if (customSelect) {
-        const selected = customSelect.querySelector(".selected");
-        const options = customSelect.querySelector(".options");
-        const items = options.querySelectorAll("li");
+    // Apply both status and category filters
+    function applyFilters() {
+      const eventCards = document.querySelectorAll('.event-card');
+      const eventCategories = document.querySelectorAll('.event-category');
+      
+      let hasVisibleEvents = false;
 
-        selected.addEventListener("click", () => {
-          const isOpen = options.style.display === "block";
-          options.style.display = isOpen ? "none" : "block";
-          customSelect.classList.toggle("open", !isOpen);
-        });
-
-        items.forEach(item => {
-          item.addEventListener("click", () => {
-            customSelect.querySelector(".selected-text").textContent = item.textContent;
-            options.style.display = "none";
-            customSelect.classList.remove("open");
-            
-            // Update category filter
-            currentCategoryFilter = item.getAttribute('data-value');
-            
-            // Apply filters
-            applyFilters();
-          });
-        });
-      }
-
-      // Apply both status and category filters
-      function applyFilters() {
-        const eventCards = document.querySelectorAll('.event-card');
-        const eventCategories = document.querySelectorAll('.event-category');
+      eventCategories.forEach(category => {
+        let categoryHasVisibleEvents = false;
+        const categoryEventCards = category.querySelectorAll('.event-card');
         
-        let hasVisibleEvents = false;
-
-        eventCategories.forEach(category => {
-          let categoryHasVisibleEvents = false;
-          const categoryEventCards = category.querySelectorAll('.event-card');
+        categoryEventCards.forEach(card => {
+          const eventStatus = card.getAttribute('data-status');
+          const eventCategory = card.getAttribute('data-category');
           
-          categoryEventCards.forEach(card => {
-            const eventStatus = card.getAttribute('data-status');
-            const eventCategory = card.getAttribute('data-category');
-            
-            // Check if event matches both status and category filters
-            const statusMatch = currentStatusFilter === 'all' || eventStatus === currentStatusFilter;
-            const categoryMatch = currentCategoryFilter === 'all' || eventCategory === currentCategoryFilter;
-            
-            if (statusMatch && categoryMatch) {
-              card.style.display = 'flex';
-              categoryHasVisibleEvents = true;
-              hasVisibleEvents = true;
-            } else {
-              card.style.display = 'none';
-            }
-          });
+          const statusMatch = currentStatusFilter === 'all' || eventStatus === currentStatusFilter;
+          const categoryMatch = currentCategoryFilter === 'all' || eventCategory === currentCategoryFilter;
           
-          // Show/hide category header based on visible events
-          const categoryHeader = category.querySelector('h4');
-          const happeningTag = category.querySelector('.tag');
-          
-          if (categoryHeader || happeningTag) {
-            if (categoryHasVisibleEvents) {
-              category.style.display = 'block';
-            } else {
-              category.style.display = 'none';
-            }
-          }
-        });
-
-        // Show no events message if no events match filters
-        const noEventsElement = document.querySelector('.no-events');
-        if (!hasVisibleEvents && eventCards.length > 0) {
-          if (!noEventsElement) {
-            const noEventsHTML = `
-              <div class="no-events">
-                <i class="fas fa-calendar-times"></i>
-                <h3>No Events Match Your Filters</h3>
-                <p>Try adjusting your filter criteria to see more events.</p>
-                <button class="btn-create-event" onclick="resetFilters()">
-                  Reset Filters
-                </button>
-              </div>
-            `;
-            document.querySelector('.event-section').insertAdjacentHTML('beforeend', noEventsHTML);
-          }
-        } else if (noEventsElement && eventCards.length > 0) {
-          noEventsElement.remove();
-        }
-      }
-
-      // Reset filters function
-      window.resetFilters = function() {
-        // Reset tabs
-        tabs.forEach(tab => {
-          tab.classList.remove('active');
-          if (tab.getAttribute('data-filter') === 'all') {
-            tab.classList.add('active');
+          if (statusMatch && categoryMatch) {
+            card.style.display = 'flex';
+            categoryHasVisibleEvents = true;
+            hasVisibleEvents = true;
+          } else {
+            card.style.display = 'none';
           }
         });
         
-        // Reset category dropdown
-        const selected = customSelect.querySelector(".selected");
-        const selectedText = customSelect.querySelector(".selected-text");
-        selected.setAttribute('data-value', 'all');
-        selectedText.textContent = 'All';
+        const categoryHeader = category.querySelector('h4');
+        const happeningTag = category.querySelector('.tag');
         
-        // Reset filter variables
-        currentStatusFilter = 'all';
-        currentCategoryFilter = 'all';
-        
-        // Apply reset
-        applyFilters();
-        
-        // Remove no events message if it exists
-        const noEventsElement = document.querySelector('.no-events');
-        if (noEventsElement) {
-          noEventsElement.remove();
-        }
-      };
-
-      // SIMPLE Launch Event functionality using event delegation
-      document.addEventListener('click', function(e) {
-        // Check if the clicked element is a launch button
-        if (e.target.classList.contains('launch-btn')) {
-          e.preventDefault();
-          e.stopPropagation();
-          
-          // Get the event ID from the button's data attribute
-          const eventId = e.target.getAttribute('data-event-id');
-          console.log('Launch button clicked, event ID:', eventId);
-          
-          if (!eventId) {
-            console.log('Button clicked but no event ID found');
-            return;
+        if (categoryHeader || happeningTag) {
+          if (categoryHasVisibleEvents) {
+            category.style.display = 'block';
+          } else {
+            category.style.display = 'none';
           }
-
-          currentEventId = eventId;
-          console.log('Current event ID set to:', currentEventId);
-
-          // Fetch and show event details
-          fetchEventDetails(currentEventId, e.target);
-        }
-        
-        // Also handle delete buttons with event delegation
-        if (e.target.classList.contains('delete-btn')) {
-          e.preventDefault();
-          currentEventId = e.target.getAttribute('data-event-id');
-          document.getElementById("deleteModal").style.display = "block";
         }
       });
 
-      // Function to fetch event details
-      async function fetchEventDetails(eventId, button) {
-        try {
-          // Show loading state
-          const originalText = button.textContent;
-          button.disabled = true;
-          button.textContent = 'Loading...';
-
-          console.log('Fetching event details for ID:', eventId);
-          const response = await fetch(`/events/${eventId}`, {
-            headers: {
-              'Accept': 'application/json',
-              'X-Requested-With': 'XMLHttpRequest'
-            },
-            credentials: 'same-origin'
-          });
-          
-          console.log('Response status:', response.status);
-          
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          
-          const event = await response.json();
-          console.log('Event data received:', event);
-          
-          // Populate modal with event data
-          document.getElementById('modalEventTitle').textContent = event.title || 'No title';
-          document.getElementById('modalEventCategory').textContent = event.category ? ucfirst(event.category.replace(/_/g, ' ')) : 'No category';
-          document.getElementById('modalEventDateTime').textContent = event.event_date_time || 'No date/time';
-          document.getElementById('modalEventLocation').textContent = event.location || 'No location';
-          document.getElementById('modalEventDescriptionTitle').textContent = event.title || 'Description';
-          document.getElementById('modalEventDescription').textContent = event.description || 'No description provided.';
-          document.getElementById('modalEventPublisher').textContent = event.published_by || 'Unknown';
-          document.getElementById('modalEventCommittee').textContent = event.category ? ucfirst(event.category.replace(/_/g, ' ')) : 'Unknown';
-          
-          // Handle event image
-          const modalImage = document.getElementById('modalEventImage');
-          if (event.image) {
-            console.log('Event image URL:', event.image);
-            modalImage.src = event.image;
-            modalImage.style.display = 'block';
-            modalImage.alt = event.title || 'Event image';
-            
-            // Add error handling for image load
-            modalImage.onerror = function() {
-              console.error('Failed to load event image:', event.image);
-              this.style.display = 'none';
-            };
-          } else {
-            modalImage.style.display = 'none';
-          }
-          
-          document.getElementById("eventModal").style.display = "block";
-          
-        } catch (error) {
-          console.error('Error fetching event details:', error);
-          alert('Error loading event details: ' + error.message);
-        } finally {
-          // Reset button state
-          button.disabled = false;
-          button.textContent = 'Launch Event';
+      let noEventsElement = document.querySelector('.no-events-filtered'); 
+      if (!hasVisibleEvents && eventCards.length > 0) {
+        if (!noEventsElement) {
+          const noEventsHTML = `
+            <div class="no-events no-events-filtered"> 
+              <i class="fas fa-calendar-times"></i>
+              <h3>No Events Match Your Filters</h3>
+              <p>Try adjusting your filter criteria to see more events.</p>
+              <button class="btn-create-event" onclick="resetFilters()">
+                Reset Filters
+              </button>
+            </div>
+          `;
+          document.querySelector('.event-section').insertAdjacentHTML('beforeend', noEventsHTML);
         }
+      } else if (noEventsElement) { 
+        noEventsElement.remove();
+      }
+    }
+
+    // Reset filters function
+    window.resetFilters = function() {
+      tabs.forEach(tab => {
+        tab.classList.remove('active');
+        if (tab.getAttribute('data-filter') === 'all') {
+          tab.classList.add('active');
+        }
+      });
+      
+      if (customSelect) { 
+        const selectedText = customSelect.querySelector(".selected-text");
+        selectedText.textContent = 'All';
+        customSelect.querySelector(".selected").setAttribute('data-value', 'all');
+      }
+      
+      currentStatusFilter = 'all';
+      currentCategoryFilter = 'all';
+      applyFilters();
+      
+      const noEventsElement = document.querySelector('.no-events-filtered'); 
+      if (noEventsElement) {
+        noEventsElement.remove();
+      }
+    };
+    
+    
+    const modal = document.getElementById('eventModal');
+    const span = modal?.querySelector('.close');
+    if (span) {
+      span.onclick = function() {
+        modal.style.display = "none";
+      }
+    }
+
+    let currentEventId = null; 
+
+    // SIMPLE Launch Event functionality using event delegation
+    document.addEventListener('click', function(e) {
+      const launchBtn = e.target.closest('.launch-btn[data-event-id]');
+      if (launchBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const eventId = launchBtn.getAttribute('data-event-id');
+        if (!eventId) return;
+
+        currentEventId = eventId;
+        fetchEventDetails(currentEventId, launchBtn);
       }
 
-      // Generate QR & Passcode
-      document.getElementById("proceedPasscode").addEventListener("click", async () => {
-        if (!currentEventId) {
-          console.log('No event selected for QR generation');
-          return;
+      const deleteBtn = e.target.closest('.delete-btn[data-event-id]');
+      if (deleteBtn) {
+        e.preventDefault();
+        currentEventId = deleteBtn.getAttribute('data-event-id');
+        document.getElementById("deleteModal").style.display = "block";
+      }
+    });
+
+    // Fetch and display modal
+    async function fetchEventDetails(eventId, button) {
+      const originalText = button.textContent;
+      button.disabled = true;
+      button.textContent = 'Loading...';
+
+      try {
+        const response = await fetch(`/events/${eventId}`, {
+          headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+          },
+          credentials: 'same-origin'
+        });
+
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+        const event = await response.json();
+
+        document.getElementById('modalEventTitle').textContent = event.title || 'No title';
+        document.getElementById('modalEventCategory').textContent = event.category?.replace(/_/g, ' ').toUpperCase() || 'No category';
+        document.getElementById('modalEventDateTime').textContent = event.event_date_time || 'No date/time';
+        document.getElementById('modalEventLocation').textContent = event.location || 'No location';
+        document.getElementById('modalEventDescriptionTitle').textContent = event.title || 'Description';
+        document.getElementById('modalEventDescription').textContent = event.description || 'No description provided.';
+        document.getElementById('modalEventPublisher').textContent = event.published_by || 'Unknown';
+        document.getElementById('modalEventCommittee').textContent = event.category?.replace(/_/g, ' ').toUpperCase() || 'Unknown';
+
+        const modalImage = document.getElementById('modalEventImage');
+        if (event.image) {
+          modalImage.src = event.image;
+          modalImage.style.display = 'block';
+          modalImage.onerror = () => modalImage.style.display = 'none';
+        } else {
+          modalImage.style.display = 'none';
         }
 
-        const proceedBtn = document.getElementById("proceedPasscode");
+        document.getElementById("eventModal").style.display = "block";
+
+      } catch (error) {
+        console.error('Error fetching event details:', error);
+        alert('Error loading event details: ' + error.message);
+      } finally {
+        button.disabled = false;
+        button.textContent = 'Launch Event'; 
+      }
+    }
+
+
+    // Generate QR & Passcode
+    const proceedBtn = document.getElementById("proceedPasscode");
+    if (proceedBtn) { 
+      proceedBtn.addEventListener("click", async () => {
+        if (!currentEventId) {
+          alert('No event selected for QR generation');
+          return;
+        }
         
         try {
-          // Show loading state
           proceedBtn.disabled = true;
           proceedBtn.textContent = 'Generating...';
 
-          // Generate a random passcode
-          const passcode = generateRandomPasscode();
+          const passcode = generateRandomPasscode(8); 
           console.log('Generated passcode:', passcode);
-          
-          // Save passcode to database and launch event
+
           const passcodeResponse = await fetch(`/events/${currentEventId}/generate-passcode`, {
             method: 'POST',
             headers: {
@@ -785,19 +805,13 @@
               'X-CSRF-TOKEN': '{{ csrf_token() }}',
               'Accept': 'application/json'
             },
-            body: JSON.stringify({ passcode: passcode })
+            body: JSON.stringify({ passcode })
           });
 
-          if (!passcodeResponse.ok) {
-            throw new Error('Failed to save passcode');
-          }
-
+          if (!passcodeResponse.ok) throw new Error('Failed to save passcode');
           const passcodeResult = await passcodeResponse.json();
-          if (!passcodeResult.success) {
-            throw new Error(passcodeResult.error || 'Failed to save passcode');
-          }
+          if (!passcodeResult.success) throw new Error(passcodeResult.error || 'Failed to save passcode');
 
-          // Launch the event
           const launchResponse = await fetch(`/events/${currentEventId}/launch`, {
             method: 'POST',
             headers: {
@@ -807,87 +821,46 @@
             }
           });
 
-          if (!launchResponse.ok) {
-            throw new Error('Failed to launch event');
-          }
-
+          if (!launchResponse.ok) throw new Error('Failed to launch event');
           const launchResult = await launchResponse.json();
-          if (!launchResult.success) {
-            throw new Error(launchResult.error || 'Failed to launch event');
-          }
+          if (!launchResult.success) throw new Error(launchResult.error || 'Failed to launch event');
 
-          // Close Event Modal
-          document.getElementById("eventModal").style.display = "none";
-
-          // Open QR Modal
-          document.getElementById("qrModal").style.display = "flex";
-          
-          // Set event title and passcode
-          const eventTitle = document.getElementById('modalEventTitle').textContent;
-          document.getElementById("qrEventTitle").textContent = eventTitle;
-          document.getElementById("generatedPasscode").value = passcode;
-
-          // Update event card UI
-          const eventCard = document.querySelector(`[data-event-id="${currentEventId}"]`);
-          if (eventCard) {
-            const launchBtn = eventCard.querySelector('.launch-btn');
-            const actionDiv = eventCard.querySelector('.event-action');
-            
-            if (launchBtn && actionDiv) {
-              launchBtn.remove();
-              const launchedBadge = document.createElement('span');
-              launchedBadge.className = 'launched-badge';
-              launchedBadge.textContent = 'Launched';
-              actionDiv.prepend(launchedBadge);
-              
-              // Update data-status for filtering - but only if it's today's event
-              // For future events, keep status as 'upcoming'
-              const eventDate = new Date(eventCard.querySelector('.event-datetime .value').textContent);
-              const today = new Date();
-              if (eventDate.toDateString() === today.toDateString()) {
-                eventCard.setAttribute('data-status', 'ongoing');
-              } else {
-                // Keep as upcoming for future dates
-                eventCard.setAttribute('data-status', 'upcoming');
-              }
-            }
-          }
-
-          // Generate QR Code
-          console.log('Generating QR code for passcode:', passcode);
-          await generateQRCode(passcode);
+          window.location.href = `/events/${currentEventId}/qr`;
 
         } catch (error) {
           console.error('Error generating QR and passcode:', error);
           alert('Error: ' + error.message);
         } finally {
-          // Reset button state
           proceedBtn.disabled = false;
           proceedBtn.textContent = 'Generate QR & Passcode';
         }
       });
+    }
 
-      // Close QR Modal
-      document.getElementById("closeQR").addEventListener("click", () => {
-        document.getElementById("qrModal").style.display = "none";
-        // Clear QR code for next use
-        const qrcodeContainer = document.getElementById("qrcode");
-        if (qrcodeContainer) {
-          qrcodeContainer.innerHTML = "";
+    function generateRandomPasscode(length = 6) {
+      const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      return Array.from({ length }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+    }
+  
+    setInterval(() => {
+      const eventCards = document.querySelectorAll('.event-card');
+      eventCards.forEach(card => {
+        const currentStatus = card.getAttribute('data-status');
+        if (currentStatus !== 'completed') {
+          applyFilters(); 
         }
       });
+    }, 60000); // Check every minute
 
-      // Close QR Modal with X button
-      document.querySelector(".qr-close").addEventListener("click", () => {
-        document.getElementById("qrModal").style.display = "none";
-        const qrcodeContainer = document.getElementById("qrcode");
-        if (qrcodeContainer) {
-          qrcodeContainer.innerHTML = "";
-        }
-      });
+    // Delete Confirmation
+    const confirmDeleteBtn = document.getElementById("confirmDelete");
+    const cancelDeleteBtn = document.getElementById("cancelDelete");
+    const deleteModal = document.getElementById("deleteModal");
 
-      // Confirm delete
-      document.getElementById("confirmDelete").addEventListener("click", async () => {
+    if (confirmDeleteBtn) { 
+      confirmDeleteBtn.addEventListener("click", async () => {
+        if (!currentEventId) return;
+
         try {
           const response = await fetch(`/events/${currentEventId}`, {
             method: 'DELETE',
@@ -897,164 +870,38 @@
             }
           });
 
-          if (response.ok) {
-            const result = await response.json();
-            if (result.success) {
-              // Remove event card from UI
-              const eventCard = document.querySelector(`[data-event-id="${currentEventId}"]`);
-              if (eventCard) {
-                eventCard.remove();
-              }
-              document.getElementById("deleteModal").style.display = "none";
-              
-              // Reload page if no events left
-              if (document.querySelectorAll('.event-card').length === 0) {
-                window.location.reload();
-              }
-            } else {
-              throw new Error(result.error || 'Delete failed');
-            }
-          } else {
-            throw new Error('Delete failed with status: ' + response.status);
-          }
+          if (!response.ok) throw new Error('Failed to delete event');
+          deleteModal.style.display = 'none';
+          window.location.reload();
+
         } catch (error) {
           console.error('Error deleting event:', error);
-          alert('Error deleting event. Please try again.');
+          alert('Error deleting event: ' + error.message);
         }
       });
+    }
 
-      // Cancel delete
-      document.getElementById("cancelDelete").addEventListener("click", () => {
-        document.getElementById("deleteModal").style.display = "none";
+    if (cancelDeleteBtn) { 
+      cancelDeleteBtn.addEventListener("click", () => {
+        deleteModal.style.display = "none";
       });
+    }
 
-      // Close modals
-      document.querySelectorAll(".close").forEach(btn => {
-        btn.addEventListener("click", () => {
-          btn.closest(".modal").style.display = "none";
-        });
-      });
-
-      // Create Activity dropdown
-      const createActivityDropdown = document.querySelector(".create-activity-dropdown");
-      const createActivityBtn = createActivityDropdown?.querySelector(".create-activity");
-
-      if (createActivityDropdown && createActivityBtn) {
-        createActivityBtn.addEventListener("click", (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          createActivityDropdown.classList.toggle("active");
-        });
-
-        document.addEventListener("click", (e) => {
-          if (!createActivityDropdown.contains(e.target)) {
-            createActivityDropdown.classList.remove("active");
-          }
-        });
+    // Close modals when clicking outside of them
+    window.addEventListener('click', (event) => {
+      if (event.target == deleteModal) {
+        deleteModal.style.display = 'none';
       }
-
-      // Utility functions
-      function generateRandomPasscode() {
-        return Math.random().toString(36).substring(2, 10).toUpperCase();
+      if (event.target == modal) {
+        modal.style.display = 'none';
       }
-
-      function ucfirst(str) {
-        return str.charAt(0).toUpperCase() + str.slice(1);
-      }
-
-      // QR Code Generation
-      async function generateQRCode(passcode) {
-        const qrcodeContainer = document.getElementById("qrcode");
-        if (!qrcodeContainer) {
-          console.error('QR code container not found');
-          return;
-        }
-        
-        qrcodeContainer.innerHTML = "";
-        
-        try {
-          // Method 1: Try QRCodeStyling first
-          if (typeof QRCodeStyling !== 'undefined') {
-            console.log('Using QRCodeStyling library');
-            qrCodeInstance = new QRCodeStyling({
-              width: 250,
-              height: 250,
-              type: "canvas",
-              data: passcode,
-              dotsOptions: {
-                color: "#3C87C4",
-                type: "rounded"
-              },
-              backgroundOptions: {
-                color: "#ffffff",
-              },
-              imageOptions: {
-                crossOrigin: "anonymous",
-                margin: 0
-              }
-            });
-
-            await qrCodeInstance.append(qrcodeContainer);
-            console.log('QR Code generated successfully with QRCodeStyling');
-            return;
-          }
-          
-          // Method 2: Try basic QRCode library
-          if (typeof QRCode !== 'undefined') {
-            console.log('Using basic QRCode library');
-            new QRCode(qrcodeContainer, {
-              text: passcode,
-              width: 250,
-              height: 250,
-              colorDark: "#3C87C4",
-              colorLight: "#ffffff",
-              correctLevel: QRCode.CorrectLevel.H
-            });
-            console.log('Basic QR Code generated successfully');
-            return;
-          }
-          
-          // Fallback: Create a simple visual representation
-          console.log('Using fallback QR representation');
-          qrcodeContainer.innerHTML = `
-            <div style="text-align: center; padding: 20px; border: 2px dashed #ccc; border-radius: 10px; background: #f9f9f9;">
-              <div style="font-size: 18px; font-weight: bold; color: #3C87C4; margin-bottom: 10px;">QR CODE</div>
-              <div style="font-size: 14px; color: #666; margin-bottom: 15px;">Passcode for attendance:</div>
-              <div style="font-size: 24px; font-weight: bold; color: #333; letter-spacing: 3px; font-family: monospace; background: #fff; padding: 10px; border-radius: 5px; border: 1px solid #ddd;">${passcode}</div>
-              <div style="font-size: 12px; color: #999; margin-top: 15px;">(Scan this code with your device)</div>
-            </div>
-          `;
-          
-        } catch (error) {
-          console.error('Error generating QR code:', error);
-          // Ultimate fallback
-          qrcodeContainer.innerHTML = `
-            <div style="text-align:center; color:#666; padding: 20px;">
-              <i class="fas fa-qrcode" style="font-size: 48px; color: #3C87C4; margin-bottom: 10px;"></i>
-              <div style="font-size: 16px; font-weight: bold; margin-bottom: 10px;">Attendance Passcode</div>
-              <div style="font-size: 20px; font-weight: bold; color: #333; letter-spacing: 2px; font-family: monospace; background: #f0f0f0; padding: 10px; border-radius: 5px;">${passcode}</div>
-              <div style="font-size: 12px; color: #999; margin-top: 10px;">Share this code with attendees</div>
-            </div>
-          `;
-        }
-      }
-
-      // Auto-update event statuses every minute
-      setInterval(() => {
-        const eventCards = document.querySelectorAll('.event-card');
-        eventCards.forEach(card => {
-          const eventId = card.getAttribute('data-event-id');
-          const currentStatus = card.getAttribute('data-status');
-          
-          // Only check events that are not completed
-          if (currentStatus !== 'completed') {
-            // This would ideally make an API call to check status
-            // For now, we'll just re-apply filters
-            applyFilters();
-          }
-        });
-      }, 60000); // Check every minute
     });
-  </script>
+    
+  }); 
+</script>
+
+
+
+    
 </body>
 </html>

@@ -8,6 +8,7 @@ use App\Models\Event;
 use App\Models\Attendance;
 use App\Models\Evaluation;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
 {
@@ -19,6 +20,8 @@ class DashboardController extends Controller
         $age = $user->date_of_birth ? Carbon::parse($user->date_of_birth)->age : 'N/A';
         $roleBadge = strtoupper($user->role) . '-Member';
 
+        Log::info("Loading dashboard for user ID: {$user->id}, Barangay ID: {$user->barangay_id}");
+
         // Calculate evaluation progress
         $attendedEvents = Attendance::where('user_id', $user->id)
             ->whereNotNull('attended_at')
@@ -29,7 +32,7 @@ class DashboardController extends Controller
 
         $eventsToEvaluate = $attendedEvents - $evaluatedEvents;
 
-        // Get events that need evaluation (attended but not evaluated)
+        // FIXED: Get events that need evaluation - USE BARANGAY_ID DIRECTLY FROM EVENT
         $unevaluatedEvents = Event::whereHas('attendances', function($query) use ($user) {
             $query->where('user_id', $user->id)
                   ->whereNotNull('attended_at');
@@ -38,19 +41,23 @@ class DashboardController extends Controller
             $query->where('user_id', $user->id);
         })
         ->where('is_launched', true)
+        ->where('barangay_id', $user->barangay_id) // DIRECT BARANGAY FILTER
         ->orderBy('event_date', 'desc')
         ->get();
 
         // Calculate notification count
         $notificationCount = $unevaluatedEvents->count();
 
-        // Get upcoming events (launched events with future dates)
+        // FIXED: Get upcoming events - USE BARANGAY_ID DIRECTLY FROM EVENT
         $upcomingEvents = Event::where('is_launched', true)
             ->where('event_date', '>=', Carbon::today())
+            ->where('barangay_id', $user->barangay_id) // DIRECT BARANGAY FILTER
             ->orderBy('event_date', 'asc')
             ->orderBy('event_time', 'asc')
             ->limit(6)
             ->get();
+
+        Log::info("Upcoming events found for barangay {$user->barangay_id}: " . $upcomingEvents->count());
 
         // Define holidays for 2025
         $holidays = [
@@ -124,16 +131,22 @@ class DashboardController extends Controller
         // Sort by date and limit to 6 items
         $displayItems = $allUpcomingItems->sortBy('date')->take(6);
 
-        // Calculate attendance percentage for progress
+        // FIXED: Calculate attendance percentage - USE BARANGAY_ID DIRECTLY FROM EVENT
         $totalEvents = Event::where('is_launched', true)
             ->where('event_date', '<=', Carbon::today())
+            ->where('barangay_id', $user->barangay_id) // DIRECT BARANGAY FILTER
             ->count();
 
         $attendedCount = Attendance::where('user_id', $user->id)
             ->whereNotNull('attended_at')
+            ->whereHas('event', function($query) use ($user) {
+                $query->where('barangay_id', $user->barangay_id); // DIRECT BARANGAY FILTER
+            })
             ->count();
 
         $attendancePercentage = $totalEvents > 0 ? ($attendedCount / $totalEvents * 100) : 0;
+
+        Log::info("Dashboard stats - Total events: {$totalEvents}, Attended: {$attendedCount}, Percentage: {$attendancePercentage}%");
 
         return view('dashboard', [
             'user' => $user,

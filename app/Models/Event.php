@@ -4,13 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany; // Add this import
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Carbon\Carbon;
 
 /**
  * App\Models\Event
  *
  * @property int $id
+ * @property int $user_id
+ * @property int $barangay_id
  * @property string $title
  * @property string|null $description
  * @property \Illuminate\Support\Carbon $event_date
@@ -42,7 +45,8 @@ class Event extends Model
         'status',
         'is_launched',
         'passcode',
-        'user_id'
+        'user_id',
+        'barangay_id' // ADDED THIS LINE
     ];
 
     protected $casts = [
@@ -132,16 +136,22 @@ class Event extends Model
     {
         return $this->hasMany(Attendance::class, 'event_id');
     }
-     public function user()
+
+    /**
+     * Get the user who created this event
+     */
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
     /**
-     * Get the barangay through the user
+     * Get the barangay of the user who created this event
      */
-    public function barangay()
+    public function barangay(): BelongsTo
     {
-        return $this->hasOneThrough(Barangay::class, User::class, 'id', 'id', 'user_id', 'barangay_id');
+        return $this->belongsTo(Barangay::class);
     }
+
+    
 }

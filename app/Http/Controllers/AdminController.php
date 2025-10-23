@@ -6,51 +6,68 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\AccountCredentialsMail;
-use Carbon\Carbon;
 use App\Http\Controllers\Auth\RegisterController;
 
 class AdminController extends Controller
 {
     /**
-     * Show all SK users for admin review.
-     * KK users are not shown because they auto-approve.
+     * Show the main admin dashboard page.
+     * (Dito mo ilalagay yung mga stats, etc. sa future)
      */
     public function dashboard()
     {
-        // Fetch only SK users for approval
-        $skUsers = User::where('role', 'sk')->get();
-
-        return view('admin-dashboard', compact('skUsers'));
+        // For now, it just returns the dashboard view.
+        return view('admin-dashboard');
     }
 
     /**
-     * Approve SK user account.
+     * ITO ANG BAGO:
+     * Show the user management page with all pending accounts.
+     */
+    public function userManagement()
+    {
+        // Kinuha natin yung logic mula sa lumang dashboard function
+        $skUsers = User::whereIn('role', ['sk', 'kk'])->get(); // Kunin na natin pareho SK at KK
+
+        // Dapat ang view na tinatawag ay 'user-management'
+        return view('user-management', compact('skUsers'));
+    }
+
+    /**
+     * Approve user account.
      */
     public function approve($id)
     {
         $user = User::findOrFail($id);
 
-        if ($user->role !== 'sk') {
-            return back()->with('error', 'Only SK accounts require admin approval.');
-        }
-
         if ($user->account_status !== 'pending') {
-            return back()->with('error', 'User is not pending.');
+            return back()->with('error', 'This account is not pending for approval.');
         }
 
-        // Use the RegisterController's method to handle password generation and email
-        $registerController = new RegisterController();
-        $result = $registerController->sendSKCredentials($user);
+        // Handle SK user approval
+        if ($user->role === 'sk') {
+            $registerController = new RegisterController();
+            $result = $registerController->sendSKCredentials($user);
 
-        if ($result) {
-            return back()->with('success', 'SK user approved and credentials sent.');
-        } else {
-            return back()->with('error', 'Failed to send credentials email.');
+            if ($result) {
+                return back()->with('success', 'SK user approved and credentials sent.');
+            } else {
+                return back()->with('error', 'Failed to send credentials email for SK user.');
+            }
         }
+        
+        // Handle KK user approval (simple status update)
+        if ($user->role === 'kk') {
+             $user->account_status = 'approved';
+             $user->save();
+             return back()->with('success', 'KK member has been approved.');
+        }
+
+        return back()->with('error', 'Invalid user role for approval.');
     }
 
     /**
-     * Reject SK user account.
+     * Reject user account.
      */
     public function reject($id)
     {
@@ -58,6 +75,6 @@ class AdminController extends Controller
         $user->account_status = 'rejected';
         $user->save();
 
-        return back()->with('success', 'User rejected.');
+        return back()->with('success', 'User account has been rejected.');
     }
 }

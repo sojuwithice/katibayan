@@ -3,71 +3,77 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KatiBayan - Dashboard</title>
+  <title>KatiBayan - SK Polls</title>
   <link rel="stylesheet" href="{{ asset('css/sk-polls.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
-
-
-
-
+  
 </head>
 <body>
   
   <!-- Sidebar -->
+  <!-- Sidebar -->
   <aside class="sidebar">
-    <button class="menu-toggle">Menu</button>
-    <div class="divider"></div>
-    <nav class="nav">
-      <a href="{{ route('sk.dashboard') }}">
-        <i data-lucide="layout-dashboard"></i>
-        <span class="label">Dashboard</span>
-      </a>
+  <button class="menu-toggle">Menu</button>
+  <div class="divider"></div>
+  <nav class="nav">
+    <a href="{{ route('sk.dashboard') }}">
+      <i data-lucide="layout-dashboard"></i>
+      <span class="label">Dashboard</span>
+    </a>
 
-      <a href="#">
-        <i data-lucide="chart-pie"></i>
-        <span class="label">Analytics</span>
-      </a>
+    <a href="#">
+      <i data-lucide="chart-pie"></i>
+      <span class="label">Analytics</span>
+    </a>
 
-      <a href="{{ route('youth-profilepage') }}" class="active">
-        <i data-lucide="users"></i>
-        <span class="label">Youth Profile</span>
-      </a>
+    <a href="{{ route('youth-profilepage') }}">
+      <i data-lucide="users"></i>
+      <span class="label">Youth Profile</span>
+    </a>
 
-      <a href="{{ route('sk-eventpage') }}" class="events-link">
+    <div class="nav-item">
+      <a href="#" class="nav-link">
         <i data-lucide="calendar"></i>
         <span class="label">Events and Programs</span>
+        <i data-lucide="chevron-down" class="submenu-arrow"></i>
       </a>
-
-      <div class="evaluation-item nav-item">
-        <a href="{{ route('sk-evaluation-feedback') }}" class="evaluation-link nav-link">
-          <i data-lucide="user-star"></i>
-          <span class="label">Evaluation</span>
-          <i data-lucide="chevron-down" class="submenu-arrow"></i>
-        </a>
-        <div class="submenu">
-          <a href="#">Feedbacks</a>
-          <a href="#">Polls</a>
-          <a href="#">Suggestion Box</a>
-        </div>
+      <div class="submenu">
+        <a href="{{ route('sk-eventpage') }}">Events List</a>
+        <a href="{{ route('youth-program-registration') }}">Youth Registration</a>
       </div>
+    </div>
 
-      <a href="#">
-        <i data-lucide="file-chart-column"></i>
-        <span class="label">Reports</span>
-      </a>
+    <a href="{{ route('sk-evaluation-feedback') }}">
+      <i data-lucide="message-square-quote"></i>
+      <span class="label">Feedbacks</span>
+    </a>
 
-      <a href="{{ route('serviceoffers') }}">
-        <i data-lucide="hand-heart"></i>
-        <span class="label">Service Offer</span>
-      </a>
+    <a href="{{ route('sk-polls') }}" class="active">
+      <i data-lucide="vote"></i>
+      <span class="label">Polls</span>
+    </a>
 
-    </nav>
-  </aside>
+    <a href="{{ route('youth-suggestion') }}">
+      <i data-lucide="lightbulb"></i>
+      <span class="label">Suggestion Box</span>
+    </a>
+    
+    <a href="{{ route('reports') }}">
+      <i data-lucide="file-chart-column"></i>
+      <span class="label">Reports</span>
+    </a>
 
+    <a href="{{ route('sk-services-offer') }}">
+      <i data-lucide="hand-heart"></i>
+      <span class="label">Service Offer</span>
+    </a>
+
+  </nav>
+</aside>
 
   <!-- Main -->
   <div class="main">
@@ -124,15 +130,16 @@
 
         <!-- Profile Avatar -->
         <div class="profile-wrapper">
-          <img src="https://i.pravatar.cc/80" alt="User" class="avatar" id="profileToggle">
+          <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+               alt="User" class="avatar" id="profileToggle">
           <div class="profile-dropdown">
             <div class="profile-header">
-              <img src="https://i.pravatar.cc/80" alt="User" class="profile-avatar">
+              <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+                   alt="User" class="profile-avatar">
               <div class="profile-info">
-                <h4>Marijoy S. Novora</h4>
+                <h4>{{ $user->given_name }} {{ $user->last_name }}</h4>
                 <div class="profile-badge">
-                  <span class="badge">KK- Member</span>
-                  <span class="badge">19 yrs old</span>
+                  <span class="badge">SK-Member</span>
                 </div>
               </div>
             </div>
@@ -157,243 +164,160 @@
     </header>
 
     <div class="poll-container">
-  <!-- Poll Header -->
-  <div class="poll-header">
-    <h2>Poll</h2>
-    <a href="#" class="btn create-poll-btn">Create Poll</a>
+      <!-- Poll Header -->
+      <div class="poll-header">
+        <h2>Poll Management</h2>
+        <a href="#" class="btn create-poll-btn">Create Poll</a>
+      </div>
+
+      <!-- Responses Subheader -->
+      <div class="responses-header">
+        <h3>Active Polls</h3>
+      </div>
+
+      <div id="pollsList">
+        @if($polls->count() > 0)
+          @foreach($polls as $poll)
+            <div class="poll-card" data-poll-id="{{ $poll->id }}" data-vote-counts="{{ json_encode($poll->getVoteCounts()) }}">
+              <div class="poll-top">
+                <p class="question">
+                  <span class="label">Question:</span>
+                  <em>{{ $poll->question }}</em>
+                  @if($poll->committee)
+                    <span class="committee-tag">{{ ucfirst($poll->committee) }}</span>
+                  @endif
+                </p>
+                <div class="poll-actions">
+                  <a href="#" class="btn view-respondents" data-poll-id="{{ $poll->id }}">View Respondents</a>
+                  <button class="delete-poll" data-poll-id="{{ $poll->id }}">Delete</button>
+                </div>
+              </div>
+
+              <div class="poll-content">
+                <div class="poll-options">
+                  @foreach($poll->options as $index => $option)
+                    @php
+                      $colors = ['#5A2D91', '#D9A441', '#0C2744', '#2E8B57', '#FF6B6B'];
+                      $color = $colors[$index % count($colors)];
+                    @endphp
+                    <div class="option">
+                 <span class="swatch" style="background-color: <?php echo $color; ?>"></span>
+                      {{ $option }} 
+                      <span class="vote-count">({{ $poll->votes->where('option_index', $index)->count() }} votes)</span>
+                    </div>
+                  @endforeach
+                </div>
+
+                <div class="poll-chart-wrap">
+                  <canvas id="pollChart{{ $poll->id }}"></canvas>
+                  <p class="responses">Total Responses: {{ $poll->votes->count() }}</p>
+                  <p class="end-date">Ends: {{ \Carbon\Carbon::parse($poll->end_date)->format('M d, Y') }}</p>
+                </div>
+              </div>
+            </div>
+          @endforeach
+        @else
+          <div class="no-polls">
+            <p>No polls created yet.</p>
+            <p>Create your first poll to engage with your barangay youth!</p>
+          </div>
+        @endif
+      </div>
+    </div>
+
   </div>
 
-  <!-- Responses Subheader -->
-  <div class="responses-header">
-    <h3>Responses</h3>
-  </div>
-
-  <!-- Poll Card 1 -->
-<div class="poll-card">
-  <div class="poll-top">
-    <p class="question">
-      <span class="label">Question:</span>
-      <em>Would you like us to organize a Drag Race event for the youth?</em>
-    </p>
-    <a href="#" class="btn view-respondents">View Respondents</a>
-  </div>
-
-  <div class="poll-content">
-    <div class="poll-options">
-      <div class="option"><span class="swatch purple"></span> Yes, that would be exciting</div>
-      <div class="option"><span class="swatch gold"></span> Maybe, I need more details</div>
-      <div class="option"><span class="swatch navy"></span> No, not interested</div>
-    </div>
-
-    <div class="poll-chart-wrap">
-      <canvas id="pollChart1"></canvas>
-      <p class="responses">Total Responses: 60</p>
+  <!-- RESPONDENTS MODAL -->
+  <div class="modal-overlay" id="respondentsOverlay">
+    <div class="respondents-modal">
+      <span class="modal-close">&times;</span>
+      <h3>Respondents</h3>
+      <div id="respondentsList">
+        <!-- Respondents will be loaded here -->
+      </div>
     </div>
   </div>
-</div>
 
-<!-- Poll Card 2 -->
-<div class="poll-card">
-  <div class="poll-top">
-    <p class="question">
-      <span class="label">Question:</span>
-      <em>Would you like us to organize a Drag Race event for the youth?</em>
-    </p>
-    <a href="#" class="btn view-respondents">View Respondents</a>
-  </div>
+  <!-- CREATE POLL MODAL -->
+  <div class="modal-overlay" id="createPollOverlay">
+    <div class="create-poll-modal">
+      <span class="modal-close">&times;</span>
+      <h2>Create Poll</h2>
+      <p>Empower the youth to voice their ideas through activity polls</p>
 
-  <div class="poll-content">
-    <div class="poll-options">
-      <div class="option"><span class="swatch purple"></span> Yes, that would be exciting</div>
-      <div class="option"><span class="swatch gold"></span> Maybe, I need more details</div>
-      <div class="option"><span class="swatch navy"></span> No, not interested</div>
-    </div>
+      <form id="createPollForm">
+        @csrf
+        
+        <label for="pollQuestion"><em>Poll Question:</em></label>
+        <input type="text" id="pollQuestion" name="question" placeholder="Enter your question" required>
 
-    <div class="poll-chart-wrap">
-      <canvas id="pollChart2"></canvas>
-      <p class="responses">Total Responses: 60</p>
-    </div>
-  </div>
-</div>
+        <label for="pollCommittee"><em>Committee (Optional):</em></label>
+        <select id="pollCommittee" name="committee">
+          <option value="">Select Committee</option>
+          <option value="active citizenship">Active Citizenship</option>
+          <option value="economic empowerment">Economic Empowerment</option>
+          <option value="education">Education</option>
+          <option value="health">Health</option>
+          <option value="sports">Sports</option>
+        </select>
 
-<!-- RESPONDENTS MODAL -->
-<div class="modal-overlay" id="respondentsOverlay">
-  <div class="respondents-modal">
-    <span class="modal-close">&times;</span>
-    <h3>60 Respondents</h3>
+        <label for="pollEnd"><em>Poll end date</em></label>
+        <input type="date" id="pollEnd" name="end_date" min="{{ date('Y-m-d', strtotime('+1 day')) }}" required>
 
-    <div class="respondent-item">
-      <img src="https://i.pravatar.cc/40?img=1" alt="User">
-      <span>Beverly J. Hills</span>
-    </div>
-    <div class="respondent-item">
-      <img src="https://i.pravatar.cc/40?img=2" alt="User">
-      <span>Juan Dela Cruz</span>
-    </div>
-    <div class="respondent-item">
-      <img src="https://i.pravatar.cc/40?img=3" alt="User">
-      <span>Jane Rea May Mengorio</span>
-    </div>
-    <div class="respondent-item">
-      <img src="https://i.pravatar.cc/40?img=4" alt="User">
-      <span>Juliane Rebecca Dayandante</span>
-    </div>
-    <div class="respondent-item">
-      <img src="https://i.pravatar.cc/40?img=5" alt="User">
-      <span>Marijoy Novora</span>
-    </div>
-    <div class="respondent-item">
-      <img src="https://i.pravatar.cc/40?img=6" alt="User">
-      <span>Sarrah Joe</span>
+        <label><em>Create choices</em></label>
+        <div id="pollOptions">
+          <div class="option-item">
+            <input type="text" name="options[]" placeholder="Option 1" class="poll-option" required>
+            <span class="remove-option">×</span>
+          </div>
+          <div class="option-item">
+            <input type="text" name="options[]" placeholder="Option 2" class="poll-option" required>
+            <span class="remove-option">×</span>
+          </div>
+        </div>
+        <button type="button" class="add-option">+ Add another option</button>
+        
+        <div class="modal-actions">
+          <button type="button" class="cancel-btn">Cancel</button>
+          <button type="submit" class="submit-btn">Create Poll</button>
+        </div>
+      </form>
     </div>
   </div>
-</div>
-
-<!-- CREATE POLL MODAL -->
-<div class="modal-overlay" id="createPollOverlay">
-  <div class="create-poll-modal">
-    <span class="modal-close">&times;</span>
-    <h2>Create Poll</h2>
-    <p>Empower the youth to voice their ideas through activity polls</p>
-
-    <label for="pollQuestion"><em>Poll Question:</em></label>
-    <input type="text" id="pollQuestion" placeholder="Enter your question">
-
-    <label for="pollEnd"><em>Poll end date</em></label>
-    <input type="date" id="pollEnd">
-
-
-    <label><em>Create choices</em></label>
-    <div id="pollOptions">
-    <div class="option-item">
-        <input type="text" name="options[]" placeholder="Option 1" class="poll-option">
-        <span class="remove-option">×</span>
-    </div>
-    <div class="option-item">
-        <input type="text" name="options[]" placeholder="Option 2" class="poll-option">
-        <span class="remove-option">×</span>
-    </div>
-    </div>
-    <button class="add-option">+ Add another option</button>
-</div>
-
-
-
-
-  
- 
-  
-
-
-
-
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
   // === Lucide icons + sidebar toggle ===
   lucide.createIcons();
+  
   const menuToggle = document.querySelector('.menu-toggle');
   const sidebar = document.querySelector('.sidebar');
-  const profileItem = document.querySelector('.profile-item');
-  const profileLink = document.querySelector('.profile-link');
-  const eventsItem = document.querySelector('.events-item');
-  const eventsLink = document.querySelector('.events-link');
 
   if (menuToggle && sidebar) {
     menuToggle.addEventListener('click', (e) => {
       e.stopPropagation();
       sidebar.classList.toggle('open');
-      if (!sidebar.classList.contains('open')) {
-        profileItem?.classList.remove('open'); 
-      }
     });
   }
 
   // === Submenus ===
-const evaluationItem = document.querySelector('.evaluation-item');
-const evaluationLink = document.querySelector('.evaluation-link');
+  const submenuTriggers = document.querySelectorAll('.nav-item > .nav-link');
 
-evaluationLink?.addEventListener('click', (e) => {
-  e.preventDefault();
+  submenuTriggers.forEach(trigger => {
+    trigger.addEventListener('click', (e) => {
+      e.preventDefault(); 
+      
+      const parentItem = trigger.closest('.nav-item');
+      const wasOpen = parentItem.classList.contains('open');
 
-  const isOpen = evaluationItem.classList.contains('open');
-  evaluationItem.classList.remove('open');
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('open');
+      });
 
-  if (!isOpen) {
-    evaluationItem.classList.add('open');
-  }
-});
-
-
-  // === Calendar ===
-  const weekdays = ["MON","TUE","WED","THU","FRI","SAT","SUN"];
-  const daysContainer = document.querySelector(".calendar .days");
-  const header = document.querySelector(".calendar header h3");
-  let today = new Date();
-  let currentView = new Date();
-
-  const holidays = [
-    "2025-01-01","2025-04-09","2025-04-17","2025-04-18",
-    "2025-05-01","2025-06-06","2025-06-12","2025-08-25",
-    "2025-11-30","2025-12-25","2025-12-30"
-  ];
-
-  function renderCalendar(baseDate) {
-    if (!daysContainer || !header) return;
-    daysContainer.innerHTML = "";
-
-    const startOfWeek = new Date(baseDate);
-    startOfWeek.setDate(baseDate.getDate() - (baseDate.getDay() === 0 ? 6 : baseDate.getDay() - 1));
-
-    const middleDay = new Date(startOfWeek);
-    middleDay.setDate(startOfWeek.getDate() + 3);
-    header.textContent = middleDay.toLocaleDateString("en-US", { month: "long", year: "numeric" });
-
-    for (let i = 0; i < 7; i++) {
-      const thisDay = new Date(startOfWeek);
-      thisDay.setDate(startOfWeek.getDate() + i);
-
-      const dayEl = document.createElement("div");
-      dayEl.classList.add("day");
-
-      const weekdayEl = document.createElement("span");
-      weekdayEl.classList.add("weekday");
-      weekdayEl.textContent = weekdays[i];
-
-      const dateEl = document.createElement("span");
-      dateEl.classList.add("date");
-      dateEl.textContent = thisDay.getDate();
-
-      const month = (thisDay.getMonth() + 1).toString().padStart(2,'0');
-      const day = thisDay.getDate().toString().padStart(2,'0');
-      const dateStr = `${thisDay.getFullYear()}-${month}-${day}`;
-
-      if (holidays.includes(dateStr)) dateEl.classList.add('holiday');
-      if (
-        thisDay.getDate() === today.getDate() &&
-        thisDay.getMonth() === today.getMonth() &&
-        thisDay.getFullYear() === today.getFullYear()
-      ) {
-        dayEl.classList.add("active");
+      if (!wasOpen) {
+        parentItem.classList.add('open');
       }
-
-      dayEl.appendChild(weekdayEl);
-      dayEl.appendChild(dateEl);
-      daysContainer.appendChild(dayEl);
-    }
-  }
-
-  renderCalendar(currentView);
-
-  const prevBtn = document.querySelector(".calendar .prev");
-  const nextBtn = document.querySelector(".calendar .next");
-  if (prevBtn) prevBtn.addEventListener("click", () => {
-    currentView.setDate(currentView.getDate() - 7);
-    renderCalendar(currentView);
-  });
-  if (nextBtn) nextBtn.addEventListener("click", () => {
-    currentView.setDate(currentView.getDate() + 7);
-    renderCalendar(currentView);
+    });
   });
 
   // === Time auto-update ===
@@ -415,11 +339,10 @@ evaluationLink?.addEventListener('click', (e) => {
   updateTime();
   setInterval(updateTime, 60000);
 
-  // === Notifications ===
+  // === Notifications & Profile ===
   const notifWrapper = document.querySelector(".notification-wrapper");
   const profileWrapper = document.querySelector(".profile-wrapper");
   const profileToggle = document.getElementById("profileToggle");
-  const profileDropdown = document.querySelector(".profile-dropdown");
 
   if (notifWrapper) {
     const bell = notifWrapper.querySelector(".fa-bell");
@@ -430,146 +353,125 @@ evaluationLink?.addEventListener('click', (e) => {
         profileWrapper?.classList.remove("active");
       });
     }
-    const dropdown = notifWrapper.querySelector(".notif-dropdown");
-    if (dropdown) dropdown.addEventListener("click", (e) => e.stopPropagation());
   }
 
-  if (profileWrapper && profileToggle && profileDropdown) {
+  if (profileWrapper && profileToggle) {
     profileToggle.addEventListener("click", (e) => {
       e.stopPropagation();
       profileWrapper.classList.toggle("active");
       notifWrapper?.classList.remove("active");
     });
-    profileDropdown.addEventListener("click", (e) => e.stopPropagation());
   }
 
   document.addEventListener("click", (e) => {
     if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
       sidebar.classList.remove('open');
-      profileItem?.classList.remove('open');
     }
     if (profileWrapper && !profileWrapper.contains(e.target)) profileWrapper.classList.remove('active');
     if (notifWrapper && !notifWrapper.contains(e.target)) notifWrapper.classList.remove('active');
-
-    // Close options dropdown when clicking outside
-    document.querySelectorAll('.options-dropdown').forEach(drop => drop.classList.remove('show'));
   });
 
-  // === Highlight Holidays in Events ===
-  document.querySelectorAll('.events li').forEach(eventItem => {
-    const dateEl = eventItem.querySelector('.date span');
-    const monthEl = eventItem.querySelector('.date strong');
-    if (!dateEl || !monthEl) return;
+  // === Poll Charts ===
+  function createPollChart(id, dataValues) {
+    const ctx = document.getElementById(id);
+    if (!ctx) return;
 
-    const monthMap = {
-      JAN: "01", FEB: "02", MAR: "03", APR: "04", MAY: "05", JUN: "06",
-      JUL: "07", AUG: "08", SEP: "09", OCT: "10", NOV: "11", DEC: "12"
-    };
-    const monthNum = monthMap[monthEl.textContent.trim().toUpperCase()];
-    const day = dateEl.textContent.trim().padStart(2,'0');
-    const dateStr = `2025-${monthNum}-${day}`;
+    const total = dataValues.reduce((a, b) => a + b, 0);
+    if (total === 0) {
+      // Show empty state
+      ctx.parentElement.innerHTML = '<p class="no-votes">No votes yet</p>';
+      return;
+    }
 
-    if (holidays.includes(dateStr)) {
-      eventItem.querySelector('.date').classList.add('holiday');
+    new Chart(ctx, {
+      type: "pie",
+      data: {
+        labels: dataValues.map((_, index) => `Option ${index + 1}`),
+        datasets: [{
+          data: dataValues,
+          backgroundColor: ["#5A2D91", "#D9A441", "#0C2744", "#2E8B57", "#FF6B6B"],
+          borderWidth: 2,
+          borderColor: "#fff"
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          datalabels: {
+            color: "#fff",
+            font: { weight: "bold", size: 14 },
+            formatter: (value) => {
+              return ((value / total) * 100).toFixed(0) + "%";
+            }
+          }
+        }
+      },
+      plugins: [ChartDataLabels]
+    });
+  }
+
+  // Initialize charts for each poll using data attributes
+  document.querySelectorAll('.poll-card').forEach(pollCard => {
+    const pollId = pollCard.dataset.pollId;
+    const voteCounts = JSON.parse(pollCard.dataset.voteCounts);
+    createPollChart(`pollChart${pollId}`, voteCounts);
+  });
+
+  // ================= CREATE POLL MODAL =================
+  const createPollBtn = document.querySelector(".create-poll-btn");
+  const createPollOverlay = document.getElementById("createPollOverlay");
+  const createPollForm = document.getElementById("createPollForm");
+
+  // Open modal
+  if (createPollBtn) {
+    createPollBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      createPollOverlay.style.display = "flex";
+    });
+  }
+
+  // Close modal
+  createPollOverlay.querySelector(".modal-close").addEventListener("click", () => {
+    createPollOverlay.style.display = "none";
+    createPollForm.reset();
+    resetOptions();
+  });
+
+  // Close when clicking outside
+  createPollOverlay.addEventListener("click", (e) => {
+    if (e.target.id === "createPollOverlay") {
+      createPollOverlay.style.display = "none";
+      createPollForm.reset();
+      resetOptions();
     }
   });
 
-// === Poll Charts ===
-function createPollChart(id, dataValues) {
-  const ctx = document.getElementById(id);
-  if (!ctx) return;
-
-  new Chart(ctx, {
-    type: "pie",
-    data: {
-      labels: ["Yes", "Maybe", "No"],
-      datasets: [{
-        data: dataValues,
-        backgroundColor: ["#5A2D91", "#D9A441", "#0C2744"],
-        borderWidth: 2,
-        borderColor: "#fff"
-      }]
-    },
-    options: {
-      plugins: {
-        legend: { display: false },
-        datalabels: {
-          color: "#fff",
-          font: { weight: "bold", size: 14 },
-          formatter: (value, context) => {
-            const dataset = context.chart.data.datasets[0].data;
-            const total = dataset.reduce((a, b) => a + b, 0);
-            return ((value / total) * 100).toFixed(0) + "%";
-          }
-        }
-      }
-    },
-    plugins: [ChartDataLabels]
-  });
-}
-
-// call charts separately
-createPollChart("pollChart1", [30, 10, 20]);
-createPollChart("pollChart2", [25, 15, 20]);
-
-// ================= RESPONDENTS MODAL =================
-document.querySelectorAll(".view-respondents").forEach(btn => {
-  btn.addEventListener("click", (e) => {
-    e.preventDefault();
-    document.getElementById("respondentsOverlay").style.display = "flex";
-  });
-});
-
-// Close respondents modal
-document
-  .querySelector("#respondentsOverlay .modal-close")
-  .addEventListener("click", () => {
-    document.getElementById("respondentsOverlay").style.display = "none";
+  // Cancel button
+  document.querySelector('.cancel-btn')?.addEventListener('click', () => {
+    createPollOverlay.style.display = "none";
+    createPollForm.reset();
+    resetOptions();
   });
 
-// Close respondents when clicking outside
-document.getElementById("respondentsOverlay").addEventListener("click", (e) => {
-  if (e.target.id === "respondentsOverlay") {
-    e.currentTarget.style.display = "none";
+  // --- Add option functionality ---
+  function resetOptions() {
+    const optionsContainer = document.getElementById("pollOptions");
+    optionsContainer.innerHTML = `
+      <div class="option-item">
+        <input type="text" name="options[]" placeholder="Option 1" class="poll-option" required>
+        <span class="remove-option">×</span>
+      </div>
+      <div class="option-item">
+        <input type="text" name="options[]" placeholder="Option 2" class="poll-option" required>
+        <span class="remove-option">×</span>
+      </div>
+    `;
+    reindexOptions();
   }
-});
-
-
-// ================= CREATE POLL MODAL =================
-const createPollBtn = document.querySelector(".create-poll-btn");
-const createPollOverlay = document.getElementById("createPollOverlay");
-
-// Open
-if (createPollBtn) {
-  createPollBtn.addEventListener("click", (e) => {
-    e.preventDefault();
-    createPollOverlay.style.display = "flex";
-  });
-}
-
-// Close
-createPollOverlay.querySelector(".modal-close").addEventListener("click", () => {
-  createPollOverlay.style.display = "none";
-});
-
-// Close when clicking outside
-createPollOverlay.addEventListener("click", (e) => {
-  if (e.target.id === "createPollOverlay") {
-    e.currentTarget.style.display = "none";
-  }
-});
-
-// --- Add option functionality (with remove, min 2 options) ---
-(function() {
-  const createOverlay = document.getElementById("createPollOverlay");
-  if (!createOverlay) return;
-
-  const optionsContainer = createOverlay.querySelector("#pollOptions");
-  const addOptionBtn = createOverlay.querySelector(".add-option");
-
-  if (!optionsContainer || !addOptionBtn) return;
 
   function reindexOptions() {
+    const optionsContainer = document.getElementById("pollOptions");
     const items = optionsContainer.querySelectorAll(".option-item");
     items.forEach((wrapper, i) => {
       const input = wrapper.querySelector("input");
@@ -577,10 +479,9 @@ createPollOverlay.addEventListener("click", (e) => {
 
       const removeBtn = wrapper.querySelector(".remove-option");
       if (i < 2) {
-        // Hide remove button for Option 1 & 2
-        if (removeBtn) removeBtn.style.display = "none";
+        removeBtn.style.display = "none";
       } else {
-        if (removeBtn) removeBtn.style.display = "flex";
+        removeBtn.style.display = "flex";
       }
     });
   }
@@ -593,16 +494,18 @@ createPollOverlay.addEventListener("click", (e) => {
     input.type = "text";
     input.name = "options[]";
     input.className = "poll-option";
-    input.placeholder = `Option ${optionsContainer.children.length + 1}`;
+    input.placeholder = `Option ${document.getElementById("pollOptions").children.length + 1}`;
+    input.required = true;
 
-    const removeBtn = document.createElement("button");
-    removeBtn.type = "button";
+    const removeBtn = document.createElement("span");
     removeBtn.textContent = "×";
     removeBtn.className = "remove-option";
 
     removeBtn.addEventListener("click", () => {
-      wrapper.remove();
-      reindexOptions();
+      if (document.getElementById("pollOptions").children.length > 2) {
+        wrapper.remove();
+        reindexOptions();
+      }
     });
 
     wrapper.appendChild(input);
@@ -610,23 +513,158 @@ createPollOverlay.addEventListener("click", (e) => {
     return wrapper;
   }
 
-  addOptionBtn.addEventListener("click", (e) => {
+  document.querySelector(".add-option")?.addEventListener("click", (e) => {
     e.preventDefault();
     const optionField = createOptionField();
-    optionsContainer.appendChild(optionField);
-    requestAnimationFrame(() => optionField.querySelector("input").focus());
+    document.getElementById("pollOptions").appendChild(optionField);
     reindexOptions();
   });
 
-  // Initial reindex on load
+  // Form submission
+  createPollForm.addEventListener("submit", function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const options = Array.from(formData.getAll('options[]')).filter(opt => opt.trim() !== '');
+    
+    // Validate at least 2 options
+    if (options.length < 2) {
+      alert('Please provide at least 2 options');
+      return;
+    }
+
+    const data = {
+      question: formData.get('question'),
+      options: options,
+      end_date: formData.get('end_date'),
+      committee: formData.get('committee'),
+      _token: '{{ csrf_token() }}'
+    };
+    
+    // Show loading state
+    const submitBtn = createPollForm.querySelector('.submit-btn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Creating...';
+    
+    fetch('/sk-polls', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        // Close modal and reload page
+        createPollOverlay.style.display = "none";
+        createPollForm.reset();
+        resetOptions();
+        location.reload();
+      } else {
+        alert('Error creating poll: ' + (data.message || 'Unknown error'));
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Error creating poll');
+    })
+    .finally(() => {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Create Poll';
+    });
+  });
+
+  // ================= RESPONDENTS MODAL =================
+  document.querySelectorAll(".view-respondents").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      const pollId = btn.dataset.pollId;
+      
+      // Show loading
+      document.getElementById('respondentsList').innerHTML = '<div class="loading">Loading respondents...</div>';
+      document.getElementById("respondentsOverlay").style.display = "flex";
+      
+      fetch(`/sk-polls/${pollId}/respondents`)
+        .then(response => response.json())
+        .then(data => {
+          const respondentsList = document.getElementById('respondentsList');
+          if (data.respondents && data.respondents.length > 0) {
+            respondentsList.innerHTML = data.respondents.map(respondent => `
+              <div class="respondent-item">
+                <img src="${respondent.avatar}" alt="User" class="respondent-avatar">
+                <span>${respondent.name}</span>
+              </div>
+            `).join('');
+          } else {
+            respondentsList.innerHTML = '<p class="no-votes">No respondents yet</p>';
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          document.getElementById('respondentsList').innerHTML = '<p class="error-message">Error loading respondents</p>';
+        });
+    });
+  });
+
+  // Close respondents modal
+  document.querySelector("#respondentsOverlay .modal-close").addEventListener("click", () => {
+    document.getElementById("respondentsOverlay").style.display = "none";
+  });
+
+  // Close when clicking outside
+  document.getElementById("respondentsOverlay").addEventListener("click", (e) => {
+    if (e.target.id === "respondentsOverlay") {
+      e.currentTarget.style.display = "none";
+    }
+  });
+
+  // ================= DELETE POLL =================
+  document.querySelectorAll(".delete-poll").forEach(btn => {
+    btn.addEventListener("click", function() {
+      const pollId = this.dataset.pollId;
+      const pollTitle = this.closest('.poll-card').querySelector('.question em').textContent;
+      
+      if (confirm(`Are you sure you want to delete the poll: "${pollTitle}"? This action cannot be undone.`)) {
+        // Show loading
+        this.disabled = true;
+        this.textContent = 'Deleting...';
+        
+        fetch(`/sk-polls/${pollId}`, {
+          method: 'DELETE',
+          headers: {
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            // Remove poll card from DOM
+            document.querySelector(`[data-poll-id="${pollId}"]`).remove();
+            
+            // Show success message or reload if no polls left
+            if (document.querySelectorAll('.poll-card').length === 0) {
+              location.reload();
+            }
+          } else {
+            alert('Error deleting poll: ' + (data.message || 'Unknown error'));
+            this.disabled = false;
+            this.textContent = 'Delete';
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Error deleting poll');
+          this.disabled = false;
+          this.textContent = 'Delete';
+        });
+      }
+    });
+  });
+
+  // Initial setup
   reindexOptions();
-})();
-
-
-
-
-
-  
 });
 </script>
 </body>

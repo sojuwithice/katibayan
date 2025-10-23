@@ -27,8 +27,6 @@ class AttendanceController extends Controller
             }
 
             $passcode = $request->input('passcode');
-            Log::info("Attendance attempt for user {$user->id} with passcode: {$passcode}");
-
             if (!$passcode) {
                 return response()->json([
                     'success' => false,
@@ -36,20 +34,19 @@ class AttendanceController extends Controller
                 ], 400);
             }
 
-            // Find event by passcode
+            // 🔍 Find event
             $event = Event::where('passcode', $passcode)
                         ->where('is_launched', true)
                         ->first();
 
             if (!$event) {
-                Log::warning("Invalid passcode attempt: {$passcode}");
                 return response()->json([
                     'success' => false,
                     'error' => 'Invalid passcode or event not launched'
                 ], 404);
             }
 
-            // Check if user already attended this event
+            // 🚫 Check if already attended
             $existingAttendance = Attendance::where('user_id', $user->id)
                                         ->where('event_id', $event->id)
                                         ->first();
@@ -61,10 +58,10 @@ class AttendanceController extends Controller
                 ], 409);
             }
 
-            // Check if event is today
+            // 📅 Check if event is for today
             $today = Carbon::today();
             $eventDate = Carbon::parse($event->event_date);
-            
+
             if (!$eventDate->isSameDay($today)) {
                 return response()->json([
                     'success' => false,
@@ -72,23 +69,46 @@ class AttendanceController extends Controller
                 ], 400);
             }
 
-            // Create attendance record
-            $attendance = Attendance::create([
-                'user_id' => $user->id,
-                'event_id' => $event->id,
-                'attended_at' => now(),
-                'passcode_used' => $passcode,
+            // 🧩 Build full name and compute age using correct field names
+            $fullnameParts = array_filter([
+                $user->given_name ?? '',
+                $user->middle_name ?? '',
+                $user->last_name ?? '',
+                $user->suffix ?? ''
             ]);
+            $fullname = implode(' ', $fullnameParts);
+            $age = $user->date_of_birth ? Carbon::parse($user->date_of_birth)->age : null;
 
-            Log::info("Attendance marked successfully for user {$user->id} at event {$event->id}");
+            // ✅ Fixed Attendance creation
+            $attendance = new Attendance();
+
+            $attendance->user_id        = $user->id;
+            $attendance->event_id       = $event->id;
+            $attendance->attended_at    = now();
+            $attendance->passcode_used  = $passcode;
+            $attendance->status         = 'Attended';
+            $attendance->date           = now()->format('Y-m-d');
+            $attendance->time           = now()->format('H:i:s');
+
+            // User details - using correct field names
+            $attendance->account_number = $user->account_number ?? '-';
+            $attendance->fullname       = $fullname ?: '-';
+            $attendance->age            = $age ?: null;
+            $attendance->purok          = $user->purok_zone ?? '-';
+            $attendance->role           = $user->role ?? '-';
+
+            $attendance->save();
+
+            // Optional: log to debug
+            Log::info('Attendance saved', $attendance->toArray());
 
             return response()->json([
                 'success' => true,
                 'message' => 'Attendance marked successfully!',
                 'event' => [
                     'title' => $event->title,
-                    'date' => $event->event_date->format('F j, Y'),
-                    'time' => $event->formatted_time,
+                    'date'  => $event->event_date->format('F j, Y'),
+                    'time'  => $event->formatted_time,
                 ]
             ]);
 
@@ -107,18 +127,30 @@ class AttendanceController extends Controller
     public function getUserAttendances(): JsonResponse
     {
         try {
-            $user = Auth::user();
-            $attendances = Attendance::with('event')
-                ->where('user_id', $user->id)
+            $attendances = Attendance::with(['user', 'event'])
                 ->orderBy('attended_at', 'desc')
                 ->get()
                 ->map(function ($attendance) {
+                    $user = $attendance->user;
+
+                    // Build full name properly using correct field names
+                    $fullnameParts = array_filter([
+                        $user->given_name ?? '',
+                        $user->middle_name ?? '',
+                        $user->last_name ?? '',
+                        $user->suffix ?? ''
+                    ]);
+                    $fullname = implode(' ', $fullnameParts) ?: '-';
+
                     return [
-                        'event_title' => $attendance->event->title,
-                        'event_date' => $attendance->event->event_date->format('F j, Y'),
-                        'event_time' => $attendance->event->formatted_time,
-                        'attended_at' => $attendance->attended_at->format('F j, Y g:i A'),
-                        'location' => $attendance->event->location,
+                        'status'         => $attendance->status ?? 'Attended',
+                        'date'           => $attendance->date ?? $attendance->attended_at->format('Y-m-d'),
+                        'time'           => $attendance->time ?? $attendance->attended_at->format('H:i:s'),
+                        'account_number' => $user->account_number ?? '-',
+                        'name'           => $fullname,
+                        'age'            => $user->date_of_birth ? Carbon::parse($user->date_of_birth)->age : '-',
+                        'purok'          => $user->purok_zone ?? '-',
+                        'role'           => $user->role ?? '-',
                     ];
                 });
 
@@ -133,6 +165,177 @@ class AttendanceController extends Controller
                 'success' => false,
                 'error' => 'Failed to fetch attendance records'
             ], 500);
+        }
+    }
+
+    public function getAllAttendances()
+    {
+        try {
+            $attendances = Attendance::orderBy('attended_at', 'desc')->get([
+                'status',
+                'date',
+                'time',
+                'account_number',
+                'fullname',
+                'age',
+                'purok',
+                'role'
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'attendances' => $attendances
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching attendance data: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to load attendance data'], 500);
+        }
+    }
+
+    public function myAttendance()
+{
+    $user = Auth::user();
+    
+    if (!$user) {
+        return response()->json([
+            'success' => false,
+            'error' => 'User not authenticated'
+        ], 401);
+    }
+
+    $attendances = Attendance::with('user')
+        ->where('user_id', $user->id)
+        ->get()
+        ->map(function ($attendance) {
+            $u = $attendance->user;
+
+            if (!$u) {
+                return null;
+            }
+
+            // 🧩 Build full name properly using correct field names
+            $fullnameParts = array_filter([
+                $u->given_name ?? '',
+                $u->middle_name ?? '',
+                $u->last_name ?? '',
+                $u->suffix ?? ''
+            ]);
+            $fullname = implode(' ', $fullnameParts);
+
+            // 🕓 Compute age from date_of_birth
+            $age = $u->date_of_birth ? Carbon::parse($u->date_of_birth)->age : '-';
+
+            return [
+                'status'          => $attendance->status ?? 'Attended',
+                'date'            => $attendance->attended_at ? $attendance->attended_at->format('Y-m-d') : '-',
+                'time'            => $attendance->attended_at ? $attendance->attended_at->format('h:i A') : '-',
+                'account_number'  => $u->account_number ?? '-',
+                'name'            => $fullname ?: '-',
+                'age'             => $age,
+                'purok'           => $u->purok_zone ?? '-',
+                'role'            => $u->role ?? '-',
+            ];
+        })
+        ->filter();
+
+    return response()->json([
+        'success' => true,
+        'attendances' => $attendances,
+    ]);
+}
+    public function showAttendancePage(Request $request)
+    {
+        $eventId = $request->query('event_id');
+        $event = Event::find($eventId);
+
+        if (!$event) {
+            return redirect()->back()->with('error', 'Event not found.');
+        }
+
+        return view('attendancepage', compact('event'));
+    }
+
+    public function getEventAttendances(Request $request): JsonResponse
+    {
+        $eventId = $request->query('event_id');
+
+        try {
+            $attendances = Attendance::where('event_id', $eventId)
+                ->with('user')
+                ->orderBy('attended_at', 'desc')
+                ->get()
+                ->map(function ($a) {
+                    $u = $a->user;
+                    if (!$u) return null;
+
+                    $fullnameParts = array_filter([
+                        $u->given_name ?? '',
+                        $u->middle_name ?? '',
+                        $u->last_name ?? '',
+                        $u->suffix ?? ''
+                    ]);
+                    $fullname = implode(' ', $fullnameParts) ?: '-';
+
+                    return [
+                        'status' => $a->status ?? 'Attended',
+                        'date' => $a->date ?? $a->attended_at->format('Y-m-d'),
+                        'time' => $a->time ?? $a->attended_at->format('H:i:s'),
+                        'account_number' => $u->account_number ?? '-',
+                        'name' => $fullname,
+                        'age' => $u->date_of_birth ? Carbon::parse($u->date_of_birth)->age : '-',
+                        'purok' => $u->purok_zone ?? '-',
+                        'role' => $u->role ?? '-',
+                    ];
+                })
+                ->filter();
+
+            return response()->json([
+                'success' => true,
+                'attendances' => $attendances
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error fetching event attendances: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to fetch attendance records'
+            ], 500);
+        }
+    }
+
+    /**
+     * Show attendees for a specific event
+     */
+    public function showAttendees(Request $request)
+    {
+        try {
+            $eventId = $request->query('event_id');
+            
+            if (!$eventId) {
+                return redirect()->route('youth-participation')->with('error', 'No event specified.');
+            }
+
+            // Get the event details
+            $event = Event::find($eventId);
+            
+            if (!$event) {
+                return redirect()->route('youth-participation')->with('error', 'Event not found.');
+            }
+
+            // Get attendees for this event
+            $attendances = Attendance::where('event_id', $eventId)
+                ->with('user')
+                ->orderBy('attended_at', 'desc')
+                ->get();
+
+            return view('list-of-attendees', [
+                'event' => $event,
+                'attendances' => $attendances
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error fetching attendees: ' . $e->getMessage());
+            return redirect()->route('youth-participation')->with('error', 'Failed to load attendees.');
         }
     }
 }

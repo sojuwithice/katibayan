@@ -18,54 +18,65 @@
 <body>
   
   <!-- Sidebar -->
+  <!-- Sidebar -->
   <aside class="sidebar">
-    <button class="menu-toggle">Menu</button>
-    <div class="divider"></div>
-    <nav class="nav">
-      <a href="{{ route('sk.dashboard') }}">
-        <i data-lucide="layout-dashboard"></i>
-        <span class="label">Dashboard</span>
-      </a>
+  <button class="menu-toggle">Menu</button>
+  <div class="divider"></div>
+  <nav class="nav">
+    <a href="{{ route('sk.dashboard') }}">
+      <i data-lucide="layout-dashboard"></i>
+      <span class="label">Dashboard</span>
+    </a>
 
-      <a href="#">
-        <i data-lucide="chart-pie"></i>
-        <span class="label">Analytics</span>
-      </a>
+    <a href="#">
+      <i data-lucide="chart-pie"></i>
+      <span class="label">Analytics</span>
+    </a>
 
-      <a href="{{ route('youth-profilepage') }}">
-        <i data-lucide="users"></i>
-        <span class="label">Youth Profile</span>
-      </a>
+    <a href="{{ route('youth-profilepage') }}">
+      <i data-lucide="users"></i>
+      <span class="label">Youth Profile</span>
+    </a>
 
-      <a href="{{ route('sk-eventpage') }}" class="events-link">
+    <div class="nav-item">
+      <a href="#" class="nav-link">
         <i data-lucide="calendar"></i>
         <span class="label">Events and Programs</span>
+        <i data-lucide="chevron-down" class="submenu-arrow"></i>
       </a>
-
-      <div class="evaluation-item nav-item">
-        <a href="{{ route('sk-evaluation-feedback') }}" class="evaluation-link nav-link active">
-          <i data-lucide="user-star"></i>
-          <span class="label">Evaluation</span>
-          <i data-lucide="chevron-down" class="submenu-arrow"></i>
-        </a>
-        <div class="submenu">
-          <a href="{{ route('sk-evaluation-feedback') }}">Feedbacks</a>
-          <a href="#">Polls</a>
-          <a href="#">Suggestion Box</a>
-        </div>
+      <div class="submenu">
+        <a href="{{ route('sk-eventpage') }}">Events List</a>
+        <a href="{{ route('youth-program-registration') }}">Youth Registration</a>
       </div>
+    </div>
 
-      <a href="#">
-        <i data-lucide="file-chart-column"></i>
-        <span class="label">Reports</span>
-      </a>
+    <a href="{{ route('sk-evaluation-feedback') }}">
+      <i data-lucide="message-square-quote"></i>
+      <span class="label">Feedbacks</span>
+    </a>
 
-      <a href="{{ route('serviceoffers') }}">
-        <i data-lucide="hand-heart"></i>
-        <span class="label">Service Offer</span>
-      </a>
-    </nav>
-  </aside>
+    <a href="{{ route('sk-polls') }}">
+      <i data-lucide="vote"></i>
+      <span class="label">Polls</span>
+    </a>
+
+    <a href="{{ route('youth-suggestion') }}">
+      <i data-lucide="lightbulb"></i>
+      <span class="label">Suggestion Box</span>
+    </a>
+    
+    <a href="{{ route('reports') }}">
+      <i data-lucide="file-chart-column"></i>
+      <span class="label">Reports</span>
+    </a>
+
+    <a href="{{ route('sk-services-offer') }}">
+      <i data-lucide="hand-heart"></i>
+      <span class="label">Service Offer</span>
+    </a>
+
+  </nav>
+</aside>
 
   <!-- Main -->
   <div class="main">
@@ -122,15 +133,17 @@
 
         <!-- Profile Avatar -->
         <div class="profile-wrapper">
-          <img src="https://i.pravatar.cc/80" alt="User" class="avatar" id="profileToggle">
+          <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+               alt="User" class="avatar" id="profileToggle">
           <div class="profile-dropdown">
             <div class="profile-header">
-              <img src="https://i.pravatar.cc/80" alt="User" class="profile-avatar">
+              <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+                   alt="User" class="profile-avatar">
               <div class="profile-info">
-                <h4>Marijoy S. Novora</h4>
+                <h4>{{ $user->given_name ?? '' }} {{ $user->middle_name ?? '' }} {{ $user->last_name ?? '' }} {{ $user->suffix ?? '' }}</h4>
                 <div class="profile-badge">
-                  <span class="badge">KK- Member</span>
-                  <span class="badge">19 yrs old</span>
+                  <span class="badge">{{ $roleBadge ?? 'SK Member' }}</span>
+                  <span class="badge">{{ $age ?? 'N/A' }} yrs old</span>
                 </div>
               </div>
             </div>
@@ -148,116 +161,23 @@
                 </a>
               </li>
               <li><i class="fas fa-star"></i> Send Feedback to Katibayan</li>
+              <li class="logout-item">
+                <a href="loginpage" onclick="confirmLogout(event)">
+                  <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+              </li>
             </ul>
+            
+            <!-- Hidden Logout Form -->
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+              @csrf
+            </form>
           </div>
         </div>
       </div>
     </header>
 
     <main class="container">
-
-  <div class="evaluation-container">
-
-    <!-- Header -->
-<div class="evaluation-header">
-  <button class="back-btn"><i class="fas fa-arrow-left"></i></button>
-  <div>
-    <h2>Kalinisan sa bagong Pilipinas Program</h2>
-    <p class="event-details">Date: 2025-09-20 | Venue: Barangay Hall</p>
-  </div>
-</div>
-
-<!-- Tabs -->
-<div class="tab-buttons">
-  <button class="tab-btn active" data-tab="rating">Rating</button>
-  <button class="tab-btn" data-tab="comments">Comments</button>
-</div>
-
-<!-- ================== RATING TAB ================== -->
-<div id="rating" class="tab-content active">
-
-  <!-- Stats -->
-  <div class="stats">
-    <div class="stat-card">
-      <h3>Average Rating of this Event</h3>
-      <div class="rating-score">4.5 / 5</div>
-      <small>Based on the <b class="highlight">100 responses</b></small>
-    </div>
-    <div class="stat-card">
-      <h3>Rating Distribution</h3>
-      <canvas id="ratingChart"></canvas>
-    </div>
-  </div>
-
-  <!-- Question Breakdown -->
-  <div class="question-section">
-    <h3>
-      Question Breakdown
-      <a href="{{ route('list-of-eval-respondents') }}" class="see-respondents">See Respondents</a>
-    </h3>
-
-    <div class="question-card">
-      <div class="question-text">Question 1: Was the purpose of the program/event explained clearly?</div>
-      <div class="rating">Rating: 5/5</div>
-    </div>
-
-    <div class="question-card">
-      <div class="question-text">Question 2: Was the time given for the program/event enough?</div>
-      <div class="rating">Rating: 4/5</div>
-    </div>
-
-    <div class="question-card">
-      <div class="question-text">Question 3: Were you able to join and participate in the activities?</div>
-      <div class="rating">Rating: 5/5</div>
-    </div>
-
-    <div class="question-card">
-      <div class="question-text">Question 4: Did you learn something new from this program/event?</div>
-      <div class="rating">Rating: 5/5</div>
-    </div>
-
-    <div class="question-card">
-      <div class="question-text">Question 5: Did the SK officials/facilitators treat all participants fairly and equally?</div>
-      <div class="rating">Rating: 5/5</div>
-    </div>
-
-    <div class="question-card">
-      <div class="question-text">Question 6: Did the SK officials/facilitators show enthusiasm and commitment in leading the program/event?</div>
-      <div class="rating">Rating: 5/5</div>
-    </div>
-
-    <div class="question-card">
-      <div class="question-text">Question 7: Overall, are you satisfied with this program/event?</div>
-      <div class="rating">Rating: 5/5</div>
-    </div>
-  </div>
-</div>
-
-<!-- ================== COMMENTS TAB ================== -->
-<!-- Feedback Section -->
-<div id="comments" class="tab-content">
-  
-  <!-- Filters inside comments -->
-  <div class="feedback-filters">
-    <button class="active">All</button>
-    <button>5 - Strongly Agree</button>
-    <button>4 - Agree</button>
-    <button>3 - Neutral</button>
-    <button>2 - Disagree</button>
-    <button>1 - Strongly Disagree</button>
-  </div>
-
-  <!-- Section Title -->
-  <h3>Feedback from participants</h3>
-
-  <!-- Comment Card -->
-  <div class="feedback-card">
-    <div class="feedback-left">
-      <img src="https://i.pravatar.cc/60?img=1" alt="profile" />
-      <div>
-        <div class="name-stars">
-          <h4>Beverly J. Hills</h4>
-          <div class="stars">★★★★★ <span>5</span></div>
       <div class="evaluation-container">
         <!-- Header -->
         <div class="evaluation-header">
@@ -293,7 +213,7 @@
           <div class="question-section">
             <h3>
               Question Breakdown
-              <span class="see-respondents">See Respondents</span>
+              <a href="{{ route('evaluation.respondents', ['event_id' => $event->id]) }}" class="see-respondents">See Respondents</a>
             </h3>
 
             @php
@@ -324,16 +244,16 @@
         <div id="comments" class="tab-content">
           <!-- Filters inside comments -->
           <div class="feedback-filters">
-            <button class="active">All</button>
-            <button>5 - Strongly Agree</button>
-            <button>4 - Agree</button>
-            <button>3 - Neutral</button>
-            <button>2 - Disagree</button>
-            <button>1 - Strongly Disagree</button>
+            <button class="filter-btn active" data-rating="all">All</button>
+            <button class="filter-btn" data-rating="5">5 - Strongly Agree</button>
+            <button class="filter-btn" data-rating="4">4 - Agree</button>
+            <button class="filter-btn" data-rating="3">3 - Neutral</button>
+            <button class="filter-btn" data-rating="2">2 - Disagree</button>
+            <button class="filter-btn" data-rating="1">1 - Strongly Disagree</button>
           </div>
 
           <!-- Section Title -->
-          <h3>Feedback from participants</h3>
+          <h3>Feedback from participants ({{ $event->evaluations->count() ?? 0 }})</h3>
 
           <!-- Comment Cards -->
           @if(isset($event) && $event->evaluations->count() > 0)
@@ -344,7 +264,7 @@
                 $stars = str_repeat('★', $overallRating) . str_repeat('☆', 5 - $overallRating);
               @endphp
               
-              <div class="feedback-card">
+              <div class="feedback-card" data-rating="{{ $overallRating }}">
                 <div class="feedback-left">
                   <img src="{{ $evaluation->user->avatar ? asset('storage/' . $evaluation->user->avatar) : 'https://i.pravatar.cc/60?img=' . $loop->index }}" alt="profile" />
                   <div>
@@ -424,46 +344,38 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      // === Lucide icons ===
-      if (window.lucide) lucide.createIcons();
+  // === Lucide icons + sidebar toggle ===
+  lucide.createIcons();
+  
+  const menuToggle = document.querySelector('.menu-toggle');
+  const sidebar = document.querySelector('.sidebar');
 
-      // ================= Sidebar =================
-      const sidebar = document.querySelector('.sidebar');
-      const menuToggle = document.querySelector('.menu-toggle');
-      const navItems = document.querySelectorAll('.nav-item > a');
+  if (menuToggle && sidebar) {
+    menuToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      sidebar.classList.toggle('open');
+    });
+  }
 
-      function closeAllSubmenus() {
-        document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('open'));
+  // === Submenus ===
+  const submenuTriggers = document.querySelectorAll('.nav-item > .nav-link');
+
+  submenuTriggers.forEach(trigger => {
+    trigger.addEventListener('click', (e) => {
+      e.preventDefault(); 
+      
+      const parentItem = trigger.closest('.nav-item');
+      const wasOpen = parentItem.classList.contains('open');
+
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('open');
+      });
+
+      if (!wasOpen) {
+        parentItem.classList.add('open');
       }
-
-      // Toggle sidebar open/close
-      menuToggle?.addEventListener('click', () => {
-        sidebar.classList.toggle('open');
-        if (!sidebar.classList.contains('open')) closeAllSubmenus();
-      });
-
-      // Toggle submenus
-      navItems.forEach(link => {
-        link.addEventListener('click', e => {
-          if (!sidebar.classList.contains('open')) return;
-
-          const parentItem = link.parentElement;
-          const isOpen = parentItem.classList.contains('open');
-
-          closeAllSubmenus();
-          if (!isOpen) parentItem.classList.add('open');
-
-          e.preventDefault();
-        });
-      });
-
-      // Close sidebar if clicked outside
-      document.addEventListener('click', e => {
-        if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
-          sidebar.classList.remove('open');
-          closeAllSubmenus();
-        }
-      });
+    });
+  });
 
       // ================= Profile & Notifications =================
       const profileWrapper = document.querySelector('.profile-wrapper');
@@ -534,96 +446,122 @@
       });
 
       // ================= Rating Distribution Chart =================
-      const ctx = document.getElementById('ratingChart').getContext('2d');
+      const ctx = document.getElementById('ratingChart');
       
-      // Get rating data from hidden input
-      const ratingDistributionInput = document.getElementById('ratingDistribution');
-      
-      // Default data as a JavaScript object
-      let ratingData = {1: 0, 2: 2, 3: 5, 4: 15, 5: 78};
-      
-      if (ratingDistributionInput && ratingDistributionInput.value) {
-        try {
-          ratingData = JSON.parse(ratingDistributionInput.value);
-        } catch (e) {
-          console.error('Error parsing rating distribution:', e);
-        }
-      }
-      
-      new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: ['1: Strongly Disagree', '2: Disagree', '3: Neutral', '4: Agree', '5: Strongly Agree'],
-          datasets: [{
-            label: 'Responses',
-            data: [
-              ratingData[1] || 0,
-              ratingData[2] || 0,
-              ratingData[3] || 0,
-              ratingData[4] || 0,
-              ratingData[5] || 0
-            ],
-            backgroundColor: '#0C4B92',
-            borderRadius: 6,
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { 
-              display: true, 
-              labels: { 
-                color: "#01214A",
-                font: {
-                  family: "'Montserrat', sans-serif",
-                  size: 12
-                }
-              } 
-            }
-          },
-          scales: {
-            x: { 
-              ticks: { 
-                color: "#4b5c77", 
-                font: {
-                  family: "'Montserrat', sans-serif",
-                  size: 11
-                }
-              } 
-            },
-            y: { 
-              beginAtZero: true, 
-              ticks: { 
-                stepSize: 25, 
-                color: "#4b5c77",
-                font: {
-                  family: "'Montserrat', sans-serif",
-                  size: 11
-                }
-              } 
-            }
+      if (ctx) {
+        // Get rating data from hidden input
+        const ratingDistributionInput = document.getElementById('ratingDistribution');
+        
+        // Default data as a JavaScript object
+        let ratingData = {1: 0, 2: 2, 3: 5, 4: 15, 5: 78};
+        
+        if (ratingDistributionInput && ratingDistributionInput.value) {
+          try {
+            ratingData = JSON.parse(ratingDistributionInput.value);
+          } catch (e) {
+            console.error('Error parsing rating distribution:', e);
           }
         }
-      });
+        
+        new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: ['1: Strongly Disagree', '2: Disagree', '3: Neutral', '4: Agree', '5: Strongly Agree'],
+            datasets: [{
+              label: 'Responses',
+              data: [
+                ratingData[1] || 0,
+                ratingData[2] || 0,
+                ratingData[3] || 0,
+                ratingData[4] || 0,
+                ratingData[5] || 0
+              ],
+              backgroundColor: '#0C4B92',
+              borderRadius: 6,
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { 
+                display: true, 
+                labels: { 
+                  color: "#01214A",
+                  font: {
+                    family: "'Montserrat', sans-serif",
+                    size: 12
+                  }
+                } 
+              }
+            },
+            scales: {
+              x: { 
+                ticks: { 
+                  color: "#4b5c77", 
+                  font: {
+                    family: "'Montserrat', sans-serif",
+                    size: 11
+                  }
+                } 
+              },
+              y: { 
+                beginAtZero: true, 
+                ticks: { 
+                  stepSize: 25, 
+                  color: "#4b5c77",
+                  font: {
+                    family: "'Montserrat', sans-serif",
+                    size: 11
+                  }
+                } 
+              }
+            }
+          }
+        });
+      }
 
       // ================= Feedback Filters =================
-      const filterButtons = document.querySelectorAll('.feedback-filters button');
+      const filterButtons = document.querySelectorAll('.filter-btn');
+      const feedbackCards = document.querySelectorAll('.feedback-card');
       
       filterButtons.forEach(button => {
         button.addEventListener('click', () => {
           filterButtons.forEach(btn => btn.classList.remove('active'));
           button.classList.add('active');
-          // Add filtering logic here if needed
+          
+          const ratingFilter = button.getAttribute('data-rating');
+          
+          // Filter feedback cards
+          feedbackCards.forEach(card => {
+            if (ratingFilter === 'all') {
+              card.style.display = 'flex';
+            } else {
+              const cardRating = card.getAttribute('data-rating');
+              if (cardRating === ratingFilter) {
+                card.style.display = 'flex';
+              } else {
+                card.style.display = 'none';
+              }
+            }
+          });
         });
       });
 
       // ================= Export Functionality =================
-      // You can add export to PDF/Excel functionality here
       const seeRespondentsBtn = document.querySelector('.see-respondents');
-      seeRespondentsBtn?.addEventListener('click', () => {
-        // Implement see respondents functionality
-        alert('Respondents list functionality would go here');
+      seeRespondentsBtn?.addEventListener('click', (e) => {
+        e.preventDefault();
+        // Navigate to respondents page with event ID
+        window.location.href = seeRespondentsBtn.href;
       });
+
+      // ================= Logout Confirmation =================
+      function confirmLogout(event) {
+        event.preventDefault();
+        if (confirm('Are you sure you want to logout?')) {
+          document.getElementById('logout-form').submit();
+        }
+      }
     });
   </script>
 </body>

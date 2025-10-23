@@ -12,8 +12,16 @@ class Attendance extends Model
     protected $fillable = [
         'user_id',
         'event_id',
+        'status',
+        'account_number',
+        'fullname',
+        'age',
+        'purok',
+        'role',
         'attended_at',
-        'passcode_used',
+        'date',
+        'time',
+        'passcode_used', // ← important!
     ];
 
     protected $casts = [

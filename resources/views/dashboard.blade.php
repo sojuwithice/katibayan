@@ -160,6 +160,95 @@
       </div>
     </header>
 
+    <div id="feedbackModal" class="modal-overlay">
+  <div class="modal-content">
+    <span class="close-btn" id="closeModal">&times;</span>
+
+    <h2>Send us feedback</h2>
+    <p>Help us improve by sharing your thoughts, suggestions, and experiences with our service.</p>
+
+    <div class="feedback-options">
+      <div class="option-card">
+        <i class="fas fa-star"></i>
+        <p><strong>Star Rating</strong><br>Rate your experience with 1–5 stars</p>
+      </div>
+      <div class="option-card">
+        <i class="fas fa-comment"></i> 
+        <p><strong>Comment Section</strong><br>Share your thoughts</p>
+      </div>
+      <div class="option-card">
+        <i class="fas fa-bolt"></i>
+        <p><strong>Quick Submission</strong><br>Simple and intuitive feedback process</p>
+      </div>
+    </div>
+
+    <h3>Enjoying it? Rate us!</h3>
+    <div class="star-rating" id="starRating">
+      <i class="far fa-star" data-value="1"></i>
+      <i class="far fa-star" data-value="2"></i>
+      <i class="far fa-star" data-value="3"></i>
+      <i class="far fa-star" data-value="4"></i>
+      <i class="far fa-star" data-value="5"></i>
+    </div>
+
+    <form id="feedbackForm" action="{{ route('feedback.submit') }}" method="POST">
+      @csrf
+      
+      <label for="type">Feedback Type</label>
+      
+      <div class="custom-select-wrapper" id="customSelect">
+        <div class="custom-select-trigger">
+          <span id="selectedFeedbackType">Select feedback type</span>
+          <div class="custom-arrow"></div>
+        </div>
+        
+        <div class="custom-options-list">
+          <div class="custom-option" data-value="suggestion">
+            <span class="dot suggestion"></span> Suggestion
+          </div>
+          <div class="custom-option" data-value="bug">
+            <span class="dot bug"></span> Bug or Issue
+          </div>
+          <div class="custom-option" data-value="appreciation">
+            <span class="dot appreciation"></span> Appreciation
+          </div>
+          <div class="custom-option" data-value="others">
+            <span class="dot others"></span> Others
+          </div>
+        </div>
+        
+        <select id="type" name="type" required style="display: none;">
+          <option value="" disabled selected>Select feedback type</option>
+          <option value="suggestion">Suggestion</option>
+          <option value="bug">Bug or Issue</option>
+          <option value="appreciation">Appreciation</option>
+          <option value="others">Others</option>
+        </select>
+      </div>
+      <label for="message">Your message</label>
+      <textarea id="message" name="message" rows="5" required></textarea>
+
+      <input type="hidden" name="rating" id="ratingInput">
+      
+      <div class="form-actions">
+        <button type="submit" class="submit-btn">Submit</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="successModal" class="modal-overlay simple-alert-modal">
+  <div class="modal-content">
+    <div class="success-icon">
+      <i class="fas fa-check"></i>
+    </div>
+    <h2>Submitted</h2>
+    <p>Thank you for your feedback! Your thoughts help us improve.</p>
+    <button id="closeSuccessModal" class="ok-btn">Ok</button>
+  </div>
+</div>
+
+
     <!-- === Pages Container === -->
     <div id="dashboard-page" class="page active">
       <div class="row">
@@ -413,12 +502,34 @@
   </div>
 
   <script>
-  document.addEventListener("DOMContentLoaded", () => {
-    // === Lucide icons + sidebar toggle ===
-    lucide.createIcons();
+  
+  function updateTime() {
+    const timeEl = document.querySelector(".time");
+    if (!timeEl) return;
+    
+    const now = new Date();
+    const shortWeekdays = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+    const shortMonths = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+    const weekday = shortWeekdays[now.getDay()];
+    const month = shortMonths[now.getMonth()];
+    const day = now.getDate();
+    let hours = now.getHours();
+    const minutes = now.getMinutes().toString().padStart(2, "0");
+    const ampm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12 || 12;
+
+    timeEl.innerHTML = `${weekday}, ${month} ${day} ${hours}:${minutes} <span>${ampm}</span>`;
+  }
+
+  /**
+   * Initializes sidebar toggle and profile submenu.
+   */
+  function initSidebar() {
     const menuToggle = document.querySelector('.menu-toggle');
     const sidebar = document.querySelector('.sidebar');
-    
+    const profileItem = document.querySelector('.profile-item');
+    const profileLink = profileItem?.querySelector('.profile-link');
+
     if (menuToggle && sidebar) {
       menuToggle.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -428,10 +539,6 @@
         }
       });
     }
-
-    // === Profile submenu ===
-    const profileItem = document.querySelector('.profile-item');
-    const profileLink = document.querySelector('.profile-link');
 
     function closeAllSubmenus() {
       profileItem?.classList.remove('open');
@@ -447,22 +554,97 @@
         }
       });
     }
+  }
 
-    // === Calendar Functionality ===
-    const weekdays = ["MON","TUE","WED","THU","FRI","SAT","SUN"];
-    const daysContainer = document.querySelector(".calendar .days");
-    const header = document.querySelector(".calendar header h3");
-    let today = new Date();
-    let currentView = new Date();
+  
+  function initTopbar(openEvaluationModal) {
+    // --- Time ---
+    updateTime();
+    setInterval(updateTime, 60000);
 
+    // --- Elements ---
+    const notifWrapper = document.querySelector(".notification-wrapper");
+    const profileWrapper = document.querySelector(".profile-wrapper");
+    const profileToggle = document.getElementById("profileToggle");
+    const profileDropdown = profileWrapper?.querySelector(".profile-dropdown");
+
+    // --- Notifications Dropdown ---
+    if (notifWrapper) {
+      const bell = notifWrapper.querySelector(".fa-bell");
+      bell?.addEventListener("click", (e) => {
+        e.stopPropagation();
+        notifWrapper.classList.toggle("active");
+        profileWrapper?.classList.remove("active");
+      });
+      
+      const dropdown = notifWrapper.querySelector(".notif-dropdown");
+      dropdown?.addEventListener("click", (e) => e.stopPropagation());
+
+      // Handle evaluation notification clicks
+      notifWrapper.querySelectorAll('.evaluation-notification').forEach(notification => {
+        notification.addEventListener('click', function() {
+          const eventId = this.getAttribute('data-event-id');
+          if (openEvaluationModal) {
+            openEvaluationModal(eventId);
+          }
+          notifWrapper.classList.remove('active'); 
+        });
+      });
+    }
+
+    // --- Profile Dropdown ---
+    if (profileWrapper && profileToggle && profileDropdown) {
+      profileToggle.addEventListener("click", (e) => {
+        e.stopPropagation();
+        profileWrapper.classList.toggle("active");
+        notifWrapper?.classList.remove("active");
+      });
+
+      profileDropdown.addEventListener("click", (e) => e.stopPropagation());
+    }
+
+    // --- Global Click Listener for Topbar/Sidebar ---
+    document.addEventListener("click", (e) => {
+      const sidebar = document.querySelector('.sidebar');
+      const menuToggle = document.querySelector('.menu-toggle');
+      
+      if (sidebar && !sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+        sidebar.classList.remove('open');
+        document.querySelector('.profile-item')?.classList.remove('open');
+      }
+      if (profileWrapper && !profileWrapper.contains(e.target)) {
+        profileWrapper.classList.remove('active');
+      }
+      if (notifWrapper && !notifWrapper.contains(e.target)) {
+        notifWrapper.classList.remove('active');
+      }
+    });
+  }
+
+  /**
+   * Initializes the 7-day week calendar.
+   */
+  function initCalendar() {
+    const calendar = document.querySelector(".calendar");
+    if (!calendar) return; 
+
+    const daysContainer = calendar.querySelector(".days");
+    const header = calendar.querySelector("header h3");
+    const prevBtn = calendar.querySelector(".prev");
+    const nextBtn = calendar.querySelector(".next");
+    
+    if (!daysContainer || !header || !prevBtn || !nextBtn) return;
+
+    const weekdays = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
     const holidays = [
       "2025-01-01", "2025-04-09", "2025-04-17", "2025-04-18",
       "2025-05-01", "2025-06-06", "2025-06-12", "2025-08-25",
       "2025-11-30", "2025-12-25", "2025-12-30"
     ];
+    let today = new Date();
+    let currentView = new Date();
 
     function renderCalendar(baseDate) {
-      if (!daysContainer || !header) return;
       daysContainer.innerHTML = "";
 
       const startOfWeek = new Date(baseDate);
@@ -487,9 +669,7 @@
         dateEl.classList.add("date");
         dateEl.textContent = thisDay.getDate();
 
-        const month = (thisDay.getMonth() + 1).toString().padStart(2,'0');
-        const day = thisDay.getDate().toString().padStart(2,'0');
-        const dateStr = `${thisDay.getFullYear()}-${month}-${day}`;
+        const dateStr = `${thisDay.getFullYear()}-${(thisDay.getMonth() + 1).toString().padStart(2, '0')}-${thisDay.getDate().toString().padStart(2, '0')}`;
 
         if (holidays.includes(dateStr)) {
           dateEl.classList.add('holiday');
@@ -509,193 +689,111 @@
 
     renderCalendar(currentView);
 
-    const prevBtn = document.querySelector(".calendar .prev");
-    const nextBtn = document.querySelector(".calendar .next");
-    
-    if (prevBtn) {
-      prevBtn.addEventListener("click", () => {
-        currentView.setDate(currentView.getDate() - 7);
-        renderCalendar(currentView);
-      });
-    }
-    
-    if (nextBtn) {
-      nextBtn.addEventListener("click", () => {
-        currentView.setDate(currentView.getDate() + 7);
-        renderCalendar(currentView);
-      });
-    }
-
-    // === Time auto-update ===
-    const timeEl = document.querySelector(".time");
-    
-    function updateTime() {
-      if (!timeEl) return;
-      const now = new Date();
-
-      const shortWeekdays = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
-      const shortMonths = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
-
-      const weekday = shortWeekdays[now.getDay()];
-      const month = shortMonths[now.getMonth()];
-      const day = now.getDate();
-
-      let hours = now.getHours();
-      const minutes = now.getMinutes().toString().padStart(2, "0");
-      const ampm = hours >= 12 ? "PM" : "AM";
-      hours = hours % 12 || 12;
-
-      timeEl.innerHTML = `${weekday}, ${month} ${day} ${hours}:${minutes} <span>${ampm}</span>`;
-    }
-    
-    updateTime();
-    setInterval(updateTime, 60000);
-
-    // === Notifications dropdown ===
-    const notifWrapper = document.querySelector(".notification-wrapper");
-    
-    if (notifWrapper) {
-      const bell = notifWrapper.querySelector(".fa-bell");
-      if (bell) {
-        bell.addEventListener("click", (e) => {
-          e.stopPropagation();
-          notifWrapper.classList.toggle("active");
-          profileWrapper?.classList.remove("active");
-        });
-      }
-      
-      const dropdown = notifWrapper.querySelector(".notif-dropdown");
-      if (dropdown) dropdown.addEventListener("click", (e) => e.stopPropagation());
-
-      // Handle evaluation notification clicks
-      document.querySelectorAll('.evaluation-notification').forEach(notification => {
-        notification.addEventListener('click', function() {
-          const eventId = this.getAttribute('data-event-id');
-          openEvaluationModal(eventId);
-        });
-      });
-    }
-
-    // === Profile dropdown (topbar) ===
-    const profileWrapper = document.querySelector(".profile-wrapper");
-    const profileToggle = document.getElementById("profileToggle");
-    const profileDropdown = document.querySelector(".profile-dropdown");
-
-    if (profileWrapper && profileToggle && profileDropdown) {
-      profileToggle.addEventListener("click", (e) => {
-        e.stopPropagation();
-        profileWrapper.classList.toggle("active");
-        notifWrapper?.classList.remove("active");
-      });
-
-      profileDropdown.addEventListener("click", (e) => e.stopPropagation());
-    }
-
-    // === Close dropdowns when clicking outside ===
-    document.addEventListener("click", (e) => {
-      if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
-        sidebar.classList.remove('open');
-        profileItem?.classList.remove('open');
-      }
-      if (profileWrapper && !profileWrapper.contains(e.target)) {
-        profileWrapper.classList.remove('active');
-      }
-      if (notifWrapper && !notifWrapper.contains(e.target)) {
-        notifWrapper.classList.remove('active');
-      }
+    prevBtn.addEventListener("click", () => {
+      currentView.setDate(currentView.getDate() - 7);
+      renderCalendar(currentView);
     });
+    
+    nextBtn.addEventListener("click", () => {
+      currentView.setDate(currentView.getDate() + 7);
+      renderCalendar(currentView);
+    });
+  }
 
-    // === Welcome Slider ===
+  /**
+   * Initializes the Welcome Slider / Carousel.
+   */
+  function initWelcomeSlider() {
     const welcomeSection = document.querySelector(".welcome");
-    const slideTrack = welcomeSection?.querySelector(".slides");
-    const slides = welcomeSection?.querySelectorAll(".slide");
-    const dotsContainer = welcomeSection?.querySelector(".dots");
+    if (!welcomeSection) return; 
+
+    const slideTrack = welcomeSection.querySelector(".slides");
+    const slides = welcomeSection.querySelectorAll(".slide");
+    const dotsContainer = welcomeSection.querySelector(".dots");
+
+    if (!slideTrack || slides.length === 0 || !dotsContainer) return;
 
     let currentIndex = 0;
     let autoPlay;
+    const dots = [];
 
-    if (welcomeSection && slideTrack && slides.length > 0 && dotsContainer) {
-      slides.forEach((_, i) => {
-        const dot = document.createElement("button");
-        if (i === 0) dot.classList.add("active");
-        dot.addEventListener("click", () => {
-          currentIndex = i;
-          updateSlide();
-          restartAuto();
-        });
-        dotsContainer.appendChild(dot);
-      });
-      
-      const dots = dotsContainer.querySelectorAll("button");
-
-      function updateSlide() {
-        const containerWidth = welcomeSection.getBoundingClientRect().width;
-        slideTrack.style.transform = `translateX(-${currentIndex * containerWidth}px)`;
-        dots.forEach(dot => dot.classList.remove("active"));
-        dots[currentIndex].classList.add("active");
-      }
-
-      function nextSlide() {
-        currentIndex = (currentIndex + 1) % slides.length;
+    slides.forEach((_, i) => {
+      const dot = document.createElement("button");
+      if (i === 0) dot.classList.add("active");
+      dot.addEventListener("click", () => {
+        currentIndex = i;
         updateSlide();
-      }
-      
-      function startAuto() {
-        autoPlay = setInterval(nextSlide, 4000);
-      }
-      
-      function stopAuto() {
-        clearInterval(autoPlay);
-      }
-      
-      function restartAuto() {
-        stopAuto();
-        startAuto();
-      }
+        restartAuto();
+      });
+      dotsContainer.appendChild(dot);
+      dots.push(dot);
+    });
 
-      updateSlide();
-      startAuto();
-
-      welcomeSection.addEventListener("mouseenter", stopAuto);
-      welcomeSection.addEventListener("mouseleave", startAuto);
-      window.addEventListener("resize", updateSlide);
+    function updateSlide() {
+      const containerWidth = welcomeSection.getBoundingClientRect().width;
+      slideTrack.style.transform = `translateX(-${currentIndex * containerWidth}px)`;
+      dots.forEach(dot => dot.classList.remove("active"));
+      dots[currentIndex].classList.add("active");
     }
 
-    // === Evaluation Modal Functionality ===
-    const evaluationModal = document.getElementById('evaluationModal');
-    const closeModal = evaluationModal?.querySelector('.close');
-    const closeBtn = evaluationModal?.querySelector('.close-btn');
-    const submitBtn = evaluationModal?.querySelector('.submit-evaluation-btn');
-    const starRating = evaluationModal?.querySelectorAll('.star');
+    function nextSlide() {
+      currentIndex = (currentIndex + 1) % slides.length;
+      updateSlide();
+    }
+    
+    function startAuto() {
+      stopAuto(); 
+      autoPlay = setInterval(nextSlide, 4000);
+    }
+    
+    function stopAuto() {
+      clearInterval(autoPlay);
+    }
+    
+    function restartAuto() {
+      stopAuto();
+      startAuto();
+    }
 
-    // Star rating functionality
-    if (starRating) {
-      starRating.forEach(star => {
-        star.addEventListener('click', function() {
-          const rating = this.getAttribute('data-rating');
-          document.getElementById('rating').value = rating;
-          
-          // Update star display
-          starRating.forEach((s, index) => {
-            if (index < rating) {
-              s.classList.add('active');
-            } else {
-              s.classList.remove('active');
-            }
-          });
+    updateSlide();
+    startAuto();
+
+    welcomeSection.addEventListener("mouseenter", stopAuto);
+    welcomeSection.addEventListener("mouseleave", startAuto);
+    window.addEventListener("resize", updateSlide);
+  }
+
+  /**
+   * Initializes the Event Evaluation Modal.
+   */
+  function initEvaluationModal() {
+    const evalModal = document.getElementById('evaluationModal');
+    if (!evalModal) return;
+
+    const evalCloseIcon = evalModal.querySelector('.close');
+    const evalCloseBtn = evalModal.querySelector('.close-btn');
+    const evalSubmitBtn = evalModal.querySelector('.submit-evaluation-btn');
+    const evalStars = evalModal.querySelectorAll('.star');
+    const evalForm = document.getElementById('evaluationForm');
+
+    evalStars.forEach(star => {
+      star.addEventListener('click', function() {
+        const rating = this.getAttribute('data-rating');
+        document.getElementById('rating').value = rating;
+        
+        evalStars.forEach((s, index) => {
+          s.classList.toggle('active', index < rating);
         });
       });
-    }
+    });
 
     function openEvaluationModal(eventId) {
-      // Fetch event details and populate modal
       fetch(`/events/${eventId}`)
         .then(response => response.json())
         .then(event => {
           document.getElementById('modalEventName').textContent = event.title;
           document.getElementById('evaluationEventId').value = event.id;
-          evaluationModal.style.display = 'block';
-          notifWrapper.classList.remove('active');
+          evalModal.style.display = 'block';
         })
         .catch(error => {
           console.error('Error fetching event details:', error);
@@ -704,69 +802,235 @@
     }
 
     // Close modal functions
-    if (closeModal) {
-      closeModal.addEventListener('click', () => {
-        evaluationModal.style.display = 'none';
-      });
-    }
+    const closeModal = () => {
+      evalModal.style.display = 'none';
+      // Reset form
+      evalForm.reset();
+      evalStars.forEach(s => s.classList.remove('active'));
+    };
 
-    if (closeBtn) {
-      closeBtn.addEventListener('click', () => {
-        evaluationModal.style.display = 'none';
-      });
-    }
-
-    if (evaluationModal) {
-      evaluationModal.addEventListener('click', (e) => {
-        if (e.target === evaluationModal) {
-          evaluationModal.style.display = 'none';
-        }
-      });
-    }
+    evalCloseIcon?.addEventListener('click', closeModal);
+    evalCloseBtn?.addEventListener('click', closeModal);
+    evalModal.addEventListener('click', (e) => {
+      if (e.target === evalModal) {
+        closeModal();
+      }
+    });
 
     // Submit evaluation
-    if (submitBtn) {
-      submitBtn.addEventListener('click', function() {
-        const form = document.getElementById('evaluationForm');
-        const formData = new FormData(form);
+    evalSubmitBtn?.addEventListener('click', function() {
+      const formData = new FormData(evalForm);
 
-        if (!formData.get('rating')) {
-          alert('Please provide a rating');
-          return;
+      if (!formData.get('rating')) {
+        alert('Please provide a rating');
+        return;
+      }
+
+      fetch('/evaluations', {
+        method: 'POST',
+        headers: {
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(Object.fromEntries(formData))
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert('Evaluation submitted successfully!');
+          closeModal();
+          location.reload();
+        } else {
+          alert('Error submitting evaluation: ' + data.error);
         }
-
-        fetch('/evaluations', {
-          method: 'POST',
-          headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(Object.fromEntries(formData))
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            alert('Evaluation submitted successfully!');
-            evaluationModal.style.display = 'none';
-            // Remove the notification
-            const notification = document.querySelector(`.evaluation-notification[data-event-id="${formData.get('event_id')}"]`);
-            if (notification) {
-              notification.remove();
-            }
-            // Refresh page to update progress
-            location.reload();
-          } else {
-            alert('Error submitting evaluation: ' + data.error);
-          }
-        })
-        .catch(error => {
-          console.error('Error:', error);
-          alert('Error submitting evaluation');
-        });
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Error submitting evaluation');
       });
-    }
+    });
+
+    return openEvaluationModal;
+  }
+
+  /**
+   * Initializes the "Send Feedback" Modal.
+   */
+  function initFeedbackModal() {
+    const feedbackTriggerBtn = document.querySelector('.profile-menu li:nth-child(4)'); // "Send Feedback" item
+    const feedbackModal = document.getElementById('feedbackModal');
+    if (!feedbackTriggerBtn || !feedbackModal) return;
+
+    
+    const feedbackCloseBtn = document.getElementById('closeModal');
+    const feedbackStars = document.querySelectorAll('#starRating i');
+    const feedbackRatingInput = document.getElementById('ratingInput');
+    
+    const feedbackForm = document.getElementById('feedbackForm');
+    const submitBtn = feedbackForm?.querySelector('.submit-btn');
+
+    
+    const successModal = document.getElementById('successModal');
+    const closeSuccessBtn = document.getElementById('closeSuccessModal');
+
+
+   
+    const customSelect = document.getElementById('customSelect');
+    const trigger = customSelect?.querySelector('.custom-select-trigger');
+    const selectedText = document.getElementById('selectedFeedbackType');
+    const optionsList = customSelect?.querySelector('.custom-options-list');
+    const options = customSelect?.querySelectorAll('.custom-option');
+    const realSelect = document.getElementById('type');
+
+    // Toggle dropdown
+    trigger?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      customSelect.classList.toggle('open');
+    });
+
+    // Handle option click
+    options?.forEach(option => {
+      option.addEventListener('click', () => {
+        const value = option.getAttribute('data-value');
+        const text = option.textContent.trim();
+        
+        if(selectedText) selectedText.textContent = text;
+        if(realSelect) realSelect.value = value; 
+        trigger?.classList.add('selected'); 
+        
+        customSelect?.classList.remove('open');
+      });
+    });
+
+    
+    document.addEventListener('click', () => {
+      customSelect?.classList.remove('open');
+    });
+
+
+    // Open modal
+    feedbackTriggerBtn.addEventListener('click', () => {
+      feedbackModal.style.display = 'flex';
+    });
+
+    // Close modal
+    feedbackCloseBtn?.addEventListener('click', () => {
+      feedbackModal.style.display = 'none';
+    });
+
+    // Close when clicking outside
+    window.addEventListener('click', (e) => {
+      if (e.target === feedbackModal) {
+        feedbackModal.style.display = 'none';
+      }
+      // (BAGO) Isara rin 'yung success modal
+      if (e.target === successModal) {
+        successModal.style.display = 'none';
+      }
+    });
+
+    // Star rating system
+    feedbackStars.forEach(star => {
+      star.addEventListener('click', () => {
+        const rating = star.getAttribute('data-value');
+        if(feedbackRatingInput) feedbackRatingInput.value = rating;
+
+        feedbackStars.forEach(s => {
+          s.classList.remove('fas');
+          s.classList.add('far');
+        });
+        for (let i = 0; i < rating; i++) {
+          feedbackStars[i].classList.remove('far');
+          feedbackStars[i].classList.add('fas');
+        }
+      });
+    });
+
+    // ==================================
+    // === (BAGO) AJAX FORM SUBMISSION ===
+    // ==================================
+    if (feedbackForm) { 
+      feedbackForm.addEventListener('submit', function(e) {
+          e.preventDefault(); 
+          
+          const formData = new FormData(feedbackForm);
+          const submitButtonText = submitBtn.textContent;
+          
+          if(submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+          }
+
+          fetch(feedbackForm.action, {
+              method: 'POST',
+              headers: {
+                  'X-CSRF-TOKEN': formData.get('_token'),
+                  'Accept': 'application/json' 
+              },
+              body: formData
+          })
+          .then(response => {
+              const contentType = response.headers.get("content-type");
+              if (response.ok && contentType && contentType.includes("application/json")) {
+                  return response.json();
+              }
+              return response.text().then(text => {
+                  console.error('Server returned non-JSON response:', text);
+                  throw new Error('Server returned an unexpected response. Check logs.');
+              });
+          })
+          .then(data => {
+              if (data.success) { 
+                  feedbackModal.style.display = 'none';
+                  if(successModal) successModal.style.display = 'flex';
+              } else {
+                  throw new Error(data.message || 'Submission failed.');
+              }
+          })
+          .catch(error => {
+              console.error('Error:', error);
+              alert(error.message || 'An error occurred. Please try again.');
+          })
+          .finally(() => {
+              if(submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = submitButtonText;
+              }
+              
+              feedbackForm.reset();
+              feedbackStars.forEach(s => {
+                s.classList.remove('fas');
+                s.classList.add('far');
+              });
+              if(feedbackRatingInput) feedbackRatingInput.value = '';
+              if(selectedText) selectedText.textContent = 'Select feedback type';
+              trigger?.classList.remove('selected');
+              if(realSelect) realSelect.value = '';
+          });
+      });
+    } 
+
+    closeSuccessBtn?.addEventListener('click', () => {
+        if(successModal) successModal.style.display = 'none';
+    });
+  }
+
+
+  // ==========================================================
+  //  APP INITIALIZATION (MAIN)
+  // ==========================================================
+  document.addEventListener("DOMContentLoaded", () => {
+    lucide.createIcons();
+    
+    // I-initialize 'yung mga component
+    initSidebar();
+    const openEvalModalFn = initEvaluationModal(); // Kunin 'yung function
+    initTopbar(openEvalModalFn); // Ipasa 'yung function sa topbar
+    initCalendar();
+    initWelcomeSlider();
+    initFeedbackModal();
   });
-  </script>
+</script>
 </body>
 </html>

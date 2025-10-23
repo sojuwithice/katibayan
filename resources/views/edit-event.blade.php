@@ -3,20 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KatiBayan - Dashboard</title>
+  <title>KatiBayan - Edit Event</title>
   <link rel="stylesheet" href="{{ asset('css/edit-event.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
-
-
-
 </head>
 <body>
   
@@ -35,12 +27,12 @@
         <span class="label">Analytics</span>
       </a>
 
-      <a href="{{ route('youth-profilepage') }}" class="active">
+      <a href="{{ route('youth-profilepage') }}">
         <i data-lucide="users"></i>
         <span class="label">Youth Profile</span>
       </a>
 
-      <a href="{{ route('sk-eventpage') }}" class="events-link">
+      <a href="{{ route('sk-eventpage') }}" class="active">
         <i data-lucide="calendar"></i>
         <span class="label">Events and Programs</span>
       </a>
@@ -52,25 +44,23 @@
           <i data-lucide="chevron-down" class="submenu-arrow"></i>
         </a>
         <div class="submenu">
-          <a href="#">Feedbacks</a>
-          <a href="#">Polls</a>
-          <a href="#">Suggestion Box</a>
+          <a href="{{ route('sk-evaluation-feedback') }}">Feedbacks</a>
+          <a href="{{ route('sk-polls') }}">Polls</a>
+          <a href="{{ route('youth-suggestion') }}">Suggestion Box</a>
         </div>
       </div>
 
-      <a href="#">
+      <a href="{{ route('reports') }}">
         <i data-lucide="file-chart-column"></i>
         <span class="label">Reports</span>
       </a>
 
-      <a href="{{ route('serviceoffers') }}">
+      <a href="{{ route('sk-services-offer') }}">
         <i data-lucide="hand-heart"></i>
         <span class="label">Service Offer</span>
       </a>
-
     </nav>
   </aside>
-
 
   <!-- Main -->
   <div class="main">
@@ -127,15 +117,17 @@
 
         <!-- Profile Avatar -->
         <div class="profile-wrapper">
-          <img src="https://i.pravatar.cc/80" alt="User" class="avatar" id="profileToggle">
+          <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+               alt="User" class="avatar" id="profileToggle">
           <div class="profile-dropdown">
             <div class="profile-header">
-              <img src="https://i.pravatar.cc/80" alt="User" class="profile-avatar">
+              <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+                   alt="User" class="profile-avatar">
               <div class="profile-info">
-                <h4>Marijoy S. Novora</h4>
+                <h4>{{ $user->given_name }} {{ $user->middle_name }} {{ $user->last_name }} {{ $user->suffix }}</h4>
                 <div class="profile-badge">
-                  <span class="badge">KK- Member</span>
-                  <span class="badge">19 yrs old</span>
+                  <span class="badge">{{ $roleBadge }}</span>
+                  <span class="badge">{{ $age }} yrs old</span>
                 </div>
               </div>
             </div>
@@ -153,619 +145,510 @@
                 </a>
               </li>
               <li><i class="fas fa-star"></i> Send Feedback to Katibayan</li>
+              <li class="logout-item">
+                <a href="loginpage" onclick="confirmLogout(event)">
+                  <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+              </li>
             </ul>
+            
+            <!-- Hidden Logout Form -->
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+              @csrf
+            </form>
           </div>
         </div>
       </div>
     </header>
 
     <!-- Event Form -->
-<section class="event-form">
-  <h2>Edit Event</h2>
-  <p class="subtitle">Set up events or programs designed for youth involvement.</p>
+    <section class="event-form">
+      <h2>Edit Event</h2>
+      <p class="subtitle">Update event details for youth involvement.</p>
 
-  <form>
-    <!-- Title -->
-    <div class="form-group">
-  <label for="title" style="display:block; font-weight:700; margin-bottom:0.5rem;">Title</label>
-  <input type="text" id="title">
-</div>
-
-    <!-- Row: Date, Time, Category -->
-    <div class="form-row">
-      <!-- Date -->
-      <div class="form-group date">
-        <label for="date">Event Date</label>
-        <input type="date" id="date">
-      </div>
-
-      <!-- Time -->
-      <div class="form-group time">
-        <label for="time">Time</label>
-        <div class="input-with-icon">
-          <input type="text" id="time" readonly>
-          <i data-lucide="clock" class="icon"></i>
+      <!-- Display Success/Error Messages -->
+      @if(session('success'))
+        <div class="alert alert-success">
+          {{ session('success') }}
         </div>
-      </div>
+      @endif
 
-
-      <!-- Category -->
-      <div class="form-group category">
-        <label for="category">Select Event Category</label>
-        <div class="custom-select" id="category" tabindex="0" role="listbox" aria-haspopup="listbox">
-          <div class="selected" data-value="">
-        <span class="selected-text">Select Category</span>
-        <div class="icon-circle small">
-          <i data-lucide="chevron-down" class="dropdown-icon"></i>
-        </div>
-      </div>
-
-          <ul class="options" role="presentation">
-            <li data-value="active citizenship" role="option">Active Citizenship</li>
-            <li data-value="economic empowerment" role="option">Economic Empowerment</li>
-            <li data-value="education" role="option">Education</li>
-            <li data-value="health" role="option">Health</li>
-            <li data-value="sports" role="option">Sports</li>
-            <li class="add-category">+ Add another category</li>
+      @if($errors->any())
+        <div class="alert alert-error">
+          <ul>
+            @foreach($errors->all() as $error)
+              <li>{{ $error }}</li>
+            @endforeach
           </ul>
         </div>
+      @endif
+
+      <form id="editEventForm" method="POST" action="{{ route('events.update', $event->id) }}" enctype="multipart/form-data">
+        @csrf
+        @method('PUT')
+
+        <!-- Title -->
+        <div class="form-group">
+          <label for="title" style="display:block; font-weight:700; margin-bottom:0.5rem;">Title</label>
+          <input type="text" id="title" name="title" value="{{ old('title', $event->title) }}" required>
+        </div>
+
+        <!-- Row: Date, Time, Category -->
+        <div class="form-row">
+          <!-- Date -->
+          <div class="form-group date">
+            <label for="date">Event Date</label>
+            <input type="date" id="date" name="event_date" value="{{ old('event_date', $event->event_date->format('Y-m-d')) }}" required>
+          </div>
+
+          <!-- Time -->
+          <div class="form-group time">
+            <label for="time">Time</label>
+            <div class="input-with-icon">
+              <input type="text" id="time" name="event_time" value="{{ old('event_time', $event->event_time) }}" readonly required>
+              <i data-lucide="clock" class="icon"></i>
+            </div>
+          </div>
+
+          <!-- Category -->
+          <div class="form-group category">
+            <label for="category">Select Event Category</label>
+            <div class="custom-select" id="categorySelect" tabindex="0" role="listbox" aria-haspopup="listbox">
+              <div class="selected" data-value="{{ $event->category }}">
+                <span class="selected-text">{{ ucfirst(str_replace('_', ' ', $event->category)) }}</span>
+                <div class="icon-circle small">
+                  <i data-lucide="chevron-down" class="dropdown-icon"></i>
+                </div>
+              </div>
+              <input type="hidden" id="category" name="category" value="{{ $event->category }}" required>
+              <ul class="options" role="presentation">
+                <li data-value="active_citizenship" role="option">Active Citizenship</li>
+                <li data-value="economic_empowerment" role="option">Economic Empowerment</li>
+                <li data-value="education" role="option">Education</li>
+                <li data-value="health" role="option">Health</li>
+                <li data-value="sports" role="option">Sports</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Note -->
+        <div class="notification-item">
+          <div class="icon-circle">
+            <i class="fa-solid fa-bell"></i>
+          </div>
+          <p class="note">This event will take place on <span id="displayDate">{{ $event->event_date->format('F j, Y') }}</span>, beginning at <span id="displayTime">{{ \Carbon\Carbon::parse($event->event_time)->format('g:i A') }}</span>.</p>
+        </div>
+
+        <!-- Location -->
+        <div class="form-group">
+          <label for="location" style="display:block; font-weight:700; margin-bottom:0.5rem;">Location</label>
+          <input type="text" id="location" name="location" value="{{ old('location', $event->location) }}" required>
+        </div>
+
+        <!-- Description -->
+        <div class="form-group">
+          <label for="description" style="display:block; font-weight:700; margin-bottom:0.5rem;">Add Description</label>
+          <textarea id="description" name="description" rows="4">{{ old('description', $event->description) }}</textarea>
+        </div>
+
+        <!-- Upload -->
+        <label>Upload Display</label>
+        <div class="upload-box" id="uploadBox">
+          <input type="file" id="upload" name="image" hidden accept="image/*">
+
+          <!-- Browse UI -->
+          <label for="upload" class="upload-label" id="uploadLabel" style="@if($event->image) display:none; @else display:flex; @endif">
+            <i class="fas fa-image"></i>
+            <p>Drag your photo here or <span>Browse from device</span></p>
+          </label>
+
+          <!-- Preview UI -->
+          <div class="image-preview" id="imagePreview" style="@if($event->image) display:flex; @else display:none; @endif">
+            <img id="previewImg" src="{{ $event->image ? asset('storage/' . $event->image) : '' }}" alt="Preview">
+            <button type="button" id="removeBtn">Remove</button>
+          </div>
+        </div>
+
+        <!-- Current Image Info -->
+        @if($event->image)
+          <div class="current-image-info">
+            <p><small>Current image: {{ basename($event->image) }}</small></p>
+          </div>
+        @endif
+
+        <!-- Publisher -->
+        <div class="form-group">
+          <label for="publisher" style="display:block; font-weight:700; margin-bottom:0.5rem;">Published By:</label>
+          <input type="text" id="publisher" name="published_by" value="{{ old('published_by', $event->published_by) }}" required>
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" class="btn-submit">Update Event</button>
+        <a href="{{ route('sk-eventpage') }}" class="btn-cancel">Cancel</a>
+      </form>
+    </section>
+
+    <!-- Time Picker Modal -->
+    <div id="timePickerModal" class="time-modal">
+      <div class="time-modal-content">
+        <p class="modal-title">Set time</p>
+        <div class="time-controls">
+          <div class="time-unit">
+            <button type="button" class="arrow up" data-type="hour">▲</button>
+            <div id="hour" class="time-value">01</div>
+            <button type="button" class="arrow down" data-type="hour">▼</button>
+          </div>
+          <span class="colon">:</span>
+          <div class="time-unit">
+            <button type="button" class="arrow up" data-type="minute">▲</button>
+            <div id="minute" class="time-value">00</div>
+            <button type="button" class="arrow down" data-type="minute">▼</button>
+          </div>
+          <div class="ampm-toggle">
+            <button type="button" id="amBtn" class="ampm active">AM</button>
+            <button type="button" id="pmBtn" class="ampm">PM</button>
+          </div>
+        </div>
+        <div class="time-actions">
+          <button type="button" id="cancelTime" class="btn cancel">Cancel</button>
+          <button type="button" id="setTime" class="btn set">Set</button>
+        </div>
       </div>
     </div>
 
-    <!-- Note -->
-    <div class="notification-item">
-  <div class="icon-circle">
-    <i class="fa-solid fa-bell"></i>
-  </div>
-  <p class="note">This event will take place on September 13, 2025, beginning at 1:00 PM.</p>
-</div>
-
-
-    <!-- Location -->
-    <div class="form-group">
-  <label for="location" style="display:block; font-weight:700; margin-bottom:0.5rem;">Location</label>
-  <input type="text" id="location">
-</div>
-
-    <!-- Description -->
-    <div class="form-group">
-  <label for="description" style="display:block; font-weight:700; margin-bottom:0.5rem;">Add Description</label>
-  <textarea id="description" rows="4"></textarea>
-</div>
-
-    <!-- Upload -->
-    <label>Upload Display</label>
-    <div class="upload-box" id="uploadBox">
-      <input type="file" id="upload" hidden accept="image/*">
-
-      <!-- Browse UI -->
-      <label for="upload" class="upload-label" id="uploadLabel">
-        <i class="fas fa-image"></i>
-        <p>Drag your photo here or <span>Browse from device</span></p>
-      </label>
-
-      <!-- Preview UI -->
-      <div class="image-preview" id="imagePreview" style="display:none;">
-        <img id="previewImg" src="" alt="Preview">
-        <button type="button" id="removeBtn">Remove</button>
+    <!-- Confirmation Modal -->
+    <div id="editEventModal" class="modal-overlay">
+      <div class="modal-box">
+        <p>Are you sure you want to edit this field? Editing will reschedule the event. Do you want to continue?</p>
+        <div class="modal-actions">
+          <button class="btn cancel" id="cancelEditEvent">Cancel</button>
+          <button class="btn save" id="saveEditEvent">Yes</button>
+        </div>
       </div>
     </div>
 
-    <!-- Publisher -->
-    <div class="form-group">
-  <label for="publisher" style="display:block; font-weight:700; margin-bottom:0.5rem;">Published By:</label>
-  <input type="text" id="publisher">
-</div>
-
-    <!-- Submit -->
-    <button type="submit" class="btn-submit">Update Event</button>
-  </form>
-</section>
-
-<!-- Time Picker Modal -->
-<div id="timePickerModal" class="time-modal">
-  <div class="time-modal-content">
-    <p class="modal-title">Set time</p>
-    <div class="time-controls">
-      <div class="time-unit">
-        <button type="button" class="arrow up" data-type="hour">▲</button>
-        <div id="hour" class="time-value">01</div>
-        <button type="button" class="arrow down" data-type="hour">▼</button>
-      </div>
-      <span class="colon">:</span>
-      <div class="time-unit">
-        <button type="button" class="arrow up" data-type="minute">▲</button>
-        <div id="minute" class="time-value">00</div>
-        <button type="button" class="arrow down" data-type="minute">▼</button>
-      </div>
-      <div class="ampm-toggle">
-        <button type="button" id="amBtn" class="ampm active">AM</button>
-        <button type="button" id="pmBtn" class="ampm">PM</button>
-      </div>
-    </div>
-    <div class="time-actions">
-      <button type="button" id="cancelTime" class="btn cancel">Cancel</button>
-      <button type="button" id="setTime" class="btn set">Set</button>
+    <!-- Success Popup -->
+    <div id="successPopup" class="success-popup">
+      <p>Event updated successfully!</p>
     </div>
   </div>
-</div>
 
-<!-- Add Category Modal -->
-<div class="modal" id="addCategoryModal">
-  <div class="modal-content">
-    <h3>Add New Category</h3>
-    <input type="text" id="newCategoryInput" placeholder="Enter category name">
-    <div class="modal-actions">
-      <button id="cancelAddCategory">Cancel</button>
-      <button id="saveAddCategory">Add</button>
-    </div>
-  </div>
-</div>
+  <script>
+  document.addEventListener("DOMContentLoaded", () => {
+    // === Initialize Lucide icons ===
+    if (typeof lucide !== "undefined" && lucide.createIcons) lucide.createIcons();
 
-<!-- Confirmation Modal -->
-<div id="editEventModal" class="modal-overlay">
-  <div class="modal-box">
-    <p>Are you sure you want to edit this field? Editing will reschedule the event. Do you want to continue?</p>
+    // --- SIDEBAR / MENU ---
+    const menuToggle = document.querySelector(".menu-toggle");
+    const sidebar = document.querySelector(".sidebar");
 
-    <div class="modal-actions">
-      <button class="btn cancel" id="cancelEditEvent">Cancel</button>
-      <button class="btn save" id="saveEditEvent">Yes</button>
-    </div>
-  </div>
-</div>
-
-<!-- Success Popup -->
-<div id="successPopup" class="success-popup">
-  <p>Event updated successfully!</p>
-</div>
-
-<!-- Posted Modal -->
-<div id="postedModal" class="posted-modal">
-  <div class="posted-modal-content">
-    <div class="posted-icon">
-      <div class="icon-circle">
-        <i class="fa-solid fa-check"></i>
-      </div>
-    </div>
-
-    <h2>Done</h2>
-    <p>The program has already been edited. Please check the details again.</p>
-
-    <button id="closePostedModal">Ok</button>
-  </div>
-</div>
-
-
-
-<!-- Done Modal -->
-<div id="doneModal" class="done-modal hidden">
-  <div class="done-modal-content">
-    <div class="check-icon">
-      <i class="fa-solid fa-check"></i>
-    </div>
-    <h2>Done</h2>
-    <p>The program has already been edited. Please check the details again.</p>
-    <button id="okBtn">OK</button>
-  </div>
-</div>
-</div>
-
-
-
-
-
-
-
-
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-  // === safe icon init ===
-  if (typeof lucide !== "undefined" && lucide.createIcons) lucide.createIcons();
-
-  // --- SIDEBAR / MENU ---
-  const menuToggle = document.querySelector(".menu-toggle");
-  const sidebar = document.querySelector(".sidebar");
-  const profileItem = document.querySelector(".profile-item");
-
-  if (menuToggle && sidebar) {
-    menuToggle.addEventListener("click", (e) => {
-      e.stopPropagation();
-      sidebar.classList.toggle("open");
-      if (!sidebar.classList.contains("open")) profileItem?.classList.remove("open");
-    });
-  }
-
-  // --- EVALUATION SUBMENU ---
-  const evaluationItem = document.querySelector(".evaluation-item");
-  const evaluationLink = document.querySelector(".evaluation-link");
-  evaluationLink?.addEventListener("click", (e) => {
-    e.preventDefault();
-    evaluationItem?.classList.toggle("open");
-  });
-
-  // --- CALENDAR ---
-  const weekdays = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
-  const daysContainer = document.querySelector(".calendar .days");
-  const header = document.querySelector(".calendar header h3");
-  let today = new Date();
-  let currentView = new Date();
-  const holidays = [
-    "2025-01-01","2025-04-09","2025-04-17","2025-04-18",
-    "2025-05-01","2025-06-06","2025-06-12","2025-08-25",
-    "2025-11-30","2025-12-25","2025-12-30"
-  ];
-
-  function renderCalendar(baseDate) {
-    if (!daysContainer || !header) return;
-    daysContainer.innerHTML = "";
-
-    const startOfWeek = new Date(baseDate);
-    startOfWeek.setDate(baseDate.getDate() - (baseDate.getDay() === 0 ? 6 : baseDate.getDay() - 1));
-    const middleDay = new Date(startOfWeek);
-    middleDay.setDate(startOfWeek.getDate() + 3);
-    header.textContent = middleDay.toLocaleDateString("en-US", { month: "long", year: "numeric" });
-
-    for (let i = 0; i < 7; i++) {
-      const thisDay = new Date(startOfWeek);
-      thisDay.setDate(startOfWeek.getDate() + i);
-
-      const dayEl = document.createElement("div");
-      dayEl.classList.add("day");
-
-      const weekdayEl = document.createElement("span");
-      weekdayEl.classList.add("weekday");
-      weekdayEl.textContent = weekdays[i];
-
-      const dateEl = document.createElement("span");
-      dateEl.classList.add("date");
-      dateEl.textContent = thisDay.getDate();
-
-      const month = (thisDay.getMonth() + 1).toString().padStart(2, "0");
-      const day = thisDay.getDate().toString().padStart(2, "0");
-      const dateStr = `${thisDay.getFullYear()}-${month}-${day}`;
-
-      if (holidays.includes(dateStr)) dateEl.classList.add("holiday");
-      if (
-        thisDay.getDate() === today.getDate() &&
-        thisDay.getMonth() === today.getMonth() &&
-        thisDay.getFullYear() === today.getFullYear()
-      ) {
-        dayEl.classList.add("active");
-      }
-
-      dayEl.appendChild(weekdayEl);
-      dayEl.appendChild(dateEl);
-      daysContainer.appendChild(dayEl);
+    if (menuToggle && sidebar) {
+      menuToggle.addEventListener("click", (e) => {
+        e.stopPropagation();
+        sidebar.classList.toggle("open");
+      });
     }
-  }
-  renderCalendar(currentView);
-  document.querySelector(".calendar .prev")?.addEventListener("click", () => {
-    currentView.setDate(currentView.getDate() - 7);
-    renderCalendar(currentView);
-  });
-  document.querySelector(".calendar .next")?.addEventListener("click", () => {
-    currentView.setDate(currentView.getDate() + 7);
-    renderCalendar(currentView);
-  });
 
-  // --- TIME AUTO UPDATE ---
-  const timeEl = document.querySelector(".time");
-  function updateTime() {
-    if (!timeEl) return;
-    const now = new Date();
-    const shortWeekdays = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
-    const shortMonths = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
-    const weekday = shortWeekdays[now.getDay()];
-    const month = shortMonths[now.getMonth()];
-    const day = now.getDate();
-    let hours = now.getHours();
-    const minutes = now.getMinutes().toString().padStart(2, "0");
-    const ampm = hours >= 12 ? "PM" : "AM";
-    hours = hours % 12 || 12;
-    timeEl.innerHTML = `${weekday}, ${month} ${day} ${hours}:${minutes} <span>${ampm}</span>`;
-  }
-  updateTime();
-  setInterval(updateTime, 60000);
+    // --- EVALUATION SUBMENU ---
+    const evaluationItem = document.querySelector(".evaluation-item");
+    const evaluationLink = document.querySelector(".evaluation-link");
+    evaluationLink?.addEventListener("click", (e) => {
+      e.preventDefault();
+      evaluationItem?.classList.toggle("open");
+    });
 
-  // --- NOTIFICATIONS + PROFILE ---
-  const notifWrapper = document.querySelector(".notification-wrapper");
-  const profileWrapper = document.querySelector(".profile-wrapper");
-  const profileToggle = document.getElementById("profileToggle");
-  const profileDropdown = document.querySelector(".profile-dropdown");
+    // --- TIME AUTO UPDATE ---
+    const timeEl = document.querySelector(".time");
+    function updateTime() {
+      if (!timeEl) return;
+      const now = new Date();
+      const shortWeekdays = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
+      const shortMonths = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+      const weekday = shortWeekdays[now.getDay()];
+      const month = shortMonths[now.getMonth()];
+      const day = now.getDate();
+      let hours = now.getHours();
+      const minutes = now.getMinutes().toString().padStart(2, "0");
+      const ampm = hours >= 12 ? "PM" : "AM";
+      hours = hours % 12 || 12;
+      timeEl.innerHTML = `${weekday}, ${month} ${day} ${hours}:${minutes} <span>${ampm}</span>`;
+    }
+    updateTime();
+    setInterval(updateTime, 60000);
 
-  if (notifWrapper) {
-    notifWrapper.querySelector(".fa-bell")?.addEventListener("click", (e) => {
-      e.stopPropagation();
-      notifWrapper.classList.toggle("active");
+    // --- NOTIFICATIONS + PROFILE ---
+    const notifWrapper = document.querySelector(".notification-wrapper");
+    const profileWrapper = document.querySelector(".profile-wrapper");
+    const profileToggle = document.getElementById("profileToggle");
+
+    if (notifWrapper) {
+      notifWrapper.querySelector(".fa-bell")?.addEventListener("click", (e) => {
+        e.stopPropagation();
+        notifWrapper.classList.toggle("active");
+        profileWrapper?.classList.remove("active");
+      });
+    }
+
+    if (profileWrapper && profileToggle) {
+      profileToggle.addEventListener("click", (e) => {
+        e.stopPropagation();
+        profileWrapper.classList.toggle("active");
+        notifWrapper?.classList.remove("active");
+      });
+    }
+
+    // Close dropdowns when clicking outside
+    document.addEventListener("click", () => {
+      notifWrapper?.classList.remove("active");
       profileWrapper?.classList.remove("active");
     });
-    notifWrapper.querySelector(".notif-dropdown")?.addEventListener("click", (e) => e.stopPropagation());
-  }
-  if (profileWrapper && profileToggle && profileDropdown) {
-    profileToggle.addEventListener("click", (e) => {
-      e.stopPropagation();
-      profileWrapper.classList.toggle("active");
-      notifWrapper?.classList.remove("active");
-    });
-    profileDropdown.addEventListener("click", (e) => e.stopPropagation());
-  }
 
-  // === CUSTOM SELECT WITH MODAL ===
-  const customSelect = document.querySelector(".custom-select");
-  if (customSelect) {
-    const selected = customSelect.querySelector(".selected");
-    const optionsContainer = customSelect.querySelector(".options");
-    const addCategoryBtn = optionsContainer.querySelector(".add-category");
+    // === CUSTOM SELECT ===
+    const customSelect = document.querySelector(".custom-select");
+    if (customSelect) {
+      const selected = customSelect.querySelector(".selected");
+      const optionsContainer = customSelect.querySelector(".options");
+      const hiddenInput = document.getElementById("category");
 
-    const modal = document.getElementById("addCategoryModal");
-    const cancelBtn = document.getElementById("cancelAddCategory");
-    const saveBtn = document.getElementById("saveAddCategory");
-    const newCategoryInput = document.getElementById("newCategoryInput");
-
-    selected.addEventListener("click", (e) => {
-      e.stopPropagation();
-      optionsContainer.classList.toggle("show");
-      optionsContainer.style.display = optionsContainer.classList.contains("show") ? "block" : "none";
-    });
-
-    const attachOptionListener = (option) => {
-      option.addEventListener("click", () => {
-        selected.querySelector(".selected-text").textContent = option.textContent;
-        selected.setAttribute("data-value", option.dataset.value);
-        optionsContainer.classList.remove("show");
-        optionsContainer.style.display = "none";
+      selected.addEventListener("click", (e) => {
+        e.stopPropagation();
+        optionsContainer.classList.toggle("show");
+        optionsContainer.style.display = optionsContainer.classList.contains("show") ? "block" : "none";
       });
-    };
-    optionsContainer.querySelectorAll("li:not(.add-category)").forEach(attachOptionListener);
 
-    document.addEventListener("click", (e) => {
-      if (!customSelect.contains(e.target)) {
-        optionsContainer.classList.remove("show");
-        optionsContainer.style.display = "none";
-      }
+      optionsContainer.querySelectorAll("li").forEach(option => {
+        option.addEventListener("click", () => {
+          selected.querySelector(".selected-text").textContent = option.textContent;
+          selected.setAttribute("data-value", option.dataset.value);
+          hiddenInput.value = option.dataset.value;
+          optionsContainer.classList.remove("show");
+          optionsContainer.style.display = "none";
+        });
+      });
+
+      document.addEventListener("click", (e) => {
+        if (!customSelect.contains(e.target)) {
+          optionsContainer.classList.remove("show");
+          optionsContainer.style.display = "none";
+        }
+      });
+    }
+
+    // --- UPLOAD BOX ---
+    const uploadBox = document.getElementById("uploadBox");
+    const uploadInput = document.getElementById("upload");
+    const uploadLabel = document.getElementById("uploadLabel");
+    const previewContainer = document.getElementById("imagePreview");
+    const previewImg = document.getElementById("previewImg");
+    const removeBtn = document.getElementById("removeBtn");
+
+    uploadInput.addEventListener("change", function() { 
+        showPreview(this.files[0]); 
+    });
+    
+    uploadBox.addEventListener("dragover", (e) => { 
+        e.preventDefault(); 
+        uploadBox.style.borderColor = "#01214A"; 
+        uploadBox.style.background = "#eef5ff"; 
+    });
+    
+    uploadBox.addEventListener("dragleave", () => { 
+        uploadBox.style.borderColor = "#3C87C4"; 
+        uploadBox.style.background = "#f9fbfd"; 
+    });
+    
+    uploadBox.addEventListener("drop", (e) => {
+        e.preventDefault();
+        uploadBox.style.borderColor = "#3C87C4";
+        uploadBox.style.background = "#f9fbfd";
+        const file = e.dataTransfer.files[0];
+        if (file) { 
+            uploadInput.files = e.dataTransfer.files; 
+            showPreview(file); 
+        }
     });
 
-    addCategoryBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      optionsContainer.classList.remove("show");
-      optionsContainer.style.display = "none";
-      modal.style.display = "flex";
-      newCategoryInput.value = "";
-      newCategoryInput.focus();
+    function showPreview(file) {
+        if (file && file.type.startsWith("image/")) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImg.src = e.target.result;
+                previewContainer.style.display = "flex";
+                uploadLabel.style.display = "none";
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+
+    removeBtn.addEventListener("click", () => {
+        uploadInput.value = "";
+        previewImg.src = "";
+        previewContainer.style.display = "none";
+        uploadLabel.style.display = "flex";
     });
 
-    cancelBtn.addEventListener("click", () => { modal.style.display = "none"; });
+    // === TIME PICKER MODAL ===
+    const timeInput = document.getElementById("time");
+    const timeModal = document.getElementById("timePickerModal");
+    const hourEl = document.getElementById("hour");
+    const minuteEl = document.getElementById("minute");
+    const amBtn = document.getElementById("amBtn");
+    const pmBtn = document.getElementById("pmBtn");
+    const cancelTimeBtn = document.getElementById("cancelTime");
+    const setTimeBtn = document.getElementById("setTime");
 
-    window.addEventListener("click", (e) => { if (e.target === modal) modal.style.display = "none"; });
-
-    const addNewCategory = () => {
-      const newValue = newCategoryInput.value.trim();
-      if (newValue !== "") {
-        const newOption = document.createElement("li");
-        newOption.setAttribute("data-value", newValue.toLowerCase().replace(/\s+/g, "-"));
-        newOption.setAttribute("role", "option");
-        newOption.textContent = newValue;
-        attachOptionListener(newOption);
-        optionsContainer.insertBefore(newOption, addCategoryBtn);
-        selected.querySelector(".selected-text").textContent = newValue;
-        selected.setAttribute("data-value", newOption.dataset.value);
-        modal.style.display = "none";
-      }
-    };
-    saveBtn.addEventListener("click", addNewCategory);
-    newCategoryInput.addEventListener("keypress", (e) => { if (e.key === "Enter") { e.preventDefault(); addNewCategory(); } });
-  }
-
-  // --- UPLOAD BOX ---
-  const uploadBox = document.getElementById("uploadBox");
-  const uploadInput = document.getElementById("upload");
-  const uploadLabel = document.getElementById("uploadLabel");
-  const previewContainer = document.getElementById("imagePreview");
-  const previewImg = document.getElementById("previewImg");
-  const removeBtn = document.getElementById("removeBtn");
-
-  uploadInput.addEventListener("change", function() { showPreview(this.files[0]); });
-  uploadBox.addEventListener("dragover", (e) => { e.preventDefault(); uploadBox.style.borderColor = "#01214A"; uploadBox.style.background = "#eef5ff"; });
-  uploadBox.addEventListener("dragleave", () => { uploadBox.style.borderColor = "#3C87C4"; uploadBox.style.background = "#f9fbfd"; });
-  uploadBox.addEventListener("drop", (e) => {
-    e.preventDefault();
-    uploadBox.style.borderColor = "#3C87C4";
-    uploadBox.style.background = "#f9fbfd";
-    const file = e.dataTransfer.files[0];
-    if (file) { uploadInput.files = e.dataTransfer.files; showPreview(file); }
-  });
-
-  function showPreview(file) {
-    if (file && file.type.startsWith("image/")) {
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        previewImg.src = e.target.result;
-        previewContainer.style.display = "flex";
-        uploadLabel.style.display = "none"; 
-      }
-      reader.readAsDataURL(file);
+    // Parse current time value and set initial state
+    function initializeTimePicker() {
+        const currentTime = timeInput.value;
+        if (currentTime) {
+            const timeParts = currentTime.split(':');
+            if (timeParts.length >= 2) {
+                let hours = parseInt(timeParts[0]);
+                const minutes = timeParts[1].split(' ')[0];
+                const ampm = currentTime.includes('PM') ? 'PM' : 'AM';
+                
+                // Convert to 12-hour format for display
+                if (hours > 12) hours -= 12;
+                if (hours === 0) hours = 12;
+                
+                hourEl.textContent = String(hours).padStart(2, '0');
+                minuteEl.textContent = minutes;
+                
+                if (ampm === 'PM') {
+                    pmBtn.classList.add('active');
+                    amBtn.classList.remove('active');
+                } else {
+                    amBtn.classList.add('active');
+                    pmBtn.classList.remove('active');
+                }
+            }
+        }
     }
-  }
 
-  removeBtn.addEventListener("click", () => {
-    uploadInput.value = "";
-    previewImg.src = "";
-    previewContainer.style.display = "none";
-    uploadLabel.style.display = "flex"; 
-  });
+    // Initialize time picker with current values
+    initializeTimePicker();
 
-  // === TIME PICKER MODAL ===
-const timeInput = document.getElementById("time");
-const timeModal = document.getElementById("timePickerModal");
-const hourEl = document.getElementById("hour");
-const minuteEl = document.getElementById("minute");
-const amBtn = document.getElementById("amBtn");
-const pmBtn = document.getElementById("pmBtn");
-const cancelTimeBtn = document.getElementById("cancelTime");
-const setTimeBtn = document.getElementById("setTime");
-
-// --- Open modal
-function openTimeModal(e) {
-  e.stopPropagation();
-  timeModal.style.display = "flex";
-}
-timeInput.addEventListener("click", openTimeModal);
-
-// --- Cancel button
-cancelTimeBtn.addEventListener("click", () => {
-  timeModal.style.display = "none";
-});
-
-// --- Set button
-setTimeBtn.addEventListener("click", () => {
-  const hour = hourEl.textContent;
-  const minute = minuteEl.textContent;
-  const ampm = amBtn.classList.contains("active") ? "AM" : "PM";
-  timeInput.value = `${hour}:${minute} ${ampm}`;
-  timeModal.style.display = "none";
-});
-
-// --- Increment / Decrement
-document.querySelectorAll(".arrow").forEach(btn => {
-  btn.addEventListener("click", () => {
-    const type = btn.dataset.type;
-    if (type === "hour") {
-      let val = parseInt(hourEl.textContent, 10);
-      val = btn.classList.contains("up") ? (val >= 12 ? 1 : val + 1) : (val <= 1 ? 12 : val - 1);
-      hourEl.textContent = String(val).padStart(2, "0");
+    // Open modal
+    function openTimeModal(e) {
+        e.stopPropagation();
+        timeModal.style.display = "flex";
     }
-    if (type === "minute") {
-      let val = parseInt(minuteEl.textContent, 10);
-      val = btn.classList.contains("up") ? (val >= 59 ? 0 : val + 1) : (val <= 0 ? 59 : val - 1);
-      minuteEl.textContent = String(val).padStart(2, "0");
+    timeInput.addEventListener("click", openTimeModal);
+
+    // Cancel button
+    cancelTimeBtn.addEventListener("click", () => {
+        timeModal.style.display = "none";
+    });
+
+    // Set button
+    setTimeBtn.addEventListener("click", () => {
+        let hour = parseInt(hourEl.textContent);
+        const minute = minuteEl.textContent;
+        const ampm = amBtn.classList.contains("active") ? "AM" : "PM";
+        
+        // Convert to 24-hour format for storage
+        if (ampm === 'PM' && hour < 12) hour += 12;
+        if (ampm === 'AM' && hour === 12) hour = 0;
+        
+        const time24 = `${String(hour).padStart(2, '0')}:${minute}`;
+        const time12 = `${hourEl.textContent}:${minute} ${ampm}`;
+        
+        timeInput.value = time24;
+        document.getElementById('displayTime').textContent = time12;
+        
+        timeModal.style.display = "none";
+    });
+
+    // Increment / Decrement
+    document.querySelectorAll(".arrow").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const type = btn.dataset.type;
+            if (type === "hour") {
+                let val = parseInt(hourEl.textContent, 10);
+                val = btn.classList.contains("up") ? (val >= 12 ? 1 : val + 1) : (val <= 1 ? 12 : val - 1);
+                hourEl.textContent = String(val).padStart(2, "0");
+            }
+            if (type === "minute") {
+                let val = parseInt(minuteEl.textContent, 10);
+                val = btn.classList.contains("up") ? (val >= 59 ? 0 : val + 1) : (val <= 0 ? 59 : val - 1);
+                minuteEl.textContent = String(val).padStart(2, "0");
+            }
+        });
+    });
+
+    // AM/PM toggle
+    amBtn.addEventListener("click", () => {
+        amBtn.classList.add("active");
+        pmBtn.classList.remove("active");
+    });
+    
+    pmBtn.addEventListener("click", () => {
+        pmBtn.classList.add("active");
+        amBtn.classList.remove("active");
+    });
+
+    // Backdrop close
+    timeModal.addEventListener("click", (e) => {
+        if (e.target === timeModal) timeModal.style.display = "none";
+    });
+
+    // ESC close
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && timeModal.style.display === "flex") {
+            timeModal.style.display = "none";
+        }
+    });
+
+    // === DATE CHANGE HANDLER ===
+    const dateInput = document.getElementById("date");
+    dateInput.addEventListener("change", function() {
+        const newDate = new Date(this.value);
+        document.getElementById('displayDate').textContent = newDate.toLocaleDateString('en-US', { 
+            month: 'long', 
+            day: 'numeric', 
+            year: 'numeric' 
+        });
+    });
+
+    // === FORM SUBMISSION ===
+    const editEventForm = document.getElementById('editEventForm');
+    editEventForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Basic validation
+        const title = document.getElementById('title').value.trim();
+        const date = document.getElementById('date').value;
+        const time = document.getElementById('time').value;
+        const category = document.getElementById('category').value;
+        const location = document.getElementById('location').value.trim();
+        const publisher = document.getElementById('publisher').value.trim();
+        
+        if (!title || !date || !time || !category || !location || !publisher) {
+            alert('Please fill in all required fields.');
+            return;
+        }
+        
+        // Submit the form
+        this.submit();
+    });
+
+    // === SUCCESS POPUP ===
+    const successPopup = document.getElementById("successPopup");
+    function showSuccessPopup(message = "Event updated successfully!") {
+        successPopup.querySelector("p").textContent = message;
+        successPopup.classList.add("show");
+        setTimeout(() => {
+            successPopup.classList.remove("show");
+        }, 3000);
+    }
+
+    // Check if there's a success message from the server
+    const successMessage = document.querySelector('.alert-success');
+    if (successMessage) {
+        showSuccessPopup(successMessage.textContent.trim());
     }
   });
-});
-
-// --- AM/PM toggle
-amBtn.addEventListener("click", () => {
-  amBtn.classList.add("active");
-  pmBtn.classList.remove("active");
-});
-pmBtn.addEventListener("click", () => {
-  pmBtn.classList.add("active");
-  amBtn.classList.remove("active");
-});
-
-// --- Backdrop close
-timeModal.addEventListener("click", (e) => {
-  if (e.target === timeModal) timeModal.style.display = "none";
-});
-
-// --- ESC close
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && timeModal.style.display === "flex") {
-    timeModal.style.display = "none";
-  }
-});
-
-// === EDIT EVENT MODAL ===
-const editEventModal = document.getElementById("editEventModal");
-const cancelEditEvent = document.getElementById("cancelEditEvent");
-const saveEditEvent = document.getElementById("saveEditEvent");
-const dateInput = document.getElementById("date");
-
-// Show modal function
-function showEditEventModal() {
-  editEventModal.style.display = "flex";
-}
-
-// Close modal function
-function closeEditEventModal() {
-  editEventModal.style.display = "none";
-}
-
-// Trigger when date changes
-dateInput.addEventListener("change", showEditEventModal);
-
-// Trigger when time is set
-setTimeBtn.addEventListener("click", () => {
-  const hour = hourEl.textContent;
-  const minute = minuteEl.textContent;
-  const ampm = amBtn.classList.contains("active") ? "AM" : "PM";
-  timeInput.value = `${hour}:${minute} ${ampm}`;
-  timeModal.style.display = "none";
-
-  // Show edit event modal after time is chosen
-  showEditEventModal();
-});
-
-// === Success popup ===
-const successPopup = document.getElementById("successPopup");
-
-function showSuccessPopup(message = "Event updated successfully!") {
-  successPopup.querySelector("p").textContent = message;
-  successPopup.classList.add("show");
-
-  // Hide after 3 seconds
-  setTimeout(() => {
-    successPopup.classList.remove("show");
-  }, 3000);
-}
-
-// Modal buttons
-cancelEditEvent.addEventListener("click", closeEditEventModal);
-saveEditEvent.addEventListener("click", () => {
-  closeEditEventModal();    // close confirmation modal
-  showSuccessPopup();       // show popup instead of alert
-});
-
-// Close if clicking outside
-window.addEventListener("click", (e) => {
-  if (e.target === editEventModal) {
-    closeEditEventModal();
-  }
-});
-
-// === POSTED MODAL ===
-const postedModal = document.getElementById("postedModal");
-const closePostedModal = document.getElementById("closePostedModal");
-
-// Function to show modal
-function showPostedModal(message = "The program has already been edited. Please check the details again.") {
-  postedModal.querySelector("p").textContent = message;
-  postedModal.style.display = "flex";
-}
-
-// Close modal
-closePostedModal.addEventListener("click", () => {
-  postedModal.style.display = "none";
-});
-
-// Close when clicking outside
-window.addEventListener("click", (e) => {
-  if (e.target === postedModal) postedModal.style.display = "none";
-});
-
-// === DONE MODAL ===
-const doneModal = document.getElementById("doneModal");
-const okBtn = document.getElementById("okBtn");
-const postEventBtn = document.querySelector(".btn-submit");
-
-// Show Done Modal when Post Event is clicked
-postEventBtn?.addEventListener("click", (e) => {
-  e.preventDefault(); // prevent actual form submission (remove if you want real submit)
-  doneModal.classList.remove("hidden");
-  doneModal.style.display = "flex";
-});
-
-// Close Done Modal
-okBtn?.addEventListener("click", () => {
-  doneModal.style.display = "none";
-
-  // 👉 If you want to actually submit the form after OK:
-  // postEventBtn.closest("form").submit();
-});
-
-
-
-});
-</script>
-
+  </script>
 </body>
 </html>
