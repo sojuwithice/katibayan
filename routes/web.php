@@ -156,11 +156,7 @@ Route::get('/sk-eval-review', function () {
     return view('sk-eval-review');
 })->name('sk-eval-review');
 
-
-
-
-//CONTROLLER ROUTES
-
+// CONTROLLER ROUTES
 
 Route::get('/edit-program', function () {
     return view('edit-program');
@@ -195,12 +191,29 @@ Route::get('/view-youth-profile', function () {
     return view('view-youth-profile');
 })->name('view-youth-profile');
 
+// ========== ADMIN ROUTES ==========
 Route::get('admindashb', function () {
     return view('admindashb');
-});
+})->name('admindashb')->middleware('auth:admin');
+
+// ADD THE MISSING ADMIN ROUTES:
+Route::get('/admin/analytics', function () {
+    return view('admin-analytics'); // You'll need to create this view
+})->name('admin-analytics')->middleware('auth:admin');
+
+Route::get('/admin/user-management', [AdminController::class, 'userManagement'])
+    ->name('user-management2')
+    ->middleware('auth:admin');
+
+Route::get('/admin/user-feedback', function () {
+    return view('admin-user-feedback'); // You'll need to create this view
+})->name('users-feedback')->middleware('auth:admin');
+
+Route::get('/admin/settings', function () {
+    return view('admin-settings'); // You'll need to create this view
+})->name('admin-settings')->middleware('auth:admin');
 
 // CONTROLLER ROUTES
-
 
 Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
 Route::post('/register', [RegisterController::class, 'register']);
@@ -219,15 +232,12 @@ Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
 
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
-
-
 // ========== ADMIN ROUTES ==========
 
 // ✅ Protected admin dashboard
 Route::get('/admin-dashboard', [AdminController::class, 'dashboard'])
     ->name('admin.dashboard')
     ->middleware('auth:admin');
-
 
 Route::get('/user-management', [AdminController::class, 'userManagement']) 
     ->name('user-management')
@@ -242,8 +252,6 @@ Route::get('/admin/login', [AdminLoginController::class, 'showLoginForm'])->name
 Route::post('/admin/login', [AdminLoginController::class, 'login'])->name('admin.login.post');
 Route::post('/admin/logout', [AdminLoginController::class, 'logout'])->name('admin.logout');
 
-
-
 Route::middleware(['auth'])->group(function () {
     // Profile routes
     Route::get('/profile', [ProfileController::class, 'index'])->name('profilepage');
@@ -251,21 +259,15 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/profile/check-session', [ProfileController::class, 'checkSession'])->name('profile.checkSession');
     Route::get('/profile/user-data', [ProfileController::class, 'getUserData'])->name('profile.userData');
 
+    Route::post('/profile/change-password', [ProfileController::class, 'changePassword'])->name('profile.change-password');
+    // Avatar routes
+    Route::post('/profile/avatar/update', [ProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
+    Route::post('/profile/avatar/remove', [ProfileController::class, 'removeAvatar'])->name('profile.avatar.remove');
+    Route::get('/profile/data', [ProfileController::class, 'getProfileData'])->name('profile.data');
 
-Route::post('/profile/change-password', [ProfileController::class, 'changePassword'])->name('profile.change-password');
-// Avatar routes
-Route::post('/profile/avatar/update', [ProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
-Route::post('/profile/avatar/remove', [ProfileController::class, 'removeAvatar'])->name('profile.avatar.remove');
-Route::get('/profile/data', [ProfileController::class, 'getProfileData'])->name('profile.data');
-
-// Attendance routes
-Route::post('/attendance/mark', [AttendanceController::class, 'markAttendance'])->name('attendance.mark');
-Route::get('/attendance/my-attendances', [AttendanceController::class, 'getUserAttendances'])->name('attendance.my');
-
-
-
-
-
+    // Attendance routes
+    Route::post('/attendance/mark', [AttendanceController::class, 'markAttendance'])->name('attendance.mark');
+    Route::get('/attendance/my-attendances', [AttendanceController::class, 'getUserAttendances'])->name('attendance.my');
     
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
@@ -349,7 +351,6 @@ Route::get('/auth/google/callback', [GoogleController::class, 'callback'])->name
 Route::get('/evaluation/respondents/{event_id}', [EvaluationRespondentsController::class, 'showRespondents'])
     ->name('evaluation.respondents');
 
-
 Route::controller(ForgotPasswordController::class)
     ->prefix('forgot-password')
     ->as('forgot-password.')
@@ -358,7 +359,6 @@ Route::controller(ForgotPasswordController::class)
         Route::post('/verify-otp', 'verifyOtp')->name('verify-otp');
         Route::post('/reset', 'resetPassword')->name('reset'); // Renamed method to resetPassword for clarity
 });
-
 
 Route::post('/feedback/submit', [FeedbackController::class, 'store'])->name('feedback.submit');
 
@@ -379,4 +379,3 @@ Route::get('/notifications/count', [NotificationController::class, 'getUnreadCou
 Route::get('/notifications', [NotificationController::class, 'getNotifications'])->name('notifications.list');
 Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
 Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
-

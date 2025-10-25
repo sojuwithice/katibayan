@@ -530,179 +530,176 @@
     }
 
     /**
-     * Notification System - Same as SK Dashboard
-     */
-    let notifications = [];
+ * Notification System - Updated with only yellow dot
+ */
+let notifications = [];
 
-    // Load notifications
-    async function loadNotifications() {
-        try {
-            const response = await fetch('{{ route("notifications.list") }}');
-            const data = await response.json();
-            
-            if (data.notifications) {
-                notifications = data.notifications;
-                updateNotificationUI();
-            }
-        } catch (error) {
-            console.error('Error loading notifications:', error);
-        }
-    }
-
-    // Update notification count
-    async function updateNotificationCount() {
-        try {
-            const response = await fetch('{{ route("notifications.count") }}');
-            const data = await response.json();
-            
-            const notifCount = document.getElementById('notificationCount');
-            const headerCount = document.getElementById('notificationsHeaderCount');
-            
-            if (notifCount) notifCount.textContent = data.count;
-            if (headerCount) headerCount.textContent = data.count;
-        } catch (error) {
-            console.error('Error updating notification count:', error);
-        }
-    }
-
-    // Extract event ID from notification message
-    function extractEventIdFromNotification(notificationItem) {
-        const messageElement = notificationItem.querySelector('.notif-content strong');
-        if (!messageElement) return null;
+// Load notifications
+async function loadNotifications() {
+    try {
+        const response = await fetch('{{ route("notifications.list") }}');
+        const data = await response.json();
         
-        const message = messageElement.textContent;
-        const match = message.match(/event_id:(\d+)\|/);
-        return match ? match[1] : null;
-    }
-
-    // Get display message without the event_id prefix
-    function getDisplayMessage(fullMessage) {
-        const match = fullMessage.match(/event_id:\d+\|(.+)/);
-        return match ? match[1] : fullMessage;
-    }
-
-    // Update notifications UI
-    function updateNotificationUI() {
-        const notificationsList = document.getElementById('notificationsList');
-        if (!notificationsList) return;
-
-        if (notifications.length === 0) {
-            notificationsList.innerHTML = '<li class="no-notifications">No notifications</li>';
-            return;
+        if (data.notifications) {
+            notifications = data.notifications;
+            updateNotificationUI();
         }
+    } catch (error) {
+        console.error('Error loading notifications:', error);
+    }
+}
 
-        notificationsList.innerHTML = notifications.map(notif => {
-            const displayMessage = getDisplayMessage(notif.message);
-            const eventId = extractEventIdFromNotification({ querySelector: () => ({ textContent: notif.message }) });
+// Update notification count
+async function updateNotificationCount() {
+    try {
+        const response = await fetch('{{ route("notifications.count") }}');
+        const data = await response.json();
+        
+        const notifCount = document.getElementById('notificationCount');
+        const headerCount = document.getElementById('notificationsHeaderCount');
+        
+        if (notifCount) notifCount.textContent = data.count;
+        if (headerCount) headerCount.textContent = data.count;
+    } catch (error) {
+        console.error('Error updating notification count:', error);
+    }
+}
+
+// Extract event ID from notification message
+function extractEventIdFromNotification(notificationItem) {
+    const messageElement = notificationItem.querySelector('.notif-content strong');
+    if (!messageElement) return null;
+    
+    const message = messageElement.textContent;
+    const match = message.match(/event_id:(\d+)\|/);
+    return match ? match[1] : null;
+}
+
+// Get display message without the event_id prefix
+function getDisplayMessage(fullMessage) {
+    const match = fullMessage.match(/event_id:\d+\|(.+)/);
+    return match ? match[1] : fullMessage;
+}
+
+// Update notifications UI - ONLY YELLOW DOT, NO ICONS
+function updateNotificationUI() {
+    const notificationsList = document.getElementById('notificationsList');
+    if (!notificationsList) return;
+
+    if (notifications.length === 0) {
+        notificationsList.innerHTML = '<li class="no-notifications">No notifications</li>';
+        return;
+    }
+
+    notificationsList.innerHTML = notifications.map(notif => {
+        const displayMessage = getDisplayMessage(notif.message);
+        const eventId = extractEventIdFromNotification({ querySelector: () => ({ textContent: notif.message }) });
+        
+        return `
+            <li class="notification-item ${notif.is_read ? 'read' : 'unread'}" data-id="${notif.id}" data-event-id="${eventId || ''}">
+                ${!notif.is_read ? '<span class="notif-dot"></span>' : '<span class="notif-dot" style="visibility: hidden;"></span>'}
+                <div class="notif-content">
+                    <strong>${displayMessage}</strong>
+                    <p>${notif.created_at}</p>
+                </div>
+            </li>
+        `;
+    }).join('');
+
+    // Add click events to notification items
+    document.querySelectorAll('.notification-item').forEach(item => {
+        item.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const notificationId = item.dataset.id;
+            const eventId = item.dataset.eventId;
             
-            return `
-                <li class="notification-item ${notif.is_read ? 'read' : 'unread'}" data-id="${notif.id}" data-event-id="${eventId || ''}">
-                    <div class="notif-icon">
-                        <i class="fas fa-star ${notif.is_read ? 'read' : 'unread'}"></i>
-                    </div>
-                    <div class="notif-content">
-                        <strong>${displayMessage}</strong>
-                        <p>${notif.created_at}</p>
-                    </div>
-                    ${!notif.is_read ? '<span class="notif-dot"></span>' : ''}
-                </li>
-            `;
-        }).join('');
+            // Mark as read
+            await markNotificationAsRead(notificationId);
+            
+            // Remove highlight immediately
+            item.classList.add('read');
+            item.classList.remove('unread');
+            const dot = item.querySelector('.notif-dot');
+            if (dot) dot.style.visibility = 'hidden';
+            
+            // Update count
+            await updateNotificationCount();
 
-        // Add click events to notification items
-        document.querySelectorAll('.notification-item').forEach(item => {
-            item.addEventListener('click', async (e) => {
-                e.stopPropagation();
-                const notificationId = item.dataset.id;
-                const eventId = item.dataset.eventId;
-                
-                // Mark as read
-                await markNotificationAsRead(notificationId);
-                
-                // Remove highlight immediately
+            // If it's an evaluation notification, open evaluation modal
+            if (eventId && window.openEvaluationModal) {
+                window.openEvaluationModal(eventId);
+            }
+        });
+    });
+}
+
+// Mark notification as read
+async function markNotificationAsRead(notificationId) {
+    try {
+        const response = await fetch(`/notifications/${notificationId}/read`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': window.csrfToken
+            }
+        });
+        
+        const data = await response.json();
+        return data.success;
+    } catch (error) {
+        console.error('Error marking notification as read:', error);
+        return false;
+    }
+}
+
+// Mark all as read
+async function markAllAsRead() {
+    try {
+        const response = await fetch('{{ route("notifications.read-all") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': window.csrfToken
+            }
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            // Update UI immediately
+            document.querySelectorAll('.notification-item').forEach(item => {
                 item.classList.add('read');
                 item.classList.remove('unread');
                 const dot = item.querySelector('.notif-dot');
-                if (dot) dot.remove();
-                
-                // Update count
-                await updateNotificationCount();
-
-                // If it's an evaluation notification, open evaluation modal
-                if (eventId && window.openEvaluationModal) {
-                    window.openEvaluationModal(eventId);
-                }
+                if (dot) dot.style.visibility = 'hidden';
             });
+            
+            await updateNotificationCount();
+        }
+    } catch (error) {
+        console.error('Error marking all as read:', error);
+    }
+}
+
+// Initialize notifications
+function initNotifications() {
+    loadNotifications();
+    updateNotificationCount();
+
+    // Set up mark all as read button
+    const markAllReadBtn = document.getElementById('markAllRead');
+    if (markAllReadBtn) {
+        markAllReadBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            markAllAsRead();
         });
     }
 
-    // Mark notification as read
-    async function markNotificationAsRead(notificationId) {
-        try {
-            const response = await fetch(`/notifications/${notificationId}/read`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': window.csrfToken
-                }
-            });
-            
-            const data = await response.json();
-            return data.success;
-        } catch (error) {
-            console.error('Error marking notification as read:', error);
-            return false;
-        }
-    }
-
-    // Mark all as read
-    async function markAllAsRead() {
-        try {
-            const response = await fetch('{{ route("notifications.read-all") }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': window.csrfToken
-                }
-            });
-            
-            const data = await response.json();
-            if (data.success) {
-                // Update UI immediately
-                document.querySelectorAll('.notification-item').forEach(item => {
-                    item.classList.add('read');
-                    item.classList.remove('unread');
-                    const dot = item.querySelector('.notif-dot');
-                    if (dot) dot.remove();
-                });
-                
-                await updateNotificationCount();
-            }
-        } catch (error) {
-            console.error('Error marking all as read:', error);
-        }
-    }
-
-    // Initialize notifications
-    function initNotifications() {
+    // Refresh notifications every 30 seconds
+    setInterval(() => {
         loadNotifications();
         updateNotificationCount();
-
-        // Set up mark all as read button
-        const markAllReadBtn = document.getElementById('markAllRead');
-        if (markAllReadBtn) {
-            markAllReadBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                markAllAsRead();
-            });
-        }
-
-        // Refresh notifications every 30 seconds
-        setInterval(() => {
-            loadNotifications();
-            updateNotificationCount();
-        }, 30000);
-    }
+    }, 30000);
+}
     
     function initTopbar(openEvaluationModal) {
       // --- Time ---

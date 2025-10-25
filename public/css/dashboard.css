@@ -752,7 +752,7 @@ textarea:focus {
   }
 }
 
-/* === NOTIFICATION STYLES (Same as SK Dashboard) === */
+/* === NOTIFICATION STYLES (Only Yellow Dot - No Icons) === */
 .notification-wrapper {
   position: relative;
   cursor: pointer;
@@ -840,7 +840,6 @@ textarea:focus {
 .notification-item {
   display: flex;
   align-items: flex-start;
-  gap: 0.8rem;
   padding: 1rem;
   border-bottom: 1px solid #eee;
   position: relative;
@@ -864,18 +863,15 @@ textarea:focus {
   border-bottom: none;
 }
 
-.notif-icon {
-  margin-top: 2px;
+/* Only yellow dot - positioned on the side */
+.notif-dot {
+  width: 8px;
+  height: 8px;
+  background: #FFB703;
+  border-radius: 50%;
+  margin-right: 12px;
+  margin-top: 6px;
   flex-shrink: 0;
-}
-
-.notif-icon .fas.fa-star {
-  color: #FFCA3A;
-  font-size: 16px;
-}
-
-.notif-icon .fas.fa-star.unread {
-  color: #3C87C6;
 }
 
 .notif-content {
@@ -894,17 +890,6 @@ textarea:focus {
   font-size: 13px;
   color: #444;
   margin: 0;
-}
-
-/* Yellow dot */
-.notif-dot {
-  width: 10px;
-  height: 10px;
-  background: #FFB703;
-  border-radius: 50%;
-  position: absolute;
-  right: 15px;
-  top: 20px;
 }
 
 .notif-loading, .no-notifications {

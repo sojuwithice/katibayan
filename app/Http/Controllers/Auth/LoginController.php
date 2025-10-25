@@ -52,7 +52,9 @@ class LoginController extends Controller
         if (Auth::guard('admin')->attempt($adminCredentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
             $this->clearLoginAttempts($request);
-            return redirect()->intended('/admin-dashboard')
+            
+            // FIXED: Redirect directly to the admindashb view
+            return redirect()->route('admindashb')
                 ->with('success', 'Welcome, Admin!');
         }
 
