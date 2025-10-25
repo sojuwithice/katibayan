@@ -34,6 +34,7 @@ use App\Http\Controllers\YouthProgramRegistrationController;
 use App\Http\Controllers\YouthAssistanceController; 
 use App\Http\Controllers\NotificationController; 
 
+
 Route::get('/', function () {
     return view('landingpage');
 });
@@ -46,6 +47,9 @@ Route::get('/registration/success', function () {
     return view('registration-success'); 
 })->name('registration.success');
 
+Route::get('/dashboard', function () {
+    return view('dashboard');
+});
 
 Route::get('/profilepage', function () {
     return view('profilepage');
@@ -54,28 +58,31 @@ Route::get('/profilepage', function () {
 // UPDATED: Certificate page route
 Route::get('/certificatepage', [EvaluationController::class, 'certificatePage'])->name('certificatepage');
 
+
 // ========== EVENT ROUTES ==========
 Route::get('/events', [EventController::class, 'index'])->name('sk-eventpage');
 Route::get('/events/create', [EventController::class, 'create'])->name('create-event');
 Route::post('/events', [EventController::class, 'store'])->name('events.store');
-Route::get('/events/{id}', [EventController::class, 'show'])->name('events.show');
+Route::get('/events/{id}', [EventController::class, 'show'])->name('events.show'); // ADDED NAME
 Route::post('/events/{id}/launch', [EventController::class, 'launchEvent']);
 Route::post('/events/{id}/generate-passcode', [EventController::class, 'generatePasscode']);
 Route::delete('/events/{id}', [EventController::class, 'destroy'])->name('events.destroy');
 Route::get('/eventpage', [EventController::class, 'userEvents'])->name('eventpage');
 
-
+// routes/web.php
 Route::get('/faqspage', function () {
     return view('faqspage'); 
 })->name('faqspage');
 
-
-
-Route::get('/suggestionbox', [SuggestionController::class, 'index'])->name('suggestionbox');
-Route::post('/suggestions', [SuggestionController::class, 'store'])->name('suggestions.store');
+Route::get('/suggestionbox', function () {
+    return view('suggestionbox'); 
+})->name('suggestionbox');
 
 Route::view('/attendance', 'attendancepage')->name('attendancepage');
-Route::get('/serviceoffers', [ServicesController::class, 'index'])->name('serviceoffers');
+
+Route::get('/serviceoffers', function () {
+    return view('serviceoffers');
+})->name('serviceoffers');
 
 // ========== POLLS ROUTES ==========
 Route::get('/polls', [PollsController::class, 'index'])->name('polls.page');
@@ -136,6 +143,25 @@ Route::get('/youth-status', function () {
     return view('youth-statuspage');
 })->name('youth-statuspage');
 
+
+Route::get('/registration-success', function () {
+    return view('registration-success');
+})->name('registration.success');
+
+Route::get('/sk-evaluation-feedback', function () {
+    return view('sk-evaluation-feedback');
+})->name('sk-evaluation-feedback');
+
+Route::get('/sk-eval-review', function () {
+    return view('sk-eval-review');
+})->name('sk-eval-review');
+
+
+
+
+//CONTROLLER ROUTES
+
+
 Route::get('/edit-program', function () {
     return view('edit-program');
 })->name('edit-program');
@@ -169,25 +195,31 @@ Route::get('/view-youth-profile', function () {
     return view('view-youth-profile');
 })->name('view-youth-profile');
 
+Route::get('admindashb', function () {
+    return view('admindashb');
+});
+
 // CONTROLLER ROUTES
 
-Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
-Route::post('/register/preview', [RegisterController::class, 'preview'])->name('register.preview');
-Route::get('/register/captcha', [RegisterController::class, 'showCaptcha'])->name('register.captcha');
-Route::post('/register/complete', [RegisterController::class, 'complete'])->name('register.complete');
 
-// ========== LOCATION ROUTES ==========
+Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
+Route::post('/register', [RegisterController::class, 'register']);
+
+Route::get('/profile', [ProfileController::class, 'index'])->name('profilepage');
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
+
 Route::get('/get-provinces/{region_id}', [LocationController::class, 'getprovinces']);
 Route::get('/get-cities/{province_id}', [LocationController::class, 'getCities']);
 Route::get('/get-barangays/{city_id}', [LocationController::class, 'getBarangays']);
 
-// ========== AUTH ROUTES ==========
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 
 // UPDATED: Login route with rate limiting
 Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
 
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+
+
 
 // ========== ADMIN ROUTES ==========
 
@@ -211,13 +243,29 @@ Route::post('/admin/login', [AdminLoginController::class, 'login'])->name('admin
 Route::post('/admin/logout', [AdminLoginController::class, 'logout'])->name('admin.logout');
 
 
-// ========== PROTECTED ROUTES ==========
+
 Route::middleware(['auth'])->group(function () {
     // Profile routes
     Route::get('/profile', [ProfileController::class, 'index'])->name('profilepage');
     Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
     Route::get('/profile/check-session', [ProfileController::class, 'checkSession'])->name('profile.checkSession');
     Route::get('/profile/user-data', [ProfileController::class, 'getUserData'])->name('profile.userData');
+
+
+Route::post('/profile/change-password', [ProfileController::class, 'changePassword'])->name('profile.change-password');
+// Avatar routes
+Route::post('/profile/avatar/update', [ProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
+Route::post('/profile/avatar/remove', [ProfileController::class, 'removeAvatar'])->name('profile.avatar.remove');
+Route::get('/profile/data', [ProfileController::class, 'getProfileData'])->name('profile.data');
+
+// Attendance routes
+Route::post('/attendance/mark', [AttendanceController::class, 'markAttendance'])->name('attendance.mark');
+Route::get('/attendance/my-attendances', [AttendanceController::class, 'getUserAttendances'])->name('attendance.my');
+
+
+
+
+
     
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
@@ -331,3 +379,4 @@ Route::get('/notifications/count', [NotificationController::class, 'getUnreadCou
 Route::get('/notifications', [NotificationController::class, 'getNotifications'])->name('notifications.list');
 Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
 Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
+
