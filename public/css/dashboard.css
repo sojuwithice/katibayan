@@ -665,29 +665,6 @@ textarea:focus {
 }
 
 .submit-btn {
-  margin-top: 0;
-  background: #4A90E2;
-  color: #fff;
-  padding: 0.8rem 2rem;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 1rem;
-  font-weight: 600;
-  transition: background-color 0.2s ease;
-}
-
-.submit-btn:hover {
-  background: #3c78c0;
-}
-
-.form-actions {
-  display: flex;
-  justify-content: flex-end; 
-  margin-top: 2rem;
-}
-
-.submit-btn {
   margin-top: 0; 
   background: #3C87C4; 
   color: #fff;
@@ -775,10 +752,7 @@ textarea:focus {
   }
 }
 
-
-
-
-/* === Notification === */
+/* === NOTIFICATION STYLES (Same as SK Dashboard) === */
 .notification-wrapper {
   position: relative;
   cursor: pointer;
@@ -840,40 +814,86 @@ textarea:focus {
   padding: 2px 8px;
 }
 
+.mark-all-read {
+  background: none;
+  border: none;
+  color: #3C87C6;
+  font-size: 12px;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.mark-all-read:hover {
+  background: #f0f7ff;
+  color: #2a5f8a;
+}
+
 /* List */
 .notif-list {
   list-style: none;
   max-height: 300px;
   overflow-y: auto;
 }
-.notif-list li {
+
+.notification-item {
   display: flex;
   align-items: flex-start;
   gap: 0.8rem;
   padding: 1rem;
   border-bottom: 1px solid #eee;
   position: relative;
+  cursor: pointer;
+  transition: background-color 0.2s;
 }
-.notif-list li:last-child {
+
+.notification-item:hover {
+  background-color: #f8f9fa;
+}
+
+.notification-item.unread {
+  background-color: #f0f7ff;
+}
+
+.notification-item.read {
+  opacity: 0.7;
+}
+
+.notification-item:last-child {
   border-bottom: none;
 }
 
 .notif-icon {
-  width: 40px;
-  height: 40px;
-  background: #3C87C4;
-  border-radius: 50%;
+  margin-top: 2px;
   flex-shrink: 0;
+}
+
+.notif-icon .fas.fa-star {
+  color: #FFCA3A;
+  font-size: 16px;
+}
+
+.notif-icon .fas.fa-star.unread {
+  color: #3C87C6;
+}
+
+.notif-content {
+  flex: 1;
 }
 
 .notif-content strong {
   font-size: 14px;
   font-weight: 700;
   color: #114B8C;
+  display: block;
+  margin-bottom: 4px;
 }
+
 .notif-content p {
   font-size: 13px;
   color: #444;
+  margin: 0;
 }
 
 /* Yellow dot */
@@ -887,15 +907,24 @@ textarea:focus {
   top: 20px;
 }
 
+.notif-loading, .no-notifications {
+  padding: 20px;
+  text-align: center;
+  color: #666;
+  font-style: italic;
+}
+
+.no-notifications {
+  color: #999;
+  font-size: 14px;
+}
+
 /* Show dropdown */
 .notification-wrapper.active .notif-dropdown {
   opacity: 1;                 
   transform: translateY(0);    
   pointer-events: auto;       
 }
-
-
-
 
 /* Row layout */
 .row {

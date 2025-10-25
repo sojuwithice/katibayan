@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use App\Models\Event;
 use App\Models\Attendance;
 use App\Models\Evaluation;
+use App\Models\Notification;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Log;
 
@@ -32,7 +33,7 @@ class DashboardController extends Controller
 
         $eventsToEvaluate = $attendedEvents - $evaluatedEvents;
 
-        // FIXED: Get events that need evaluation - USE BARANGAY_ID DIRECTLY FROM EVENT
+        // Get events that need evaluation
         $unevaluatedEvents = Event::whereHas('attendances', function($query) use ($user) {
             $query->where('user_id', $user->id)
                   ->whereNotNull('attended_at');
@@ -41,17 +42,47 @@ class DashboardController extends Controller
             $query->where('user_id', $user->id);
         })
         ->where('is_launched', true)
-        ->where('barangay_id', $user->barangay_id) // DIRECT BARANGAY FILTER
+        ->where('barangay_id', $user->barangay_id)
         ->orderBy('event_date', 'desc')
         ->get();
 
-        // Calculate notification count
-        $notificationCount = $unevaluatedEvents->count();
+        // CREATE NOTIFICATIONS FOR UNEVALUATED EVENTS
+        foreach ($unevaluatedEvents as $event) {
+            // Get the attendance date for this event
+            $attendance = $event->attendances()->where('user_id', $user->id)->first();
+            $attendedDate = $attendance ? $attendance->attended_at->format('M j, Y') : 'recently';
+            
+            // Check if notification already exists for this event
+            $existingNotification = Notification::where('user_id', $user->id)
+                ->where('type', 'evaluation_reminder')
+                ->where('message', 'LIKE', "%evaluate '{$event->title}'%")
+                ->first();
 
-        // FIXED: Get upcoming events - USE BARANGAY_ID DIRECTLY FROM EVENT
+            if (!$existingNotification) {
+                // Create notification with evaluation_id as NULL
+                Notification::create([
+                    'user_id' => $user->id,
+                    'evaluation_id' => null, // This is now allowed to be NULL
+                    'type' => 'evaluation_reminder',
+                    'message' => "Please evaluate '{$event->title}' - attended on {$attendedDate}",
+                    'is_read' => false,
+                ]);
+                
+                Log::info("Created evaluation notification for user {$user->id}, event {$event->id}");
+            }
+        }
+
+        // Calculate notification count from database
+        $notificationCount = Notification::where('user_id', $user->id)
+            ->where('is_read', false)
+            ->count();
+
+        Log::info("User {$user->id} has {$notificationCount} unread notifications");
+
+        // Get upcoming events
         $upcomingEvents = Event::where('is_launched', true)
             ->where('event_date', '>=', Carbon::today())
-            ->where('barangay_id', $user->barangay_id) // DIRECT BARANGAY FILTER
+            ->where('barangay_id', $user->barangay_id)
             ->orderBy('event_date', 'asc')
             ->orderBy('event_time', 'asc')
             ->limit(6)
@@ -131,16 +162,16 @@ class DashboardController extends Controller
         // Sort by date and limit to 6 items
         $displayItems = $allUpcomingItems->sortBy('date')->take(6);
 
-        // FIXED: Calculate attendance percentage - USE BARANGAY_ID DIRECTLY FROM EVENT
+        // Calculate attendance percentage
         $totalEvents = Event::where('is_launched', true)
             ->where('event_date', '<=', Carbon::today())
-            ->where('barangay_id', $user->barangay_id) // DIRECT BARANGAY FILTER
+            ->where('barangay_id', $user->barangay_id)
             ->count();
 
         $attendedCount = Attendance::where('user_id', $user->id)
             ->whereNotNull('attended_at')
             ->whereHas('event', function($query) use ($user) {
-                $query->where('barangay_id', $user->barangay_id); // DIRECT BARANGAY FILTER
+                $query->where('barangay_id', $user->barangay_id);
             })
             ->count();
 

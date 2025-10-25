@@ -57,7 +57,7 @@
     <h2>Welcome to KatiBayan</h2>
   </div>
   <button class="theme-toggle" id="themeToggle">
-    <i data-lucide="sun"></i>
+    <i data-lucide="sun" class="lucide-icon"></i>
   </button>
 </header>
 
@@ -77,15 +77,15 @@
   <!-- Steps with icons -->
   <div class="steps">
     <div class="step active" data-step="1">
-      <div class="circle"><i data-lucide="user"></i></div>
+      <div class="circle"><i data-lucide="user" class="lucide-icon"></i></div>
       <p>Personal Information</p>
     </div>
     <div class="step" data-step="2">
-      <div class="circle"><i data-lucide="settings"></i></div>
+      <div class="circle"><i data-lucide="settings" class="lucide-icon"></i></div>
       <p>Account Setup</p>
     </div>
     <div class="step" data-step="3">
-      <div class="circle"><i data-lucide="check-square"></i></div>
+      <div class="circle"><i data-lucide="check-square" class="lucide-icon"></i></div>
       <p>Verification and Review</p>
     </div>
   </div>
@@ -163,7 +163,7 @@
                 <li data-id="{{ $region->id }}">{{ $region->name }}</li>
               @endforeach
             </ul>
-            <span class="arrow"><i data-lucide="chevron-down"></i></span>
+            <span class="arrow"><i data-lucide="chevron-down" class="lucide-icon"></i></span>
             <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
           </div>
 
@@ -171,7 +171,7 @@
           <div class="select-wrapper">
             <input type="text" id="provinceInput" placeholder="-- Select Province --" readonly disabled required>
             <ul class="dropdown-options"></ul>
-            <span class="arrow"><i data-lucide="chevron-down"></i></span>
+            <span class="arrow"><i data-lucide="chevron-down" class="lucide-icon"></i></span>
             <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
           </div>
           
@@ -179,7 +179,7 @@
           <div class="select-wrapper">
             <input type="text" id="cityInput" placeholder="-- Select City/Municipality --" readonly disabled required>
             <ul class="dropdown-options"></ul>
-            <span class="arrow"><i data-lucide="chevron-down"></i></span>
+            <span class="arrow"><i data-lucide="chevron-down" class="lucide-icon"></i></span>
             <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
           </div>
 
@@ -187,7 +187,7 @@
           <div class="select-wrapper">
             <input type="text" id="barangayInput" placeholder="-- Select Barangay --" readonly disabled required>
             <ul class="dropdown-options"></ul>
-            <span class="arrow"><i data-lucide="chevron-down"></i></span>
+            <span class="arrow"><i data-lucide="chevron-down" class="lucide-icon"></i></span>
             <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
           </div>
         </div>
@@ -209,13 +209,13 @@
         <div class="form-grid-4">
           <div class="input-icon input-wrapper">
             <input type="date" id="step1_dob" name="date_of_birth" placeholder="Date of Birth" required>
-            <span class="icon" id="calendarIcon"><i data-lucide="calendar"></i></span>
+            <span class="icon" id="calendarIcon"><i data-lucide="calendar" class="lucide-icon"></i></span>
             <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
           </div>
 
           <div class="select-wrapper">
             <input type="text" id="step1_sex" name="sex" placeholder="Sex" readonly required>
-            <span class="arrow"><i data-lucide="chevron-down"></i></span>
+            <span class="arrow"><i data-lucide="chevron-down" class="lucide-icon"></i></span>
             <ul class="dropdown-options">
               <li data-value="male">Male</li>
               <li data-value="female">Female</li>
@@ -251,7 +251,7 @@
             <li data-value="Unknown">Unknown</li>
             <li data-value="Live-in">Live-in</li>
           </ul>
-          <span class="arrow"><i data-lucide="chevron-down"></i></span>
+          <span class="arrow"><i data-lucide="chevron-down" class="lucide-icon"></i></span>
           <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
         </div>
         <div class="select-wrapper">
@@ -269,7 +269,7 @@
             <li data-value="Doctorate Level">Doctorate Level</li>
             <li data-value="Doctorate Graduate">Doctorate Graduate</li>
           </ul>
-          <span class="arrow"><i data-lucide="chevron-down"></i></span>
+          <span class="arrow"><i data-lucide="chevron-down" class="lucide-icon"></i></span>
           <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
         </div>
         <div class="select-wrapper">
@@ -282,7 +282,7 @@
             <li data-value="Currently looking for a Job">Currently looking for a Job</li>
             <li data-value="Not Interested Looking for a Job">Not Interested Looking for a Job</li>
           </ul>
-          <span class="arrow"><i data-lucide="chevron-down"></i></span>
+          <span class="arrow"><i data-lucide="chevron-down" class="lucide-icon"></i></span>
           <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
         </div>
       </div>
@@ -299,7 +299,7 @@
             <li data-value="Children in Conflict with the Law (CICL)">Children in Conflict with the Law (CICL)</li>
             <li data-value="Indigenous People (IP)">Indigenous People (IP)</li>
           </ul>
-          <span class="arrow"><i data-lucide="chevron-down"></i></span>
+          <span class="arrow"><i data-lucide="chevron-down" class="lucide-icon"></i></span>
           <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
         </div>
 
@@ -309,7 +309,7 @@
            <li data-value="Yes">Yes</li>
             <li data-value="No">No</li>
           </ul>
-          <span class="arrow"><i data-lucide="chevron-down"></i></span>
+          <span class="arrow"><i data-lucide="chevron-down" class="lucide-icon"></i></span>
           <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
         </div>
       </div>
@@ -324,7 +324,7 @@
          <li data-value="sk">SK</li>
           <li data-value="kk">KK</li>
         </ul>
-        <span class="arrow"><i data-lucide="chevron-down"></i></span>
+        <span class="arrow"><i data-lucide="chevron-down" class="lucide-icon"></i></span>
         <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
       </div>
 
@@ -520,778 +520,757 @@
   </div>
 </footer>
 
-<script src="https://unpkg.com/lucide@latest"></script>
 <script>
-lucide.createIcons();
-
-const themeToggle = document.getElementById("themeToggle");
-const body = document.body;
-
-// ---- THEME TOGGLE ----
-const savedTheme = localStorage.getItem("theme");
-function applyTheme(isDark) {
-  if (isDark) {
-    body.classList.add("dark-mode");
-    themeToggle.innerHTML = `<i data-lucide="moon"></i>`;
-  } else {
-    body.classList.remove("dark-mode");
-    themeToggle.innerHTML = `<i data-lucide="sun"></i>`;
-  }
-  lucide.createIcons();
-  localStorage.setItem("theme", isDark ? "dark" : "light");
+// Lucide Icons Initialization with Error Handling
+function initializeLucideIcons() {
+    if (typeof lucide === 'undefined') {
+        console.warn('Lucide not loaded, using Font Awesome fallback');
+        replaceLucideIcons();
+        return;
+    }
+    
+    try {
+        lucide.createIcons();
+        console.log('Lucide icons initialized successfully');
+    } catch (error) {
+        console.error('Error initializing Lucide:', error);
+        replaceLucideIcons();
+    }
 }
-applyTheme(savedTheme === "dark");
 
-themeToggle?.addEventListener("click", () => {
-  const isDark = !body.classList.contains("dark-mode");
-  applyTheme(isDark);
-});
+// Fallback function to replace Lucide icons with Font Awesome
+function replaceLucideIcons() {
+    console.log('Using Font Awesome as fallback for icons');
+    
+    const iconMap = {
+        'sun': 'fas fa-sun',
+        'moon': 'fas fa-moon',
+        'user': 'fas fa-user',
+        'settings': 'fas fa-cog',
+        'check-square': 'fas fa-check-square',
+        'chevron-down': 'fas fa-chevron-down',
+        'calendar': 'fas fa-calendar',
+        'arrow-left': 'fas fa-arrow-left'
+    };
 
-// ---- DATE PICKER ICON ----
-document.querySelectorAll(".input-icon").forEach(wrapper => {
-  const dateInput = wrapper.querySelector('input[type="date"]');
-  const calendarIcon = wrapper.querySelector(".icon");
-  if (dateInput && calendarIcon) {
-    calendarIcon.addEventListener("click", () => {
-      if (dateInput.showPicker) dateInput.showPicker();
-      else dateInput.focus();
-    });
-  }
-});
-
-// ---- TERMS MODAL ----
-document.addEventListener("DOMContentLoaded", () => {
-  const modal = document.getElementById("termsModal");
-  const acceptBtn = document.getElementById("acceptBtn");
-  const cancelBtn = document.getElementById("cancelBtn");
-  if (modal) {
-    modal.style.display = "flex";
-    acceptBtn?.addEventListener("click", () => modal.style.display = "none");
-    cancelBtn?.addEventListener("click", () => {
-      window.location.href = "/loginpage";
-    });
-  }
-});
-
-// ---- CUSTOM SELECT DROPDOWNS ----
-document.querySelectorAll(".select-wrapper").forEach(wrapper => {
-  const input = wrapper.querySelector("input");
-  const dropdown = wrapper.querySelector(".dropdown-options");
-  if (!input || !dropdown) return;
-
-  input.addEventListener("click", () => {
-    document.querySelectorAll(".select-wrapper").forEach(w => {
-      if (w !== wrapper) {
-        w.classList.remove("open");
-        const otherDropdown = w.querySelector(".dropdown-options");
-        if (otherDropdown) otherDropdown.style.display = "none";
-      }
-    });
-    wrapper.classList.toggle("open");
-    dropdown.style.display = wrapper.classList.contains("open") ? "block" : "none";
-  });
-
-  dropdown?.querySelectorAll("li").forEach(option => {
-    option.addEventListener("click", () => {
-      // Use data-value if present, else use text
-      input.value = option.getAttribute("data-value") || option.textContent;
-
-      // Close dropdown
-      wrapper.classList.remove("open");
-      dropdown.style.display = "none";
-
-      // Clear any field error for this input
-      const errorSpan = wrapper.querySelector('.field-error');
-      if (errorSpan) errorSpan.style.display = 'none';
-
-      // Show/hide role-specific fields
-      if (input.name === "role") {
-        const skFields = document.getElementById("skFields");
-        const kkFields = document.getElementById("kkFields");
-
-        if (input.value.toLowerCase() === "sk") {
-          skFields.style.display = "block";
-          kkFields.style.display = "none";
-        } else if (input.value.toLowerCase() === "kk") {
-          skFields.style.display = "none";
-          kkFields.style.display = "block";
-        } else {
-          skFields.style.display = "none";
-          kkFields.style.display = "none";
+    document.querySelectorAll('.lucide-icon').forEach(icon => {
+        const iconName = icon.getAttribute('data-lucide');
+        if (iconName && iconMap[iconName]) {
+            const faIcon = document.createElement('i');
+            faIcon.className = iconMap[iconName];
+            icon.parentNode.replaceChild(faIcon, icon);
         }
-      }
     });
-  });
-});
+}
 
-document.addEventListener("click", e => {
-  if (!e.target.closest(".select-wrapper")) {
+// Initialize Lucide when DOM is ready
+document.addEventListener("DOMContentLoaded", function() {
+    initializeLucideIcons();
+    
+    // ---- THEME TOGGLE ----
+    const themeToggle = document.getElementById("themeToggle");
+    const body = document.body;
+
+    const savedTheme = localStorage.getItem("theme");
+    function applyTheme(isDark) {
+        if (isDark) {
+            body.classList.add("dark-mode");
+            themeToggle.innerHTML = `<i data-lucide="moon" class="lucide-icon"></i>`;
+        } else {
+            body.classList.remove("dark-mode");
+            themeToggle.innerHTML = `<i data-lucide="sun" class="lucide-icon"></i>`;
+        }
+        initializeLucideIcons();
+        localStorage.setItem("theme", isDark ? "dark" : "light");
+    }
+    applyTheme(savedTheme === "dark");
+
+    themeToggle?.addEventListener("click", () => {
+        const isDark = !body.classList.contains("dark-mode");
+        applyTheme(isDark);
+    });
+
+    // ---- DATE PICKER ICON ----
+    document.querySelectorAll(".input-icon").forEach(wrapper => {
+        const dateInput = wrapper.querySelector('input[type="date"]');
+        const calendarIcon = wrapper.querySelector(".icon");
+        if (dateInput && calendarIcon) {
+            calendarIcon.addEventListener("click", () => {
+                if (dateInput.showPicker) dateInput.showPicker();
+                else dateInput.focus();
+            });
+        }
+    });
+
+    // ---- TERMS MODAL ----
+    const modal = document.getElementById("termsModal");
+    const acceptBtn = document.getElementById("acceptBtn");
+    const cancelBtn = document.getElementById("cancelBtn");
+    if (modal) {
+        modal.style.display = "flex";
+        acceptBtn?.addEventListener("click", () => modal.style.display = "none");
+        cancelBtn?.addEventListener("click", () => {
+            window.location.href = "/loginpage";
+        });
+    }
+
+    // ---- CUSTOM SELECT DROPDOWNS ----
     document.querySelectorAll(".select-wrapper").forEach(wrapper => {
-      wrapper.classList.remove("open");
-      const dropdown = wrapper.querySelector(".dropdown-options");
-      if (dropdown) dropdown.style.display = "none";
-    });
-  }
-});
+        const input = wrapper.querySelector("input");
+        const dropdown = wrapper.querySelector(".dropdown-options");
+        if (!input || !dropdown) return;
 
-// ---- MULTI-STEP FORM WITH REAL-TIME VALIDATION ----
-document.addEventListener("DOMContentLoaded", () => {
-  let currentStep = 1;
-  const steps = document.querySelectorAll(".step-content");
-  const progressSteps = document.querySelectorAll(".step");
-  const backBtn = document.querySelector(".back-btn");
-  const nextBtn = document.querySelector(".next-btn");
-  const form = document.getElementById("multiStepForm");
-  const currentStepInput = document.getElementById("currentStep");
-  const stepErrors = document.getElementById("stepErrors");
-  const stepErrorsList = document.getElementById("stepErrorsList");
+        input.addEventListener("click", () => {
+            document.querySelectorAll(".select-wrapper").forEach(w => {
+                if (w !== wrapper) {
+                    w.classList.remove("open");
+                    const otherDropdown = w.querySelector(".dropdown-options");
+                    if (otherDropdown) otherDropdown.style.display = "none";
+                }
+            });
+            wrapper.classList.toggle("open");
+            dropdown.style.display = wrapper.classList.contains("open") ? "block" : "none";
+        });
 
-  // Function to validate current step
-  function validateCurrentStep() {
-    const currentStepElement = document.querySelector(`.step-content[data-step="${currentStep}"]`);
-    const requiredFields = currentStepElement.querySelectorAll('[required]');
-    const errors = [];
-    
-    // Clear previous errors
-    stepErrors.style.display = 'none';
-    stepErrorsList.innerHTML = '';
-    document.querySelectorAll('.field-error').forEach(error => error.style.display = 'none');
-    
-    // Check each required field
-    requiredFields.forEach(field => {
-      let isValid = true;
-      
-      if (field.type === 'checkbox') {
-        isValid = field.checked;
-      } else if (field.type === 'file') {
-        // Special handling for file inputs - only validate if they are visible and for the selected role
-        const roleInput = document.querySelector('input[name="role"]');
-        const selectedRole = roleInput ? roleInput.value.toLowerCase() : '';
-        
-        if (field.id === 'oath_certificate' && selectedRole !== 'sk') {
-          return; // Skip SK file validation if role is not SK
-        }
-        if (field.id === 'barangay_indigency' && selectedRole !== 'kk') {
-          return; // Skip KK file validation if role is not KK
-        }
-        
-        isValid = field.files.length > 0;
-      } else {
-        isValid = field.value.trim() !== '';
-        
-        // Special validation for location dropdowns
-        if (field.id === 'regionInput' || field.id === 'provinceInput' || 
-            field.id === 'cityInput' || field.id === 'barangayInput') {
-          const hiddenIdField = document.getElementById(field.id.replace('Input', 'Id'));
-          isValid = hiddenIdField && hiddenIdField.value !== '';
-        }
-      }
-      
-      if (!isValid) {
-        let fieldName = field.placeholder || field.name;
-        // Make file field names more user-friendly
-        if (field.type === 'file') {
-          if (field.id === 'oath_certificate') {
-            fieldName = 'Oath Taking Certificate';
-          } else if (field.id === 'barangay_indigency') {
-            fieldName = 'Barangay Indigency';
-          }
-        }
-        errors.push(fieldName);
-        
-        // Show individual field error
-        const fieldWrapper = field.closest('.input-wrapper, .select-wrapper, .checkbox-group, .file-section');
-        if (fieldWrapper) {
-          const errorSpan = fieldWrapper.querySelector('.field-error');
-          if (errorSpan) errorSpan.style.display = 'block';
-        }
-      }
-    });
-    
-    return errors;
-  }
+        dropdown?.querySelectorAll("li").forEach(option => {
+            option.addEventListener("click", () => {
+                // Use data-value if present, else use text
+                input.value = option.getAttribute("data-value") || option.textContent;
 
-  function showStep(step) {
-    steps.forEach((s, i) => s.classList.toggle("active", i === step - 1));
-    progressSteps.forEach((p, i) => {
-      p.classList.toggle("active", i < step);
-      p.classList.toggle("completed", i < step - 1);
+                // Close dropdown
+                wrapper.classList.remove("open");
+                dropdown.style.display = "none";
+
+                // Clear any field error for this input
+                const errorSpan = wrapper.querySelector('.field-error');
+                if (errorSpan) errorSpan.style.display = 'none';
+
+                // Show/hide role-specific fields
+                if (input.name === "role") {
+                    const skFields = document.getElementById("skFields");
+                    const kkFields = document.getElementById("kkFields");
+
+                    if (input.value.toLowerCase() === "sk") {
+                        skFields.style.display = "block";
+                        kkFields.style.display = "none";
+                    } else if (input.value.toLowerCase() === "kk") {
+                        skFields.style.display = "none";
+                        kkFields.style.display = "block";
+                    } else {
+                        skFields.style.display = "none";
+                        kkFields.style.display = "none";
+                    }
+                }
+            });
+        });
     });
 
-    if (step === steps.length) {
-      nextBtn.innerText = "Submit";
-      nextBtn.type = "button";
-      
-      // Fill review data
-      fillStep3();
-      
-      nextBtn.onclick = () => {
-        const errors = validateCurrentStep();
-        if (errors.length === 0) {
-          // Submit form directly - this will go to preview route
-          // which then redirects to captcha page
-          form.submit();
-        } else {
-          stepErrors.style.display = 'block';
-          errors.forEach(error => {
-            const li = document.createElement('li');
-            li.textContent = error;
-            li.style.color = '#d00';
-            stepErrorsList.appendChild(li);
-          });
+    document.addEventListener("click", e => {
+        if (!e.target.closest(".select-wrapper")) {
+            document.querySelectorAll(".select-wrapper").forEach(wrapper => {
+                wrapper.classList.remove("open");
+                const dropdown = wrapper.querySelector(".dropdown-options");
+                if (dropdown) dropdown.style.display = "none";
+            });
         }
-      };
-    } else {
-      nextBtn.innerText = "Next";
-      nextBtn.type = "button";
-      nextBtn.onclick = () => {
-        const errors = validateCurrentStep();
-        if (errors.length > 0) {
-          stepErrors.style.display = 'block';
-          errors.forEach(error => {
-            const li = document.createElement('li');
-            li.textContent = error;
-            li.style.color = '#d00';
-            stepErrorsList.appendChild(li);
-          });
-          return;
-        }
+    });
+
+    // ---- MULTI-STEP FORM WITH REAL-TIME VALIDATION ----
+    let currentStep = 1;
+    const steps = document.querySelectorAll(".step-content");
+    const progressSteps = document.querySelectorAll(".step");
+    const backBtn = document.querySelector(".back-btn");
+    const nextBtn = document.querySelector(".next-btn");
+    const form = document.getElementById("multiStepForm");
+    const currentStepInput = document.getElementById("currentStep");
+    const stepErrors = document.getElementById("stepErrors");
+    const stepErrorsList = document.getElementById("stepErrorsList");
+
+    // Function to validate current step
+    function validateCurrentStep() {
+        const currentStepElement = document.querySelector(`.step-content[data-step="${currentStep}"]`);
+        const requiredFields = currentStepElement.querySelectorAll('[required]');
+        const errors = [];
         
-        // Clear errors if validation passes
+        // Clear previous errors
         stepErrors.style.display = 'none';
         stepErrorsList.innerHTML = '';
+        document.querySelectorAll('.field-error').forEach(error => error.style.display = 'none');
         
-        if (currentStep === 2) fillStep3();
-        if (currentStep < steps.length) {
-          currentStep++;
-          showStep(currentStep);
-          currentStepInput.value = currentStep;
-        }
-      };
-    }
-  }
-
-  backBtn?.addEventListener("click", () => {
-    if (currentStep > 1) {
-      currentStep--;
-      showStep(currentStep);
-      currentStepInput.value = currentStep;
-      
-      // Clear errors when going back
-      stepErrors.style.display = 'none';
-      stepErrorsList.innerHTML = '';
-      document.querySelectorAll('.field-error').forEach(error => error.style.display = 'none');
-    }
-  });
-
-  // Add real-time validation for input fields
-  document.querySelectorAll('input[required]').forEach(input => {
-    input.addEventListener('input', function() {
-      if (this.value.trim() !== '') {
-        const fieldWrapper = this.closest('.input-wrapper, .select-wrapper, .checkbox-group');
-        if (fieldWrapper) {
-          const errorSpan = fieldWrapper.querySelector('.field-error');
-          if (errorSpan) errorSpan.style.display = 'none';
-        }
-      }
-    });
-    
-    // For dropdowns, clear error when value is selected
-    if (input.readOnly && input.placeholder && input.placeholder.includes('Select')) {
-      input.addEventListener('click', function() {
-        const fieldWrapper = this.closest('.select-wrapper');
-        if (fieldWrapper) {
-          const errorSpan = fieldWrapper.querySelector('.field-error');
-          if (errorSpan) errorSpan.style.display = 'none';
-        }
-      });
-    }
-  });
-
-  showStep(currentStep);
-});
-
-// ---- VERIFY MODAL ----
-document.addEventListener("DOMContentLoaded", () => {
-  const contactInput = document.getElementById("contactInput");
-  const methodModal  = document.getElementById("methodModal");
-  const closeModal   = document.getElementById("closeModal");
-  const mobileOption = document.getElementById("mobileOption");
-  const googleOption = document.getElementById("googleOption");
-
-  // open on input click
-  contactInput?.addEventListener("click", () => {
-    methodModal.style.display = "flex";
-  });
-
-  // close on button
-  closeModal?.addEventListener("click", () => {
-    methodModal.style.display = "none";
-  });
-
-  // close on backdrop
-  methodModal?.addEventListener("click", (e) => {
-    if (e.target === methodModal) methodModal.style.display = "none";
-  });
-
-  // handle option clicks
-  mobileOption?.addEventListener("click", () => {
-    contactInput.value = "Mobile Number";
-    methodModal.style.display = "none";
-  });
-
-  googleOption?.addEventListener("click", () => {
-    contactInput.value = "Google Account";
-    methodModal.style.display = "none";
-  });
-});
-
-// ---- FILE UPLOAD LABEL UPDATE ----
-function setupFileUpload(inputId, fileTextId) {
-  const input = document.getElementById(inputId);
-  const text = document.getElementById(fileTextId);
-  if (input && text) {
-    input.addEventListener("change", () => {
-      text.textContent = input.files.length > 0
-        ? input.files[0].name
-        : "Accepted: PDF, max 5 MB";
-      
-      // Clear file error when file is selected
-      if (input.files.length > 0) {
-        const fieldWrapper = input.closest('.file-section');
-        if (fieldWrapper) {
-          const errorSpan = fieldWrapper.querySelector('.field-error');
-          if (errorSpan) errorSpan.style.display = 'none';
-        }
-      }
-    });
-  }
-}
-setupFileUpload("oath_certificate", "fileText1");
-setupFileUpload("barangay_indigency", "fileText3");
-
-// ---- LOCATION DROPDOWNS WITH ID STORAGE ----
-document.addEventListener("DOMContentLoaded", () => {
-  const regionInput = document.getElementById("regionInput");
-  const provinceInput = document.getElementById("provinceInput");
-  const cityInput = document.getElementById("cityInput");
-  const barangayInput = document.getElementById("barangayInput");
-
-  // Hidden input fields for IDs
-  const regionIdInput = document.getElementById("regionId");
-  const provinceIdInput = document.getElementById("provinceId");
-  const cityIdInput = document.getElementById("cityId");
-  const barangayIdInput = document.getElementById("barangayId");
-
-  const regionDropdown = regionInput.nextElementSibling;
-  const provinceDropdown = provinceInput.nextElementSibling;
-  const cityDropdown = cityInput.nextElementSibling;
-  const barangayDropdown = barangayInput.nextElementSibling;
-
-  function closeAllDropdowns() {
-    [regionDropdown, provinceDropdown, cityDropdown, barangayDropdown].forEach(dd => dd.style.display = "none");
-  }
-
-  function openDropdown(input, dropdown) {
-    closeAllDropdowns();
-    dropdown.style.display = "block";
-  }
-
-  // Show dropdown on input click
-  [regionInput, provinceInput, cityInput, barangayInput].forEach((input, i) => {
-    input.addEventListener("click", e => {
-      e.stopPropagation();
-      const dropdown = input.nextElementSibling;
-      if (!input.disabled) openDropdown(input, dropdown);
-    });
-  });
-
-  // Event delegation for dropdown items with ID storage
-  function setupDropdownSelection(parentDropdown, input, hiddenInput, fetchNext = null) {
-    parentDropdown.addEventListener("click", e => {
-      if (e.target.tagName === "LI") {
-        input.value = e.target.textContent;
+        // Check each required field
+        requiredFields.forEach(field => {
+            let isValid = true;
+            
+            if (field.type === 'checkbox') {
+                isValid = field.checked;
+            } else if (field.type === 'file') {
+                // Special handling for file inputs - only validate if they are visible and for the selected role
+                const roleInput = document.querySelector('input[name="role"]');
+                const selectedRole = roleInput ? roleInput.value.toLowerCase() : '';
+                
+                if (field.id === 'oath_certificate' && selectedRole !== 'sk') {
+                    return; // Skip SK file validation if role is not SK
+                }
+                if (field.id === 'barangay_indigency' && selectedRole !== 'kk') {
+                    return; // Skip KK file validation if role is not KK
+                }
+                
+                isValid = field.files.length > 0;
+            } else {
+                isValid = field.value.trim() !== '';
+                
+                // Special validation for location dropdowns
+                if (field.id === 'regionInput' || field.id === 'provinceInput' || 
+                    field.id === 'cityInput' || field.id === 'barangayInput') {
+                    const hiddenIdField = document.getElementById(field.id.replace('Input', 'Id'));
+                    isValid = hiddenIdField && hiddenIdField.value !== '';
+                }
+            }
+            
+            if (!isValid) {
+                let fieldName = field.placeholder || field.name;
+                // Make file field names more user-friendly
+                if (field.type === 'file') {
+                    if (field.id === 'oath_certificate') {
+                        fieldName = 'Oath Taking Certificate';
+                    } else if (field.id === 'barangay_indigency') {
+                        fieldName = 'Barangay Indigency';
+                    }
+                }
+                errors.push(fieldName);
+                
+                // Show individual field error
+                const fieldWrapper = field.closest('.input-wrapper, .select-wrapper, .checkbox-group, .file-section');
+                if (fieldWrapper) {
+                    const errorSpan = fieldWrapper.querySelector('.field-error');
+                    if (errorSpan) errorSpan.style.display = 'block';
+                }
+            }
+        });
         
-        // Store the ID in the hidden input field
-        if (hiddenInput) {
-          hiddenInput.value = e.target.dataset.id;
+        return errors;
+    }
+
+    function showStep(step) {
+        steps.forEach((s, i) => s.classList.toggle("active", i === step - 1));
+        progressSteps.forEach((p, i) => {
+            p.classList.toggle("active", i < step);
+            p.classList.toggle("completed", i < step - 1);
+        });
+
+        if (step === steps.length) {
+            nextBtn.innerText = "Submit";
+            nextBtn.type = "button";
+            
+            // Fill review data
+            fillStep3();
+            
+            nextBtn.onclick = () => {
+                const errors = validateCurrentStep();
+                if (errors.length === 0) {
+                    // Submit form directly - this will go to preview route
+                    // which then redirects to captcha page
+                    form.submit();
+                } else {
+                    stepErrors.style.display = 'block';
+                    errors.forEach(error => {
+                        const li = document.createElement('li');
+                        li.textContent = error;
+                        li.style.color = '#d00';
+                        stepErrorsList.appendChild(li);
+                    });
+                }
+            };
+        } else {
+            nextBtn.innerText = "Next";
+            nextBtn.type = "button";
+            nextBtn.onclick = () => {
+                const errors = validateCurrentStep();
+                if (errors.length > 0) {
+                    stepErrors.style.display = 'block';
+                    errors.forEach(error => {
+                        const li = document.createElement('li');
+                        li.textContent = error;
+                        li.style.color = '#d00';
+                        stepErrorsList.appendChild(li);
+                    });
+                    return;
+                }
+                
+                // Clear errors if validation passes
+                stepErrors.style.display = 'none';
+                stepErrorsList.innerHTML = '';
+                
+                if (currentStep === 2) fillStep3();
+                if (currentStep < steps.length) {
+                    currentStep++;
+                    showStep(currentStep);
+                    currentStepInput.value = currentStep;
+                }
+            };
         }
+    }
 
-        // Clear location error when selection is made
-        const fieldWrapper = input.closest('.select-wrapper');
-        if (fieldWrapper) {
-          const errorSpan = fieldWrapper.querySelector('.field-error');
-          if (errorSpan) errorSpan.style.display = 'none';
+    backBtn?.addEventListener("click", () => {
+        if (currentStep > 1) {
+            currentStep--;
+            showStep(currentStep);
+            currentStepInput.value = currentStep;
+            
+            // Clear errors when going back
+            stepErrors.style.display = 'none';
+            stepErrorsList.innerHTML = '';
+            document.querySelectorAll('.field-error').forEach(error => error.style.display = 'none');
         }
+    });
 
-        // Reset lower-level inputs
-        if (fetchNext) fetchNext(e.target.dataset.id);
+    // Add real-time validation for input fields
+    document.querySelectorAll('input[required]').forEach(input => {
+        input.addEventListener('input', function() {
+            if (this.value.trim() !== '') {
+                const fieldWrapper = this.closest('.input-wrapper, .select-wrapper, .checkbox-group');
+                if (fieldWrapper) {
+                    const errorSpan = fieldWrapper.querySelector('.field-error');
+                    if (errorSpan) errorSpan.style.display = 'none';
+                }
+            }
+        });
+        
+        // For dropdowns, clear error when value is selected
+        if (input.readOnly && input.placeholder && input.placeholder.includes('Select')) {
+            input.addEventListener('click', function() {
+                const fieldWrapper = this.closest('.select-wrapper');
+                if (fieldWrapper) {
+                    const errorSpan = fieldWrapper.querySelector('.field-error');
+                    if (errorSpan) errorSpan.style.display = 'none';
+                }
+            });
+        }
+    });
 
+    showStep(currentStep);
+
+    // ---- FILE UPLOAD LABEL UPDATE ----
+    function setupFileUpload(inputId, fileTextId) {
+        const input = document.getElementById(inputId);
+        const text = document.getElementById(fileTextId);
+        if (input && text) {
+            input.addEventListener("change", () => {
+                text.textContent = input.files.length > 0
+                    ? input.files[0].name
+                    : "Accepted: PDF, max 5 MB";
+                
+                // Clear file error when file is selected
+                if (input.files.length > 0) {
+                    const fieldWrapper = input.closest('.file-section');
+                    if (fieldWrapper) {
+                        const errorSpan = fieldWrapper.querySelector('.field-error');
+                        if (errorSpan) errorSpan.style.display = 'none';
+                    }
+                }
+            });
+        }
+    }
+    setupFileUpload("oath_certificate", "fileText1");
+    setupFileUpload("barangay_indigency", "fileText3");
+
+    // ---- LOCATION DROPDOWNS WITH ID STORAGE ----
+    const regionInput = document.getElementById("regionInput");
+    const provinceInput = document.getElementById("provinceInput");
+    const cityInput = document.getElementById("cityInput");
+    const barangayInput = document.getElementById("barangayInput");
+
+    // Hidden input fields for IDs
+    const regionIdInput = document.getElementById("regionId");
+    const provinceIdInput = document.getElementById("provinceId");
+    const cityIdInput = document.getElementById("cityId");
+    const barangayIdInput = document.getElementById("barangayId");
+
+    const regionDropdown = regionInput.nextElementSibling;
+    const provinceDropdown = provinceInput.nextElementSibling;
+    const cityDropdown = cityInput.nextElementSibling;
+    const barangayDropdown = barangayInput.nextElementSibling;
+
+    function closeAllDropdowns() {
+        [regionDropdown, provinceDropdown, cityDropdown, barangayDropdown].forEach(dd => dd.style.display = "none");
+    }
+
+    function openDropdown(input, dropdown) {
         closeAllDropdowns();
-      }
+        dropdown.style.display = "block";
+    }
+
+    // Show dropdown on input click
+    [regionInput, provinceInput, cityInput, barangayInput].forEach((input, i) => {
+        input.addEventListener("click", e => {
+            e.stopPropagation();
+            const dropdown = input.nextElementSibling;
+            if (!input.disabled) openDropdown(input, dropdown);
+        });
     });
-  }
 
-  // Region → Province
-  setupDropdownSelection(regionDropdown, regionInput, regionIdInput, regionId => {
-    provinceInput.value = "";
-    provinceInput.disabled = false;
-    provinceDropdown.innerHTML = "";
-    provinceIdInput.value = "";
-    
-    cityInput.value = "";
-    cityInput.disabled = true;
-    cityDropdown.innerHTML = "";
-    cityIdInput.value = "";
-    
-    barangayInput.value = "";
-    barangayInput.disabled = true;
-    barangayDropdown.innerHTML = "";
-    barangayIdInput.value = "";
+    // Event delegation for dropdown items with ID storage
+    function setupDropdownSelection(parentDropdown, input, hiddenInput, fetchNext = null) {
+        parentDropdown.addEventListener("click", e => {
+            if (e.target.tagName === "LI") {
+                input.value = e.target.textContent;
+                
+                // Store the ID in the hidden input field
+                if (hiddenInput) {
+                    hiddenInput.value = e.target.dataset.id;
+                }
 
-    fetch(`/get-provinces/${regionId}`)
-      .then(res => res.json())
-      .then(provinces => {
-        provinces.forEach(p => {
-          const li = document.createElement("li");
-          li.textContent = p.name;
-          li.dataset.id = p.id;
-          provinceDropdown.appendChild(li);
+                // Clear location error when selection is made
+                const fieldWrapper = input.closest('.select-wrapper');
+                if (fieldWrapper) {
+                    const errorSpan = fieldWrapper.querySelector('.field-error');
+                    if (errorSpan) errorSpan.style.display = 'none';
+                }
+
+                // Reset lower-level inputs
+                if (fetchNext) fetchNext(e.target.dataset.id);
+
+                closeAllDropdowns();
+            }
         });
-      })
-      .catch(error => console.error('Error fetching provinces:', error));
-  });
+    }
 
-  // Province → City
-  setupDropdownSelection(provinceDropdown, provinceInput, provinceIdInput, provinceId => {
-    cityInput.value = "";
-    cityInput.disabled = false;
-    cityDropdown.innerHTML = "";
-    cityIdInput.value = "";
-    
-    barangayInput.value = "";
-    barangayInput.disabled = true;
-    barangayDropdown.innerHTML = "";
-    barangayIdInput.value = "";
+    // Region → Province
+    setupDropdownSelection(regionDropdown, regionInput, regionIdInput, regionId => {
+        provinceInput.value = "";
+        provinceInput.disabled = false;
+        provinceDropdown.innerHTML = "";
+        provinceIdInput.value = "";
+        
+        cityInput.value = "";
+        cityInput.disabled = true;
+        cityDropdown.innerHTML = "";
+        cityIdInput.value = "";
+        
+        barangayInput.value = "";
+        barangayInput.disabled = true;
+        barangayDropdown.innerHTML = "";
+        barangayIdInput.value = "";
 
-    fetch(`/get-cities/${provinceId}`)
-      .then(res => res.json())
-      .then(cities => {
-        cities.forEach(c => {
-          const li = document.createElement("li");
-          li.textContent = c.name;
-          li.dataset.id = c.id;
-          cityDropdown.appendChild(li);
+        fetch(`/get-provinces/${regionId}`)
+            .then(res => res.json())
+            .then(provinces => {
+                provinces.forEach(p => {
+                    const li = document.createElement("li");
+                    li.textContent = p.name;
+                    li.dataset.id = p.id;
+                    provinceDropdown.appendChild(li);
+                });
+            })
+            .catch(error => console.error('Error fetching provinces:', error));
+    });
+
+    // Province → City
+    setupDropdownSelection(provinceDropdown, provinceInput, provinceIdInput, provinceId => {
+        cityInput.value = "";
+        cityInput.disabled = false;
+        cityDropdown.innerHTML = "";
+        cityIdInput.value = "";
+        
+        barangayInput.value = "";
+        barangayInput.disabled = true;
+        barangayDropdown.innerHTML = "";
+        barangayIdInput.value = "";
+
+        fetch(`/get-cities/${provinceId}`)
+            .then(res => res.json())
+            .then(cities => {
+                cities.forEach(c => {
+                    const li = document.createElement("li");
+                    li.textContent = c.name;
+                    li.dataset.id = c.id;
+                    cityDropdown.appendChild(li);
+                });
+            })
+            .catch(error => console.error('Error fetching cities:', error));
+    });
+
+    // City → Barangay
+    setupDropdownSelection(cityDropdown, cityInput, cityIdInput, cityId => {
+        barangayInput.value = "";
+        barangayInput.disabled = false;
+        barangayDropdown.innerHTML = "";
+        barangayIdInput.value = "";
+
+        fetch(`/get-barangays/${cityId}`)
+            .then(res => res.json())
+            .then(barangays => {
+                barangays.forEach(b => {
+                    const li = document.createElement("li");
+                    li.textContent = b.name;
+                    li.dataset.id = b.id;
+                    barangayDropdown.appendChild(li);
+                });
+            })
+            .catch(error => console.error('Error fetching barangays:', error));
+    });
+
+    // Barangay selection
+    setupDropdownSelection(barangayDropdown, barangayInput, barangayIdInput);
+
+    // Close dropdowns on click outside
+    document.addEventListener("click", closeAllDropdowns);
+
+    // ---- STEP 3 REVIEW ----
+    function fillStep3() {
+        // Personal Information
+        document.getElementById("review_lastname").textContent =
+            document.getElementById("step1_lastname")?.value || "";
+        document.getElementById("review_givenname").textContent =
+            document.getElementById("step1_givenname")?.value || "";
+        document.getElementById("review_middlename").textContent =
+            document.getElementById("step1_middlename")?.value || "";
+        document.getElementById("review_suffix").textContent =
+            document.getElementById("step1_suffix")?.value || "";
+        
+        // Location Information
+        document.getElementById("review_region").textContent =
+            document.getElementById("regionInput")?.value || "";
+        document.getElementById("review_province").textContent =
+            document.getElementById("provinceInput")?.value || "";
+        document.getElementById("review_city").textContent =
+            document.getElementById("cityInput")?.value || "";
+        document.getElementById("review_barangay").textContent =
+            document.getElementById("barangayInput")?.value || "";
+        document.getElementById("review_zip").textContent =
+            document.getElementById("step1_zip")?.value || "";
+        document.getElementById("review_purok").textContent =
+            document.getElementById("step1_purok")?.value || "";
+        
+        // Personal Details
+        document.getElementById("review_dob").textContent =
+            document.getElementById("step1_dob")?.value || "";
+        document.getElementById("review_sex").textContent =
+            document.getElementById("step1_sex")?.value || "";
+        document.getElementById("review_email").textContent =
+            document.getElementById("step1_email")?.value || "";
+        document.getElementById("review_contact").textContent =
+            document.querySelector("input[name='contact_no']")?.value || "";
+
+        // Demographics
+        document.getElementById("review_civil").textContent =
+            document.getElementById("step1_civil")?.value || "";
+        document.getElementById("review_education").textContent =
+            document.querySelector("input[name='education']")?.value || "";
+        document.getElementById("review_work").textContent =
+            document.querySelector("input[name='work_status']")?.value || "";
+        document.getElementById("review_youth").textContent =
+            document.querySelector("input[name='youth_classification']")?.value || "";
+        document.getElementById("review_sk").textContent =
+            document.querySelector("input[name='sk_voter']")?.value || "";
+
+        // Role and Documents
+        document.getElementById("review_role").textContent =
+            document.querySelector("input[name='role']")?.value || "";
+
+        const oathCert = document.getElementById("oath_certificate")?.files[0]?.name;
+        const barangayInd = document.getElementById("barangay_indigency")?.files[0]?.name;
+        
+        let filesText = "";
+        if (oathCert) filesText += `Oath Certificate: ${oathCert} `;
+        if (barangayInd) filesText += `Barangay Indigency: ${barangayInd}`;
+        
+        document.getElementById("review_files").textContent =
+            filesText || "No files uploaded";
+    }
+
+    // OTP functionality
+    const contactInput = document.getElementById("contactInput");
+    const verifyBtn = document.getElementById("openMethodBtn");
+    const googleAccountSelector = document.getElementById("googleAccountSelector");
+
+    const codeModal = document.getElementById("codeModal");
+    const codeMessage = document.getElementById("codeMessage");
+    const codeBoxes = document.querySelectorAll(".code-box");
+    const codeVerifyBtn = document.getElementById("codeVerifyBtn");
+    const resendLink = document.getElementById("resendLink");
+
+    const successModal = document.getElementById("successModal");
+    const successOkBtn = document.getElementById("successOkBtn");
+
+    const clientId = document.querySelector('meta[name="google-signin-client_id"]')?.getAttribute("content");
+    let resendTimer = 30;
+    let resendInterval;
+
+    // Initialize Google OAuth
+    if (typeof google !== 'undefined' && google.accounts && google.accounts.oauth2) {
+        const tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: clientId,
+            scope: "email profile openid",
+            callback: async (response) => {
+                if (response.access_token) {
+                    try {
+                        const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+                            headers: { Authorization: `Bearer ${response.access_token}` },
+                        });
+                        const userInfo = await res.json();
+                        contactInput.value = userInfo.email;
+                    } catch (error) {
+                        console.error("Error fetching user info:", error);
+                    }
+                }
+            },
         });
-      })
-      .catch(error => console.error('Error fetching cities:', error));
-  });
 
-  // City → Barangay
-  setupDropdownSelection(cityDropdown, cityInput, cityIdInput, cityId => {
-    barangayInput.value = "";
-    barangayInput.disabled = false;
-    barangayDropdown.innerHTML = "";
-    barangayIdInput.value = "";
-
-    fetch(`/get-barangays/${cityId}`)
-      .then(res => res.json())
-      .then(barangays => {
-        barangays.forEach(b => {
-          const li = document.createElement("li");
-          li.textContent = b.name;
-          li.dataset.id = b.id;
-          barangayDropdown.appendChild(li);
+        // Google Account Selection
+        googleAccountSelector.addEventListener("click", () => {
+            if (!verifyBtn.disabled) {
+                tokenClient.requestAccessToken();
+            }
         });
-      })
-      .catch(error => console.error('Error fetching barangays:', error));
-  });
+    } else {
+        console.warn('Google OAuth not loaded');
+    }
 
-  // Barangay selection
-  setupDropdownSelection(barangayDropdown, barangayInput, barangayIdInput);
+    // Send OTP Button
+    verifyBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
 
-  // Close dropdowns on click outside
-  document.addEventListener("click", closeAllDropdowns);
-});
+        const email = contactInput.value.trim();
+        if (!email) return showMessage("Please select your Google account first.");
 
-// ---- STEP 3 REVIEW ----
-function fillStep3() {
-  // Personal Information
-  document.getElementById("review_lastname").textContent =
-    document.getElementById("step1_lastname")?.value || "";
-  document.getElementById("review_givenname").textContent =
-    document.getElementById("step1_givenname")?.value || "";
-  document.getElementById("review_middlename").textContent =
-    document.getElementById("step1_middlename")?.value || "";
-  document.getElementById("review_suffix").textContent =
-    document.getElementById("step1_suffix")?.value || "";
-  
-  // Location Information
-  document.getElementById("review_region").textContent =
-    document.getElementById("regionInput")?.value || "";
-  document.getElementById("review_province").textContent =
-    document.getElementById("provinceInput")?.value || "";
-  document.getElementById("review_city").textContent =
-    document.getElementById("cityInput")?.value || "";
-  document.getElementById("review_barangay").textContent =
-    document.getElementById("barangayInput")?.value || "";
-  document.getElementById("review_zip").textContent =
-    document.getElementById("step1_zip")?.value || "";
-  document.getElementById("review_purok").textContent =
-    document.getElementById("step1_purok")?.value || "";
-  
-  // Personal Details
-  document.getElementById("review_dob").textContent =
-    document.getElementById("step1_dob")?.value || "";
-  document.getElementById("review_sex").textContent =
-    document.getElementById("step1_sex")?.value || "";
-  document.getElementById("review_email").textContent =
-    document.getElementById("step1_email")?.value || "";
-  document.getElementById("review_contact").textContent =
-    document.querySelector("input[name='contact_no']")?.value || "";
+        fetch("/send-otp", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": "{{ csrf_token() }}",
+            },
+            body: JSON.stringify({ email }),
+        })
+            .then((res) => res.json())
+            .then((data) => {
+                if (data.success) {
+                    codeModal.style.display = "flex";
+                    showMessage(`We sent a code to ${email}`);
+                    clearCodeBoxes();
+                    codeBoxes[0].focus();
+                    startResendTimer();
+                } else {
+                    showMessage(data.error || "Failed to send OTP.");
+                }
+            })
+            .catch((err) => console.error("Error sending OTP:", err));
+    });
 
-  // Demographics
-  document.getElementById("review_civil").textContent =
-    document.getElementById("step1_civil")?.value || "";
-  document.getElementById("review_education").textContent =
-    document.querySelector("input[name='education']")?.value || "";
-  document.getElementById("review_work").textContent =
-    document.querySelector("input[name='work_status']")?.value || "";
-  document.getElementById("review_youth").textContent =
-    document.querySelector("input[name='youth_classification']")?.value || "";
-  document.getElementById("review_sk").textContent =
-    document.querySelector("input[name='sk_voter']")?.value || "";
+    // Resend OTP Link
+    resendLink.addEventListener("click", (e) => {
+        e.preventDefault();
+        if (resendLink.disabled) return;
 
-  // Role and Documents
-  document.getElementById("review_role").textContent =
-    document.querySelector("input[name='role']")?.value || "";
+        const email = contactInput.value.trim();
+        if (!email) return showMessage("Please select your Google account first.");
 
-  const oathCert = document.getElementById("oath_certificate")?.files[0]?.name;
-  const barangayInd = document.getElementById("barangay_indigency")?.files[0]?.name;
-  
-  let filesText = "";
-  if (oathCert) filesText += `Oath Certificate: ${oathCert} `;
-  if (barangayInd) filesText += `Barangay Indigency: ${barangayInd}`;
-  
-  document.getElementById("review_files").textContent =
-    filesText || "No files uploaded";
-}
+        fetch("/send-otp", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": "{{ csrf_token() }}",
+            },
+            body: JSON.stringify({ email }),
+        })
+            .then((res) => res.json())
+            .then((data) => {
+                if (data.success) {
+                    showMessage(`A new code has been sent to ${email}`);
+                    clearCodeBoxes();
+                    codeBoxes[0].focus();
+                    startResendTimer();
+                } else {
+                    showMessage(data.error || "Failed to resend OTP.");
+                }
+            })
+            .catch((err) => console.error("Error resending OTP:", err));
+    });
 
-// OTP functionality (dummy functions for now)
-function sendOtp(mobile) {
-  return Promise.resolve({ message: "OTP sent successfully" });
-}
+    // Verify OTP Button
+    codeVerifyBtn.addEventListener("click", async (e) => {
+        e.preventDefault();
+        const code = Array.from(codeBoxes).map((box) => box.value).join("");
+        const email = contactInput.value.trim();
 
-function verifyOtp(mobile, otp) {
-  return Promise.resolve({ status: "approved" });
-}
+        if (code.length !== 6) return showMessage("Please enter the 6-digit code.");
 
-
-// === OTP ===
-document.addEventListener("DOMContentLoaded", function () {
-  // === 1. ELEMENT SELECTION ===
-  // Lahat ng kailangan nating element, nandito na sa taas.
-  const contactInput = document.getElementById("contactInput");
-  const verifyBtn = document.getElementById("openMethodBtn");
-  const googleAccountSelector = document.getElementById("googleAccountSelector"); // <-- Para sa buong clickable box
-
-  const codeModal = document.getElementById("codeModal");
-  const codeMessage = document.getElementById("codeMessage");
-  const codeBoxes = document.querySelectorAll(".code-box");
-  const codeVerifyBtn = document.getElementById("codeVerifyBtn");
-  const resendLink = document.getElementById("resendLink");
-
-  const successModal = document.getElementById("successModal");
-  const successOkBtn = document.getElementById("successOkBtn");
-
-  // === 2. STATE & CONFIGURATION ===
-  const clientId = document.querySelector('meta[name="google-signin-client_id"]')?.getAttribute("content");
-  let resendTimer = 30;
-  let resendInterval;
-
-  // === 3. INITIALIZATION (GOOGLE OAUTH) ===
-  const tokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: clientId,
-    scope: "email profile openid",
-    callback: async (response) => {
-      // Itong function ang tatakbo kapag pumili na ng Google account
-      if (response.access_token) {
         try {
-          const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-            headers: { Authorization: `Bearer ${response.access_token}` },
-          });
-          const userInfo = await res.json();
-          contactInput.value = userInfo.email; // Ilalagay ang email sa input box
-        } catch (error) {
-          console.error("Error fetching user info:", error);
+            const res = await fetch("/verify-otp", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                },
+                body: JSON.stringify({ email, code: code.split("") }),
+            });
+
+            const data = await res.json();
+            if (data.verified === true) {
+                codeModal.style.display = "none";
+                setTimeout(() => {
+                    successModal.style.display = "flex";
+                }, 150);
+
+                verifyBtn.textContent = "Verified";
+                verifyBtn.disabled = true;
+                verifyBtn.classList.add("verified");
+            } else {
+                showMessage(data.error || "Invalid or expired code.");
+            }
+        } catch (err) {
+            console.error("Error verifying OTP:", err);
         }
-      }
-    },
-  });
-
-  // === 4. EVENT LISTENERS ===
-
-  // --- Google Account Selection (FIXED) ---
-  // Pinindot ang buong box, hindi lang ang input
-  googleAccountSelector.addEventListener("click", () => {
-    // Huwag nang buksan ulit kung verified na
-    if (!verifyBtn.disabled) {
-      tokenClient.requestAccessToken();
-    }
-  });
-
-  // --- Send OTP Button ---
-  verifyBtn.addEventListener("click", (e) => {
-    e.stopPropagation(); // <-- IMPORTANTE: Para hindi mag-trigger ang click ng buong box
-
-    const email = contactInput.value.trim();
-    if (!email) return showMessage("Please select your Google account first.");
-
-    fetch("/send-otp", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRF-TOKEN": "{{ csrf_token() }}",
-      },
-      body: JSON.stringify({ email }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success) {
-          codeModal.style.display = "flex";
-          showMessage(`We sent a code to ${email}`);
-          clearCodeBoxes();
-          codeBoxes[0].focus();
-          startResendTimer();
-        } else {
-          showMessage(data.error || "Failed to send OTP.");
-        }
-      })
-      .catch((err) => console.error("Error sending OTP:", err));
-  });
-
-  // --- Resend OTP Link ---
-  resendLink.addEventListener("click", (e) => {
-    e.preventDefault();
-    if (resendLink.disabled) return;
-
-    const email = contactInput.value.trim();
-    if (!email) return showMessage("Please select your Google account first.");
-
-    fetch("/send-otp", { /* Assuming same endpoint for resend */
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRF-TOKEN": "{{ csrf_token() }}",
-      },
-      body: JSON.stringify({ email }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success) {
-          showMessage(`A new code has been sent to ${email}`);
-          clearCodeBoxes();
-          codeBoxes[0].focus();
-          startResendTimer();
-        } else {
-          showMessage(data.error || "Failed to resend OTP.");
-        }
-      })
-      .catch((err) => console.error("Error resending OTP:", err));
-  });
-
-  // --- Verify OTP Button ---
-  codeVerifyBtn.addEventListener("click", async (e) => {
-    e.preventDefault();
-    const code = Array.from(codeBoxes).map((box) => box.value).join("");
-    const email = contactInput.value.trim();
-
-    if (code.length !== 6) return showMessage("Please enter the 6-digit code.");
-
-    try {
-      const res = await fetch("/verify-otp", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRF-TOKEN": "{{ csrf_token() }}",
-        },
-        body: JSON.stringify({ email, code: code.split("") }),
-      });
-
-      const data = await res.json();
-      if (data.verified === true) {
-        codeModal.style.display = "none";
-        setTimeout(() => {
-          successModal.style.display = "flex";
-        }, 150);
-
-        verifyBtn.textContent = "Verified";
-        verifyBtn.disabled = true;
-        verifyBtn.classList.add("verified");
-      } else {
-        showMessage(data.error || "Invalid or expired code.");
-      }
-    } catch (err) {
-      console.error("Error verifying OTP:", err);
-    }
-  });
-
-  // --- Success Modal OK Button ---
-  successOkBtn.addEventListener("click", () => {
-    successModal.style.display = "none";
-  });
-
-  // --- OTP Input Box Logic (Auto-focus & Backspace) ---
-  codeBoxes.forEach((box, index) => {
-    box.addEventListener("input", (e) => {
-      if (e.target.value && index < codeBoxes.length - 1) {
-        codeBoxes[index + 1].focus();
-      }
     });
-    box.addEventListener("keydown", (e) => {
-      if (e.key === "Backspace" && !e.target.value && index > 0) {
-        codeBoxes[index - 1].focus();
-      }
+
+    // Success Modal OK Button
+    successOkBtn.addEventListener("click", () => {
+        successModal.style.display = "none";
     });
-  });
 
-  // === 5. HELPER FUNCTIONS ===
+    // OTP Input Box Logic
+    codeBoxes.forEach((box, index) => {
+        box.addEventListener("input", (e) => {
+            if (e.target.value && index < codeBoxes.length - 1) {
+                codeBoxes[index + 1].focus();
+            }
+        });
+        box.addEventListener("keydown", (e) => {
+            if (e.key === "Backspace" && !e.target.value && index > 0) {
+                codeBoxes[index - 1].focus();
+            }
+        });
+    });
 
-  function clearCodeBoxes() {
-    codeBoxes.forEach((box) => (box.value = ""));
-  }
+    function clearCodeBoxes() {
+        codeBoxes.forEach((box) => (box.value = ""));
+    }
 
-  function startResendTimer() {
-    resendLink.disabled = true;
-    let timeLeft = resendTimer;
-    resendLink.textContent = `Resend (${timeLeft}s)`;
+    function startResendTimer() {
+        resendLink.disabled = true;
+        let timeLeft = resendTimer;
+        resendLink.textContent = `Resend (${timeLeft}s)`;
 
-    clearInterval(resendInterval);
-    resendInterval = setInterval(() => {
-      timeLeft--;
-      resendLink.textContent = `Resend (${timeLeft}s)`;
-      if (timeLeft <= 0) {
         clearInterval(resendInterval);
-        resendLink.disabled = false;
-        resendLink.textContent = "Resend";
-      }
-    }, 1000);
-  }
+        resendInterval = setInterval(() => {
+            timeLeft--;
+            resendLink.textContent = `Resend (${timeLeft}s)`;
+            if (timeLeft <= 0) {
+                clearInterval(resendInterval);
+                resendLink.disabled = false;
+                resendLink.textContent = "Resend";
+            }
+        }, 1000);
+    }
 
-  function showMessage(msg) {
-    const originalMessage = codeMessage.innerText;
-    codeMessage.innerText = msg;
-    setTimeout(() => {
-      codeMessage.innerText = originalMessage;
-    }, 5000);
-  }
+    function showMessage(msg) {
+        const originalMessage = codeMessage.innerText;
+        codeMessage.innerText = msg;
+        setTimeout(() => {
+            codeMessage.innerText = originalMessage;
+        }, 5000);
+    }
 });
-
-
-
-
-  
-
 </script>
 </body>
 </html>
