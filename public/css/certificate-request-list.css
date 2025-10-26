@@ -695,7 +695,7 @@ body {
 }
 
 .status.requesting {
-  color: #F39C12;
+  color: #DEA560;
   font-weight: 600;
 }
 .status.pending {
@@ -713,6 +713,60 @@ body {
   color: #28a745;
   border: 2px solid #28a745;
   cursor: default;
+}
+
+
+.action-cell .claim-btn {
+  background-color: #3C87C4;
+  color: #fff;
+  border: none;
+  padding: 6px 40px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: background-color 0.2s;
+}
+
+.action-cell .claim-btn:hover {
+  background-color: #1867a7;
+}
+
+.claim-btn:disabled {
+  background-color: #aaa;
+  cursor: not-allowed;
+}
+
+
+.status-claimed,
+td.status.claimed {
+  color: #6c757d;
+  font-weight: 600;
+  font-style: italic;
+}
+
+
+.status-pending {
+  color: #aaa;
+  font-style: italic;
+}
+
+.claim-btn {
+  background-color: #71E200; 
+  color: #fff; 
+  border: 1px solid #71E200;
+  padding: 8px 43px; 
+  border-radius: 5px; 
+  font-weight: 600; 
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.claim-btn:hover {
+  background-color: #608739; 
+  transform: translateY(-1px); 
+  color: #fff;
 }
 
 /* Overlay */

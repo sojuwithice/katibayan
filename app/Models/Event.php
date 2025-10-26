@@ -153,5 +153,17 @@ class Event extends Model
         return $this->belongsTo(Barangay::class);
     }
 
+
+    public function certificateRequests()
+{
+    return $this->hasMany(CertificateRequest::class);
+}
+
+// Sa loob ng Event class
+public function certificateSchedule()
+{
+    // Isang event ay may ISANG certificate schedule
+    return $this->hasOne(CertificateSchedule::class); 
+}
     
 }

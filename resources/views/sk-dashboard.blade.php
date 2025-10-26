@@ -99,21 +99,37 @@
       <div class="topbar-right">
         <div class="time">MON 10:00 <span>AM</span></div>
 
-        <!-- Notifications -->
         <div class="notification-wrapper">
-          <i class="fas fa-bell" id="notificationBell"></i>
-          <span class="notif-count" id="notificationCount">0</span>
-          <div class="notif-dropdown">
-            <div class="notif-header">
-              <strong>Notifications</strong> 
-              <span id="notificationsHeaderCount">0</span>
-              <button class="mark-all-read" id="markAllRead">Mark all as read</button>
-            </div>
-            <ul class="notif-list" id="notificationsList">
-              <li class="notif-loading">Loading notifications...</li>
-            </ul>
+  <i class="fas fa-bell"></i>
+  <span class="notif-count">{{ $notifications->count() }}</span>
+
+  <div class="notif-dropdown">
+    <div class="notif-header">
+      <strong>Notification</strong>
+      <span>{{ $notifications->count() }}</span>
+    </div>
+
+    <ul class="notif-list">
+      @forelse($notifications as $notif)
+        <li>
+          <div class="notif-icon"></div>
+          <div class="notif-content">
+            <strong>{{ $notif->title ?? 'No Title' }}</strong>
+            <p>{{ $notif->message ?? 'No message available' }}</p>
           </div>
-        </div>
+          <span class="notif-dot"></span>
+        </li>
+      @empty
+        <li>
+          <div class="notif-content">
+            <p>No notifications available</p>
+          </div>
+        </li>
+      @endforelse
+    </ul>
+  </div>
+</div>
+
 
         <!-- Profile Avatar -->
         <div class="profile-wrapper">

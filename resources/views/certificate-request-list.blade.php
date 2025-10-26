@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>KatiBayan - Dashboard</title>
   <link rel="stylesheet" href="{{ asset('css/certificate-request-list.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
@@ -159,35 +160,49 @@
       </div>
     </header>
 
-    <main class="container">
+    <main class="container" data-event-id="{{ $event->id }}">
   <!-- Header Title -->
       <!-- Program Info Card -->
     <section class="certificate-card">
   <p class="certificate-label">Claiming of Certificate for:</p>
   <div class="certificate-content">
-    <!-- Left: Program Image -->
+
     <div class="certificate-image">
-      <img src="{{ asset('images/linis.jpg') }}" alt="Program Certificate">
+
+      <img src="{{ $event->image ? asset('storage/' . $event->image) : asset('images/default_cert_image.jpg') }}" 
+     alt="{{ $event->title }}">
     </div>
 
-    <!-- Right: Program Details -->
     <div class="certificate-details">
       <p><strong>Title:</strong></p>
+
       <h3 class="cert-title">
-        Kalinisan sa bagong Pilipinas Program (Kalinga at Inisyatiba para sa malinis na bayan)
+        {{ $event->title }}
       </h3>
-      <p class="cert-subtitle">NATIONWIDE SIMULTANEOUS CLEAN UP DRIVE</p>
-      <p class="cert-date">September 15, 2025</p>
+
+      <p class="cert-subtitle">{{ $event->description ? $event->description : 'No description provided.' }}</p>
+
+      <p class="cert-date">{{ $event->event_date->format('F j, Y') }}</p>
+
     </div>
   </div>
-    </section>
+</section>
 
     <!-- Certificate Request Header -->
 <div class="request-header">
   <h3>Certificate Request List</h3>
-  <button class="accept-btn">Accept Request</button>
+
+  @if ($requests->contains('status', 'requesting'))
+    {{-- Kung mayroon pang kahit isang "requesting", ipakita ang normal na button --}}
+    <button class="accept-btn">Accept Request</button>
+  @else
+    {{-- Kung lahat ay na-process na (accepted, claimed, etc.), ipakita ang disabled na button --}}
+    <button class="accept-btn accepted-btn" disabled>Accepted</button>
+  @endif
+
 </div>
 
+<!-- Certificate Request Table -->
 <!-- Certificate Request Table -->
 <section class="request-list">
   <div class="table-wrapper">
@@ -199,46 +214,53 @@
           <th>Age</th>
           <th>Purok</th>
           <th>Status</th>
-          <th>Certificate Status</th>
-        </tr>
+          <th>Certificate Status</th> </tr>
       </thead>
       <tbody>
-        <tr>
-          <td>KKBA-EMS3-2025-0012</td>
-          <td>Precious O. Balimbing</td>
-          <td>18</td>
-          <td>Purok 6</td>
-          <td class="status requesting">Requesting</td>
-          <td class="status pending">Pending</td>
-        </tr>
-        <tr>
-          <td>KKBA-EMS3-2025-0013</td>
-          <td>Red D. Lopez</td>
-          <td>18</td>
-          <td>Purok 6</td>
-          <td class="status requesting">Requesting</td>
-          <td class="status pending">Pending</td>
-        </tr>
-        <tr>
-          <td>KKBA-EMS3-2025-0013</td>
-          <td>Shanchai D. Guard</td>
-          <td>18</td>
-          <td>Purok 6</td>
-          <td class="status requesting">Requesting</td>
-          <td class="status pending">Pending</td>
-        </tr>
-        <tr>
-          <td>KKBA-EMS3-2025-0013</td>
-          <td>Poloy Y. Poy</td>
-          <td>18</td>
-          <td>Purok 6</td>
-          <td class="status requesting">Requesting</td>
-          <td class="status pending">Pending</td>
-        </tr>
-      </tbody>
+@forelse ($requests as $req)
+  <tr data-request-id="{{ $req->id }}">
+    <td>{{ $req->user->account_number ?? 'N/A' }}</td>
+    <td>{{ $req->user->name ?? 'Unknown' }}</td>
+    <td>{{ $req->user->age ?? 'N/A' }}</td>
+    <td>{{ $req->user->purok ?? 'N/A' }}</td>
+
+    {{-- STATUS CELL (Request Status) --}}
+    {{-- Ito ay magiging 'Requesting' or 'Accepted' lang --}}
+    <td class="status {{ $req->status }}" id="status-cell-{{ $req->id }}">
+      @if($req->status === 'requesting')
+        Requesting
+      @else
+        Accepted {{-- Kahit 'ready_for_pickup' or 'claimed' pa, 'Accepted' ang display --}}
+      @endif
+    </td>
+
+    {{-- ACTION CELL (Certificate Status) --}}
+    {{-- Ito ang magbabago-bago: Pending -> Accepted -> Claim Button -> Claimed --}}
+    <td class="action-cell" id="action-cell-{{ $req->id }}">
+      @if($req->status === 'ready_for_pickup')
+        <button class="claim-btn" data-id="{{ $req->id }}">Claim</button>
+
+      @elseif($req->status === 'claimed')
+        <span class="status-claimed">Claimed</span>
+
+      @elseif($req->status === 'accepted')
+        <span class="status-pending">Accepted</span>
+        
+      @else {{-- 'requesting' --}}
+        <span class="status-pending">Pending</span>
+      @endif
+    </td>
+  </tr>
+@empty
+  <tr>
+    <td colspan="6" style="text-align:center;">No requests for this event yet.</td>
+  </tr>
+@endforelse
+</tbody>
     </table>
   </div>
 </section>
+
 
 
 <!-- Accepted Modal -->
@@ -525,19 +547,99 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll('.options-dropdown').forEach(drop => drop.classList.remove('show'));
   });
 
-  // ===== Accepted Modal =====
+  // ==========================================================
+  // SETUP PARA SA AJAX
+  // ==========================================================
+  
+  const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+  const mainContainer = document.querySelector('main.container');
+  const eventId = mainContainer ? mainContainer.dataset.eventId : null;
+
+  let toastContainer = document.querySelector('.toast-container');
+  if (!toastContainer) {
+    toastContainer = document.createElement('div');
+    toastContainer.className = 'toast-container';
+    document.body.appendChild(toastContainer);
+  }
+
+  function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    let iconClass = '';
+    if (type === 'success') iconClass = 'fa-solid fa-circle-check';
+    if (type === 'error') iconClass = 'fa-solid fa-circle-xmark';
+    if (type === 'info') iconClass = 'fa-solid fa-circle-info';
+    if (type === 'warning') iconClass = 'fa-solid fa-triangle-exclamation';
+    toast.innerHTML = `<i class="${iconClass} toast-icon"></i> <span>${message}</span>`;
+    toastContainer.appendChild(toast);
+    setTimeout(() => { toast.remove(); }, 3000);
+  }
+
+
+  // ==========================================================
+  // STEP 1: ACCEPTED MODAL LOGIC
+  // ==========================================================
+  
   const acceptBtn = document.querySelector('.accept-btn');
   const acceptedModal = document.getElementById('acceptedModal');
 
-  acceptBtn?.addEventListener('click', () => acceptedModal.style.display = 'flex');
-  acceptedModal?.addEventListener('click', (e) => {
-    if (e.target === acceptedModal) acceptedModal.style.display = 'none';
+  acceptBtn?.addEventListener('click', () => {
+    if (!eventId) {
+        showToast('Event ID not found. Cannot proceed.', 'error');
+        return;
+    }
+
+    acceptBtn.disabled = true;
+    acceptBtn.textContent = 'Accepting...';
+
+    fetch('/accept-requests', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        },
+        body: JSON.stringify({ event_id: eventId })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Failed to accept requests. Please try again.');
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log(data.message); 
+        acceptBtn.textContent = 'Accepted';
+        acceptBtn.classList.add('accepted-btn'); 
+
+        document.querySelectorAll('.certificate-table tbody .status.requesting').forEach(cell => {
+            cell.textContent = 'Accepted';
+            cell.classList.remove('requesting');
+            cell.classList.add('accepted');
+        });
+
+        acceptedModal.style.display = 'flex';
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast(error.message, 'error');
+        acceptBtn.disabled = false;
+        acceptBtn.textContent = 'Accept Request';
+    });
   });
 
-  // ===== Schedule Modal =====
+  // === FIX 1: TINANGGAL YUNG EVENT LISTENER PARA SA CLICK OUTSIDE ===
+  // acceptedModal?.addEventListener('click', (e) => {
+  //   if (e.target === acceptedModal) acceptedModal.style.display = 'none';
+  // });
+
+
+  // ==========================================================
+  // STEP 2: SCHEDULE MODAL LOGIC
+  // ==========================================================
+  
   const scheduleBtn = document.getElementById("scheduleBtn");
   const scheduleModal = document.getElementById("scheduleModal");
-  const closeScheduleBtn = scheduleModal?.querySelector(".close-btn");
+  const closeScheduleBtn = scheduleModal?.querySelector(".close-btn"); // Para 'to sa 'X' button kung meron
   scheduleModal.style.display = "none";
 
   scheduleBtn?.addEventListener("click", () => {
@@ -546,9 +648,13 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   closeScheduleBtn?.addEventListener("click", () => scheduleModal.style.display = "none");
-  window.addEventListener("click", (e) => { if (e.target === scheduleModal) scheduleModal.style.display = "none"; });
+  // Tinanggal na rin dito yung click outside
 
-  // ===== Schedule Modal Calendar =====
+
+  // ==========================================================
+  // STEP 3: SCHEDULE MODAL CALENDAR & TIME
+  // ==========================================================
+
   const calendarGrid = scheduleModal.querySelector(".calendar-grid");
   const monthDisplay = scheduleModal.querySelector(".month-display");
   const prevMonthBtn = scheduleModal.querySelector(".calendar-header .nav-btn:first-child");
@@ -559,17 +665,27 @@ document.addEventListener("DOMContentLoaded", () => {
   let selectedDate = null;
 
   function renderScheduleCalendar(month, year) {
+    if (!calendarGrid || !monthDisplay) return;
+    
     const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
     monthDisplay.textContent = `${monthNames[month]} ${year}`;
     calendarGrid.innerHTML = "";
 
+    const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    dayLabels.forEach(day => {
+        const dayEl = document.createElement('div');
+        dayEl.classList.add('day-label');
+        dayEl.textContent = day;
+        calendarGrid.appendChild(dayEl);
+    });
+
     const firstDay = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-    // Empty slots for alignment
-    for (let i = 0; i < (firstDay === 0 ? 6 : firstDay - 1); i++) {
+    let startDay = (firstDay === 0) ? 6 : firstDay - 1;
+    for (let i = 0; i < startDay; i++) {
       const empty = document.createElement('div');
-      empty.classList.add('day');
+      empty.classList.add('day', 'empty');
       calendarGrid.appendChild(empty);
     }
 
@@ -577,18 +693,27 @@ document.addEventListener("DOMContentLoaded", () => {
       const day = document.createElement('div');
       day.classList.add('day');
       day.textContent = d;
+      
+      const thisDate = new Date(year, month, d);
+      const todayMidnight = new Date(today.toDateString());
 
-      // Highlight today but allow selection
-      if (d === today.getDate() && month === today.getMonth() && year === today.getFullYear() && !selectedDate) {
-        day.classList.add('active', 'today');
+      if (thisDate < todayMidnight) {
+          day.classList.add('disabled');
+      } else {
+          day.addEventListener('click', () => {
+              selectedDate = d;
+              calendarGrid.querySelectorAll('.day.active').forEach(el => el.classList.remove('active'));
+              day.classList.add('active');
+          });
       }
 
-      day.addEventListener('click', () => {
-        selectedDate = d;
-        calendarGrid.querySelectorAll('.day').forEach(el => el.classList.remove('active'));
-        day.classList.add('active');
-      });
-
+      if (d === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+        day.classList.add('today');
+        if (!selectedDate) {
+            day.classList.add('active');
+            selectedDate = d;
+        }
+      }
       calendarGrid.appendChild(day);
     }
   }
@@ -596,156 +721,203 @@ document.addEventListener("DOMContentLoaded", () => {
   prevMonthBtn?.addEventListener('click', () => {
     currentMonth--;
     if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+    selectedDate = null;
     renderScheduleCalendar(currentMonth, currentYear);
   });
 
   nextMonthBtn?.addEventListener('click', () => {
     currentMonth++;
     if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+    selectedDate = null;
     renderScheduleCalendar(currentMonth, currentYear);
   });
 
   renderScheduleCalendar(currentMonth, currentYear);
 
-  // ===== Time Picker =====
-const timePicker = scheduleModal.querySelector('.time-picker');
+  const timePicker = scheduleModal.querySelector('.time-picker');
+  const timeColumns = timePicker.querySelectorAll('.time-column');
+  const hourColumn = timeColumns[0];
+  const minColumn = timeColumns[1];
+  const hourValue = hourColumn.querySelector('.time-value');
+  const minValue = minColumn.querySelector('.time-value');
+  const hourUp = hourColumn.querySelector('button:first-of-type');
+  const hourDown = hourColumn.querySelector('button:last-of-type');
+  const minUp = minColumn.querySelector('button:first-of-type'); 
+  const minDown = minColumn.querySelector('button:last-of-type');
+  const ampmBtns = timePicker.querySelectorAll('.ampm-btn');
+  let selectedAmPm = 'AM';
 
-// Hour & Minute columns
-const timeColumns = timePicker.querySelectorAll('.time-column');
-const hourColumn = timeColumns[0];
-const minColumn = timeColumns[1];
-
-const hourValue = hourColumn.querySelector('.time-value');
-const minValue = minColumn.querySelector('.time-value');
-
-// Buttons
-const hourUp = hourColumn.querySelector('button:first-of-type');
-const hourDown = hourColumn.querySelector('button:last-of-type');
-const minUp = minColumn.querySelector('button:first-of-type');
-const minDown = minColumn.querySelector('button:last-of-type');
-
-// AM/PM buttons
-const ampmBtns = timePicker.querySelectorAll('.ampm-btn');
-let selectedAmPm = 'AM';
-
-// ===== Hour Controls =====
-hourUp.addEventListener('click', () => {
-  let val = parseInt(hourValue.textContent);
-  val = val === 12 ? 1 : val + 1;
-  hourValue.textContent = val.toString().padStart(2, '0');
-});
-
-hourDown.addEventListener('click', () => {
-  let val = parseInt(hourValue.textContent);
-  val = val === 1 ? 12 : val - 1;
-  hourValue.textContent = val.toString().padStart(2, '0');
-});
-
-// ===== Minute Controls =====
-minUp.addEventListener('click', () => {
-  let val = parseInt(minValue.textContent);
-  val = val === 59 ? 0 : val + 1;
-  minValue.textContent = val.toString().padStart(2, '0');
-});
-
-minDown.addEventListener('click', () => {
-  let val = parseInt(minValue.textContent);
-  val = val === 0 ? 59 : val - 1;
-  minValue.textContent = val.toString().padStart(2, '0');
-});
-
-// ===== AM/PM Toggle =====
-ampmBtns.forEach(btn => {
-  btn.addEventListener('click', () => {
-    ampmBtns.forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    selectedAmPm = btn.textContent;
+  hourUp.addEventListener('click', () => {
+    let val = parseInt(hourValue.textContent);
+    val = val === 12 ? 1 : val + 1;
+    hourValue.textContent = val.toString().padStart(2, '0');
   });
-});
+  hourDown.addEventListener('click', () => {
+    let val = parseInt(hourValue.textContent);
+    val = val === 1 ? 12 : val - 1;
+    hourValue.textContent = val.toString().padStart(2, '0');
+  });
+  minUp.addEventListener('click', () => {
+    let val = parseInt(minValue.textContent);
+    val = (val + 1) % 60;
+    minValue.textContent = val.toString().padStart(2, '0');
+  });
+  minDown.addEventListener('click', () => {
+    let val = parseInt(minValue.textContent);
+    val = (val - 1 + 60) % 60;
+    minValue.textContent = val.toString().padStart(2, '0');
+  });
+  ampmBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      ampmBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedAmPm = btn.textContent;
+    });
+  });
 
+  // ==========================================================
+// STEP 4: CONFIRM SCHEDULE LOGIC (FULLY FIXED)
+// ==========================================================
 
-
-  // ===== Confirm Schedule =====
 const confirmBtn = scheduleModal.querySelector('.schedule-confirm');
 const locationInput = scheduleModal.querySelector('#location');
 
-// Create toast container if not exists
-let toastContainer = document.querySelector('.toast-container');
-if (!toastContainer) {
-  toastContainer = document.createElement('div');
-  toastContainer.className = 'toast-container';
-  document.body.appendChild(toastContainer);
-}
-
-function showToast(message, type = 'success') {
-  const toast = document.createElement('div');
-  toast.className = `toast ${type}`;
-
-  // Piliin icon depende sa type
-  let iconClass = '';
-  if (type === 'success') iconClass = 'fa-solid fa-circle-check';
-  if (type === 'error') iconClass = 'fa-solid fa-circle-xmark';
-  if (type === 'info') iconClass = 'fa-solid fa-circle-info';
-  if (type === 'warning') iconClass = 'fa-solid fa-triangle-exclamation';
-
-  toast.innerHTML = `
-    <i class="${iconClass} toast-icon"></i>
-    <span>${message}</span>
-  `;
-
-  toastContainer.appendChild(toast);
-
-  // Auto remove after 3s
-  setTimeout(() => {
-    toast.remove();
-  }, 3000);
-}
-
-confirmBtn?.addEventListener('click', () => {
-  if (!selectedDate) { 
-    showToast('Please select a date.', 'error'); 
-    return; 
-  }
-  if (!locationInput.value.trim()) {
-    showToast('Please enter a location.', 'error'); 
-    return;
-  }
-
-  const scheduleData = {
-    date: `${selectedDate} ${monthDisplay.textContent.split(' ')[0]} ${monthDisplay.textContent.split(' ')[1]}`,
-    time: `${hourValue.textContent}:${minValue.textContent} ${selectedAmPm}`,
-    location: locationInput.value
-  };
-
-  console.log('Scheduled:', scheduleData);
-  showToast(`Schedule set for ${scheduleData.date}, ${scheduleData.time} at ${scheduleData.location}`, 'success');
-
-  // === Close modal
-  scheduleModal.style.display = 'none';
-
-  // === Update Accept Button
-  const acceptBtn = document.querySelector('.accept-btn');
-  if (acceptBtn) {
-    acceptBtn.textContent = 'Accepted';
-    acceptBtn.disabled = true;
-    acceptBtn.classList.add('accepted-btn'); 
-  }
-
-  // === Update Table Status (Requesting -> Accepted)
-  document.querySelectorAll('.certificate-table tbody tr').forEach(row => {
-    const statusCell = row.querySelector('.status.requesting');
-    if (statusCell) {
-      statusCell.textContent = 'Accepted';
-      statusCell.classList.remove('requesting');
-      statusCell.classList.add('accepted');
+confirmBtn?.addEventListener('click', async () => {
+    if (!selectedDate) {
+        showToast('Please select a date.', 'error');
+        return;
     }
-  });
+
+    const location = locationInput.value.trim();
+    if (!location) {
+        showToast('Please enter a location.', 'error');
+        return;
+    }
+
+    const formattedDate = `${currentYear}-${(currentMonth + 1)
+        .toString()
+        .padStart(2, '0')}-${selectedDate.toString().padStart(2, '0')}`;
+
+    const formattedTime = `${hourValue.textContent}:${minValue.textContent} ${selectedAmPm}`;
+
+    const scheduleData = {
+        event_id: eventId,
+        date: formattedDate,
+        time: formattedTime,
+        location: location,
+    };
+
+    console.log("Sending to /set-schedule:", scheduleData);
+
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = "Setting...";
+
+    try {
+        const res = await fetch("/set-schedule", {
+            method: "POST",
+            cache: "no-store", // 🔥 prevents stale reload
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": csrfToken, // Siguraduhin na 'csrfToken' ay defined sa taas
+            },
+            body: JSON.stringify(scheduleData),
+        });
+
+        if (!res.ok) {
+            const err = await res.json().catch(() => null);
+            throw new Error(err?.message || `Error ${res.status}`);
+        }
+
+        const data = await res.json();
+        console.log("Success:", data);
+
+        scheduleModal.style.display = "none";
+        showToast(data.message || "Schedule set successfully!", "success");
+
+        // ✅ AUTO RELOAD (HARD RELOAD NA NGAYON)
+        setTimeout(() => {
+            window.location.reload(true); // <--- ITO YUNG FIX
+        }, 800); 
+
+    } catch (error) {
+        console.error("Schedule Error:", error);
+        showToast(error.message, "error");
+
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = "Set schedule";
+    }
 });
 
 
 
-});
+  // ==========================================================
+// STEP 5: CLAIM BUTTON LOGIC (FIXED)
+// ==========================================================
 
+const tableWrapper = document.querySelector('.table-wrapper');
+
+tableWrapper?.addEventListener('click', async (e) => {
+    // Titingnan kung 'claim-btn' ang na-click
+    if (!e.target.classList.contains('claim-btn')) {
+        return;
+    }
+
+    const claimButton = e.target;
+    const id = claimButton.dataset.id;
+    
+    if (!id) return;
+
+    // I-disable ang button habang nagp-process
+    claimButton.disabled = true;
+    claimButton.textContent = 'Claiming...';
+
+    try {
+        const res = await fetch("{{ route('certificate.claim') }}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+                "X-CSRF-TOKEN": csrfToken
+            },
+            body: JSON.stringify({ id: id })
+        });
+
+        if (!res.ok) {
+            const errData = await res.json().catch(() => null);
+            const errorMsg = errData?.message || `Failed with status ${res.status}`;
+            throw new Error(errorMsg);
+        }
+
+        const data = await res.json();
+        
+        if (data.success) { 
+            
+            showToast(data.message || 'Certificate claimed!', 'success');
+        
+            // --- FIX: Ibinalik ang auto-reload ---
+            setTimeout(() => {
+                location.reload();
+            }, 1500); // 1.5 second delay
+            // --- END NG FIX ---
+        
+        } else {
+            throw new Error(data.message || 'Claiming failed. Please try again.');
+        }
+
+    } catch (error) {
+        console.error('Error claiming certificate:', error);
+        showToast(error.message, 'error');
+        
+        // Ibalik yung button sa dati kapag nagka-error
+        if (claimButton) {
+            claimButton.disabled = false;
+            claimButton.textContent = 'Claim';
+        }
+    }
+});
+  
+
+}); 
 </script>
 
 </body>

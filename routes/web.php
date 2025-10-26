@@ -29,10 +29,10 @@ use App\Http\Controllers\UserLoginController;
 use App\Models\Admin;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\FeedbackController;
-use App\Http\Controllers\ProgramController; 
-use App\Http\Controllers\YouthProgramRegistrationController; 
-use App\Http\Controllers\YouthAssistanceController; 
-use App\Http\Controllers\NotificationController; 
+use App\Http\Controllers\CertificateRequestController;
+use App\Http\Controllers\CertificateController;
+use App\Http\Controllers\NotificationController;
+
 
 
 Route::get('/', function () {
@@ -123,13 +123,8 @@ Route::get('/edit-event', function () {
     return view('edit-event'); 
 })->name('edit-event');
 
-Route::get('/certificate-request', function () {
-    return view('certificate-request'); 
-})->name('certificate-request');
 
-Route::get('/certificate-request-list', function () {
-    return view('certificate-request-list'); 
-})->name('certificate-request-list');
+
 
 Route::get('/youth-participation', [YouthParticipationController::class, 'index'])
     ->name('youth-participation')
@@ -361,6 +356,51 @@ Route::controller(ForgotPasswordController::class)
 });
 
 Route::post('/feedback/submit', [FeedbackController::class, 'store'])->name('feedback.submit');
+
+// ✅ Certificate Request Routes
+Route::get('/certificate-request', [CertificateRequestController::class, 'index'])->name('certificate-request');
+Route::post('/certificate-request', [CertificateRequestController::class, 'store'])->name('certificate.request');
+Route::get('/certificate-request-list/{event_id}', [CertificateRequestController::class, 'showList'])->name('certificate-request-list');
+
+
+Route::get('/certificate-request-list/{event_id}', [CertificateController::class, 'showCertificateRequests'])->name('certificate-request-list');
+Route::post('/accept-requests', [CertificateController::class, 'acceptRequests'])->name('certificate.accept');
+Route::post('/set-schedule', [CertificateController::class, 'setSchedule'])->name('certificate.setSchedule');
+
+
+// Sa web.php
+
+Route::get('/evaluation', [EvaluationController::class, 'index'])->name('evaluation');
+Route::get('/evaluation/{id}', [EvaluationController::class, 'show'])->name('evaluation.show'); // <-- IDAGDAG ITO
+Route::post('/evaluation', [EvaluationController::class, 'store']);
+
+
+Route::post('/notifications/mark-as-read/{id}', [NotificationController::class, 'markAsRead'])
+       ->name('notifications.markAsRead')
+       ->middleware('auth');
+
+Route::post('/certificate/mark-as-claimed', [CertificateController::class, 'confirmClaimed'])
+    ->middleware('auth') // Ensure only logged-in users can access
+    ->name('certificates.confirmClaimed');
+
+    Route::get('/certificate-requests/{event_id}/status', [CertificateController::class, 'getStatuses'])
+    ->middleware(['auth', 'role:sk']) // Example middleware
+    ->name('certificate.getStatuses');
+
+   Route::post('/certificate/mark-as-claimed', [CertificateController::class, 'confirmClaimed'])
+     ->name('certificate.markAsClaimed');
+
+     Route::post('/certificate/claim', [CertificateController::class, 'claimCertificate']);
+
+
+     Route::get('/certificate-request-list/{event_id}', [CertificateController::class, 'showCertificateRequests'])
+    ->name('certificate-request-list');
+
+   Route::post('/certificate/claim', [App\Http\Controllers\CertificateController::class, 'claimCertificate'])
+    ->name('certificate.claim');
+
+
+//programs
 
 Route::post('/programs', [ProgramController::class, 'store'])
     ->name('programs.store');

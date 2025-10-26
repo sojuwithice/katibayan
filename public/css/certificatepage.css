@@ -651,7 +651,7 @@ body {
   font-size: 0.85rem;         
   background: transparent;    
   color: #3C87C4;             
-  border: 2px solid #3C87C4;  
+  border: 1.5px solid #3C87C4;  
   border-radius: 6px;
   cursor: pointer;
   font-weight: 600;
@@ -666,6 +666,45 @@ body {
   background: #3C87C4;  
   color: #fff;
 }
+
+.print-btn.status-pending {
+  background-color: #FFF4EE;
+  color: #DEA560;
+  border-color: #EAAB75;
+  opacity: 1;
+  cursor: not-allowed;
+  border-radius: 20px;
+}
+
+/* Base sa image mo para sa "Accepted" (Green) */
+.print-btn.status-accepted {
+  background-color: #FBF4E2;
+  color: #FBC93F;
+  border-color: #F9CD55;
+  opacity: 1;
+  cursor: not-allowed;
+  border-radius: 20px;
+}
+
+/* Suggestion para sa "Ready to Claim" (Blue) */
+.print-btn.status-ready {
+  background-color: #E5F3FE;
+  color: #1680D6;
+  opacity: 1;
+  cursor: not-allowed;
+  border-radius: 20px;
+}
+
+/* Suggestion para sa "Claimed" (Beige/Brown) */
+.print-btn.status-claimed {
+  background-color: #EDFBDF;
+  color: #1bad3d;
+  border-color: #1bad3d;
+  opacity: 1;
+  cursor: not-allowed;
+  border-radius: 20px;
+}
+
 
 .empty-state {
   display: flex;

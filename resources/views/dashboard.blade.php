@@ -7,11 +7,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>KatiBayan - Dashboard</title>
   <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 </head>
 
 <body>
@@ -72,19 +73,84 @@
 
         <!-- Notifications -->
         <div class="notification-wrapper">
-          <i class="fas fa-bell" id="notificationBell"></i>
-          <span class="notif-count" id="notificationCount">0</span>
-          <div class="notif-dropdown">
-            <div class="notif-header">
-              <strong>Notifications</strong> 
-              <span id="notificationsHeaderCount">0</span>
-              <button class="mark-all-read" id="markAllRead">Mark all as read</button>
-            </div>
-            <ul class="notif-list" id="notificationsList">
-              <li class="notif-loading">Loading notifications...</li>
-            </ul>
-          </div>
+    <i class="fas fa-bell"></i>
+    @if($notificationCount > 0)
+        <span class="notif-count">{{ $notificationCount }}</span>
+    @endif
+    <div class="notif-dropdown">
+        <div class="notif-header">
+            <strong>Notification</strong>
+            @if($notificationCount > 0)
+                <span>{{ $notificationCount }}</span>
+            @endif
         </div>
+        
+        <ul class="notif-list">
+
+            @foreach ($generalNotifications as $notif)
+                @php
+                    $link = '#'; // Default
+                    if ($notif->type == 'certificate_schedule') {
+                        $link = route('certificatepage'); 
+                    }
+                @endphp
+                
+                <li>
+                    <a href="{{ $link }}" class="notif-link {{ $notif->is_read == 0 ? 'unread' : '' }}" data-id="{{ $notif->id }}">
+                        
+                        <div class="notif-dot-container">
+                            @if ($notif->is_read == 0)
+                                <span class="notif-dot"></span>
+                            @else
+                                <span class="notif-dot-placeholder"></span>
+                            @endif
+                        </div>
+
+                        <div class="notif-main-content">
+                            <div class="notif-header-line">
+                                <strong>{{ $notif->title }}</strong>
+                                <span class="notif-timestamp">
+                                    {{ $notif->created_at->format('m/d/Y g:i A') }}
+                                </span>
+                            </div>
+                            <p class="notif-message">{{ $notif->message }}</p>
+                        </div>
+                    </a>
+                </li>
+            @endforeach
+
+            @foreach($unevaluatedEvents as $event)
+                <li>
+                    <a href="{{ route('evaluation.show', $event->id) }}" class="notif-link unread" data-event-id="{{ $event->id }}">
+                        
+                        <div class="notif-dot-container">
+                             <span class="notif-dot"></span> </div>
+                        
+                        <div class="notif-main-content">
+                            <div class="notif-header-line">
+                                <strong>Program Evaluation Required</strong>
+                                @if($event->attendances->first())
+                                    <span class="notif-timestamp">
+                                        {{ $event->attendances->first()->created_at->format('m/d/Y g:i A') }}
+                                    </span>
+                                @endif
+                            </div>
+                            <p class="notif-message">Please evaluate "{{ $event->title }}"</p>
+                        </div>
+                    </a>
+                </li>
+            @endforeach
+
+            @if($generalNotifications->isEmpty() && $unevaluatedEvents->isEmpty())
+                <li class="no-notifications">
+                    <p>No new notifications</p>
+                </li>
+            @endif
+
+        </ul>
+        
+    </div>
+</div>
 
         <!-- Profile Avatar -->
         <div class="profile-wrapper">
@@ -380,34 +446,85 @@
           </div>
         </div>
 
-        <!-- Announcements -->
         <div class="announcements-section">
-          <h3 class="announcements-title">Announcements</h3>
-          <div class="announcements">
-            <div class="card">
-              <div class="card-content">
-                <div class="icon"><i class="fas fa-info"></i></div>
-                <div class="text">
-                  <strong>Important Announcement: No Office Today</strong>
-                  <p>The office is closed today. We sincerely apologize for any inconvenience.</p>
-                </div>
-              </div>
-              <button class="options">⋯</button>
-            </div>
-            <div class="card">
-              <div class="card-content">
-                <div class="icon">
-                  <i class="fas fa-print"></i>
-                </div>
-                <div class="text">
-                  <strong>Notice: No Printing Service Today</strong>
-                  <p>Please be informed that printing services are closed today.</p>
-                </div>
-              </div>
-              <button class="options">⋯</button>
-            </div>
+  <h3 class="announcements-title">Announcements</h3>
+  <div class="announcements" id="announcementsList"> {{-- Added ID --}}
+
+    @forelse ($announcements as $announcement)
+      {{-- Check if this is a certificate schedule announcement --}}
+      @php
+        $isCertificateSchedule = optional($announcement)->type == 'certificate_schedule';
+        preg_match("/'([^']+)'/", optional($announcement)->message, $matches);
+        $eventTitleFromMessage = $matches[1] ?? null;
+        $announcementId = optional($announcement)->id;
+        $relatedEventId = null; 
+      @endphp
+
+      {{-- Add data attributes and a class to the card --}}
+      <div class="card {{ $isCertificateSchedule ? 'certificate-schedule-announcement' : '' }}"
+           @if($isCertificateSchedule && $announcementId)
+             data-announcement-id="{{ $announcementId }}"
+           @endif
+           style="{{ $isCertificateSchedule ? 'cursor: pointer;' : '' }}"
+           >
+        <div class="card-content">
+          <div class="icon">
+            @if($isCertificateSchedule)
+               <i class="fas fa-calendar-check" style="color: #FFCA3A;"></i>
+            @else
+               <i class="fas fa-info-circle"></i>
+            @endif
+          </div>
+          <div class="text">
+            <strong>{{ optional($announcement)->title }}</strong>
+            <p>{{ optional($announcement)->message }}</p>
+            <small style="color: #888; margin-top: 5px; display: block;">
+                 Posted: {{ optional($announcement)->created_at?->diffForHumans() ?? 'Just now' }}
+            </small>
           </div>
         </div>
+      </div>
+    
+    @empty
+
+      {{-- === ITO YUNG FIX (Naka-Gitna) === --}}
+      <div style="
+          display: flex;
+          flex-direction: column;
+          justify-content: center; 
+          align-items: center;     
+          height: 100%;            
+          min-height: 200px;       
+          padding: 20px;
+          color: #999;
+      ">
+        
+        <i class="fas fa-bell-slash" style="
+            font-size: 2.5rem; 
+            color: #ccc; 
+            margin-bottom: 15px;
+        "></i>
+        
+        <strong style="
+            font-size: 1.1rem; 
+            color: #888; 
+            display: block; 
+            margin-bottom: 5px;
+            font-weight: 600;
+        ">
+          No Announcements Yet
+        </strong>
+        
+        <p style="font-size: 0.9rem; margin: 0; color: #999;">
+          Check back later for new updates.
+        </p>
+      </div>
+      {{-- === END NG FIX === --}}
+
+    @endforelse
+
+  </div>
+</div>
 
         <!-- Suggestion Box -->
         <div class="suggestion-box">
@@ -472,24 +589,32 @@
     </div>
   </div>
 
+
+ 
+
+  
+
   <script>
     // CSRF Token for AJAX requests
     window.csrfToken = '{{ csrf_token() }}';
   
-    function updateTime() {
-      const timeEl = document.querySelector(".time");
-      if (!timeEl) return;
-      
-      const now = new Date();
-      const shortWeekdays = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
-      const shortMonths = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
-      const weekday = shortWeekdays[now.getDay()];
-      const month = shortMonths[now.getMonth()];
-      const day = now.getDate();
-      let hours = now.getHours();
-      const minutes = now.getMinutes().toString().padStart(2, "0");
-      const ampm = hours >= 12 ? "PM" : "AM";
-      hours = hours % 12 || 12;
+  /**
+   * Updates the time in the topbar.
+   */
+  function updateTime() {
+    const timeEl = document.querySelector(".time");
+    if (!timeEl) return;
+    
+    const now = new Date();
+    const shortWeekdays = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+    const shortMonths = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+    const weekday = shortWeekdays[now.getDay()];
+    const month = shortMonths[now.getMonth()];
+    const day = now.getDate();
+    let hours = now.getHours();
+    const minutes = now.getMinutes().toString().padStart(2, "0");
+    const ampm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12 || 12;
 
       timeEl.innerHTML = `${weekday}, ${month} ${day} ${hours}:${minutes} <span>${ampm}</span>`;
     }
@@ -529,182 +654,14 @@
       }
     }
 
-    /**
- * Notification System - Updated with only yellow dot
- */
-let notifications = [];
-
-// Load notifications
-async function loadNotifications() {
-    try {
-        const response = await fetch('{{ route("notifications.list") }}');
-        const data = await response.json();
-        
-        if (data.notifications) {
-            notifications = data.notifications;
-            updateNotificationUI();
-        }
-    } catch (error) {
-        console.error('Error loading notifications:', error);
-    }
-}
-
-// Update notification count
-async function updateNotificationCount() {
-    try {
-        const response = await fetch('{{ route("notifications.count") }}');
-        const data = await response.json();
-        
-        const notifCount = document.getElementById('notificationCount');
-        const headerCount = document.getElementById('notificationsHeaderCount');
-        
-        if (notifCount) notifCount.textContent = data.count;
-        if (headerCount) headerCount.textContent = data.count;
-    } catch (error) {
-        console.error('Error updating notification count:', error);
-    }
-}
-
-// Extract event ID from notification message
-function extractEventIdFromNotification(notificationItem) {
-    const messageElement = notificationItem.querySelector('.notif-content strong');
-    if (!messageElement) return null;
-    
-    const message = messageElement.textContent;
-    const match = message.match(/event_id:(\d+)\|/);
-    return match ? match[1] : null;
-}
-
-// Get display message without the event_id prefix
-function getDisplayMessage(fullMessage) {
-    const match = fullMessage.match(/event_id:\d+\|(.+)/);
-    return match ? match[1] : fullMessage;
-}
-
-// Update notifications UI - ONLY YELLOW DOT, NO ICONS
-function updateNotificationUI() {
-    const notificationsList = document.getElementById('notificationsList');
-    if (!notificationsList) return;
-
-    if (notifications.length === 0) {
-        notificationsList.innerHTML = '<li class="no-notifications">No notifications</li>';
-        return;
-    }
-
-    notificationsList.innerHTML = notifications.map(notif => {
-        const displayMessage = getDisplayMessage(notif.message);
-        const eventId = extractEventIdFromNotification({ querySelector: () => ({ textContent: notif.message }) });
-        
-        return `
-            <li class="notification-item ${notif.is_read ? 'read' : 'unread'}" data-id="${notif.id}" data-event-id="${eventId || ''}">
-                ${!notif.is_read ? '<span class="notif-dot"></span>' : '<span class="notif-dot" style="visibility: hidden;"></span>'}
-                <div class="notif-content">
-                    <strong>${displayMessage}</strong>
-                    <p>${notif.created_at}</p>
-                </div>
-            </li>
-        `;
-    }).join('');
-
-    // Add click events to notification items
-    document.querySelectorAll('.notification-item').forEach(item => {
-        item.addEventListener('click', async (e) => {
-            e.stopPropagation();
-            const notificationId = item.dataset.id;
-            const eventId = item.dataset.eventId;
-            
-            // Mark as read
-            await markNotificationAsRead(notificationId);
-            
-            // Remove highlight immediately
-            item.classList.add('read');
-            item.classList.remove('unread');
-            const dot = item.querySelector('.notif-dot');
-            if (dot) dot.style.visibility = 'hidden';
-            
-            // Update count
-            await updateNotificationCount();
-
-            // If it's an evaluation notification, open evaluation modal
-            if (eventId && window.openEvaluationModal) {
-                window.openEvaluationModal(eventId);
-            }
-        });
-    });
-}
-
-// Mark notification as read
-async function markNotificationAsRead(notificationId) {
-    try {
-        const response = await fetch(`/notifications/${notificationId}/read`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': window.csrfToken
-            }
-        });
-        
-        const data = await response.json();
-        return data.success;
-    } catch (error) {
-        console.error('Error marking notification as read:', error);
-        return false;
-    }
-}
-
-// Mark all as read
-async function markAllAsRead() {
-    try {
-        const response = await fetch('{{ route("notifications.read-all") }}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': window.csrfToken
-            }
-        });
-        
-        const data = await response.json();
-        if (data.success) {
-            // Update UI immediately
-            document.querySelectorAll('.notification-item').forEach(item => {
-                item.classList.add('read');
-                item.classList.remove('unread');
-                const dot = item.querySelector('.notif-dot');
-                if (dot) dot.style.visibility = 'hidden';
-            });
-            
-            await updateNotificationCount();
-        }
-    } catch (error) {
-        console.error('Error marking all as read:', error);
-    }
-}
-
-// Initialize notifications
-function initNotifications() {
-    loadNotifications();
-    updateNotificationCount();
-
-    // Set up mark all as read button
-    const markAllReadBtn = document.getElementById('markAllRead');
-    if (markAllReadBtn) {
-        markAllReadBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            markAllAsRead();
-        });
-    }
-
-    // Refresh notifications every 30 seconds
-    setInterval(() => {
-        loadNotifications();
-        updateNotificationCount();
-    }, 30000);
-}
-    
-    function initTopbar(openEvaluationModal) {
-      // --- Time ---
-      updateTime();
-      setInterval(updateTime, 60000);
+  /**
+   * Initializes topbar dropdowns (notifications, profile)
+   * and handles global clicks to close them.
+   */
+  function initTopbar(openEvaluationModal) { // Tumatanggap ng function
+    // --- Time ---
+    updateTime();
+    setInterval(updateTime, 60000);
 
       // --- Elements ---
       const notifWrapper = document.querySelector(".notification-wrapper");
@@ -712,18 +669,31 @@ function initNotifications() {
       const profileToggle = document.getElementById("profileToggle");
       const profileDropdown = profileWrapper?.querySelector(".profile-dropdown");
 
-      // --- Notifications Dropdown ---
-      if (notifWrapper) {
-        const bell = notifWrapper.querySelector(".fa-bell");
-        bell?.addEventListener("click", (e) => {
-          e.stopPropagation();
-          notifWrapper.classList.toggle("active");
-          profileWrapper?.classList.remove("active");
+    // --- Notifications Dropdown ---
+    if (notifWrapper) {
+      const bell = notifWrapper.querySelector(".fa-bell");
+      bell?.addEventListener("click", (e) => {
+        e.stopPropagation();
+        notifWrapper.classList.toggle("active");
+        profileWrapper?.classList.remove("active");
+      });
+      
+      const dropdown = notifWrapper.querySelector(".notif-dropdown");
+      dropdown?.addEventListener("click", (e) => e.stopPropagation());
+
+      // Handle evaluation notification clicks
+      // (BAGO) Pinalitan ko 'to para hanapin 'yung .notif-link na may data-event-id
+      notifWrapper.querySelectorAll('.notif-link[data-event-id]').forEach(notification => {
+        notification.addEventListener('click', function(e) {
+          e.preventDefault(); // Pigilan 'yung default link behavior
+          const eventId = this.getAttribute('data-event-id');
+          if (openEvaluationModal) {
+            openEvaluationModal(eventId); // Gamitin 'yung function na pinasa
+          }
+          notifWrapper.classList.remove('active'); 
         });
-        
-        const dropdown = notifWrapper.querySelector(".notif-dropdown");
-        dropdown?.addEventListener("click", (e) => e.stopPropagation());
-      }
+      });
+    }
 
       // --- Profile Dropdown ---
       if (profileWrapper && profileToggle && profileDropdown) {
@@ -771,14 +741,15 @@ function initNotifications() {
       
       if (!daysContainer || !header || !prevBtn || !nextBtn) return;
 
-      const weekdays = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
-      const holidays = [
-        "2025-01-01", "2025-04-09", "2025-04-17", "2025-04-18",
-        "2025-05-01", "2025-06-06", "2025-06-12", "2025-08-25",
-        "2025-11-30", "2025-12-25", "2025-12-30"
-      ];
-      let today = new Date();
-      let currentView = new Date();
+    const weekdays = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
+    const holidays = [
+      // (Assuming 2024 for example, update this as needed)
+      "2024-01-01", "2024-04-09", "2024-04-10", "2024-05-01",
+      "2024-06-12", "2024-08-26", "2024-11-30", "2024-12-25", 
+      "2024-12-30", "2024-12-31"
+    ];
+    let today = new Date();
+    let currentView = new Date();
 
       function renderCalendar(baseDate) {
         daysContainer.innerHTML = "";
@@ -865,12 +836,15 @@ function initNotifications() {
         dots.push(dot);
       });
 
-      function updateSlide() {
-        const containerWidth = welcomeSection.getBoundingClientRect().width;
-        slideTrack.style.transform = `translateX(-${currentIndex * containerWidth}px)`;
-        dots.forEach(dot => dot.classList.remove("active"));
-        dots[currentIndex].classList.add("active");
-      }
+    function updateSlide() {
+      // (FIX) Recalculate width on update, important for resize
+      const containerWidth = welcomeSection.getBoundingClientRect().width;
+      if (containerWidth === 0) return; // Avoid error if hidden
+      slideTrack.style.transform = `translateX(-${currentIndex * containerWidth}px)`;
+      
+      dots.forEach(dot => dot.classList.remove("active"));
+      if(dots[currentIndex]) dots[currentIndex].classList.add("active");
+    }
 
       function nextSlide() {
         currentIndex = (currentIndex + 1) % slides.length;
@@ -899,126 +873,164 @@ function initNotifications() {
       window.addEventListener("resize", updateSlide);
     }
 
-    /**
-     * Initializes the Event Evaluation Modal.
-     */
-    function initEvaluationModal() {
-      const evalModal = document.getElementById('evaluationModal');
-      if (!evalModal) return;
+  /**
+   * (FIXED STRUCTURE)
+   * Initializes the Event Evaluation Modal.
+   * Returns the function to open the modal.
+   */
+  function initEvaluationModal() {
+    const evalModal = document.getElementById('evaluationModal');
+    
+    // (FIX) Define the opener function here
+    function openEvaluationModal(eventId) {
+      if (!evalModal) {
+        console.error("Evaluation modal not found in DOM.");
+        return;
+      }
+      
+      // Fetch event details
+      fetch(`/events/${eventId}`)
+        .then(response => {
+          if (!response.ok) throw new Error('Event not found or server error');
+          return response.json();
+        })
+        .then(event => {
+          document.getElementById('modalEventName').textContent = event.title;
+          document.getElementById('evaluationEventId').value = event.id;
+          evalModal.style.display = 'block';
+        })
+        .catch(error => {
+          console.error('Error fetching event details:', error);
+          alert('Error loading event details');
+        });
+    }
+    
+    // If modal doesn't exist, return a dummy function to avoid errors
+    if (!evalModal) {
+      return function() { 
+        console.warn("Tried to open evaluation modal, but it was not found."); 
+      };
+    }
 
-      const evalCloseIcon = evalModal.querySelector('.close');
-      const evalCloseBtn = evalModal.querySelector('.close-btn');
-      const evalSubmitBtn = evalModal.querySelector('.submit-evaluation-btn');
-      const evalStars = evalModal.querySelectorAll('.star');
-      const evalForm = document.getElementById('evaluationForm');
+    // --- Modal exists, proceed with setup ---
+    const evalCloseIcon = evalModal.querySelector('.close');
+    const evalCloseBtn = evalModal.querySelector('.close-btn');
+    const evalSubmitBtn = evalModal.querySelector('.submit-evaluation-btn');
+    const evalStars = evalModal.querySelectorAll('.star');
+    const evalForm = document.getElementById('evaluationForm');
 
-      evalStars.forEach(star => {
-        star.addEventListener('click', function() {
-          const rating = this.getAttribute('data-rating');
-          document.getElementById('rating').value = rating;
-          
-          evalStars.forEach((s, index) => {
-            s.classList.toggle('active', index < rating);
-          });
+    // Star rating logic
+    evalStars.forEach(star => {
+      star.addEventListener('click', function() {
+        const rating = this.getAttribute('data-rating');
+        document.getElementById('rating').value = rating;
+        
+        evalStars.forEach((s, index) => {
+          s.classList.toggle('active', index < rating);
         });
       });
+    });
 
-      function openEvaluationModal(eventId) {
-        fetch(`/events/${eventId}`)
-          .then(response => response.json())
-          .then(event => {
-            document.getElementById('modalEventName').textContent = event.title;
-            document.getElementById('evaluationEventId').value = event.id;
-            evalModal.style.display = 'block';
-          })
-          .catch(error => {
-            console.error('Error fetching event details:', error);
-            alert('Error loading event details');
-          });
+    // Close modal function
+    const closeModal = () => {
+      evalModal.style.display = 'none';
+      // Reset form
+      evalForm.reset();
+      evalStars.forEach(s => s.classList.remove('active'));
+    };
+
+    evalCloseIcon?.addEventListener('click', closeModal);
+    evalCloseBtn?.addEventListener('click', closeModal);
+    // Close on outside click
+    evalModal.addEventListener('click', (e) => {
+      if (e.target === evalModal) {
+        closeModal();
       }
+    });
 
-      // Close modal functions
-      const closeModal = () => {
-        evalModal.style.display = 'none';
-        // Reset form
-        evalForm.reset();
-        evalStars.forEach(s => s.classList.remove('active'));
-      };
-
-      evalCloseIcon?.addEventListener('click', closeModal);
-      evalCloseBtn?.addEventListener('click', closeModal);
-      evalModal.addEventListener('click', (e) => {
-        if (e.target === evalModal) {
-          closeModal();
-        }
-      });
-
-      // Submit evaluation
-      evalSubmitBtn?.addEventListener('click', function() {
-        const formData = new FormData(evalForm);
+    // Submit evaluation logic
+    evalSubmitBtn?.addEventListener('click', function() {
+      const formData = new FormData(evalForm);
+      const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
         if (!formData.get('rating')) {
           alert('Please provide a rating');
           return;
         }
 
-        fetch('/evaluations', {
-          method: 'POST',
-          headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(Object.fromEntries(formData))
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            alert('Evaluation submitted successfully!');
-            closeModal();
-            location.reload();
-          } else {
-            alert('Error submitting evaluation: ' + data.error);
+      fetch('/evaluations', {
+        method: 'POST',
+        headers: {
+          'X-CSRF-TOKEN': csrfToken,
+          'Accept': 'application/json'
+        },
+        body: formData // Send as FormData
+      })
+      .then(response => {
+        if (!response.ok) {
+           return response.json().then(err => { throw err; });
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data.success) {
+          alert('Evaluation submitted successfully!');
+          closeModal();
+          location.reload(); // Reload to update progress/notifications
+        } else {
+          // Handle validation errors or other specific errors
+          let errorMsg = data.message || 'Submission failed.';
+          if (data.errors) {
+            errorMsg += '\n' + Object.values(data.errors).join('\n');
           }
-        })
-        .catch(error => {
-          console.error('Error:', error);
-          alert('Error submitting evaluation');
-        });
+          alert(errorMsg);
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert(error.message || 'An error occurred while submitting.');
       });
+    });
 
-      return openEvaluationModal;
+    // (FIX) Return the opener function
+    return openEvaluationModal;
+  }
+
+  /**
+   * Initializes the "Send Feedback" Modal.
+   */
+  function initFeedbackModal() {
+    const feedbackTriggerBtn = document.querySelector('.profile-menu li:nth-child(4) a'); // "Send Feedback" item
+    const feedbackModal = document.getElementById('feedbackModal');
+    if (!feedbackTriggerBtn || !feedbackModal) {
+      console.warn("Feedback modal or trigger not found.");
+      return;
     }
+    
+    const feedbackCloseBtn = document.getElementById('closeModal');
+    const feedbackStars = document.querySelectorAll('#starRating i');
+    const feedbackRatingInput = document.getElementById('ratingInput');
+    
+    const feedbackForm = document.getElementById('feedbackForm');
+    const submitBtn = feedbackForm?.querySelector('.submit-btn');
+    
+    const successModal = document.getElementById('successModal');
+    const closeSuccessBtn = document.getElementById('closeSuccessModal');
 
-    /**
-     * Initializes the "Send Feedback" Modal.
-     */
-    function initFeedbackModal() {
-      const feedbackTriggerBtn = document.querySelector('.profile-menu li:nth-child(4)'); // "Send Feedback" item
-      const feedbackModal = document.getElementById('feedbackModal');
-      if (!feedbackTriggerBtn || !feedbackModal) return;
-
-      
-      const feedbackCloseBtn = document.getElementById('closeModal');
-      const feedbackStars = document.querySelectorAll('#starRating i');
-      const feedbackRatingInput = document.getElementById('ratingInput');
-      
-      const feedbackForm = document.getElementById('feedbackForm');
-      const submitBtn = feedbackForm?.querySelector('.submit-btn');
-
-      
-      const successModal = document.getElementById('successModal');
-      const closeSuccessBtn = document.getElementById('closeSuccessModal');
-
-
-     
-      const customSelect = document.getElementById('customSelect');
-      const trigger = customSelect?.querySelector('.custom-select-trigger');
+    // Custom Select Box Logic
+    const customSelect = document.getElementById('customSelect');
+    if (customSelect) {
+      const trigger = customSelect.querySelector('.custom-select-trigger');
       const selectedText = document.getElementById('selectedFeedbackType');
-      const optionsList = customSelect?.querySelector('.custom-options-list');
-      const options = customSelect?.querySelectorAll('.custom-option');
+      const optionsList = customSelect.querySelector('.custom-options-list');
+      const options = customSelect.querySelectorAll('.custom-option');
       const realSelect = document.getElementById('type');
 
+      // Toggle dropdown
+      trigger?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        customSelect.classList.toggle('open');
+      });
       // Toggle dropdown
       trigger?.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -1035,36 +1047,36 @@ function initNotifications() {
           if(realSelect) realSelect.value = value; 
           trigger?.classList.add('selected'); 
           
-          customSelect?.classList.remove('open');
+          customSelect.classList.remove('open');
         });
       });
-
       
+      // Close custom select on outside click
       document.addEventListener('click', () => {
-        customSelect?.classList.remove('open');
+        customSelect.classList.remove('open');
       });
+    }
 
-
-      // Open modal
-      feedbackTriggerBtn.addEventListener('click', () => {
-        feedbackModal.style.display = 'flex';
-      });
+    // Open modal
+    feedbackTriggerBtn.addEventListener('click', (e) => {
+      e.preventDefault(); // Prevent link from navigating
+      feedbackModal.style.display = 'flex';
+    });
 
       // Close modal
       feedbackCloseBtn?.addEventListener('click', () => {
         feedbackModal.style.display = 'none';
       });
 
-      // Close when clicking outside
-      window.addEventListener('click', (e) => {
-        if (e.target === feedbackModal) {
-          feedbackModal.style.display = 'none';
-        }
-        // (BAGO) Isara rin 'yung success modal
-        if (e.target === successModal) {
-          successModal.style.display = 'none';
-        }
-      });
+    // Close when clicking outside
+    window.addEventListener('click', (e) => {
+      if (e.target === feedbackModal) {
+        feedbackModal.style.display = 'none';
+      }
+      if (e.target === successModal) {
+        successModal.style.display = 'none';
+      }
+    });
 
       // Star rating system
       feedbackStars.forEach(star => {
@@ -1083,91 +1095,213 @@ function initNotifications() {
         });
       });
 
-      // ==================================
-      // === (BAGO) AJAX FORM SUBMISSION ===
-      // ==================================
-      if (feedbackForm) { 
-        feedbackForm.addEventListener('submit', function(e) {
-            e.preventDefault(); 
-            
-            const formData = new FormData(feedbackForm);
-            const submitButtonText = submitBtn.textContent;
-            
-            if(submitBtn) {
-              submitBtn.disabled = true;
-              submitBtn.textContent = 'Submitting...';
-            }
+    // AJAX Form Submission
+    if (feedbackForm) { 
+      feedbackForm.addEventListener('submit', function(e) {
+          e.preventDefault(); 
+          
+          const formData = new FormData(feedbackForm);
+          const submitButtonText = submitBtn.textContent;
+          
+          if(submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+          }
 
-            fetch(feedbackForm.action, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': formData.get('_token'),
-                    'Accept': 'application/json' 
-                },
-                body: formData
-            })
-            .then(response => {
-                const contentType = response.headers.get("content-type");
-                if (response.ok && contentType && contentType.includes("application/json")) {
-                    return response.json();
-                }
-                return response.text().then(text => {
-                    console.error('Server returned non-JSON response:', text);
-                    throw new Error('Server returned an unexpected response. Check logs.');
-                });
-            })
-            .then(data => {
-                if (data.success) { 
-                    feedbackModal.style.display = 'none';
-                    if(successModal) successModal.style.display = 'flex';
-                } else {
-                    throw new Error(data.message || 'Submission failed.');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert(error.message || 'An error occurred. Please try again.');
-            })
-            .finally(() => {
-                if(submitBtn) {
-                  submitBtn.disabled = false;
-                  submitBtn.textContent = submitButtonText;
-                }
-                
-                feedbackForm.reset();
-                feedbackStars.forEach(s => {
-                  s.classList.remove('fas');
-                  s.classList.add('far');
-                });
-                if(feedbackRatingInput) feedbackRatingInput.value = '';
-                if(selectedText) selectedText.textContent = 'Select feedback type';
-                trigger?.classList.remove('selected');
-                if(realSelect) realSelect.value = '';
-            });
-        });
-      } 
-
-      closeSuccessBtn?.addEventListener('click', () => {
-          if(successModal) successModal.style.display = 'none';
+          fetch(feedbackForm.action, {
+              method: 'POST',
+              headers: {
+                  'X-CSRF-TOKEN': formData.get('_token'),
+                  'Accept': 'application/json' 
+              },
+              body: formData
+          })
+          .then(response => response.json()) // Assume it always returns JSON
+          .then(data => {
+              if (data.success) { 
+                  feedbackModal.style.display = 'none';
+                  if(successModal) successModal.style.display = 'flex';
+              } else {
+                  // Handle validation errors or other errors
+                  let errorMsg = data.message || 'Submission failed.';
+                  if (data.errors) {
+                    errorMsg += '\n' + Object.values(data.errors).join('\n');
+                  }
+                  throw new Error(errorMsg);
+              }
+          })
+          .catch(error => {
+              console.error('Error:', error);
+              alert(error.message || 'An error occurred. Please try again.');
+          })
+          .finally(() => {
+              // Reset form in finally block
+              if(submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = submitButtonText;
+              }
+              
+              feedbackForm.reset();
+              feedbackStars.forEach(s => {
+                s.classList.remove('fas');
+                s.classList.add('far');
+              });
+              if(feedbackRatingInput) feedbackRatingInput.value = '';
+              
+              // Reset custom select
+              const selectedText = document.getElementById('selectedFeedbackType');
+              const trigger = customSelect?.querySelector('.custom-select-trigger');
+              const realSelect = document.getElementById('type');
+              if(selectedText) selectedText.textContent = 'Select feedback type';
+              trigger?.classList.remove('selected');
+              if(realSelect) realSelect.value = '';
+          });
       });
+    } 
+
+    // Close success modal
+    closeSuccessBtn?.addEventListener('click', () => {
+        if(successModal) successModal.style.display = 'none';
+    });
+  }
+
+  /**
+   * Initializes mark-as-read functionality for general notifications.
+   */
+  function initMarkAsRead() {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    if (!csrfToken) {
+        console.error('CSRF token not found.');
+        return;
     }
 
+    // Target general notifications (with data-id)
+    const generalNotifLinks = document.querySelectorAll('.notif-link[data-id]');
 
-    // ==========================================================
-    //  APP INITIALIZATION (MAIN)
-    // ==========================================================
-    document.addEventListener("DOMContentLoaded", () => {
-      lucide.createIcons();
-      
-      // I-initialize 'yung mga component
-      initSidebar();
-      const openEvalModalFn = initEvaluationModal(); // Kunin 'yung function
-      window.openEvaluationModal = openEvalModalFn; // Make it globally available
-      initTopbar(openEvalModalFn); // Ipasa 'yung function sa topbar
-      initCalendar();
-      initWelcomeSlider();
-      initFeedbackModal();
+    generalNotifLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            if (!link.classList.contains('unread')) {
+                return; // Already read, let link work normally
+            }
+
+            e.preventDefault(); 
+            
+            const notifId = link.dataset.id;
+            const destinationUrl = link.href;
+            const dot = link.querySelector('.notif-dot'); 
+            const placeholder = link.querySelector('.notif-dot-placeholder');
+
+            // 1. Visually mark as read immediately
+            link.classList.remove('unread');
+            if (dot) dot.style.display = 'none'; 
+            if (placeholder) placeholder.style.display = 'inline-block'; 
+
+            // 2. Send request to server
+            fetch(`/notifications/mark-as-read/${notifId}`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ id: notifId })
+            })
+            .catch(err => {
+                console.error('Failed to mark notification as read:', err);
+                // (Optional) Revert visual change if fetch fails
+                // link.classList.add('unread');
+                // if (dot) dot.style.display = 'inline-block';
+                // if (placeholder) placeholder.style.display = 'none';
+            })
+            .finally(() => {
+                // 3. Navigate after fetch (success or fail)
+                window.location.href = destinationUrl;
+            });
+        });
     });
-  </script>
+  }
+
+  /**
+   * Initializes Certificate Claim
+   * (BINAGO) - Inalis na ang modal. 
+   * Kapag cliniclick ang card, mag-mark as read at diretso redirect.
+   */
+  function initCertificateModal() {
+    
+    const announcementCards = document.querySelectorAll('.certificate-schedule-announcement');
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    const redirectUrl = '{{ route('certificatepage') }}'; 
+
+    announcementCards.forEach(card => {
+      card.addEventListener('click', (event) => {
+        event.preventDefault(); // Para mapigilan ang default behavior
+
+        // Kunin 'yung ID para sa "mark as read"
+        const annId = card.dataset.announcementId; 
+
+        if (!annId) {
+            // Kung walang ID, i-redirect na lang
+            window.location.href = redirectUrl;
+            return;
+        }
+
+        // 1. Mark as read (POST request)
+        fetch(`/notifications/mark-as-read/${annId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+          },
+          body: JSON.stringify({ id: annId }) 
+        })
+        .catch(error => {
+          console.error('Error marking notification as read:', error);
+          // Kahit mag-error sa pag-mark as read, i-redirect pa rin
+        })
+        .finally(() => {
+          // 2. Redirect
+          window.location.href = redirectUrl;
+        });
+      });
+    });
+  }
+
+  /**
+   * Handles logout confirmation.
+   * This is called directly from the HTML's onclick attribute.
+   */
+  function confirmLogout(event) {
+    event.preventDefault(); // Prevent the <a> tag's default action
+    if (confirm('Are you sure you want to logout?')) {
+      document.getElementById('logout-form').submit();
+    }
+  }
+
+
+  // ==========================================================
+  //  APP INITIALIZATION (MAIN)
+  // ==========================================================
+  document.addEventListener("DOMContentLoaded", () => {
+    // Initialize Lucide icons first
+    lucide.createIcons();
+    
+    // Initialize all components
+    initSidebar();
+    
+    // (FIX) Kunin 'yung function na nireturn ng initEvaluationModal()
+    const openEvalModalFn = initEvaluationModal(); 
+    
+    // Ipasa 'yung function sa initTopbar()
+    initTopbar(openEvalModalFn); 
+    
+    initCalendar();
+    initWelcomeSlider();
+    initFeedbackModal();
+    initMarkAsRead();
+    initCertificateModal();
+  });
+
+
+</script>
 </body>
 </html>

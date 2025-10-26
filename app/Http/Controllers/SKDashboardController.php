@@ -7,6 +7,8 @@ use Carbon\Carbon;
 use Illuminate\View\View;
 use App\Models\User;
 use App\Models\Event;
+use App\Models\Notification;
+use App\Models\CertificateRequest;
 
 class SKDashboardController extends Controller
 {
@@ -36,6 +38,11 @@ class SKDashboardController extends Controller
         // Get events for reminders - FILTERED BY SAME BARANGAY
         $remindersData = $this->getEventsForReminders();
 
+        // ✅ FIX: Define notifications before passing to view
+        $notifications = Notification::where('recipient_role', 'sk')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
         return view('sk-dashboard', compact(
             'user', 
             'roleBadge', 
@@ -43,7 +50,8 @@ class SKDashboardController extends Controller
             'demographicsData', 
             'populationData', 
             'ageGroupData',
-            'remindersData'
+            'remindersData',
+            'notifications'
         ));
     }
 
@@ -215,4 +223,11 @@ class SKDashboardController extends Controller
             'barangay_filter' => $skUser->barangay_id
         ];
     }
+
+    public function showCertificateRequests()
+{
+    $events = Event::withCount('certificateRequests')->get();
+    return view('sk.certificate-request', compact('events'));
+}
+
 }

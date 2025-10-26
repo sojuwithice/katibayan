@@ -55,6 +55,7 @@ class EvaluationController extends Controller
         ->with(['evaluations' => function($query) use ($user) {
             $query->where('user_id', $user->id);
         }])
+        ->orderBy('event_date', 'desc') // In-order ko na
         ->get();
 
         // Calculate role badge and age - FIXED
@@ -188,6 +189,30 @@ class EvaluationController extends Controller
         }
     }
 
+    // --- ITO YUNG BAGONG DAGDAG ---
+    /**
+     * Show a specific evaluation by redirecting to the index with an anchor.
+     * Ito ang gagamitin ng route('evaluation.show', $event->id)
+     */
+    public function show($id)
+    {
+        $user = Auth::user();
+
+        // 1. Tiyakin na may event at umattend ang user
+        $event = Event::where('id', $id)
+            ->whereHas('attendances', function($query) use ($user) {
+                $query->where('user_id', $user->id)
+                      ->whereNotNull('attended_at');
+            })
+            ->firstOrFail(); // Mag-404 kung walang event o hindi umattend
+
+        // 2. I-redirect sa main evaluation page ('evaluation'), pero may anchor link (#)
+        // Ito ay mag-jujump sa page papunta mismo sa event card na 'yon
+        return redirect()->route('evaluation', ['#' => 'event-card-' . $event->id]);
+    }
+    // --- END NG BAGONG DAGDAG ---
+
+
     /**
      * Get certificates for evaluated events
      */
@@ -195,66 +220,97 @@ class EvaluationController extends Controller
     {
         try {
             $user = Auth::user();
-            
-            Log::info("Fetching certificates for user: {$user->id}, Barangay: {$user->barangay_id}");
+            $userId = $user->id;
 
-            // Get events that user has evaluated
-            $evaluatedEvents = Event::whereHas('evaluations', function($query) use ($user) {
-                $query->where('user_id', $user->id);
-            })
-            ->with(['evaluations' => function($query) use ($user) {
-                $query->where('user_id', $user->id)
-                      ->select('id', 'event_id', 'submitted_at', 'created_at');
-            }])
-            ->where('barangay_id', $user->barangay_id)
-            ->orderBy('event_date', 'desc')
-            ->get()
-            ->map(function ($event) {
-                $evaluation = $event->evaluations->first();
-                
-                // Safely handle event_date
-                $eventDate = 'Date not available';
-                if ($event->event_date) {
-                    try {
-                        $eventDate = $event->event_date instanceof Carbon 
-                            ? $event->event_date->format('F d, Y')
-                            : Carbon::parse($event->event_date)->format('F d, Y');
-                    } catch (\Exception $e) {
-                        Log::error("Error parsing event date for event {$event->id}: " . $e->getMessage());
-                    }
-                }
-                
-                // Safely handle evaluated_at
-                $evaluatedAt = $evaluation->submitted_at ?? $evaluation->created_at ?? now();
-                $evaluationDate = $evaluatedAt instanceof Carbon 
-                    ? $evaluatedAt->format('F d, Y')
-                    : Carbon::parse($evaluatedAt)->format('F d, Y');
-                
-                // Build image URL safely
-                $eventImage = null;
-                if ($event->image) {
-                    try {
-                        if (Storage::disk('public')->exists($event->image)) {
-                            $eventImage = asset('storage/' . $event->image);
-                        } else {
-                            Log::warning("Event image not found: " . $event->image);
+            Log::info("Fetching certificates for user: {$userId}, Barangay: {$user->barangay_id}");
+
+            // (BINAGO) Idinagdag natin 'yung 'request_count' at 'updated_at'
+            $evaluatedEvents = Event::select(
+                    'events.id', 
+                    'events.title',
+                    'events.event_date',
+                    'events.image',
+                    'events.barangay_id',
+                    'certificate_requests.status as request_status',
+                    'certificate_requests.request_count',     // <-- BAGO
+                    'certificate_requests.updated_at as request_updated_at' // <-- BAGO
+                )
+                ->whereHas('evaluations', function($query) use ($userId) {
+                    $query->where('user_id', $userId);
+                })
+                ->leftJoin('certificate_requests', function($join) use ($userId) {
+                    $join->on('events.id', '=', 'certificate_requests.event_id')
+                         ->where('certificate_requests.user_id', '=', $userId);
+                })
+                ->with(['evaluations' => function($query) use ($userId) {
+                    $query->where('user_id', $userId)
+                          ->select('id', 'event_id', 'submitted_at', 'created_at');
+                }])
+                ->where('events.barangay_id', $user->barangay_id)
+                ->orderBy('events.event_date', 'desc')
+                ->get()
+                ->map(function ($event) {
+                    $evaluation = $event->evaluations->first();
+                    
+                    // Safely handle event_date
+                    $eventDate = 'Date not available';
+                    if ($event->event_date) {
+                        try {
+                            $eventDate = $event->event_date instanceof Carbon ? $event->event_date->format('F d, Y') : Carbon::parse($event->event_date)->format('F d, Y');
+                        } catch (\Exception $e) { 
+                            Log::error("Error parsing event date for event {$event->id}: " . $e->getMessage());
                         }
-                    } catch (\Exception $e) {
-                        Log::error("Error generating image URL for event {$event->id}: " . $e->getMessage());
                     }
-                }
+                    
+                    // Safely handle evaluated_at
+                    $evaluatedAt = $evaluation?->submitted_at ?? $evaluation?->created_at ?? now();
+                    $evaluationDate = $evaluatedAt instanceof Carbon ? $evaluatedAt->format('F d, Y') : Carbon::parse($evaluatedAt)->format('F d, Y');
+                    
+                    // Build image URL safely
+                    $eventImage = null;
+                    if ($event->image) {
+                        try {
+                            if (Storage::disk('public')->exists($event->image)) {
+                                $eventImage = asset('storage/' . $event->image);
+                            } else { 
+                                Log::warning("Event image not found: " . $event->image);
+                            }
+                        } catch (\Exception $e) { 
+                            Log::error("Error generating image URL for event {$event->id}: " . $e->getMessage());
+                        }
+                    }
 
-                return [
-                    'event_id' => $event->id,
-                    'event_title' => $event->title,
-                    'event_date' => $eventDate,
-                    'event_image' => $eventImage,
-                    'evaluated_at' => $evaluatedAt,
-                    'evaluation_date' => $evaluationDate
-                ];
-            });
+                    // (BAGO) Logic para malaman kung pwede na ulit mag-request
+                    $canRequestAgain = false;
+                    $requestCount = $event->request_count ?? 0;
 
-            Log::info("Found {$evaluatedEvents->count()} certificates for user {$user->id}");
+                    if ($event->request_status === null) {
+                        // 1. Wala pang request (1st time)
+                        $canRequestAgain = true;
+                    } else if ($event->request_status !== 'claimed' && $requestCount < 2) {
+                        // 2. Hindi pa claimed AT wala pa sa 2-request limit
+                        $lastRequestTime = Carbon::parse($event->request_updated_at);
+                        if ($lastRequestTime->isBefore(Carbon::now()->subDays(7))) {
+                            // 3. At nakalipas na ang 7-day cooldown
+                            $canRequestAgain = true;
+                        }
+                    }
+                    // Kung claimed na, o nasa cooldown pa, o max na, $canRequestAgain ay mananatiling 'false'
+
+                    return [
+                        'event_id' => $event->id,
+                        'event_title' => $event->title,
+                        'event_date' => $eventDate,
+                        'event_image' => $eventImage,
+                        'evaluated_at' => $evaluatedAt,
+                        'evaluation_date' => $evaluationDate,
+                        'request_status' => $event->request_status,
+                        'request_count' => $requestCount,     // <-- BAGO
+                        'can_request_again' => $canRequestAgain   // <-- BAGO
+                    ];
+                });
+
+            Log::info("Found {$evaluatedEvents->count()} certificates for user {$userId}");
 
             return response()->json([
                 'success' => true,

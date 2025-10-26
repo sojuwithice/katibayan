@@ -364,7 +364,7 @@
       id="contactInput"
       placeholder="Click here to choose your Google account"
       readonly
-      style="pointer-events: none;"
+      style="cursor: pointer;"
     />
     <button type="button" id="openMethodBtn" class="verify-btn">Verify</button>
   </div>
@@ -1117,111 +1117,123 @@ document.addEventListener("DOMContentLoaded", function() {
             },
         });
 
-        // Google Account Selection
-        googleAccountSelector.addEventListener("click", () => {
-            if (!verifyBtn.disabled) {
-                tokenClient.requestAccessToken();
-            }
-        });
-    } else {
-        console.warn('Google OAuth not loaded');
+  // === 4. EVENT LISTENERS ===
+
+  // --- Google Account Selection (FIXED) ---
+  // Pinindot ang buong box, hindi lang ang input
+  googleAccountSelector.addEventListener("click", () => {
+    // Huwag nang buksan ulit kung verified na
+    if (!verifyBtn.disabled) {
+      tokenClient.requestAccessToken();
+    }
+  });
+
+  // --- Send OTP Button ---
+  verifyBtn.addEventListener("click", (e) => {
+    e.stopPropagation(); // <-- IMPORTANTE: Para hindi mag-trigger ang click ng buong box
+
+    const email = contactInput.value.trim();
+    
+    if (!email) {
+      // --- ITO YUNG FIX ---
+      // Kung walang email, buksan ang Google Picker imbes na mag-error.
+      // Siguraduhin lang na hindi pa verified bago buksan.
+      if (!verifyBtn.disabled) {
+        tokenClient.requestAccessToken();
+      }
+      // --- END NG FIX ---
+      return; // Itigil dito, huwag ituloy ang fetch
     }
 
-    // Send OTP Button
-    verifyBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-
-        const email = contactInput.value.trim();
-        if (!email) return showMessage("Please select your Google account first.");
-
-        fetch("/send-otp", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRF-TOKEN": "{{ csrf_token() }}",
-            },
-            body: JSON.stringify({ email }),
-        })
-            .then((res) => res.json())
-            .then((data) => {
-                if (data.success) {
-                    codeModal.style.display = "flex";
-                    showMessage(`We sent a code to ${email}`);
-                    clearCodeBoxes();
-                    codeBoxes[0].focus();
-                    startResendTimer();
-                } else {
-                    showMessage(data.error || "Failed to send OTP.");
-                }
-            })
-            .catch((err) => console.error("Error sending OTP:", err));
-    });
-
-    // Resend OTP Link
-    resendLink.addEventListener("click", (e) => {
-        e.preventDefault();
-        if (resendLink.disabled) return;
-
-        const email = contactInput.value.trim();
-        if (!email) return showMessage("Please select your Google account first.");
-
-        fetch("/send-otp", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRF-TOKEN": "{{ csrf_token() }}",
-            },
-            body: JSON.stringify({ email }),
-        })
-            .then((res) => res.json())
-            .then((data) => {
-                if (data.success) {
-                    showMessage(`A new code has been sent to ${email}`);
-                    clearCodeBoxes();
-                    codeBoxes[0].focus();
-                    startResendTimer();
-                } else {
-                    showMessage(data.error || "Failed to resend OTP.");
-                }
-            })
-            .catch((err) => console.error("Error resending OTP:", err));
-    });
-
-    // Verify OTP Button
-    codeVerifyBtn.addEventListener("click", async (e) => {
-        e.preventDefault();
-        const code = Array.from(codeBoxes).map((box) => box.value).join("");
-        const email = contactInput.value.trim();
-
-        if (code.length !== 6) return showMessage("Please enter the 6-digit code.");
-
-        try {
-            const res = await fetch("/verify-otp", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": "{{ csrf_token() }}",
-                },
-                body: JSON.stringify({ email, code: code.split("") }),
-            });
-
-            const data = await res.json();
-            if (data.verified === true) {
-                codeModal.style.display = "none";
-                setTimeout(() => {
-                    successModal.style.display = "flex";
-                }, 150);
-
-                verifyBtn.textContent = "Verified";
-                verifyBtn.disabled = true;
-                verifyBtn.classList.add("verified");
-            } else {
-                showMessage(data.error || "Invalid or expired code.");
-            }
-        } catch (err) {
-            console.error("Error verifying OTP:", err);
+    // Kung may email, ituloy ang pag-send ng OTP
+    fetch("/send-otp", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-TOKEN": "{{ csrf_token() }}", // Siguraduhin na blade file ito or palitan ng value
+      },
+      body: JSON.stringify({ email }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          codeModal.style.display = "flex";
+          showMessage(`We sent a code to ${email}`);
+          clearCodeBoxes();
+          codeBoxes[0].focus();
+          startResendTimer();
+        } else {
+          showMessage(data.error || "Failed to send OTP.");
         }
-    });
+      })
+      .catch((err) => console.error("Error sending OTP:", err));
+  });
+
+  // --- Resend OTP Link ---
+  resendLink.addEventListener("click", (e) => {
+    e.preventDefault();
+    if (resendLink.disabled) return;
+
+    const email = contactInput.value.trim();
+    if (!email) return showMessage("Please select your Google account first.");
+
+    fetch("/send-otp", { /* Assuming same endpoint for resend */
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-TOKEN": "{{ csrf_token() }}",
+      },
+      body: JSON.stringify({ email }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          showMessage(`A new code has been sent to ${email}`);
+          clearCodeBoxes();
+          codeBoxes[0].focus();
+          startResendTimer();
+        } else {
+          showMessage(data.error || "Failed to resend OTP.");
+        }
+      })
+      .catch((err) => console.error("Error resending OTP:", err));
+  });
+
+  // --- Verify OTP Button ---
+  codeVerifyBtn.addEventListener("click", async (e) => {
+    e.preventDefault();
+    const code = Array.from(codeBoxes).map((box) => box.value).join("");
+    const email = contactInput.value.trim();
+
+    if (code.length !== 6) return showMessage("Please enter the 6-digit code.");
+
+    try {
+      const res = await fetch("/verify-otp", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-TOKEN": "{{ csrf_token() }}",
+        },
+        body: JSON.stringify({ email, code: code.split("") }),
+      });
+
+      const data = await res.json();
+      if (data.verified === true) {
+        codeModal.style.display = "none";
+        setTimeout(() => {
+          successModal.style.display = "flex";
+        }, 150);
+
+        verifyBtn.textContent = "Verified";
+        verifyBtn.disabled = true;
+        verifyBtn.classList.add("verified");
+      } else {
+        showMessage(data.error || "Invalid or expired code.");
+      }
+    } catch (err) {
+      console.error("Error verifying OTP:", err);
+    }
+  });
 
     // Success Modal OK Button
     successOkBtn.addEventListener("click", () => {
