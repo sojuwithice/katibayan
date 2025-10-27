@@ -37,8 +37,6 @@ use App\Http\Controllers\ServiceOffersController;
 use App\Http\Controllers\YouthProgramRegistrationController;
 use App\Http\Controllers\YouthAssistanceController;
 
-
-
 Route::get('/', function () {
     return view('landingpage');
 });
@@ -78,9 +76,8 @@ Route::get('/faqspage', function () {
     return view('faqspage'); 
 })->name('faqspage');
 
-Route::get('/suggestionbox', function () {
-    return view('suggestionbox'); 
-})->name('suggestionbox');
+// FIXED: Suggestion Box route - use controller instead of direct view
+Route::get('/suggestionbox', [SuggestionController::class, 'index'])->name('suggestionbox');
 
 Route::view('/attendance', 'attendancepage')->name('attendancepage');
 
@@ -253,6 +250,10 @@ Route::get('/admin/login', [AdminLoginController::class, 'showLoginForm'])->name
 Route::post('/admin/login', [AdminLoginController::class, 'login'])->name('admin.login.post');
 Route::post('/admin/logout', [AdminLoginController::class, 'logout'])->name('admin.logout');
 
+// ========== SUGGESTION ROUTES ==========
+// FIXED: Add the suggestion store route
+Route::post('/suggestions', [SuggestionController::class, 'store'])->name('suggestions.store');
+
 Route::middleware(['auth'])->group(function () {
     // Profile routes
     Route::get('/profile', [ProfileController::class, 'index'])->name('profilepage');
@@ -296,6 +297,9 @@ Route::middleware(['auth'])->group(function () {
     
     // SK Suggestions Route
     Route::get('/sk-suggestions', [SuggestionController::class, 'getSKSuggestions'])->name('sk.suggestions');
+    
+    // Suggestion Box Route - ADDED INSIDE AUTH MIDDLEWARE
+    Route::get('/suggestionbox', [SuggestionController::class, 'index'])->name('suggestionbox');
     
     // Protected Poll Routes (for voting)
     Route::post('/polls/{pollId}/vote', [PollsController::class, 'vote'])->name('polls.vote');

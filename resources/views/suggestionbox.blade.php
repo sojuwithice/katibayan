@@ -106,17 +106,23 @@
 
         <!-- Profile Avatar -->
         <div class="profile-wrapper">
-          <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+          <img src="{{ isset($user) && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
                alt="User" class="avatar" id="profileToggle">
           <div class="profile-dropdown">
             <div class="profile-header">
-              <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+              <img src="{{ isset($user) && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
                    alt="User" class="profile-avatar">
               <div class="profile-info">
-                <h4>{{ $user->given_name }} {{ $user->middle_name }} {{ $user->last_name }} {{ $user->suffix }}</h4>
+                <h4>
+                  @if(isset($user))
+                    {{ $user->given_name ?? '' }} {{ $user->middle_name ?? '' }} {{ $user->last_name ?? '' }} {{ $user->suffix ?? '' }}
+                  @else
+                    Guest User
+                  @endif
+                </h4>
                 <div class="profile-badge">
-                  <span class="badge">{{ $roleBadge }}</span>
-                  <span class="badge">{{ $age }} yrs old</span>
+                  <span class="badge">{{ $roleBadge ?? 'GUEST' }}</span>
+                  <span class="badge">{{ $age ?? 'N/A' }} yrs old</span>
                 </div>
               </div>
             </div>
