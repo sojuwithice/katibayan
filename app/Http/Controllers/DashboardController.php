@@ -183,4 +183,4 @@ class DashboardController extends Controller
         return $allUpcomingItems->sortBy('date')->take(6);
     }
 
-} // End of DashboardController class
+} 
