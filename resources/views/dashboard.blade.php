@@ -589,11 +589,6 @@
     </div>
   </div>
 
-
- 
-
-  
-
   <script>
     // CSRF Token for AJAX requests
     window.csrfToken = '{{ csrf_token() }}';
@@ -723,8 +718,6 @@
         }
       });
 
-      // Initialize notifications system
-      initNotifications();
     }
 
     /**
@@ -1294,7 +1287,7 @@
     // Ipasa 'yung function sa initTopbar()
     initTopbar(openEvalModalFn); 
     
-    initCalendar();
+    initCalendar(); // <-- Ito 'yung para sa calendar
     initWelcomeSlider();
     initFeedbackModal();
     initMarkAsRead();
