@@ -211,10 +211,14 @@ Route::get('/admin/settings', function () {
     return view('admin-settings'); // You'll need to create this view
 })->name('admin-settings')->middleware('auth:admin');
 
-// CONTROLLER ROUTES
-
+// ========== REGISTRATION ROUTES ==========
+// FIXED: Add the missing registration routes
 Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
-Route::post('/register', [RegisterController::class, 'register']);
+Route::post('/register/preview', [RegisterController::class, 'preview'])->name('register.preview'); // ADD THIS LINE
+Route::get('/register/captcha', [RegisterController::class, 'showCaptcha'])->name('register.captcha'); // ADD THIS LINE
+Route::post('/register/complete', [RegisterController::class, 'complete'])->name('register.complete'); // ADD THIS LINE
+
+// CONTROLLER ROUTES
 
 Route::get('/profile', [ProfileController::class, 'index'])->name('profilepage');
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');

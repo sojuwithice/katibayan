@@ -1114,173 +1114,171 @@ document.addEventListener("DOMContentLoaded", function() {
                         console.error("Error fetching user info:", error);
                     }
                 }
-            },
-        });
-
-  // === 4. EVENT LISTENERS ===
-
-  // --- Google Account Selection (FIXED) ---
-  // Pinindot ang buong box, hindi lang ang input
-  googleAccountSelector.addEventListener("click", () => {
-    // Huwag nang buksan ulit kung verified na
-    if (!verifyBtn.disabled) {
-      tokenClient.requestAccessToken();
-    }
-  });
-
-  // --- Send OTP Button ---
-  verifyBtn.addEventListener("click", (e) => {
-    e.stopPropagation(); // <-- IMPORTANTE: Para hindi mag-trigger ang click ng buong box
-
-    const email = contactInput.value.trim();
-    
-    if (!email) {
-      // --- ITO YUNG FIX ---
-      // Kung walang email, buksan ang Google Picker imbes na mag-error.
-      // Siguraduhin lang na hindi pa verified bago buksan.
-      if (!verifyBtn.disabled) {
-        tokenClient.requestAccessToken();
-      }
-      // --- END NG FIX ---
-      return; // Itigil dito, huwag ituloy ang fetch
-    }
-
-    // Kung may email, ituloy ang pag-send ng OTP
-    fetch("/send-otp", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRF-TOKEN": "{{ csrf_token() }}", // Siguraduhin na blade file ito or palitan ng value
-      },
-      body: JSON.stringify({ email }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success) {
-          codeModal.style.display = "flex";
-          showMessage(`We sent a code to ${email}`);
-          clearCodeBoxes();
-          codeBoxes[0].focus();
-          startResendTimer();
-        } else {
-          showMessage(data.error || "Failed to send OTP.");
-        }
-      })
-      .catch((err) => console.error("Error sending OTP:", err));
-  });
-
-  // --- Resend OTP Link ---
-  resendLink.addEventListener("click", (e) => {
-    e.preventDefault();
-    if (resendLink.disabled) return;
-
-    const email = contactInput.value.trim();
-    if (!email) return showMessage("Please select your Google account first.");
-
-    fetch("/send-otp", { /* Assuming same endpoint for resend */
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRF-TOKEN": "{{ csrf_token() }}",
-      },
-      body: JSON.stringify({ email }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success) {
-          showMessage(`A new code has been sent to ${email}`);
-          clearCodeBoxes();
-          codeBoxes[0].focus();
-          startResendTimer();
-        } else {
-          showMessage(data.error || "Failed to resend OTP.");
-        }
-      })
-      .catch((err) => console.error("Error resending OTP:", err));
-  });
-
-  // --- Verify OTP Button ---
-  codeVerifyBtn.addEventListener("click", async (e) => {
-    e.preventDefault();
-    const code = Array.from(codeBoxes).map((box) => box.value).join("");
-    const email = contactInput.value.trim();
-
-    if (code.length !== 6) return showMessage("Please enter the 6-digit code.");
-
-    try {
-      const res = await fetch("/verify-otp", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRF-TOKEN": "{{ csrf_token() }}",
-        },
-        body: JSON.stringify({ email, code: code.split("") }),
-      });
-
-      const data = await res.json();
-      if (data.verified === true) {
-        codeModal.style.display = "none";
-        setTimeout(() => {
-          successModal.style.display = "flex";
-        }, 150);
-
-        verifyBtn.textContent = "Verified";
-        verifyBtn.disabled = true;
-        verifyBtn.classList.add("verified");
-      } else {
-        showMessage(data.error || "Invalid or expired code.");
-      }
-    } catch (err) {
-      console.error("Error verifying OTP:", err);
-    }
-  });
-
-    // Success Modal OK Button
-    successOkBtn.addEventListener("click", () => {
-        successModal.style.display = "none";
-    });
-
-    // OTP Input Box Logic
-    codeBoxes.forEach((box, index) => {
-        box.addEventListener("input", (e) => {
-            if (e.target.value && index < codeBoxes.length - 1) {
-                codeBoxes[index + 1].focus();
             }
         });
-        box.addEventListener("keydown", (e) => {
-            if (e.key === "Backspace" && !e.target.value && index > 0) {
-                codeBoxes[index - 1].focus();
+
+        // Google Account Selection
+        googleAccountSelector.addEventListener("click", () => {
+            // Don't open again if already verified
+            if (!verifyBtn.disabled) {
+                tokenClient.requestAccessToken();
             }
         });
-    });
 
-    function clearCodeBoxes() {
-        codeBoxes.forEach((box) => (box.value = ""));
-    }
+        // Send OTP Button
+        verifyBtn.addEventListener("click", (e) => {
+            e.stopPropagation(); // Important: Prevent triggering the whole box click
 
-    function startResendTimer() {
-        resendLink.disabled = true;
-        let timeLeft = resendTimer;
-        resendLink.textContent = `Resend (${timeLeft}s)`;
+            const email = contactInput.value.trim();
+            
+            if (!email) {
+                // If no email, open Google Picker instead of error
+                // Make sure not verified before opening
+                if (!verifyBtn.disabled) {
+                    tokenClient.requestAccessToken();
+                }
+                return; // Stop here, don't continue fetch
+            }
 
-        clearInterval(resendInterval);
-        resendInterval = setInterval(() => {
-            timeLeft--;
+            // If there's email, proceed to send OTP
+            fetch("/send-otp", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                },
+                body: JSON.stringify({ email }),
+            })
+            .then((res) => res.json())
+            .then((data) => {
+                if (data.success) {
+                    codeModal.style.display = "flex";
+                    showMessage(`We sent a code to ${email}`);
+                    clearCodeBoxes();
+                    codeBoxes[0].focus();
+                    startResendTimer();
+                } else {
+                    showMessage(data.error || "Failed to send OTP.");
+                }
+            })
+            .catch((err) => console.error("Error sending OTP:", err));
+        });
+
+        // Resend OTP Link
+        resendLink.addEventListener("click", (e) => {
+            e.preventDefault();
+            if (resendLink.disabled) return;
+
+            const email = contactInput.value.trim();
+            if (!email) return showMessage("Please select your Google account first.");
+
+            fetch("/send-otp", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                },
+                body: JSON.stringify({ email }),
+            })
+            .then((res) => res.json())
+            .then((data) => {
+                if (data.success) {
+                    showMessage(`A new code has been sent to ${email}`);
+                    clearCodeBoxes();
+                    codeBoxes[0].focus();
+                    startResendTimer();
+                } else {
+                    showMessage(data.error || "Failed to resend OTP.");
+                }
+            })
+            .catch((err) => console.error("Error resending OTP:", err));
+        });
+
+        // Verify OTP Button
+        codeVerifyBtn.addEventListener("click", async (e) => {
+            e.preventDefault();
+            const code = Array.from(codeBoxes).map((box) => box.value).join("");
+            const email = contactInput.value.trim();
+
+            if (code.length !== 6) return showMessage("Please enter the 6-digit code.");
+
+            try {
+                const res = await fetch("/verify-otp", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                    },
+                    body: JSON.stringify({ email, code: code.split("") }),
+                });
+
+                const data = await res.json();
+                if (data.verified === true) {
+                    codeModal.style.display = "none";
+                    setTimeout(() => {
+                        successModal.style.display = "flex";
+                    }, 150);
+
+                    verifyBtn.textContent = "Verified";
+                    verifyBtn.disabled = true;
+                    verifyBtn.classList.add("verified");
+                } else {
+                    showMessage(data.error || "Invalid or expired code.");
+                }
+            } catch (err) {
+                console.error("Error verifying OTP:", err);
+            }
+        });
+
+        // Success Modal OK Button
+        successOkBtn.addEventListener("click", () => {
+            successModal.style.display = "none";
+        });
+
+        // OTP Input Box Logic
+        codeBoxes.forEach((box, index) => {
+            box.addEventListener("input", (e) => {
+                if (e.target.value && index < codeBoxes.length - 1) {
+                    codeBoxes[index + 1].focus();
+                }
+            });
+            box.addEventListener("keydown", (e) => {
+                if (e.key === "Backspace" && !e.target.value && index > 0) {
+                    codeBoxes[index - 1].focus();
+                }
+            });
+        });
+
+        function clearCodeBoxes() {
+            codeBoxes.forEach((box) => (box.value = ""));
+        }
+
+        function startResendTimer() {
+            resendLink.disabled = true;
+            let timeLeft = resendTimer;
             resendLink.textContent = `Resend (${timeLeft}s)`;
-            if (timeLeft <= 0) {
-                clearInterval(resendInterval);
-                resendLink.disabled = false;
-                resendLink.textContent = "Resend";
-            }
-        }, 1000);
-    }
 
-    function showMessage(msg) {
-        const originalMessage = codeMessage.innerText;
-        codeMessage.innerText = msg;
-        setTimeout(() => {
-            codeMessage.innerText = originalMessage;
-        }, 5000);
+            clearInterval(resendInterval);
+            resendInterval = setInterval(() => {
+                timeLeft--;
+                resendLink.textContent = `Resend (${timeLeft}s)`;
+                if (timeLeft <= 0) {
+                    clearInterval(resendInterval);
+                    resendLink.disabled = false;
+                    resendLink.textContent = "Resend";
+                }
+            }, 1000);
+        }
+
+        function showMessage(msg) {
+            const originalMessage = codeMessage.innerText;
+            codeMessage.innerText = msg;
+            setTimeout(() => {
+                codeMessage.innerText = originalMessage;
+            }, 5000);
+        }
+    } else {
+        console.error('Google OAuth library not loaded');
     }
 });
 </script>
