@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KatiBayan - Profile Page</title>
+  <title>KatiBayan - Service Offers</title>
   <link rel="stylesheet" href="{{ asset('css/serviceoffers.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -35,11 +35,6 @@
       <a href="{{ route('eventpage') }}" class="events-link">
         <i data-lucide="calendar"></i>
         <span class="label">Events and Programs</span>
-      </a>
-
-      <a href="#">
-        <i data-lucide="megaphone"></i>
-        <span class="label">Announcements</span>
       </a>
 
       <a href="{{ route('evaluation') }}">
@@ -108,7 +103,7 @@
           </div>
         </div>
 
-         <!-- Profile Avatar -->
+        <!-- Profile Avatar - EXACT COPY FROM SK DASHBOARD -->
         <div class="profile-wrapper">
           <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
                alt="User" class="avatar" id="profileToggle">
@@ -138,7 +133,17 @@
                 </a>
               </li>
               <li><i class="fas fa-star"></i> Send Feedback to Katibayan</li>
+              <li class="logout-item">
+                <a href="loginpage" onclick="confirmLogout(event)">
+                  <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+              </li>
             </ul>
+            
+            <!-- Hidden Logout Form -->
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+              @csrf
+            </form>
           </div>
         </div>
       </div>
@@ -197,7 +202,7 @@
   <div class="org-chart-container">
     <h2>Organizational Chart</h2>
     <p class="section-desc">
-      The organizational chart of the Sangguniang Kabataan of Barangay 3 EM’s Barrio East illustrates the structure of its committees
+      The organizational chart of the Sangguniang Kabataan of Barangay 3 EM's Barrio East illustrates the structure of its committees
       and defines the roles and responsibilities of each official.
     </p>
   </div>
@@ -219,7 +224,7 @@
       <img src="{{ asset('images/print.jpeg') }}" alt="Free Printing">
   <h2>Free Printing Services</h2>
   <p class="intro">
-    Supporting the youth and students of Barangay 3, EM’s Barrio East, Legazpi City. 
+    Supporting the youth and students of Barangay 3, EM's Barrio East, Legazpi City. 
     As part of our commitment to helping the youth in their education, the Sangguniang Kabataan 
     of Barangay 3 is offering Free Printing Services. This program aims to ease the burden of 
     school expenses by providing free printing, scanning, and copying of academic requirements.
@@ -233,14 +238,14 @@
     </ul>
 
     <h3>Pick-Up Location</h3>
-    <p>2nd Floor SK Office, Brgy 3 Multi-Purpose Hall, EM’s Barrio East, Legazpi City</p>
+    <p>2nd Floor SK Office, Brgy 3 Multi-Purpose Hall, EM's Barrio East, Legazpi City</p>
   </div>
 
   <div>
     <h3>How to Avail</h3>
     <p>
       Send your files through:<br>
-      • FB Messenger: SK Brgy 3 EM’s Barrio East Legazpi City<br>
+      • FB Messenger: SK Brgy 3 EM's Barrio East Legazpi City<br>
       • Email: skbrgy3embarrioeast@gmail.com
     </p>
 
@@ -514,5 +519,14 @@ modalOverlay?.addEventListener('click', (e) => {
   }
 });
 
+  // === Logout confirmation ===
+  function confirmLogout(event) {
+    event.preventDefault();
+    if (confirm('Are you sure you want to logout?')) {
+      document.getElementById('logout-form').submit();
+    }
+  }
 });
 </script>
+</body>
+</html>

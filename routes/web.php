@@ -33,7 +33,7 @@ use App\Http\Controllers\CertificateRequestController;
 use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProgramController;
-
+use App\Http\Controllers\ServiceOffersController;
 use App\Http\Controllers\YouthProgramRegistrationController;
 
 
@@ -83,9 +83,7 @@ Route::get('/suggestionbox', function () {
 
 Route::view('/attendance', 'attendancepage')->name('attendancepage');
 
-Route::get('/serviceoffers', function () {
-    return view('serviceoffers');
-})->name('serviceoffers');
+Route::get('/service-offers', [ServiceOffersController::class, 'index'])->name('serviceoffers');
 
 // ========== POLLS ROUTES ==========
 Route::get('/polls', [PollsController::class, 'index'])->name('polls.page');

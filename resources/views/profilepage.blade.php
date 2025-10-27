@@ -38,11 +38,6 @@
         <span class="label">Events and Programs</span>
       </a>
 
-      <a href="#">
-        <i data-lucide="megaphone"></i>
-        <span class="label">Announcements</span>
-      </a>
-
       <a href="{{ route('evaluation') }}">
           <i data-lucide="user-star"></i>
           <span class="label">Evaluation</span>
