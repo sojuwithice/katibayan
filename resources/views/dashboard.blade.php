@@ -71,8 +71,8 @@
       <div class="topbar-right">
         <div class="time">MON 10:00 <span>AM</span></div>
 
-        <!-- Notifications -->
-        <div class="notification-wrapper">
+    <!-- Notifications -->
+<div class="notification-wrapper">
     <i class="fas fa-bell"></i>
     @if($notificationCount > 0)
         <span class="notif-count">{{ $notificationCount }}</span>
@@ -119,29 +119,29 @@
                 </li>
             @endforeach
 
-            @foreach($unevaluatedEvents as $event)
+            @foreach($unevaluatedActivities as $activity)
                 <li>
-                    <a href="{{ route('evaluation.show', $event->id) }}" class="notif-link unread" data-event-id="{{ $event->id }}">
+                    <a href="{{ route('evaluation.show', $activity['id']) }}" class="notif-link unread" 
+                       data-{{ $activity['type'] }}-id="{{ $activity['id'] }}">
                         
                         <div class="notif-dot-container">
-                             <span class="notif-dot"></span> </div>
+                            <span class="notif-dot"></span>
+                        </div>
                         
                         <div class="notif-main-content">
                             <div class="notif-header-line">
-                                <strong>Program Evaluation Required</strong>
-                                @if($event->attendances->first())
-                                    <span class="notif-timestamp">
-                                        {{ $event->attendances->first()->created_at->format('m/d/Y g:i A') }}
-                                    </span>
-                                @endif
+                                <strong>{{ ucfirst($activity['type']) }} Evaluation Required</strong>
+                                <span class="notif-timestamp">
+                                    {{ $activity['created_at']->format('m/d/Y g:i A') }}
+                                </span>
                             </div>
-                            <p class="notif-message">Please evaluate "{{ $event->title }}"</p>
+                            <p class="notif-message">Please evaluate "{{ $activity['title'] }}"</p>
                         </div>
                     </a>
                 </li>
             @endforeach
 
-            @if($generalNotifications->isEmpty() && $unevaluatedEvents->isEmpty())
+            @if($generalNotifications->isEmpty() && $unevaluatedActivities->isEmpty())
                 <li class="no-notifications">
                     <p>No new notifications</p>
                 </li>
@@ -377,23 +377,23 @@
               <div class="card-content">
                 <div class="text">
                   <h4>Evaluation</h4>
-                  <p>
-                    @if($eventsToEvaluate > 0)
-                      You have {{ $eventsToEvaluate }} program{{ $eventsToEvaluate > 1 ? 's' : '' }} to evaluate.
-                    @else
-                      All evaluations completed!
-                    @endif
-                  </p>
+                <p>
+    @if($activitiesToEvaluate > 0)
+        You have {{ $activitiesToEvaluate }} {{ $activitiesToEvaluate == 1 ? 'activity' : 'activities' }} to evaluate.
+    @else
+        All evaluations completed!
+    @endif
+</p>
                 </div>
                 <div class="icon">
                   <i data-lucide="thumbs-up"></i>
                 </div>
               </div>
-              <div class="progress-footer" style="--progress: {{ $attendedEvents > 0 ? ($evaluatedEvents / $attendedEvents * 100) : 0 }}%">
+              <div class="progress-footer" style="--progress: {{ $totalActivities > 0 ? ($evaluatedActivities / $totalActivities * 100) : 0 }}%">
                 <div class="bar">
                   <span style="width: var(--progress)"></span>
                 </div>
-                <small>{{ $evaluatedEvents }}/{{ $attendedEvents }}</small>
+                <small>{{ $evaluatedActivities }}/{{ $totalActivities }}</small>
               </div>
             </div>
 
@@ -544,13 +544,14 @@
     <div class="modal-content">
       <span class="close">&times;</span>
       <div class="modal-header">
-        <h2>Evaluate Event</h2>
-        <span id="modalEventName" class="event-name"></span>
+        <h2>Evaluate Activity</h2>
+        <span id="modalActivityName" class="activity-name"></span>
       </div>
       <div class="modal-body">
         <form id="evaluationForm">
           @csrf
-          <input type="hidden" id="evaluationEventId" name="event_id">
+          <input type="hidden" id="evaluationActivityId" name="activity_id">
+          <input type="hidden" id="evaluationActivityType" name="activity_type">
           
           <div class="rating-section">
             <label>Overall Rating:</label>
@@ -566,11 +567,11 @@
 
           <div class="form-group">
             <label for="comments">Comments/Suggestions:</label>
-            <textarea id="comments" name="comments" rows="4" placeholder="Share your thoughts about the event..."></textarea>
+            <textarea id="comments" name="comments" rows="4" placeholder="Share your thoughts about the activity..."></textarea>
           </div>
 
           <div class="form-group">
-            <label>Would you recommend this event to others?</label>
+            <label>Would you recommend this activity to others?</label>
             <div class="recommendation">
               <label>
                 <input type="radio" name="recommend" value="yes" required> Yes
@@ -676,14 +677,19 @@
       const dropdown = notifWrapper.querySelector(".notif-dropdown");
       dropdown?.addEventListener("click", (e) => e.stopPropagation());
 
-      // Handle evaluation notification clicks
-      // (BAGO) Pinalitan ko 'to para hanapin 'yung .notif-link na may data-event-id
-      notifWrapper.querySelectorAll('.notif-link[data-event-id]').forEach(notification => {
+      // Handle evaluation notification clicks for both events and programs
+      notifWrapper.querySelectorAll('.notif-link[data-event-id], .notif-link[data-program-id]').forEach(notification => {
         notification.addEventListener('click', function(e) {
           e.preventDefault(); // Pigilan 'yung default link behavior
           const eventId = this.getAttribute('data-event-id');
+          const programId = this.getAttribute('data-program-id');
+          
           if (openEvaluationModal) {
-            openEvaluationModal(eventId); // Gamitin 'yung function na pinasa
+            if (eventId) {
+              openEvaluationModal(eventId, 'event'); // Specify activity type
+            } else if (programId) {
+              openEvaluationModal(programId, 'program'); // Specify activity type
+            }
           }
           notifWrapper.classList.remove('active'); 
         });
@@ -868,33 +874,37 @@
 
   /**
    * (FIXED STRUCTURE)
-   * Initializes the Event Evaluation Modal.
+   * Initializes the Activity Evaluation Modal.
    * Returns the function to open the modal.
    */
   function initEvaluationModal() {
     const evalModal = document.getElementById('evaluationModal');
     
     // (FIX) Define the opener function here
-    function openEvaluationModal(eventId) {
+    function openEvaluationModal(activityId, activityType = 'event') {
       if (!evalModal) {
         console.error("Evaluation modal not found in DOM.");
         return;
       }
       
-      // Fetch event details
-      fetch(`/events/${eventId}`)
+      // Determine the API endpoint based on activity type
+      const apiUrl = activityType === 'event' ? `/events/${activityId}` : `/programs/${activityId}`;
+      
+      // Fetch activity details
+      fetch(apiUrl)
         .then(response => {
-          if (!response.ok) throw new Error('Event not found or server error');
+          if (!response.ok) throw new Error('Activity not found or server error');
           return response.json();
         })
-        .then(event => {
-          document.getElementById('modalEventName').textContent = event.title;
-          document.getElementById('evaluationEventId').value = event.id;
+        .then(activity => {
+          document.getElementById('modalActivityName').textContent = activity.title;
+          document.getElementById('evaluationActivityId').value = activity.id;
+          document.getElementById('evaluationActivityType').value = activityType;
           evalModal.style.display = 'block';
         })
         .catch(error => {
-          console.error('Error fetching event details:', error);
-          alert('Error loading event details');
+          console.error('Error fetching activity details:', error);
+          alert('Error loading activity details');
         });
     }
     
@@ -951,7 +961,15 @@
           return;
         }
 
-      fetch('/evaluations', {
+      // Determine which field to set based on activity type
+      const activityType = formData.get('activity_type');
+      if (activityType === 'event') {
+        formData.set('event_id', formData.get('activity_id'));
+      } else {
+        formData.set('program_id', formData.get('activity_id'));
+      }
+
+      fetch('/evaluation', {
         method: 'POST',
         headers: {
           'X-CSRF-TOKEN': csrfToken,

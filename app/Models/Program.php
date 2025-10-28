@@ -141,4 +141,14 @@ class Program extends Model
     {
         return $query->where('barangay_id', $barangayId);
     }
+    // In Program model
+public function evaluations()
+{
+    return $this->hasMany(Evaluation::class);
+}
+
+public function programRegistrations()
+{
+    return $this->hasMany(ProgramRegistration::class);
+}
 }

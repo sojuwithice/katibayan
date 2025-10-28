@@ -152,91 +152,176 @@
     <section class="programs-section">
       <div class="programs-header">
         <h2>Programs and Events Attended</h2>
-        <p>Evaluate the program you attended and share your feedback with us.</p>
+        <p>Evaluate the programs and events you attended and share your feedback with us.</p>
       </div>
 
       @php
-        // Safely handle the attendedEvents variable
-        $attendedEvents = $attendedEvents ?? collect();
+        // Safely handle the allActivities variable
+        $allActivities = $allActivities ?? ['events' => collect(), 'programs' => collect()];
         
         // Filter events that haven't been evaluated yet
-        $eventsToEvaluate = $attendedEvents->filter(function($event) {
-            // Check if evaluations relationship exists and filter
+        $eventsToEvaluate = $allActivities['events']->filter(function($event) {
             return !($event->evaluations && $event->evaluations->where('user_id', Auth::id())->count());
         });
+
+        // Filter programs that haven't been evaluated yet
+        $programsToEvaluate = $allActivities['programs']->filter(function($program) {
+            return !($program->evaluations && $program->evaluations->where('user_id', Auth::id())->count());
+        });
+
+        $totalToEvaluate = $eventsToEvaluate->count() + $programsToEvaluate->count();
       @endphp
 
       <p class="programs-note">
-        You have <span>{{ $eventsToEvaluate->count() }} programs</span> to evaluate. Please evaluate them now.
+        You have <span>{{ $totalToEvaluate }} activities</span> to evaluate. Please evaluate them now.
       </p>
 
-      <div class="program-list">
-        @if($eventsToEvaluate->count() > 0)
-          @foreach($eventsToEvaluate as $event)
-            <div class="program-card" data-event-id="{{ $event->id }}">
-              <div class="program-img-wrapper">
-                @if($event->image && Storage::disk('public')->exists($event->image))
-                  <img src="{{ asset('storage/' . $event->image) }}" alt="{{ $event->title }}" class="program-img" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0jOTk5IHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5FdmVudCBJbWFnZTwvdGV4dD48L3N2Zz4='">
-                @else
-                  <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0jOTk5IHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5FdmVudCBJbWFnZTwvdGV4dD48L3N2Zz4=" alt="Event Image" class="program-img">
-                @endif
-                <span class="status-dot"></span>
-              </div>
-              <div class="program-info">
-                <h3>{{ $event->title }}</h3>
-                <p class="date">{{ $event->event_date->format('F d, Y') }} | {{ $event->formatted_time ?? 'Time not specified' }}</p>
-                <p class="location"><i class="fas fa-map-marker-alt"></i> {{ $event->location }}</p>
-              </div>
-              <button class="evaluate-btn" data-event-id="{{ $event->id }}">Evaluate</button>
-            </div>
-          @endforeach
-        @else
-          <div class="no-events-message">
-            <i class="fas fa-calendar-check"></i>
-            <p>No events to evaluate at the moment.</p>
-            <p class="sub-message">
-              @if($attendedEvents->count() > 0)
-                You have attended events, but they may have already been evaluated.
-              @else
-                Attend events to see them here for evaluation.
-              @endif
-            </p>
-          </div>
-        @endif
-      </div>
-
-      <!-- Already Evaluated Section -->
-      @php
-        $evaluatedEvents = $attendedEvents->filter(function($event) {
-            return $event->evaluations && $event->evaluations->where('user_id', Auth::id())->count();
-        });
-      @endphp
-
-      @if($evaluatedEvents->count() > 0)
-        <div class="evaluated-section">
-          <h3>Already Evaluated ({{ $evaluatedEvents->count() }})</h3>
-          <div class="program-list evaluated">
-            @foreach($evaluatedEvents as $event)
-              <div class="program-card evaluated">
+      <!-- Events to Evaluate -->
+      @if($eventsToEvaluate->count() > 0)
+        <div class="activity-type-section">
+          <h3>Events to Evaluate</h3>
+          <div class="program-list">
+            @foreach($eventsToEvaluate as $event)
+              <div class="program-card" id="event-card-{{ $event->id }}" data-activity-type="event" data-activity-id="{{ $event->id }}">
                 <div class="program-img-wrapper">
                   @if($event->image && Storage::disk('public')->exists($event->image))
                     <img src="{{ asset('storage/' . $event->image) }}" alt="{{ $event->title }}" class="program-img" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0jOTk5IHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5FdmVudCBJbWFnZTwvdGV4dD48L3N2Zz4='">
                   @else
                     <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0jOTk5IHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5FdmVudCBJbWFnZTwvdGV4dD48L3N2Zz4=" alt="Event Image" class="program-img">
                   @endif
-                  <span class="status-dot completed"><i class="fas fa-check"></i></span>
+                  <span class="status-dot"></span>
+                  <span class="activity-badge event-badge">Event</span>
                 </div>
                 <div class="program-info">
                   <h3>{{ $event->title }}</h3>
                   <p class="date">{{ $event->event_date->format('F d, Y') }} | {{ $event->formatted_time ?? 'Time not specified' }}</p>
                   <p class="location"><i class="fas fa-map-marker-alt"></i> {{ $event->location }}</p>
                 </div>
-                <button class="evaluate-btn done" disabled>
-                  <i class="fa-solid fa-check"></i> Evaluated
-                </button>
+                <button class="evaluate-btn" data-activity-type="event" data-activity-id="{{ $event->id }}">Evaluate</button>
               </div>
             @endforeach
           </div>
+        </div>
+      @endif
+
+      <!-- Programs to Evaluate -->
+      @if($programsToEvaluate->count() > 0)
+        <div class="activity-type-section">
+          <h3>Programs to Evaluate</h3>
+          <div class="program-list">
+            @foreach($programsToEvaluate as $program)
+              <div class="program-card" id="program-card-{{ $program->id }}" data-activity-type="program" data-activity-id="{{ $program->id }}">
+                <div class="program-img-wrapper">
+                  @if($program->display_image && Storage::disk('public')->exists($program->display_image))
+                    <img src="{{ asset('storage/' . $program->display_image) }}" alt="{{ $program->title }}" class="program-img" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0jOTk5IHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5Qcm9ncmFtIEltYWdlPC90ZXh0Pjwvc3ZnPg=='">
+                  @else
+                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0jOTk5IHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5Qcm9ncmFtIEltYWdlPC90ZXh0Pjwvc3ZnPg==" alt="Program Image" class="program-img">
+                  @endif
+                  <span class="status-dot"></span>
+                  <span class="activity-badge program-badge">Program</span>
+                </div>
+                <div class="program-info">
+                  <h3>{{ $program->title }}</h3>
+                  <p class="date">{{ $program->event_date->format('F d, Y') }} | {{ $program->event_time ? \Carbon\Carbon::parse($program->event_time)->format('g:i A') : 'Time not specified' }}</p>
+                  <p class="location"><i class="fas fa-map-marker-alt"></i> {{ $program->location }}</p>
+                </div>
+                <button class="evaluate-btn" data-activity-type="program" data-activity-id="{{ $program->id }}">Evaluate</button>
+              </div>
+            @endforeach
+          </div>
+        </div>
+      @endif
+
+      @if($totalToEvaluate === 0)
+        <div class="no-events-message">
+          <i class="fas fa-calendar-check"></i>
+          <p>No activities to evaluate at the moment.</p>
+          <p class="sub-message">
+            @if($allActivities['events']->count() > 0 || $allActivities['programs']->count() > 0)
+              You have attended activities, but they may have already been evaluated.
+            @else
+              Attend events or register for programs to see them here for evaluation.
+            @endif
+          </p>
+        </div>
+      @endif
+
+      <!-- Already Evaluated Section -->
+      @php
+        $evaluatedEvents = $allActivities['events']->filter(function($event) {
+            return $event->evaluations && $event->evaluations->where('user_id', Auth::id())->count();
+        });
+
+        $evaluatedPrograms = $allActivities['programs']->filter(function($program) {
+            return $program->evaluations && $program->evaluations->where('user_id', Auth::id())->count();
+        });
+
+        $totalEvaluated = $evaluatedEvents->count() + $evaluatedPrograms->count();
+      @endphp
+
+      @if($totalEvaluated > 0)
+        <div class="evaluated-section">
+          <h3>Already Evaluated ({{ $totalEvaluated }})</h3>
+          
+          <!-- Evaluated Events -->
+          @if($evaluatedEvents->count() > 0)
+            <div class="activity-type-section">
+              <h4>Events</h4>
+              <div class="program-list evaluated">
+                @foreach($evaluatedEvents as $event)
+                  <div class="program-card evaluated" data-activity-type="event" data-activity-id="{{ $event->id }}">
+                    <div class="program-img-wrapper">
+                      @if($event->image && Storage::disk('public')->exists($event->image))
+                        <img src="{{ asset('storage/' . $event->image) }}" alt="{{ $event->title }}" class="program-img" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0jOTk5IHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5FdmVudCBJbWFnZTwvdGV4dD48L3N2Zz4='">
+                      @else
+                        <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0jOTk5IHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5FdmVudCBJbWFnZTwvdGV4dD48L3N2Zz4=" alt="Event Image" class="program-img">
+                      @endif
+                      <span class="status-dot completed"><i class="fas fa-check"></i></span>
+                      <span class="activity-badge event-badge">Event</span>
+                    </div>
+                    <div class="program-info">
+                      <h3>{{ $event->title }}</h3>
+                      <p class="date">{{ $event->event_date->format('F d, Y') }} | {{ $event->formatted_time ?? 'Time not specified' }}</p>
+                      <p class="location"><i class="fas fa-map-marker-alt"></i> {{ $event->location }}</p>
+                    </div>
+                    <button class="evaluate-btn done" disabled>
+                      <i class="fa-solid fa-check"></i> Evaluated
+                    </button>
+                  </div>
+                @endforeach
+              </div>
+            </div>
+          @endif
+
+          <!-- Evaluated Programs -->
+          @if($evaluatedPrograms->count() > 0)
+            <div class="activity-type-section">
+              <h4>Programs</h4>
+              <div class="program-list evaluated">
+                @foreach($evaluatedPrograms as $program)
+                  <div class="program-card evaluated" data-activity-type="program" data-activity-id="{{ $program->id }}">
+                    <div class="program-img-wrapper">
+                      @if($program->display_image && Storage::disk('public')->exists($program->display_image))
+                        <img src="{{ asset('storage/' . $program->display_image) }}" alt="{{ $program->title }}" class="program-img" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0jOTk5IHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5Qcm9ncmFtIEltYWdlPC90ZXh0Pjwvc3ZnPg=='">
+                      @else
+                        <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0jOTk5IHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5Qcm9ncmFtIEltYWdlPC90ZXh0Pjwvc3ZnPg==" alt="Program Image" class="program-img">
+                      @endif
+                      <span class="status-dot completed"><i class="fas fa-check"></i></span>
+                      <span class="activity-badge program-badge">Program</span>
+                    </div>
+                    <div class="program-info">
+                      <h3>{{ $program->title }}</h3>
+                      <p class="date">{{ $program->event_date->format('F d, Y') }} | {{ $program->event_time ? \Carbon\Carbon::parse($program->event_time)->format('g:i A') : 'Time not specified' }}</p>
+                      <p class="location"><i class="fas fa-map-marker-alt"></i> {{ $program->location }}</p>
+                    </div>
+                    <button class="evaluate-btn done" disabled>
+                      <i class="fa-solid fa-check"></i> Evaluated
+                    </button>
+                  </div>
+                @endforeach
+              </div>
+            </div>
+          @endif
         </div>
       @endif
     </section>
@@ -258,10 +343,11 @@
             constructive responses. All evaluations will remain confidential.
           </p>
 
-          <label class="label">Event Name</label>
-          <input type="text" class="event-input" id="modalEventName" readonly>
+          <label class="label">Activity Name</label>
+          <input type="text" class="event-input" id="modalActivityName" readonly>
 
-          <input type="hidden" id="currentEventId">
+          <input type="hidden" id="currentActivityId">
+          <input type="hidden" id="currentActivityType">
 
           <p class="label">Instruction:</p>
           <p class="instruction">
@@ -286,7 +372,7 @@
             <div class="question">
               <p>Question 2: Was the time given for the program/event enough? <span class="required">*</span></p>
               <div class="scale">
-                <label><input type="radio" name="q2" value="1" required><span><div class="circle">1</div>Strongly Disagree</span></label>
+                <label><input type="radio" name="q2" value="1" required><span><div class="circle">2</div>Strongly Disagree</span></label>
                 <label><input type="radio" name="q2" value="2"><span><div class="circle">2</div>Disagree</span></label>
                 <label><input type="radio" name="q2" value="3"><span><div class="circle">3</div>Neutral</span></label>
                 <label><input type="radio" name="q2" value="4"><span><div class="circle">4</div>Agree</span></label>
@@ -372,7 +458,7 @@
           </p>
           <textarea class="comment-box" id="comments" placeholder="Enter your comments here..."></textarea>
           <p class="instruction">
-            Once you have submitted this evaluation, your certificate for this event will be available in your profile. Thank you!
+            Once you have submitted this evaluation, your certificate for this activity will be available in your profile. Thank you!
           </p>
 
           <div class="pagination">
@@ -505,22 +591,27 @@
       const okBtn = successModal?.querySelector(".ok-btn");
       const page1 = document.getElementById("page1");
       const page2 = document.getElementById("page2");
-      const modalEventName = document.getElementById("modalEventName");
-      const currentEventId = document.getElementById("currentEventId");
+      const modalActivityName = document.getElementById("modalActivityName");
+      const currentActivityId = document.getElementById("currentActivityId");
+      const currentActivityType = document.getElementById("currentActivityType");
       const comments = document.getElementById("comments");
 
-      let currentEvaluatingEventId = null;
+      let currentEvaluatingActivityId = null;
+      let currentEvaluatingActivityType = null;
 
-      // Open modal with event data
+      // Open modal with activity data
       document.querySelectorAll(".evaluate-btn:not(.done)").forEach(btn => {
         btn.addEventListener("click", async () => {
-          const eventId = btn.getAttribute("data-event-id");
-          const eventCard = btn.closest(".program-card");
-          const eventName = eventCard.querySelector("h3").textContent;
+          const activityId = btn.getAttribute("data-activity-id");
+          const activityType = btn.getAttribute("data-activity-type");
+          const activityCard = btn.closest(".program-card");
+          const activityName = activityCard.querySelector("h3").textContent;
           
-          currentEvaluatingEventId = eventId;
-          currentEventId.value = eventId;
-          modalEventName.value = eventName;
+          currentEvaluatingActivityId = activityId;
+          currentEvaluatingActivityType = activityType;
+          currentActivityId.value = activityId;
+          currentActivityType.value = activityType;
+          modalActivityName.value = activityName;
 
           // Reset form
           page1.style.display = "block";
@@ -536,7 +627,8 @@
 
       closeBtn?.addEventListener("click", () => {
         evaluationModal.style.display = "none";
-        currentEvaluatingEventId = null;
+        currentEvaluatingActivityId = null;
+        currentEvaluatingActivityType = null;
       });
 
       // Next button - validate required questions
@@ -569,8 +661,8 @@
 
       // Submit evaluation
       submitBtn?.addEventListener("click", async () => {
-        if (!currentEvaluatingEventId) {
-          alert("No event selected for evaluation.");
+        if (!currentEvaluatingActivityId || !currentEvaluatingActivityType) {
+          alert("No activity selected for evaluation.");
           return;
         }
 
@@ -584,6 +676,18 @@
             }
           }
 
+          // Prepare evaluation data based on activity type
+          const evaluationData = {
+            ratings: ratings,
+            comments: comments.value
+          };
+
+          if (currentEvaluatingActivityType === 'event') {
+            evaluationData.event_id = currentEvaluatingActivityId;
+          } else {
+            evaluationData.program_id = currentEvaluatingActivityId;
+          }
+
           // Submit evaluation
           const response = await fetch('/evaluation', {
             method: 'POST',
@@ -591,11 +695,7 @@
               'Content-Type': 'application/json',
               'X-CSRF-TOKEN': '{{ csrf_token() }}'
             },
-            body: JSON.stringify({
-              event_id: currentEvaluatingEventId,
-              ratings: ratings,
-              comments: comments.value
-            })
+            body: JSON.stringify(evaluationData)
           });
 
           const result = await response.json();
@@ -605,7 +705,7 @@
             successModal.style.display = "flex";
 
             // Update UI - mark as evaluated
-            const evaluatedBtn = document.querySelector(`.evaluate-btn[data-event-id="${currentEvaluatingEventId}"]`);
+            const evaluatedBtn = document.querySelector(`.evaluate-btn[data-activity-id="${currentEvaluatingActivityId}"][data-activity-type="${currentEvaluatingActivityType}"]`);
             if (evaluatedBtn) {
               evaluatedBtn.innerHTML = '<i class="fa-solid fa-check"></i> Evaluated';
               evaluatedBtn.classList.add('done');
@@ -618,7 +718,8 @@
               }
             }
 
-            currentEvaluatingEventId = null;
+            currentEvaluatingActivityId = null;
+            currentEvaluatingActivityType = null;
           } else {
             alert(result.error || 'Failed to submit evaluation');
           }
@@ -639,7 +740,44 @@
         if (e.target === evaluationModal) evaluationModal.style.display = "none";
         if (e.target === successModal) successModal.style.display = "none";
       });
+
+      // Handle anchor links for direct navigation to specific activities
+      if (window.location.hash) {
+        const targetElement = document.querySelector(window.location.hash);
+        if (targetElement) {
+          setTimeout(() => {
+            targetElement.scrollIntoView({ behavior: 'smooth' });
+            // Add highlight effect
+            targetElement.style.backgroundColor = '#f8f9fa';
+            targetElement.style.transition = 'background-color 2s';
+            setTimeout(() => {
+              targetElement.style.backgroundColor = '';
+            }, 2000);
+          }, 500);
+        }
+      }
     });
+
+    // Logout confirmation
+    function confirmLogout(event) {
+      event.preventDefault();
+      if (confirm('Are you sure you want to logout?')) {
+        // Create and submit logout form
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '{{ route("logout") }}';
+        form.style.display = 'none';
+        
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = '_token';
+        csrfInput.value = '{{ csrf_token() }}';
+        
+        form.appendChild(csrfInput);
+        document.body.appendChild(form);
+        form.submit();
+      }
+    }
   </script>
 </body>
 </html>
