@@ -57,7 +57,7 @@ class YouthProgramRegistrationController extends Controller
     }
 
     /**
-     * Show registration list for a specific program - ENHANCED WITH ATTENDANCE TRACKING
+     * Show registration list for a specific program - ENHANCED WITH DAILY ATTENDANCE TRACKING
      */
     public function showRegistrationList($programId)
     {
@@ -83,6 +83,11 @@ class YouthProgramRegistrationController extends Controller
                 ->where('barangay_id', $user->barangay_id)
                 ->firstOrFail();
 
+            // Calculate total program days
+            $startDate = Carbon::parse($program->event_date);
+            $endDate = $program->event_end_date ? Carbon::parse($program->event_end_date) : $startDate;
+            $totalDays = $startDate->diffInDays($endDate) + 1;
+
             // Get all registrations for this program with enhanced data
             $registrations = ProgramRegistration::with(['user' => function($query) {
                     $query->select('id', 'given_name', 'middle_name', 'last_name', 'suffix', 'email', 'contact_no', 'date_of_birth', 'barangay_id');
@@ -93,7 +98,7 @@ class YouthProgramRegistrationController extends Controller
                 ->where('program_id', $programId)
                 ->orderBy('created_at', 'desc')
                 ->get()
-                ->map(function($registration) {
+                ->map(function($registration) use ($totalDays) {
                     $age = null;
                     if ($registration->user->date_of_birth) {
                         $age = Carbon::parse($registration->user->date_of_birth)->age;
@@ -103,6 +108,16 @@ class YouthProgramRegistrationController extends Controller
                     $registrationData = $registration->registration_data ? json_decode($registration->registration_data, true) : [];
                     $userProfile = $registrationData['user_profile'] ?? [];
                     $customFields = $registrationData['custom_fields'] ?? [];
+                    
+                    // Calculate daily attendance
+                    $attendanceDays = $registration->attendance_days ? json_decode($registration->attendance_days, true) : [];
+                    $presentDays = 0;
+                    
+                    if (is_array($attendanceDays)) {
+                        $presentDays = count(array_filter($attendanceDays, function($attended) {
+                            return $attended === true || $attended === 'true';
+                        }));
+                    }
                     
                     return [
                         'id' => $registration->id,
@@ -117,6 +132,9 @@ class YouthProgramRegistrationController extends Controller
                         'age' => $userProfile['age'] ?? $age,
                         'barangay' => $userProfile['barangay'] ?? ($registration->user->barangay->name ?? 'N/A'),
                         'attended' => $registration->attended ?? false,
+                        'attendance_days' => $attendanceDays,
+                        'present_days' => $presentDays,
+                        'total_days' => $totalDays,
                         'registered_at' => $registration->created_at->format('M d, Y g:i A'),
                         'attended_at' => $registration->attended_at ? $registration->attended_at->format('M d, Y g:i A') : null,
                         'registration_data' => $registrationData,
@@ -134,7 +152,8 @@ class YouthProgramRegistrationController extends Controller
                 'roleBadge',
                 'program',
                 'registrations',
-                'attendedCount'
+                'attendedCount',
+                'totalDays'
             ));
 
         } catch (\Exception $e) {
@@ -150,7 +169,7 @@ class YouthProgramRegistrationController extends Controller
     }
 
     /**
-     * Update attendance status
+     * Update overall attendance status
      */
     public function updateAttendance(Request $request, $registrationId)
     {
@@ -228,6 +247,138 @@ class YouthProgramRegistrationController extends Controller
     }
 
     /**
+     * Update daily attendance for a registration
+     */
+    public function updateDailyAttendance(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not authenticated'
+                ], 401);
+            }
+
+            $request->validate([
+                'registration_id' => 'required|exists:program_registrations,id',
+                'attendance_data' => 'required|array',
+                'present_count' => 'required|integer',
+                'total_days' => 'required|integer'
+            ]);
+
+            $registration = ProgramRegistration::where('id', $request->registration_id)
+                ->firstOrFail();
+
+            // Update attendance_days JSON field
+            $attendanceData = [];
+            foreach ($request->attendance_data as $day => $attended) {
+                $attendanceData[$day] = filter_var($attended, FILTER_VALIDATE_BOOLEAN);
+            }
+
+            $registration->update([
+                'attendance_days' => json_encode($attendanceData),
+                'attended' => $request->present_count > 0, // Mark as attended if at least one day present
+                'attended_at' => $request->present_count > 0 ? now() : null,
+                'marked_by_user_id' => $user->id
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Daily attendance updated successfully',
+                'present_count' => $request->present_count,
+                'total_days' => $request->total_days,
+                'attendance_data' => $attendanceData
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error updating daily attendance: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error updating daily attendance: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get daily attendance data for a specific registration
+     */
+    public function getDailyAttendance($registrationId)
+    {
+        try {
+            $user = Auth::user();
+            
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not authenticated'
+                ], 401);
+            }
+
+            $registration = ProgramRegistration::with(['program'])
+                ->where('id', $registrationId)
+                ->firstOrFail();
+
+            // Verify the program belongs to user's barangay
+            if ($registration->program->barangay_id !== $user->barangay_id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Access denied'
+                ], 403);
+            }
+
+            // Calculate total program days
+            $startDate = Carbon::parse($registration->program->event_date);
+            $endDate = $registration->program->event_end_date ? 
+                Carbon::parse($registration->program->event_end_date) : $startDate;
+            $totalDays = $startDate->diffInDays($endDate) + 1;
+
+            // Get attendance data
+            $attendanceDays = $registration->attendance_days ? 
+                json_decode($registration->attendance_days, true) : [];
+
+            // Generate day labels
+            $dayLabels = [];
+            $currentDate = $startDate->copy();
+            for ($i = 1; $i <= $totalDays; $i++) {
+                $dayLabels["day_{$i}"] = [
+                    'label' => "Day {$i}",
+                    'date' => $currentDate->format('M d, Y'),
+                    'attended' => $attendanceDays["day_{$i}"] ?? false
+                ];
+                $currentDate->addDay();
+            }
+
+            return response()->json([
+                'success' => true,
+                'registration' => [
+                    'id' => $registration->id,
+                    'reference_id' => $registration->reference_id,
+                    'user_name' => $registration->user->given_name . ' ' . 
+                                  ($registration->user->middle_name ? $registration->user->middle_name . ' ' : '') . 
+                                  $registration->user->last_name . 
+                                  ($registration->user->suffix ? ' ' . $registration->user->suffix : ''),
+                    'email' => $registration->user->email,
+                    'total_days' => $totalDays
+                ],
+                'attendance_data' => $attendanceDays,
+                'day_labels' => $dayLabels,
+                'present_count' => count(array_filter($attendanceDays, function($attended) {
+                    return $attended === true || $attended === 'true';
+                }))
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error fetching daily attendance: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching daily attendance: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Get program registration details with all submitted data (for AJAX/modal)
      */
     public function getProgramRegistrations($programId)
@@ -239,6 +390,11 @@ class YouthProgramRegistrationController extends Controller
                 ->where('barangay_id', $user->barangay_id)
                 ->firstOrFail();
 
+            // Calculate total program days
+            $startDate = Carbon::parse($program->event_date);
+            $endDate = $program->event_end_date ? Carbon::parse($program->event_end_date) : $startDate;
+            $totalDays = $startDate->diffInDays($endDate) + 1;
+
             $registrations = ProgramRegistration::with(['user' => function($query) {
                     $query->select('id', 'given_name', 'middle_name', 'last_name', 'suffix', 'email', 'contact_no', 'date_of_birth', 'barangay_id');
                 }])
@@ -248,7 +404,7 @@ class YouthProgramRegistrationController extends Controller
                 ->where('program_id', $programId)
                 ->orderBy('created_at', 'desc')
                 ->get()
-                ->map(function($registration) {
+                ->map(function($registration) use ($totalDays) {
                     $age = null;
                     if ($registration->user->date_of_birth) {
                         $age = Carbon::parse($registration->user->date_of_birth)->age;
@@ -258,6 +414,12 @@ class YouthProgramRegistrationController extends Controller
                     $registrationData = $registration->registration_data ? json_decode($registration->registration_data, true) : [];
                     $userProfile = $registrationData['user_profile'] ?? [];
                     $customFields = $registrationData['custom_fields'] ?? [];
+                    
+                    // Calculate daily attendance
+                    $attendanceDays = $registration->attendance_days ? json_decode($registration->attendance_days, true) : [];
+                    $presentDays = count(array_filter($attendanceDays, function($attended) {
+                        return $attended === true || $attended === 'true';
+                    }));
                     
                     return [
                         'id' => $registration->id,
@@ -272,6 +434,9 @@ class YouthProgramRegistrationController extends Controller
                         'age' => $userProfile['age'] ?? $age,
                         'barangay' => $userProfile['barangay'] ?? ($registration->user->barangay->name ?? 'N/A'),
                         'attended' => $registration->attended ?? false,
+                        'attendance_days' => $attendanceDays,
+                        'present_days' => $presentDays,
+                        'total_days' => $totalDays,
                         'registered_at' => $registration->created_at->format('M d, Y g:i A'),
                         'attended_at' => $registration->attended_at ? $registration->attended_at->format('M d, Y g:i A') : null,
                         'registration_data' => $registrationData,
@@ -289,9 +454,11 @@ class YouthProgramRegistrationController extends Controller
                     'id' => $program->id,
                     'title' => $program->title,
                     'event_date' => $program->event_date,
+                    'event_end_date' => $program->event_end_date,
                     'event_time' => $program->event_time,
                     'category' => $program->category,
-                    'total_registrations' => $registrations->count()
+                    'total_registrations' => $registrations->count(),
+                    'total_days' => $totalDays
                 ],
                 'registrations' => $registrations,
                 'attended_count' => $attendedCount
@@ -322,13 +489,35 @@ class YouthProgramRegistrationController extends Controller
             $attendedCount = ProgramRegistration::where('program_id', $programId)->where('attended', true)->count();
             $absentCount = $totalRegistrations - $attendedCount;
 
+            // Calculate daily attendance statistics
+            $dailyStats = [];
+            $startDate = Carbon::parse($program->event_date);
+            $endDate = $program->event_end_date ? Carbon::parse($program->event_end_date) : $startDate;
+            $totalDays = $startDate->diffInDays($endDate) + 1;
+
+            for ($day = 1; $day <= $totalDays; $day++) {
+                $dayKey = "day_{$day}";
+                $dayPresentCount = ProgramRegistration::where('program_id', $programId)
+                    ->whereRaw("JSON_EXTRACT(attendance_days, '$.\"{$dayKey}\"') = true")
+                    ->count();
+                
+                $dailyStats[] = [
+                    'day' => $day,
+                    'present_count' => $dayPresentCount,
+                    'attendance_rate' => $totalRegistrations > 0 ? 
+                        round(($dayPresentCount / $totalRegistrations) * 100, 2) : 0
+                ];
+            }
+
             return response()->json([
                 'success' => true,
                 'stats' => [
                     'total' => $totalRegistrations,
                     'attended' => $attendedCount,
                     'absent' => $absentCount,
-                    'attendance_rate' => $totalRegistrations > 0 ? round(($attendedCount / $totalRegistrations) * 100, 2) : 0
+                    'attendance_rate' => $totalRegistrations > 0 ? 
+                        round(($attendedCount / $totalRegistrations) * 100, 2) : 0,
+                    'daily_stats' => $dailyStats
                 ]
             ]);
 

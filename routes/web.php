@@ -95,9 +95,12 @@ Route::post('/sk-polls', [SKPollsController::class, 'store'])->name('sk-polls.st
 Route::get('/sk-polls/{pollId}/respondents', [SKPollsController::class, 'getRespondents'])->name('sk-polls.respondents');
 Route::delete('/sk-polls/{pollId}', [SKPollsController::class, 'destroy'])->name('sk-polls.destroy');
 
+// ========== EVALUATION ROUTES ==========
 Route::get('/evaluation', [EvaluationController::class, 'index'])->name('evaluation');
 Route::post('/evaluation', [EvaluationController::class, 'store']);
+Route::get('/evaluation/{id}', [EvaluationController::class, 'show'])->name('evaluation.show');
 Route::get('/evaluation/check/{eventId}', [EvaluationController::class, 'checkEvaluation']);
+Route::get('/evaluation/check', [EvaluationController::class, 'checkEvaluation'])->name('evaluation.check');
 
 // NEW: Certificate routes
 Route::get('/evaluation/certificates', [EvaluationController::class, 'getCertificates'])->name('evaluation.certificates');
@@ -109,7 +112,7 @@ Route::get('/sk-dashboard', [SKDashboardController::class, 'index'])->name('sk.d
 // FIXED: Youth Profile route - use controller instead of direct view
 Route::get('/youth-profilepage', [YouthProfileController::class, 'index'])->name('youth-profilepage');
 
-// ========== PROGRAM ROUTES ========== ADD THESE ROUTES
+// ========== PROGRAM ROUTES ==========
 Route::get('/create-program', [ProgramController::class, 'create'])->name('create-program');
 Route::post('/programs', [ProgramController::class, 'store'])->name('programs.store');
 Route::get('/programs', [ProgramController::class, 'index'])->name('programs.index');
@@ -118,12 +121,14 @@ Route::get('/programs/{id}/edit', [ProgramController::class, 'edit'])->name('pro
 Route::put('/programs/{id}', [ProgramController::class, 'update'])->name('programs.update');
 Route::delete('/programs/{id}', [ProgramController::class, 'destroy'])->name('programs.destroy');
 
+// Program registration routes
+Route::post('/program-registrations', [ProgramController::class, 'storeRegistration'])->name('programs.store-registration');
+Route::get('/my-program-registrations', [ProgramController::class, 'getUserRegistrations'])->name('programs.my-registrations');
+Route::get('/programs/{programId}/registrations', [ProgramController::class, 'getProgramRegistrations'])->name('programs.registrations');
+
 Route::get('/edit-event', function () {
     return view('edit-event'); 
 })->name('edit-event');
-
-
-
 
 Route::get('/youth-participation', [YouthParticipationController::class, 'index'])
     ->name('youth-participation')
@@ -318,6 +323,11 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/programs/{id}', [ProgramController::class, 'update'])->name('programs.update');
     Route::delete('/programs/{id}', [ProgramController::class, 'destroy'])->name('programs.destroy');
     
+    // Protected Program Registration Routes
+    Route::post('/program-registrations', [ProgramController::class, 'storeRegistration'])->name('programs.store-registration');
+    Route::get('/my-program-registrations', [ProgramController::class, 'getUserRegistrations'])->name('programs.my-registrations');
+    Route::get('/programs/{programId}/registrations', [ProgramController::class, 'getProgramRegistrations'])->name('programs.registrations');
+    
     // Protected Youth Registration List Route
     Route::get('/youth-registration-list/{programId}', [YouthProgramRegistrationController::class, 'showRegistrationList'])
         ->name('youth-registration-list');
@@ -330,6 +340,11 @@ Route::middleware(['auth'])->group(function () {
     // Get attendance statistics for a program
     Route::get('/program/{programId}/attendance-stats', [YouthProgramRegistrationController::class, 'getAttendanceStats'])
         ->name('program.attendance-stats');
+        
+    // ========== EVALUATION ROUTES (PROTECTED) ==========
+    Route::post('/evaluation', [EvaluationController::class, 'store']);
+    Route::get('/evaluation/check', [EvaluationController::class, 'checkEvaluation'])->name('evaluation.check');
+    Route::get('/evaluation/{id}', [EvaluationController::class, 'show'])->name('evaluation.show');
 });
 
 Route::post('/polls/{pollId}/reset-vote', [PollsController::class, 'resetVote'])->name('polls.reset-vote');
@@ -381,9 +396,6 @@ Route::post('/set-schedule', [CertificateController::class, 'setSchedule'])->nam
 // Sa web.php
 
 Route::get('/evaluation', [EvaluationController::class, 'index'])->name('evaluation');
-Route::get('/evaluation/{id}', [EvaluationController::class, 'show'])->name('evaluation.show'); // <-- IDAGDAG ITO
-Route::post('/evaluation', [EvaluationController::class, 'store']);
-
 
 Route::post('/notifications/mark-as-read/{id}', [NotificationController::class, 'markAsRead'])
        ->name('notifications.markAsRead')
@@ -414,13 +426,6 @@ Route::post('/certificate/mark-as-claimed', [CertificateController::class, 'conf
 
 Route::post('/programs', [ProgramController::class, 'store'])
     ->name('programs.store');
-// Program registration routes
-Route::post('/program-registrations', [ProgramController::class, 'storeRegistration'])->name('programs.store-registration');
-Route::get('/my-program-registrations', [ProgramController::class, 'getUserRegistrations'])->name('programs.my-registrations');
-// Add this route for fetching program registrations
-Route::get('/youth-program-registration/{programId}/registrations', [YouthProgramRegistrationController::class, 'getProgramRegistrations'])
-    ->name('youth-program-registration.registrations')
-    ->middleware('auth');
     
 Route::get('/events/{id}/edit', [EventController::class, 'edit'])->name('edit-event');
 Route::put('/events/{id}', [EventController::class, 'update'])->name('events.update');
@@ -429,3 +434,4 @@ Route::get('/notifications/count', [NotificationController::class, 'getUnreadCou
 Route::get('/notifications', [NotificationController::class, 'getNotifications'])->name('notifications.list');
 Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
 Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
+Route::post('/programs/update-daily-attendance', [YouthProgramRegistrationController::class, 'updateDailyAttendance'])->name('programs.update-daily-attendance');

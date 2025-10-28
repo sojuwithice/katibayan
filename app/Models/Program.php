@@ -13,7 +13,9 @@ class Program extends Model
     protected $fillable = [
         'title',
         'event_date',
+        'event_end_date', // ADDED THIS
         'event_time',
+        'number_of_days', // ADDED THIS
         'category',
         'location',
         'description',
@@ -34,6 +36,7 @@ class Program extends Model
 
     protected $casts = [
         'event_date' => 'date',
+        'event_end_date' => 'date', // ADDED THIS
         'registration_open_date' => 'date',
         'registration_close_date' => 'date',
         'custom_fields' => 'array',
@@ -141,14 +144,15 @@ class Program extends Model
     {
         return $query->where('barangay_id', $barangayId);
     }
-    // In Program model
-public function evaluations()
-{
-    return $this->hasMany(Evaluation::class);
-}
 
-public function programRegistrations()
-{
-    return $this->hasMany(ProgramRegistration::class);
-}
+    // In Program model
+    public function evaluations()
+    {
+        return $this->hasMany(Evaluation::class);
+    }
+
+    public function programRegistrations()
+    {
+        return $this->hasMany(ProgramRegistration::class);
+    }
 }
