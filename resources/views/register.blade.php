@@ -319,46 +319,61 @@
     <section class="step-content" data-step="2">
       <h2>III. Verification Document</h2>
       <div class="select-wrapper short-select">
-        <input type="text" name="role" placeholder="Select your role (SK, KK, etc)" readonly required>
-        <ul class="dropdown-options">
-         <li data-value="sk">SK</li>
-          <li data-value="kk">KK</li>
-        </ul>
-        <span class="arrow"><i data-lucide="chevron-down" class="lucide-icon"></i></span>
-        <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
-      </div>
+    <input type="text" name="role" placeholder="Select your role (SK, KK, etc)" readonly required>
+    <ul class="dropdown-options">
+      <li data-value="sk">SK</li>
+      <li data-value="kk">KK</li>
+    </ul>
+    <span class="arrow"><i data-lucide="chevron-down" class="lucide-icon"></i></span>
+    <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
+  </div>
 
       <!-- SK Specific Fields -->
       <div id="skFields" style="display: none;">
-        <div class="file-section">
-          <p>Upload Oath Taking Certificate</p>
-          <div class="upload-box">
-            <label for="oath_certificate" class="upload-label">Choose File</label>
-            <input type="file" id="oath_certificate" name="oath_certificate" accept=".pdf" hidden>
-            <span id="fileText1" class="file-text">Accepted: PDF, max 5 MB</span>
-          </div>
-          <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
+    <div class="file-section">
+      <p>Upload Oath Taking Certificate</p>
+      <div class="upload-box">
+        <div class="upload-row">
+          <label for="oath_certificate" class="upload-label">Choose Files</label>
+          <span id="fileText1" class="file-text">Accepted: PDF, PNG, JPG (up to 2 files), max 5 MB</span>
         </div>
+
+        <input type="file" id="oath_certificate" name="oath_certificate[]" accept="application/pdf, image/png, image/jpeg" hidden multiple>
+
+        <div class="image-preview-container" id="skPreviewContainer"></div>
       </div>
+
+      <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
+    </div>
+  </div>
+
 
       <!-- KK Specific Fields -->
       <div id="kkFields" style="display: none;">
-        <div class="file-section">
-          <p>Upload Barangay Indigency or Valid ID with Full Address</p>
-          <div class="upload-box">
-            <label for="barangay_indigency" class="upload-label">Choose File</label>
-            <input type="file" id="barangay_indigency" name="barangay_indigency" accept=".pdf" hidden>
-            <span id="fileText3" class="file-text">Accepted: PDF, max 5 MB</span>
-          </div>
-          <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
+    <div class="file-section">
+      <p>Upload Barangay Indigency or Valid ID with Full Address</p>
+      <div class="upload-box">
+        <div class="upload-row">
+          <label for="barangay_indigency" class="upload-label">Choose Files</label>
+          <span id="fileText3" class="file-text">Accepted: PDF, PNG, JPG (up to 2 files), max 5 MB</span>
         </div>
+
+        <input type="file" id="barangay_indigency" name="barangay_indigency[]" accept="application/pdf, image/png, image/jpeg" hidden multiple>
+
+        <div class="image-preview-container" id="kkPreviewContainer"></div>
       </div>
 
-      <h2>IV. Account Setup & Verification</h2>
-      <p>Confirmation of your account details.</p>
+      <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
+    </div>
+  </div>
 
-      <div class="form-grid">
-  <div class="input-with-btn" id="googleAccountSelector">
+      
+
+<h2>IV. Account Setup & Verification</h2>
+<p>Confirmation of your account details.</p>
+
+<div class="form-grid">
+  <div class="input-with-btn">
     <input
       type="text"
       id="contactInput"
@@ -366,9 +381,11 @@
       readonly
       style="cursor: pointer;"
     />
+
     <button type="button" id="openMethodBtn" class="verify-btn">Verify</button>
   </div>
 </div>
+
 
 
 <!-- ENTER CODE MODAL -->
@@ -1082,7 +1099,13 @@ document.addEventListener("DOMContentLoaded", function() {
     // OTP functionality
     const contactInput = document.getElementById("contactInput");
     const verifyBtn = document.getElementById("openMethodBtn");
-    const googleAccountSelector = document.getElementById("googleAccountSelector");
+    
+
+    // --- Disable Verify button initially ---
+verifyBtn.disabled = true;
+verifyBtn.style.opacity = "0.6";
+verifyBtn.style.cursor = "not-allowed";
+
 
     const codeModal = document.getElementById("codeModal");
     const codeMessage = document.getElementById("codeMessage");
@@ -1110,6 +1133,11 @@ document.addEventListener("DOMContentLoaded", function() {
                         });
                         const userInfo = await res.json();
                         contactInput.value = userInfo.email;
+                        // --- Enable Verify button after selecting Google account ---
+verifyBtn.disabled = false;
+verifyBtn.style.opacity = "1";
+verifyBtn.style.cursor = "pointer";
+
                     } catch (error) {
                         console.error("Error fetching user info:", error);
                     }
@@ -1117,17 +1145,21 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         });
 
-        // Google Account Selection
-        googleAccountSelector.addEventListener("click", () => {
-            // Don't open again if already verified
-            if (!verifyBtn.disabled) {
-                tokenClient.requestAccessToken();
-            }
-        });
+        // Google Account Selection (click input to choose account)
+contactInput.addEventListener("click", () => {
+    // Only open if verify button is still disabled (hasn’t chosen yet)
+    if (verifyBtn.disabled) {
+        tokenClient.requestAccessToken();
+    }
+});
+
+
 
         // Send OTP Button
         verifyBtn.addEventListener("click", (e) => {
-            e.stopPropagation(); // Important: Prevent triggering the whole box click
+    e.stopPropagation();
+    if (verifyBtn.disabled) return; // stop if disabled
+
 
             const email = contactInput.value.trim();
             
@@ -1280,6 +1312,162 @@ document.addEventListener("DOMContentLoaded", function() {
     } else {
         console.error('Google OAuth library not loaded');
     }
+
+    // ---- SAVE STEP & INPUTS ON RELOAD ----
+
+// ✅ Check if registration failed (from Laravel redirect or query param)
+const registrationFailed = window.location.search.includes("failed=1") || {{ $errors->any() ? 'true' : 'false' }};
+
+if (registrationFailed) {
+    console.warn("Registration failed. Resetting progress to Step 1.");
+    // Clear all saved data to ensure it always starts at Step 1
+    localStorage.clear();
+    currentStep = 1;
+    showStep(currentStep);
+    currentStepInput.value = currentStep;
+} else {
+    // 🔹 Restore saved step if no registration failure
+    const savedStep = localStorage.getItem("currentStep");
+
+    if (!savedStep || isNaN(savedStep) || savedStep < 1 || savedStep > steps.length) {
+        currentStep = 1;
+    } else {
+        currentStep = parseInt(savedStep);
+    }
+
+    showStep(currentStep);
+    currentStepInput.value = currentStep;
+}
+
+// ---- SAVE STEP CHANGES ----
+function saveCurrentStepAfterChange() {
+    localStorage.setItem("currentStep", currentStep);
+}
+
+nextBtn?.addEventListener("click", () => {
+    setTimeout(saveCurrentStepAfterChange, 100);
+});
+
+backBtn?.addEventListener("click", () => {
+    setTimeout(saveCurrentStepAfterChange, 100);
+});
+
+// ---- SAVE INPUT VALUES ----
+const formInputs = form.querySelectorAll("input[type='text'], input[type='email'], input[type='date'], input[type='number'], input[type='hidden'], input[type='checkbox']");
+
+// Restore saved input values
+formInputs.forEach(input => {
+    const savedValue = localStorage.getItem(input.name || input.id);
+    if (savedValue !== null) {
+        if (input.type === "checkbox") {
+            input.checked = savedValue === "true";
+        } else {
+            input.value = savedValue;
+        }
+    }
+});
+
+// Save input values on change
+formInputs.forEach(input => {
+    input.addEventListener("input", () => {
+        if (input.type === "checkbox") {
+            localStorage.setItem(input.name || input.id, input.checked);
+        } else {
+            localStorage.setItem(input.name || input.id, input.value);
+        }
+    });
+});
+
+// ---- RESTORE ROLE-BASED FIELD DISPLAY ----
+const roleInput = document.querySelector('input[name="role"]');
+if (roleInput) {
+    const roleValue = localStorage.getItem(roleInput.name || roleInput.id);
+    const skFields = document.getElementById("skFields");
+    const kkFields = document.getElementById("kkFields");
+
+    if (roleValue) {
+        if (roleValue.toLowerCase() === "sk") {
+            skFields.style.display = "block";
+            kkFields.style.display = "none";
+        } else if (roleValue.toLowerCase() === "kk") {
+            skFields.style.display = "none";
+            kkFields.style.display = "block";
+        } else {
+            skFields.style.display = "none";
+            kkFields.style.display = "none";
+        }
+    }
+}
+
+// ---- RESTORE LOCATION DROPDOWNS ----
+["regionInput", "provinceInput", "cityInput", "barangayInput"].forEach(id => {
+    const input = document.getElementById(id);
+    const savedValue = localStorage.getItem(id);
+    if (input && savedValue) input.value = savedValue;
+
+    input?.addEventListener("input", () => localStorage.setItem(id, input.value));
+});
+
+
+
+function initFileUploadPreview(inputId, previewContainerId) {
+  const input = document.getElementById(inputId);
+  const previewContainer = document.getElementById(previewContainerId);
+
+  input.addEventListener('change', () => {
+    previewContainer.innerHTML = ''; // Clear previous previews
+
+    const files = Array.from(input.files).slice(0, 2); // max 2 files
+
+    files.forEach(file => {
+      if (file.type.startsWith('image/')) {
+        const img = document.createElement('img');
+        img.src = URL.createObjectURL(file);
+        img.classList.add('img-preview');
+        previewContainer.appendChild(img);
+      } else if (file.type === 'application/pdf') {
+        const pdfDiv = document.createElement('div');
+        pdfDiv.classList.add('pdf-preview');
+        pdfDiv.innerHTML = `<span>PDF</span><br><small>${file.name}</small>`;
+        previewContainer.appendChild(pdfDiv);
+      }
+    });
+  });
+}
+
+// Initialize SK and KK previews
+initFileUploadPreview('oath_certificate', 'skPreviewContainer');
+initFileUploadPreview('barangay_indigency', 'kkPreviewContainer');
+
+    
+
+    // Hintayin na ma-load ang buong HTML
+document.addEventListener("DOMContentLoaded", function() {
+
+  // Dito mo ilagay lahat ng code mo
+  
+  const contactInput = document.querySelector("#contactInput");
+  const verifyButton = document.querySelector("#openMethodBtn");
+
+  if (contactInput && verifyButton) {
+    
+    console.log("Elements found!"); // Check mo sa console kung lumabas 'to
+    
+    verifyButton.addEventListener("click", function() {
+      alert("Verify button clicked!");
+      // Ilagay ang verify logic mo dito
+    });
+
+    contactInput.addEventListener("click", function() {
+      alert("Input clicked!");
+      // Ilagay ang logic mo para sa input dito
+    });
+
+  } else {
+    console.error("Error: Hindi makita ang #contactInput or #openMethodBtn");
+  }
+
+});
 });
 </script>
 </body>

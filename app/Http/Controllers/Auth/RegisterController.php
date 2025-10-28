@@ -18,6 +18,8 @@ use Illuminate\Support\Facades\Mail;
 use App\Models\City;
 use App\Models\Barangay;
 use Illuminate\Support\Facades\Log;
+use Spatie\PdfToText\Pdf;
+use thiagoalessio\TesseractOCR\TesseractOCR;
 
 class RegisterController extends Controller
 {
@@ -55,11 +57,15 @@ class RegisterController extends Controller
             'role' => 'required|in:sk,kk',
         ];
 
-        // File rules by role - make them optional for preview
-        if (isset($data['role']) && $data['role'] === 'sk') {
-            $rules['oath_certificate'] = 'required|file|mimes:pdf|max:5120';
-        } elseif (isset($data['role']) && $data['role'] === 'kk') {
-            $rules['barangay_indigency'] = 'required|file|mimes:pdf|max:5120';
+        // File rules for multiple uploads
+        if (isset($data['role'])) {
+            if ($data['role'] === 'sk') {
+                $rules['oath_certificate'] = 'required|array';
+                $rules['oath_certificate.*'] = 'file|mimes:pdf,png,jpg,jpeg|max:5120';
+            } elseif ($data['role'] === 'kk') {
+                $rules['barangay_indigency'] = 'required|array';
+                $rules['barangay_indigency.*'] = 'file|mimes:pdf,png,jpg,jpeg|max:5120';
+            }
         }
 
         return Validator::make($data, $rules);
@@ -90,21 +96,32 @@ class RegisterController extends Controller
             'youth_classification' => 'required|string',
             'sk_voter' => 'required|in:Yes,No',
             'role' => 'required|in:sk,kk',
+
+            // Confirm checkboxes
             'certify_info' => 'required|accepted',
             'certify_final' => 'required|accepted',
             'confirm_submission' => 'required|accepted',
         ];
 
-        // File rules by role - required for preview
-        if (isset($data['role']) && $data['role'] === 'sk') {
-            $rules['oath_certificate'] = 'required|file|mimes:pdf|max:5120';
-        } elseif (isset($data['role']) && $data['role'] === 'kk') {
-            $rules['barangay_indigency'] = 'required|file|mimes:pdf|max:5120';
+        // File rules for multiple uploads
+        if (isset($data['role'])) {
+            if ($data['role'] === 'sk') {
+                $rules['oath_certificate'] = 'required|array';
+                $rules['oath_certificate.*'] = 'file|mimes:pdf,png,jpg,jpeg|max:5120';
+            } elseif ($data['role'] === 'kk') {
+                $rules['barangay_indigency'] = 'required|array';
+                $rules['barangay_indigency.*'] = 'file|mimes:pdf,png,jpg,jpeg|max:5120';
+            }
         }
 
         return Validator::make($data, $rules);
     }
 
+
+    /**
+     * Step 1: Preview route — validate, store files temporarily and keep data in session,
+     * then redirect to captcha page.
+     */
     /**
      * Step 1: Preview route — validate, store files temporarily and keep data in session,
      * then redirect to captcha page.
@@ -113,9 +130,7 @@ class RegisterController extends Controller
     {
         Log::info('Preview method called', ['data' => $request->except(['_token', 'oath_certificate', 'barangay_indigency'])]);
 
-        // Use the preview validator which includes checkbox validation
         $validator = $this->previewValidator($request->all());
-        
         if ($validator->fails()) {
             Log::error('Validation failed in preview', $validator->errors()->toArray());
             return redirect()->back()
@@ -124,26 +139,104 @@ class RegisterController extends Controller
                 ->with('error', 'Please fix the validation errors below.');
         }
 
-        // Store inputs except files and checkboxes
         $data = $request->except(['_token', 'oath_certificate', 'barangay_indigency', 'certify_info', 'certify_final', 'confirm_submission']);
+        $documentText = '';
+        
+        // Define binary paths
+        $pdftotextBinary = '/opt/homebrew/bin/pdftotext';
+        // FIXED: Changed this path to match your Homebrew setup
+        $tesseractBinary = '/opt/homebrew/bin/tesseract'; 
 
-        // Store uploaded files temporarily in public disk under temp/
-        if ($request->hasFile('oath_certificate')) {
-            $data['oath_certificate_temp'] = $request->file('oath_certificate')->store('temp', 'public');
-            Log::info('Oath certificate stored temporarily', ['path' => $data['oath_certificate_temp']]);
-        }
-        if ($request->hasFile('barangay_indigency')) {
-            $data['barangay_indigency_temp'] = $request->file('barangay_indigency')->store('temp', 'public');
-            Log::info('Barangay indigency stored temporarily', ['path' => $data['barangay_indigency_temp']]);
+        // Handle SK multiple files
+        if ($request->role === 'sk' && $request->hasFile('oath_certificate')) {
+            $data['oath_certificate_temp'] = [];
+            foreach ($request->file('oath_certificate') as $file) {
+                $path = $file->store('temp', 'public');
+                $data['oath_certificate_temp'][] = $path;
+                Log::info('Oath certificate stored temporarily', ['path' => $path]);
+
+                $ext = strtolower($file->getClientOriginalExtension());
+                if ($ext === 'pdf') {
+                    $documentText .= ' ' . (new Pdf($pdftotextBinary))
+                                          ->setPdf(storage_path('app/public/' . $path))
+                                          ->text();
+                } else {
+                    $documentText .= ' ' . (new TesseractOCR(storage_path('app/public/' . $path)))
+                        ->executable($tesseractBinary) // Use the correct variable
+                        ->run();
+                }
+            }
         }
 
-        // Save to session with flash data to persist across redirects
+        // Handle KK multiple files
+        if ($request->role === 'kk' && $request->hasFile('barangay_indigency')) {
+            $data['barangay_indigency_temp'] = [];
+            foreach ($request->file('barangay_indigency') as $file) {
+                $path = $file->store('temp', 'public');
+                $data['barangay_indigency_temp'][] = $path;
+                Log::info('Barangay indigency stored temporarily', ['path' => $path]);
+
+                $ext = strtolower($file->getClientOriginalExtension());
+                if ($ext === 'pdf') {
+                    $documentText .= ' ' . (new Pdf($pdftotextBinary))
+                                          ->setPdf(storage_path('app/public/' . $path))
+                                          ->text();
+                } else {
+                    $documentText .= ' ' . (new TesseractOCR(storage_path('app/public/' . $path)))
+                        ->executable($tesseractBinary) // Use the correct variable
+                        ->run();
+                }
+            }
+        }
+
+        // Flexible Matching Logic
+        $cleanString = function($str) {
+            $str = preg_replace('/[^a-zA-Z0-9]/', '', $str);
+            return strtoupper($str);
+        };
+
+        $normalizedDocText = $cleanString($documentText);
+
+        $givenName = $data['given_name'];
+        $lastName = $data['last_name'];
+        $barangayName = (Barangay::find($data['barangay_id'])->name ?? '');
+
+        $normGivenName = $cleanString($givenName);
+        $normLastName = $cleanString($lastName);
+        $normBarangayName = $cleanString($barangayName);
+
+        $givenNameMatches = !empty($normGivenName) && str_contains($normalizedDocText, $normGivenName);
+        $lastNameMatches = !empty($normLastName) && str_contains($normalizedDocText, $normLastName);
+        $barangayMatches = !empty($normBarangayName) && str_contains($normalizedDocText, $normBarangayName);
+
+        if (empty($normBarangayName)) {
+            $barangayMatches = true; 
+            Log::warning('Barangay name is empty, skipping barangay match validation.');
+        }
+        
+        if (!$givenNameMatches || !$lastNameMatches || !$barangayMatches) {
+            
+            Log::warning('Document does not match Step 1 data (Partial Check Failed)', [
+                'found_given_name' => $givenNameMatches,
+                'found_last_name' => $lastNameMatches,
+                'found_barangay' => $barangayMatches,
+                'checking_for_given' => $normGivenName,
+                'checking_for_last' => $normLastName,
+                'checking_for_barangay' => $normBarangayName,
+                'doc_text_snippet_normalized' => substr($normalizedDocText, 0, 400) . '...'
+            ]);
+            
+            return redirect()->back()->withErrors([
+                'document' => 'Uploaded document does not match your Step 1 information. Please ensure your Given Name, Last Name, and Barangay are visible in the document.'
+            ])->withInput();
+        }
+        
         $request->session()->put('pending_registration', $data);
-        Log::info('Data stored in session, redirecting to captcha');
+        Log::info('Data stored in session, document verified, redirecting to captcha');
 
-        // Redirect to captcha page
         return redirect()->route('register.captcha');
     }
+
 
     /**
      * Show captcha page (only if session has pending_registration)
@@ -180,12 +273,9 @@ class RegisterController extends Controller
 
         $token = $request->input('g-recaptcha-response');
         
-        // DEVELOPMENT MODE: Bypass reCAPTCHA for local testing
         if (app()->environment('local')) {
             Log::info('Local environment detected - bypassing reCAPTCHA verification');
-            // Skip reCAPTCHA verification in local development
         } else {
-            // PRODUCTION: Verify reCAPTCHA
             if (!$token) {
                 Log::error('No reCAPTCHA token provided');
                 return redirect()->route('register.captcha')->withErrors('Please complete the captcha.');
@@ -193,7 +283,6 @@ class RegisterController extends Controller
 
             try {
                 $secret = config('services.recaptcha.secret');
-                
                 if (!$secret) {
                     Log::error('reCAPTCHA secret key not configured');
                     return redirect()->route('register.captcha')->withErrors('System configuration error. Please contact administrator.');
@@ -223,32 +312,72 @@ class RegisterController extends Controller
             }
         }
 
-        // Continue with registration process...
         $data = session('pending_registration');
         Log::info('Processing registration data from session');
 
         try {
-            // Move temp files to final location
+            // *** START: FIXED FILE HANDLING ***
+            
+            // FIXED: Handle array of SK files
             if (!empty($data['oath_certificate_temp'])) {
-                $temp = $data['oath_certificate_temp'];
-                $final = 'documents/sk/' . basename($temp);
-                Storage::disk('public')->move($temp, $final);
-                $data['oath_certificate_path'] = $final;
+                $finalPaths = [];
+                // Loop through the array of temp paths
+                foreach ($data['oath_certificate_temp'] as $tempPath) {
+                    $finalPath = 'documents/sk/' . basename($tempPath);
+                    Storage::disk('public')->move($tempPath, $finalPath);
+                    $finalPaths[] = $finalPath;
+                }
+                // Store all paths as a single comma-separated string
+                $data['oath_certificate_path'] = implode(',', $finalPaths);
                 unset($data['oath_certificate_temp']);
-                Log::info('Moved oath certificate to final location', ['from' => $temp, 'to' => $final]);
-            }
-            if (!empty($data['barangay_indigency_temp'])) {
-                $temp = $data['barangay_indigency_temp'];
-                $final = 'documents/kk/' . basename($temp);
-                Storage::disk('public')->move($temp, $final);
-                $data['barangay_indigency_path'] = $final;
-                unset($data['barangay_indigency_temp']);
-                Log::info('Moved barangay indigency to final location', ['from' => $temp, 'to' => $final]);
+                Log::info('Moved oath certificates to final location', ['paths' => $data['oath_certificate_path']]);
             }
 
-            // Create the user
+            // FIXED: Handle array of KK files
+            if (!empty($data['barangay_indigency_temp'])) {
+                $finalPaths = [];
+                // Loop through the array of temp paths
+                foreach ($data['barangay_indigency_temp'] as $tempPath) {
+                    $finalPath = 'documents/kk/' . basename($tempPath);
+                    Storage::disk('public')->move($tempPath, $finalPath);
+                    $finalPaths[] = $finalPath;
+                }
+                // Store all paths as a single comma-separated string
+                $data['barangay_indigency_path'] = implode(',', $finalPaths);
+                unset($data['barangay_indigency_temp']);
+                Log::info('Moved barangay indigency files to final location', ['paths' => $data['barangay_indigency_path']]);
+            }
+
+            // *** END: FIXED FILE HANDLING ***
+
+            // Before creating user, check barangay SK Chair approval
+            if ($data['role'] === 'kk') {
+                $hasApprovedChair = User::where('role', 'sk')
+                    ->where('barangay_id', $data['barangay_id'])
+                    ->where('account_status', 'approved')
+                    ->exists();
+
+                if (!$hasApprovedChair) {
+                    Log::warning('KK registration blocked - No approved SK Chair found for barangay', [
+                        'barangay_id' => $data['barangay_id'],
+                        'email' => $data['email']
+                    ]);
+
+                    // FIXED: Delete the files we just moved
+                    if (!empty($data['barangay_indigency_path'])) {
+                        Storage::disk('public')->delete(explode(',', $data['barangay_indigency_path']));
+                        Log::info('Deleted moved files for KK user due to no SK chair');
+                    }
+
+                    session()->forget('pending_registration');
+                    return redirect()->route('register')->with('error', 'Registration failed. The SK Chair in your barangay has not been approved yet.');
+                }
+            }
+
+            // Create the user if valid
             $user = $this->create($data);
             Log::info('User created successfully', ['user_id' => $user->id, 'email' => $user->email]);
+
 
             // Create role-specific models
             if (isset($data['role']) && $data['role'] === 'sk') {
@@ -265,130 +394,161 @@ class RegisterController extends Controller
                 Log::info('KK member record created');
             }
 
-            // Cleanup session
             session()->forget('pending_registration');
             Log::info('Session cleaned up, redirecting to success');
 
-            // Redirect to success page
             return redirect()->route('registration.success')->with('success', 'Registration submitted. Your account is pending approval.');
 
         } catch (\Exception $e) {
             Log::error('Error during user creation: ' . $e->getMessage());
+            
+            // FIXED: Attempt to clean up any files that were moved before the error
+            if(isset($data['oath_certificate_path'])) {
+                 Storage::disk('public')->delete(explode(',', $data['oath_certificate_path']));
+            }
+            if(isset($data['barangay_indigency_path'])) {
+                 Storage::disk('public')->delete(explode(',', $data['barangay_indigency_path']));
+            }
+
             session()->forget('pending_registration');
             return redirect()->route('register')->with('error', 'Registration failed: ' . $e->getMessage());
         }
     }
 
     protected function create(array $data)
-    {
-        // Role prefix
-        $prefix = strtoupper($data['role']); // SK or KK
+{
+    // Role prefix
+    $prefix = strtoupper($data['role']); // SK or KK
 
-        // Birthdate in Ymd
-        $birthdate = date('Ymd', strtotime($data['date_of_birth']));
+    // Birthdate in Ymd
+    $birthdate = date('Ymd', strtotime($data['date_of_birth']));
 
-        // Get initials from name
-        $fullName = $data['given_name'] . ' ' . ($data['middle_name'] ?? '') . ' ' . $data['last_name'];
-        $names = explode(' ', $fullName);
-        $initials = '';
-        foreach ($names as $n) {
-            if (!empty($n)) {
-                $initials .= strtoupper(substr($n, 0, 1));
-            }
+    // Get initials from name
+    $fullName = $data['given_name'] . ' ' . ($data['middle_name'] ?? '') . ' ' . $data['last_name'];
+    $names = explode(' ', $fullName);
+    $initials = '';
+    foreach ($names as $n) {
+        if (!empty($n)) {
+            $initials .= strtoupper(substr($n, 0, 1));
         }
+    }
 
-        // Combine role + birthdate + initials
-        $accountNumber = $prefix . $birthdate . $initials;
+    // Combine role + birthdate + initials
+    $accountNumber = $prefix . $birthdate . $initials;
 
-        // Handle password generation based on role
-        if ($data['role'] === 'kk') {
-            // KK: Generate password immediately and send email
+    // Default password setup
+    $plainPassword = null;
+    $passwordHash = null;
+    $defaultPassword = null;
+
+    // Determine account status logic
+    $accountStatus = 'pending';
+
+    if ($data['role'] === 'kk') {
+        // Check if there's an approved SK chair in the same barangay
+        $hasApprovedChair = User::where('role', 'sk')
+            ->where('barangay_id', $data['barangay_id'])
+            ->where('account_status', 'approved')
+            ->exists();
+
+        if ($hasApprovedChair) {
+            // Approve KK automatically and send credentials
+            $accountStatus = 'approved';
             $plainPassword = $prefix . rand(1000, 9999);
             $passwordHash = Hash::make($plainPassword);
             $defaultPassword = $plainPassword;
         } else {
-            // SK: No password until approved
-            $plainPassword = null;
-            $passwordHash = Hash::make(Str::random(32)); // Temporary random password
-            $defaultPassword = null;
+            // Pending if SK Chair not yet approved
+            $accountStatus = 'pending';
+            $passwordHash = Hash::make(Str::random(32)); // placeholder password
         }
+    } else {
+        // SK always pending until admin approves
+        $accountStatus = 'pending';
+        $passwordHash = Hash::make(Str::random(32));
+    }
 
-        // Log password generation for debugging
-        Log::info('PASSWORD DEBUG - Before user creation:', [
-            'role' => $data['role'],
-            'generated_password' => $plainPassword,
-            'account_number' => $accountNumber,
-            'email' => $data['email']
-        ]);
+    // Log password generation for debugging
+    Log::info('PASSWORD DEBUG - Before user creation:', [
+        'role' => $data['role'],
+        'generated_password' => $plainPassword,
+        'account_number' => $accountNumber,
+        'email' => $data['email']
+    ]);
 
-        // Create user
-        $user = User::create([
-            'role' => $data['role'],
-            'account_number' => $accountNumber,
-            'last_name' => $data['last_name'],
-            'given_name' => $data['given_name'],
-            'middle_name' => $data['middle_name'] ?? null,
-            'suffix' => $data['suffix'] ?? null,
+    // Create the user
+    $user = User::create([
+        'role' => $data['role'],
+        'account_number' => $accountNumber,
+        'last_name' => $data['last_name'],
+        'given_name' => $data['given_name'],
+        'middle_name' => $data['middle_name'] ?? null,
+        'suffix' => $data['suffix'] ?? null,
 
-            // Location
-            'region_id' => $data['region_id'],
-            'province_id' => $data['province_id'],
-            'city_id' => $data['city_id'],
-            'barangay_id' => $data['barangay_id'],
-            'purok_zone' => $data['purok_zone'],
-            'zip_code' => $data['zip_code'],
+        // Location
+        'region_id' => $data['region_id'],
+        'province_id' => $data['province_id'],
+        'city_id' => $data['city_id'],
+        'barangay_id' => $data['barangay_id'],
+        'purok_zone' => $data['purok_zone'],
+        'zip_code' => $data['zip_code'],
 
-            // Personal
-            'date_of_birth' => $data['date_of_birth'],
-            'sex' => $data['sex'],
-            'email' => $data['email'],
-            'contact_no' => $data['contact_no'],
-            'civil_status' => $data['civil_status'],
-            'education' => $data['education'],
-            'work_status' => $data['work_status'],
-            'youth_classification' => $data['youth_classification'],
-            'sk_voter' => $data['sk_voter'],
+        // Personal
+        'date_of_birth' => $data['date_of_birth'],
+        'sex' => $data['sex'],
+        'email' => $data['email'],
+        'contact_no' => $data['contact_no'],
+        'civil_status' => $data['civil_status'],
+        'education' => $data['education'],
+        'work_status' => $data['work_status'],
+        'youth_classification' => $data['youth_classification'],
+        'sk_voter' => $data['sk_voter'],
 
-            // Account status & password
-            'account_status' => $data['role'] === 'kk' ? 'approved' : 'pending',
-            'password' => $passwordHash,
-            'default_password' => $defaultPassword,
-        ]);
+        // Account
+        'account_status' => $accountStatus,
+        'password' => $passwordHash,
+        'default_password' => $defaultPassword,
+    ]);
 
-        // Debug: Verify what was stored in database
-        $freshUser = User::find($user->id);
-        Log::info('PASSWORD DEBUG - After user creation:', [
-            'role' => $freshUser->role,
-            'stored_default_password' => $freshUser->default_password,
-            'account_status' => $freshUser->account_status
-        ]);
+    // Debug: Verify stored data
+    Log::info('PASSWORD DEBUG - After user creation:', [
+        'role' => $user->role,
+        'stored_default_password' => $user->default_password,
+        'account_status' => $user->account_status
+    ]);
 
-        // Send email ONLY for KK users (auto-approved)
-        if ($data['role'] === 'kk') {
-            try {
-                Mail::to($user->email)->send(
-                    new AccountCredentialsMail($user, $accountNumber, $plainPassword)
-                );
-                Log::info('Account credentials email sent to KK user', [
-                    'user_id' => $user->id,
-                    'email' => $user->email,
-                    'account_number' => $accountNumber,
-                    'password_sent_in_email' => $plainPassword
-                ]);
-            } catch (\Exception $e) {
-                Log::error('Failed to send email to KK user: ' . $e->getMessage());
-            }
-        } else {
-            // SK users - log that no password generated yet
-            Log::info('SK user created - no password generated (pending admin approval)', [
+    // Send email ONLY if KK is auto-approved
+    if ($data['role'] === 'kk' && $accountStatus === 'approved') {
+        try {
+            Mail::to($user->email)->send(
+                new AccountCredentialsMail($user, $accountNumber, $plainPassword)
+            );
+            Log::info('Account credentials email sent to KK user', [
                 'user_id' => $user->id,
                 'email' => $user->email,
-                'account_number' => $accountNumber
+                'account_number' => $accountNumber,
+                'password_sent_in_email' => $plainPassword
             ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to send email to KK user: ' . $e->getMessage());
         }
-
-        return $user;
+    } elseif ($data['role'] === 'kk' && $accountStatus === 'pending') {
+        Log::info('KK registration pending — SK chair not yet approved', [
+            'email' => $user->email,
+            'barangay_id' => $user->barangay_id
+        ]);
+    } else {
+        // SK users: no password until admin approves
+        Log::info('SK user created - no password generated (pending admin approval)', [
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'account_number' => $accountNumber
+        ]);
     }
+
+    return $user;
+}
+
 
     /**
      * Method to generate and send credentials when SK user is approved

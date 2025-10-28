@@ -26,4 +26,6 @@ class CertificateRequest extends Model
     {
         return $this->belongsTo(Event::class);
     }
+
+    
 }

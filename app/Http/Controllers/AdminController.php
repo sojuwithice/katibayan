@@ -37,34 +37,47 @@ class AdminController extends Controller
      * Approve user account.
      */
     public function approve($id)
-    {
-        $user = User::findOrFail($id);
+{
+    $user = User::findOrFail($id);
 
-        if ($user->account_status !== 'pending') {
-            return back()->with('error', 'This account is not pending for approval.');
-        }
-
-        // Handle SK user approval
-        if ($user->role === 'sk') {
-            $registerController = new RegisterController();
-            $result = $registerController->sendSKCredentials($user);
-
-            if ($result) {
-                return back()->with('success', 'SK user approved and credentials sent.');
-            } else {
-                return back()->with('error', 'Failed to send credentials email for SK user.');
-            }
-        }
-        
-        // Handle KK user approval (simple status update)
-        if ($user->role === 'kk') {
-             $user->account_status = 'approved';
-             $user->save();
-             return back()->with('success', 'KK member has been approved.');
-        }
-
-        return back()->with('error', 'Invalid user role for approval.');
+    if ($user->account_status !== 'pending') {
+        return back()->with('error', 'This account is not pending for approval.');
     }
+
+    // Handle SK user approval
+    if ($user->role === 'sk') {
+        $registerController = new RegisterController();
+        $result = $registerController->sendSKCredentials($user);
+
+        if ($result) {
+            return back()->with('success', 'SK user approved and credentials sent.');
+        } else {
+            return back()->with('error', 'Failed to send credentials email for SK user.');
+        }
+    }
+
+    // Handle KK (Youth) user approval
+    if ($user->role === 'kk') {
+        // Check if there is at least one approved SK Chair in the same barangay
+        $hasApprovedChair = User::where('role', 'sk')
+            ->where('barangay_id', $user->barangay_id)
+            ->where('account_status', 'approved')
+            ->exists();
+
+        if (!$hasApprovedChair) {
+            return back()->with('error', 'Youth cannot be approved yet. The SK Chair for this barangay has not been approved.');
+        }
+
+        // Proceed if SK Chair exists
+        $user->account_status = 'approved';
+        $user->save();
+
+        return back()->with('success', 'KK member has been approved successfully.');
+    }
+
+    return back()->with('error', 'Invalid user role for approval.');
+}
+
 
     /**
      * Reject user account.

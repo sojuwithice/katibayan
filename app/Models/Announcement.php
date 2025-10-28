@@ -42,4 +42,12 @@ class Announcement extends Model
     {
         return $this->belongsTo(Barangay::class); 
     }
+
+        public function event()
+{
+    return $this->belongsTo(Event::class);
+}
+
+
+    
 }

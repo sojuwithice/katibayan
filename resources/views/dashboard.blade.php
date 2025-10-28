@@ -718,6 +718,7 @@
         }
       });
 
+
     }
 
     /**
@@ -1158,61 +1159,66 @@
     });
   }
 
-  /**
-   * Initializes mark-as-read functionality for general notifications.
-   */
   function initMarkAsRead() {
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-    if (!csrfToken) {
-        console.error('CSRF token not found.');
-        return;
-    }
-
-    // Target general notifications (with data-id)
-    const generalNotifLinks = document.querySelectorAll('.notif-link[data-id]');
-
-    generalNotifLinks.forEach(link => {
-        link.addEventListener('click', (e) => {
-            if (!link.classList.contains('unread')) {
-                return; // Already read, let link work normally
-            }
-
-            e.preventDefault(); 
-            
-            const notifId = link.dataset.id;
-            const destinationUrl = link.href;
-            const dot = link.querySelector('.notif-dot'); 
-            const placeholder = link.querySelector('.notif-dot-placeholder');
-
-            // 1. Visually mark as read immediately
-            link.classList.remove('unread');
-            if (dot) dot.style.display = 'none'; 
-            if (placeholder) placeholder.style.display = 'inline-block'; 
-
-            // 2. Send request to server
-            fetch(`/notifications/mark-as-read/${notifId}`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken,
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ id: notifId })
-            })
-            .catch(err => {
-                console.error('Failed to mark notification as read:', err);
-                // (Optional) Revert visual change if fetch fails
-                // link.classList.add('unread');
-                // if (dot) dot.style.display = 'inline-block';
-                // if (placeholder) placeholder.style.display = 'none';
-            })
-            .finally(() => {
-                // 3. Navigate after fetch (success or fail)
-                window.location.href = destinationUrl;
-            });
-        });
-    });
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+  if (!csrfToken) {
+    console.error('CSRF token not found.');
+    return;
   }
+
+  // Select all notifications with a data-id attribute
+  document.querySelectorAll('.notif-link[data-id]').forEach(link => {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      const notifId = this.dataset.id;
+      const destinationUrl = this.href;
+
+      // Remove notification visually
+      const notifItem = this.closest('li');
+      notifItem?.remove();
+
+      // Update notification count
+      const countEl = document.querySelector('.notif-count');
+      if (countEl) {
+        let currentCount = parseInt(countEl.textContent) || 0;
+        countEl.textContent = Math.max(0, currentCount - 1);
+        if (parseInt(countEl.textContent) === 0) {
+          countEl.remove();
+          // Optional: remove red dot on bell icon
+          const bellDot = document.querySelector('.notif-dot');
+          if (bellDot) bellDot.remove();
+        }
+      }
+
+      // If no notifications left, show "No new notifications"
+      const notifList = document.querySelector('.notif-list');
+      if (notifList && notifList.children.length === 0) {
+        notifList.innerHTML = `<li class="no-notifications"><p>No new notifications</p></li>`;
+      }
+
+      // Send AJAX request to mark as read
+      fetch(`/notifications/${notifId}/read`, {
+        method: 'POST',
+        headers: {
+          'X-CSRF-TOKEN': csrfToken,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ id: notifId })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (!data.success) console.error('Error marking notification as read:', data.message);
+      })
+      .catch(err => console.error('Fetch error:', err))
+      .finally(() => {
+        if (destinationUrl && destinationUrl !== '#') {
+          window.location.href = destinationUrl;
+        }
+      });
+    });
+  });
+}
 
   /**
    * Initializes Certificate Claim
