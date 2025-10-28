@@ -262,14 +262,6 @@
         </div>
       </div>
 
-      <!-- Program Days Section -->
-      <div class="program-days-section">
-        <h3>Program Days</h3>
-        <div class="days-container" id="programDaysContainer">
-          <!-- Days will be dynamically generated here -->
-        </div>
-      </div>
-
       <!-- Actions Row -->
       <div class="actions-row">
         <div class="left-actions">
@@ -328,7 +320,9 @@
                 </td>
                 <td>
                   <div class="daily-attendance" id="dailyAttendance_{{ $registration['id'] }}">
-                    <!-- Daily attendance will be populated by JavaScript -->
+                    <span class="attendance-summary-small">
+                      {{ $registration['present_days'] ?? 0 }}/{{ $registration['total_days'] ?? 1 }} days
+                    </span>
                   </div>
                 </td>
                 <td>
@@ -526,55 +520,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Program days generation
-    function generateProgramDays() {
-        const container = document.getElementById('programDaysContainer');
-        if (!container) return;
-        
-        // Get program dates from PHP variables
-        const startDate = new Date('{{ $program->event_date }}');
-        const endDate = new Date('{{ $program->event_end_date ? $program->event_end_date : $program->event_date }}');
-        
-        let currentDate = new Date(startDate);
-        let dayNumber = 1;
-        
-        container.innerHTML = '';
-        
-        while (currentDate <= endDate) {
-            const dayElement = document.createElement('div');
-            dayElement.className = 'program-day';
-            dayElement.innerHTML = `
-                <span class="day-number">Day ${dayNumber}</span>
-                <span class="day-date">${currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-                <span class="day-attendance-count" id="dayAttendanceCount_${dayNumber}">0/{{ count($registrations) }}</span>
-            `;
-            container.appendChild(dayElement);
-            
-            currentDate.setDate(currentDate.getDate() + 1);
-            dayNumber++;
-        }
-    }
-    
-    generateProgramDays();
-
-    // Initialize daily attendance displays
-    function initializeDailyAttendance() {
-        const rows = document.querySelectorAll('#registrationsTable tbody tr[data-registration-id]');
-        
-        rows.forEach(row => {
-            const registrationId = row.getAttribute('data-registration-id');
-            const dailyAttendanceCell = document.getElementById('dailyAttendance_' + registrationId);
-            
-            if (dailyAttendanceCell) {
-                // Initially set to 0/total days
-                const totalDays = getTotalProgramDays();
-                dailyAttendanceCell.innerHTML = `<span class="attendance-summary-small">0/${totalDays} days</span>`;
-            }
-        });
-    }
-    
-    initializeDailyAttendance();
-
     // Get total program days
     function getTotalProgramDays() {
         const startDate = new Date('{{ $program->event_date }}');
@@ -658,49 +603,75 @@ document.addEventListener('DOMContentLoaded', function() {
         const container = document.getElementById('modalDailyAttendance');
         if (!container) return;
 
-        // Fetch actual attendance data from server
+        // Fetch actual attendance data from server - FIXED: Using the correct route
         container.innerHTML = '<p>Loading daily attendance...</p>';
         
-        fetch(`/programs/daily-attendance/${registrationId}`, {
-            method: 'GET',
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Accept': 'application/json'
+        // Try multiple possible endpoints
+        const endpoints = [
+            `/youth-program-registration/daily-attendance/${registrationId}`,
+            `/programs/daily-attendance/${registrationId}`,
+            `/api/daily-attendance/${registrationId}`
+        ];
+
+        let currentEndpointIndex = 0;
+
+        function tryEndpoint(index) {
+            if (index >= endpoints.length) {
+                container.innerHTML = '<p>Error: Could not load attendance data. Please check if the route exists.</p>';
+                return;
             }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                const totalDays = getTotalProgramDays();
-                let presentDays = 0;
-                let html = '';
-                
-                // Generate day items based on actual data
-                for (let i = 1; i <= totalDays; i++) {
-                    const dayKey = `day_${i}`;
-                    const isPresent = data.attendance_data[dayKey] || false;
-                    if (isPresent) presentDays++;
-                    
-                    html += `
-                        <div class="day-attendance-item">
-                            <span class="day-label">Day ${i}</span>
-                            <span class="day-attendance-badge ${isPresent ? 'present' : 'absent'}">
-                                ${isPresent ? 'Present' : 'Absent'}
-                            </span>
-                        </div>
-                    `;
+
+            fetch(endpoints[index], {
+                method: 'GET',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
                 }
-                
-                html = `<div class="attendance-summary">${presentDays}/${totalDays} days attended</div>` + html;
-                container.innerHTML = html;
-            } else {
-                container.innerHTML = '<p>Error loading attendance data</p>';
-            }
-        })
-        .catch(error => {
-            console.error('Error loading attendance details:', error);
-            container.innerHTML = '<p>Error loading attendance data</p>';
-        });
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Attendance data received:', data);
+                if (data.success) {
+                    const totalDays = getTotalProgramDays();
+                    let presentDays = 0;
+                    let html = '';
+                    
+                    // Generate day items based on actual data
+                    for (let i = 1; i <= totalDays; i++) {
+                        const dayKey = `day_${i}`;
+                        const isPresent = data.attendance_data && data.attendance_data[dayKey] || false;
+                        if (isPresent) presentDays++;
+                        
+                        html += `
+                            <div class="day-attendance-item">
+                                <span class="day-label">Day ${i}</span>
+                                <span class="day-attendance-badge ${isPresent ? 'present' : 'absent'}">
+                                    ${isPresent ? 'Present' : 'Absent'}
+                                </span>
+                            </div>
+                        `;
+                    }
+                    
+                    html = `<div class="attendance-summary">${presentDays}/${totalDays} days attended</div>` + html;
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = '<p>Error loading attendance data: ' + (data.message || 'Unknown error') + '</p>';
+                }
+            })
+            .catch(error => {
+                console.error(`Error loading from ${endpoints[index]}:`, error);
+                // Try next endpoint
+                tryEndpoint(index + 1);
+            });
+        }
+
+        // Start trying endpoints
+        tryEndpoint(currentEndpointIndex);
     }
 
     // Show daily attendance modal
@@ -734,43 +705,68 @@ document.addEventListener('DOMContentLoaded', function() {
         // Show loading state
         container.innerHTML = '<p>Loading attendance data...</p>';
 
-        // Fetch existing attendance data from server
-        fetch(`/programs/daily-attendance/${registrationId}`, {
-            method: 'GET',
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Accept': 'application/json'
+        // Try multiple possible endpoints
+        const endpoints = [
+            `/youth-program-registration/daily-attendance/${registrationId}`,
+            `/programs/daily-attendance/${registrationId}`,
+            `/api/daily-attendance/${registrationId}`
+        ];
+
+        let currentEndpointIndex = 0;
+
+        function tryEndpoint(index) {
+            if (index >= endpoints.length) {
+                container.innerHTML = '<p>Error: Could not load attendance data. Please check if the route exists.</p>';
+                return;
             }
-        })
-        .then(response => response.json())
-        .then(data => {
-            container.innerHTML = '';
-            
-            if (data.success) {
-                const attendanceData = data.attendance_data || {};
-                
-                for (let i = 1; i <= totalDays; i++) {
-                    const dayKey = `day_${i}`;
-                    const isChecked = attendanceData[dayKey] || false;
-                    
-                    const dayElement = document.createElement('div');
-                    dayElement.className = 'day-attendance-item';
-                    dayElement.innerHTML = `
-                        <label>
-                            <input type="checkbox" name="attendance_day_${i}" value="day_${i}" data-day="${i}" ${isChecked ? 'checked' : ''}>
-                            <span class="day-label">Day ${i}</span>
-                        </label>
-                    `;
-                    container.appendChild(dayElement);
+
+            fetch(endpoints[index], {
+                method: 'GET',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
                 }
-            } else {
-                container.innerHTML = '<p>Error loading attendance data</p>';
-            }
-        })
-        .catch(error => {
-            console.error('Error loading attendance:', error);
-            container.innerHTML = '<p>Error loading attendance data</p>';
-        });
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Attendance data for modal:', data);
+                container.innerHTML = '';
+                
+                if (data.success) {
+                    const attendanceData = data.attendance_data || {};
+                    
+                    for (let i = 1; i <= totalDays; i++) {
+                        const dayKey = `day_${i}`;
+                        const isChecked = attendanceData[dayKey] || false;
+                        
+                        const dayElement = document.createElement('div');
+                        dayElement.className = 'day-attendance-item';
+                        dayElement.innerHTML = `
+                            <label>
+                                <input type="checkbox" name="attendance_day_${i}" value="day_${i}" data-day="${i}" ${isChecked ? 'checked' : ''}>
+                                <span class="day-label">Day ${i}</span>
+                            </label>
+                        `;
+                        container.appendChild(dayElement);
+                    }
+                } else {
+                    container.innerHTML = '<p>Error loading attendance data: ' + (data.message || 'Unknown error') + '</p>';
+                }
+            })
+            .catch(error => {
+                console.error(`Error loading from ${endpoints[index]}:`, error);
+                // Try next endpoint
+                tryEndpoint(index + 1);
+            });
+        }
+
+        // Start trying endpoints
+        tryEndpoint(currentEndpointIndex);
     }
 
     // Save daily attendance
@@ -807,41 +803,68 @@ document.addEventListener('DOMContentLoaded', function() {
         saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
         saveBtn.disabled = true;
 
-        // Send data to server - FIXED: Using the correct route without registrationId parameter
-        fetch('{{ route("programs.update-daily-attendance") }}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({
-                registration_id: registrationId,
-                attendance_data: attendanceData,
-                present_count: presentCount,
-                total_days: totalDays
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Update UI
-                updateAttendanceDisplay(registrationId, presentCount, totalDays);
-                alert('Attendance saved successfully!');
-                modals.dailyAttendance.style.display = 'none';
-            } else {
-                throw new Error(data.message || 'Failed to save attendance');
+        // Try multiple possible endpoints for saving
+        const saveEndpoints = [
+            '{{ route("programs.update-daily-attendance") }}',
+            '/youth-program-registration/update-daily-attendance',
+            '/programs/update-daily-attendance',
+            '/api/update-daily-attendance'
+        ];
+
+        let currentSaveEndpointIndex = 0;
+
+        function trySaveEndpoint(index) {
+            if (index >= saveEndpoints.length) {
+                alert('Error: Could not save attendance. Please check if the route exists.');
+                saveBtn.innerHTML = originalText;
+                saveBtn.disabled = false;
+                return;
             }
-        })
-        .catch(error => {
-            console.error('Error saving attendance:', error);
-            alert('Error saving attendance: ' + error.message);
-        })
-        .finally(() => {
-            // Reset button state
-            saveBtn.innerHTML = originalText;
-            saveBtn.disabled = false;
-        });
+
+            fetch(saveEndpoints[index], {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    registration_id: registrationId,
+                    attendance_data: attendanceData,
+                    present_count: presentCount,
+                    total_days: totalDays
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Update UI
+                    updateAttendanceDisplay(registrationId, presentCount, totalDays);
+                    alert('Attendance saved successfully!');
+                    modals.dailyAttendance.style.display = 'none';
+                } else {
+                    throw new Error(data.message || 'Failed to save attendance');
+                }
+            })
+            .catch(error => {
+                console.error(`Error saving to ${saveEndpoints[index]}:`, error);
+                // Try next endpoint
+                trySaveEndpoint(index + 1);
+            })
+            .finally(() => {
+                // Reset button state
+                saveBtn.innerHTML = originalText;
+                saveBtn.disabled = false;
+            });
+        }
+
+        // Start trying save endpoints
+        trySaveEndpoint(currentSaveEndpointIndex);
     }
 
     // Update attendance display in the table

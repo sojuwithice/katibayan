@@ -341,6 +341,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/program/{programId}/attendance-stats', [YouthProgramRegistrationController::class, 'getAttendanceStats'])
         ->name('program.attendance-stats');
         
+    // ========== DAILY ATTENDANCE ROUTES ==========
+    // Get daily attendance data for a specific registration - ADDED THIS ROUTE
+    Route::get('/youth-program-registration/daily-attendance/{registrationId}', [YouthProgramRegistrationController::class, 'getDailyAttendance'])
+        ->name('youth-program-registration.daily-attendance');
+        
     // ========== EVALUATION ROUTES (PROTECTED) ==========
     Route::post('/evaluation', [EvaluationController::class, 'store']);
     Route::get('/evaluation/check', [EvaluationController::class, 'checkEvaluation'])->name('evaluation.check');
@@ -375,9 +380,9 @@ Route::controller(ForgotPasswordController::class)
     ->prefix('forgot-password')
     ->as('forgot-password.')
     ->group(function () {
-        Route::post('/send-otp', 'sendOtp')->name('send-otp');
-        Route::post('/verify-otp', 'verifyOtp')->name('verify-otp');
-        Route::post('/reset', 'resetPassword')->name('reset'); // Renamed method to resetPassword for clarity
+        Route::post('/send-otp', 'sendOtp')->name('forgot-password.send-otp');
+        Route::post('/verify-otp', 'verifyOtp')->name('forgot-password.verify-otp');
+        Route::post('/reset', 'resetPassword')->name('forgot-password.reset'); // Renamed method to resetPassword for clarity
 });
 
 Route::post('/feedback/submit', [FeedbackController::class, 'store'])->name('feedback.submit');
@@ -434,4 +439,8 @@ Route::get('/notifications/count', [NotificationController::class, 'getUnreadCou
 Route::get('/notifications', [NotificationController::class, 'getNotifications'])->name('notifications.list');
 Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
 Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
-Route::post('/programs/update-daily-attendance', [YouthProgramRegistrationController::class, 'updateDailyAttendance'])->name('programs.update-daily-attendance');
+
+// ========== DAILY ATTENDANCE ROUTES ==========
+// Update daily attendance - ADDED THIS ROUTE (make sure it's outside auth middleware if needed)
+Route::post('/programs/update-daily-attendance', [YouthProgramRegistrationController::class, 'updateDailyAttendance'])
+    ->name('programs.update-daily-attendance');

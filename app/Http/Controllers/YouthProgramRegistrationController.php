@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Program;
@@ -110,7 +111,7 @@ class YouthProgramRegistrationController extends Controller
                     $customFields = $registrationData['custom_fields'] ?? [];
                     
                     // Calculate daily attendance
-                    $attendanceDays = $registration->attendance_days ? json_decode($registration->attendance_days, true) : [];
+                    $attendanceDays = $registration->attendance_days ?: [];
                     $presentDays = 0;
                     
                     if (is_array($attendanceDays)) {
@@ -277,10 +278,18 @@ class YouthProgramRegistrationController extends Controller
                 $attendanceData[$day] = filter_var($attended, FILTER_VALIDATE_BOOLEAN);
             }
 
+            // FIXED: Update all attendance fields including marked_by_user_id
             $registration->update([
-                'attendance_days' => json_encode($attendanceData),
+                'attendance_days' => $attendanceData, // This will be automatically cast to JSON
                 'attended' => $request->present_count > 0, // Mark as attended if at least one day present
                 'attended_at' => $request->present_count > 0 ? now() : null,
+                'marked_by_user_id' => $user->id
+            ]);
+
+            Log::info('Daily attendance updated successfully', [
+                'registration_id' => $request->registration_id,
+                'attendance_data' => $attendanceData,
+                'present_count' => $request->present_count,
                 'marked_by_user_id' => $user->id
             ]);
 
@@ -294,6 +303,7 @@ class YouthProgramRegistrationController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Error updating daily attendance: ' . $e->getMessage());
+            Log::error('Request data: ', $request->all());
             return response()->json([
                 'success' => false,
                 'message' => 'Error updating daily attendance: ' . $e->getMessage()
@@ -334,14 +344,14 @@ class YouthProgramRegistrationController extends Controller
                 Carbon::parse($registration->program->event_end_date) : $startDate;
             $totalDays = $startDate->diffInDays($endDate) + 1;
 
-            // Get attendance data
-            $attendanceDays = $registration->attendance_days ? 
-                json_decode($registration->attendance_days, true) : [];
+            // Get attendance data - use the casted array directly
+            $attendanceDays = $registration->attendance_days ?: [];
 
             // Generate day labels
             $dayLabels = [];
             $currentDate = $startDate->copy();
             for ($i = 1; $i <= $totalDays; $i++) {
+                $dayKey = "day_{$i}";
                 $dayLabels["day_{$i}"] = [
                     'label' => "Day {$i}",
                     'date' => $currentDate->format('M d, Y'),
@@ -349,6 +359,18 @@ class YouthProgramRegistrationController extends Controller
                 ];
                 $currentDate->addDay();
             }
+
+            // Calculate present count
+            $presentCount = count(array_filter($attendanceDays, function($attended) {
+                return $attended === true || $attended === 'true';
+            }));
+
+            Log::info('Daily attendance data fetched successfully', [
+                'registration_id' => $registrationId,
+                'total_days' => $totalDays,
+                'present_count' => $presentCount,
+                'attendance_data' => $attendanceDays
+            ]);
 
             return response()->json([
                 'success' => true,
@@ -364,13 +386,12 @@ class YouthProgramRegistrationController extends Controller
                 ],
                 'attendance_data' => $attendanceDays,
                 'day_labels' => $dayLabels,
-                'present_count' => count(array_filter($attendanceDays, function($attended) {
-                    return $attended === true || $attended === 'true';
-                }))
+                'present_count' => $presentCount
             ]);
 
         } catch (\Exception $e) {
             Log::error('Error fetching daily attendance: ' . $e->getMessage());
+            Log::error('Registration ID: ' . $registrationId);
             return response()->json([
                 'success' => false,
                 'message' => 'Error fetching daily attendance: ' . $e->getMessage()
@@ -416,7 +437,7 @@ class YouthProgramRegistrationController extends Controller
                     $customFields = $registrationData['custom_fields'] ?? [];
                     
                     // Calculate daily attendance
-                    $attendanceDays = $registration->attendance_days ? json_decode($registration->attendance_days, true) : [];
+                    $attendanceDays = $registration->attendance_days ?: [];
                     $presentDays = count(array_filter($attendanceDays, function($attended) {
                         return $attended === true || $attended === 'true';
                     }));
