@@ -178,10 +178,6 @@ Route::get('/list-of-eval-respondents', function () {
     return view('list-of-eval-respondents');
 })->name('list-of-eval-respondents');
 
-Route::get('/sk-services-offer', function () {
-    return view('sk-services-offer');
-})->name('sk-services-offer');
-
 Route::get('/reports', function () {
     return view('reports');
 })->name('reports');
@@ -350,7 +346,20 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/evaluation', [EvaluationController::class, 'store']);
     Route::get('/evaluation/check', [EvaluationController::class, 'checkEvaluation'])->name('evaluation.check');
     Route::get('/evaluation/{id}', [EvaluationController::class, 'show'])->name('evaluation.show');
+
+    // ========== SERVICE OFFERS ROUTES (PROTECTED) ==========
+    
+    Route::post('/services', [ServiceOffersController::class, 'storeService'])->name('services.store');
+    Route::put('/services/{id}', [ServiceOffersController::class, 'updateService'])->name('services.update');
+    Route::delete('/services/{id}', [ServiceOffersController::class, 'deleteService'])->name('services.delete');
+    Route::get('/services/{id}/details', [ServiceOffersController::class, 'getServiceDetails'])->name('services.details');
+    Route::post('/organizational-chart', [ServiceOffersController::class, 'storeOrganizationalChart'])->name('organizational-chart.store');
 });
+
+// ========== SERVICE OFFERS ROUTES ==========
+// MOVED OUTSIDE AUTH MIDDLEWARE - This should be accessible to authenticated users
+Route::get('/sk-services-offer', [ServiceOffersController::class, 'index'])->name('sk-services-offer')->middleware('auth');
+Route::get('/service-offers', [ServiceOffersController::class, 'serviceoffers'])->name('serviceoffers')->middleware('auth');
 
 Route::post('/polls/{pollId}/reset-vote', [PollsController::class, 'resetVote'])->name('polls.reset-vote');
 
@@ -380,9 +389,9 @@ Route::controller(ForgotPasswordController::class)
     ->prefix('forgot-password')
     ->as('forgot-password.')
     ->group(function () {
-        Route::post('/send-otp', 'sendOtp')->name('forgot-password.send-otp');
-        Route::post('/verify-otp', 'verifyOtp')->name('forgot-password.verify-otp');
-        Route::post('/reset', 'resetPassword')->name('forgot-password.reset'); // Renamed method to resetPassword for clarity
+        Route::post('/send-otp', 'sendOtp')->name('send-otp');
+        Route::post('/verify-otp', 'verifyOtp')->name('verify-otp');
+        Route::post('/reset', 'resetPassword')->name('reset');
 });
 
 Route::post('/feedback/submit', [FeedbackController::class, 'store'])->name('feedback.submit');
@@ -441,6 +450,5 @@ Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsR
 Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
 
 // ========== DAILY ATTENDANCE ROUTES ==========
-// Update daily attendance - ADDED THIS ROUTE (make sure it's outside auth middleware if needed)
 Route::post('/programs/update-daily-attendance', [YouthProgramRegistrationController::class, 'updateDailyAttendance'])
     ->name('programs.update-daily-attendance');

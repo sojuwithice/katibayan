@@ -20,4 +20,13 @@ class Barangay extends Model
     {
         return $this->hasMany(Purok::class);
     }
+     public function services()
+    {
+        return $this->hasMany(Service::class);
+    }
+
+    public function organizationalCharts()
+    {
+        return $this->hasMany(OrganizationalChart::class);
+    }
 }
