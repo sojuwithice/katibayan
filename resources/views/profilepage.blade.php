@@ -38,11 +38,6 @@
         <span class="label">Events and Programs</span>
       </a>
 
-      <a href="#">
-        <i data-lucide="megaphone"></i>
-        <span class="label">Announcements</span>
-      </a>
-
       <a href="{{ route('evaluation') }}">
           <i data-lucide="user-star"></i>
           <span class="label">Evaluation</span>
@@ -75,36 +70,78 @@
         <!-- Notifications -->
         <div class="notification-wrapper">
           <i class="fas fa-bell"></i>
-          <span class="notif-count">3</span>
+          @if($totalNotificationCount > 0)
+            <span class="notif-count">{{ $totalNotificationCount }}</span>
+          @endif
           <div class="notif-dropdown">
             <div class="notif-header">
-              <strong>Notification</strong> <span>3</span>
+              <strong>Notification</strong>
+              @if($totalNotificationCount > 0)
+                <span>{{ $totalNotificationCount }}</span>
+              @endif
             </div>
+            
             <ul class="notif-list">
-              <li>
-                <div class="notif-icon"></div>
-                <div class="notif-content">
-                  <strong>Program Evaluation</strong>
-                  <p>We need evaluation for the KK-Assembly Event</p>
-                </div>
-                <span class="notif-dot"></span>
-              </li>
-              <li>
-                <div class="notif-icon"></div>
-                <div class="notif-content">
-                  <strong>Program Evaluation</strong>
-                  <p>We need evaluation for the KK-Assembly Event</p>
-                </div>
-                <span class="notif-dot"></span>
-              </li>
-              <li>
-                <div class="notif-icon"></div>
-                <div class="notif-content">
-                  <strong>Program Evaluation</strong>
-                  <p>We need evaluation for the KK-Assembly Event</p>
-                </div>
-                <span class="notif-dot"></span>
-              </li>
+              @foreach ($generalNotifications as $notif)
+                @php
+                  $link = '#'; // Default
+                  if ($notif->type == 'certificate_schedule') {
+                    $link = route('certificatepage'); 
+                  }
+                @endphp
+                
+                <li>
+                  <a href="{{ $link }}" class="notif-link {{ $notif->is_read == 0 ? 'unread' : '' }}" data-id="{{ $notif->id }}">
+                    
+                    <div class="notif-dot-container">
+                      @if ($notif->is_read == 0)
+                        <span class="notif-dot"></span>
+                      @else
+                        <span class="notif-dot-placeholder"></span>
+                      @endif
+                    </div>
+
+                    <div class="notif-main-content">
+                      <div class="notif-header-line">
+                        <strong>{{ $notif->title }}</strong>
+                        <span class="notif-timestamp">
+                          {{ $notif->created_at->format('m/d/Y g:i A') }}
+                        </span>
+                      </div>
+                      <p class="notif-message">{{ $notif->message }}</p>
+                    </div>
+                  </a>
+                </li>
+              @endforeach
+
+              @foreach($unevaluatedEvents as $event)
+                <li>
+                  <a href="{{ route('evaluation.show', $event->id) }}" class="notif-link unread" data-event-id="{{ $event->id }}">
+                    
+                    <div class="notif-dot-container">
+                      <span class="notif-dot"></span>
+                    </div>
+                    
+                    <div class="notif-main-content">
+                      <div class="notif-header-line">
+                        <strong>Program Evaluation Required</strong>
+                        @if($event->attendances->first())
+                          <span class="notif-timestamp">
+                            {{ $event->attendances->first()->created_at->format('m/d/Y g:i A') }}
+                          </span>
+                        @endif
+                      </div>
+                      <p class="notif-message">Please evaluate "{{ $event->title }}"</p>
+                    </div>
+                  </a>
+                </li>
+              @endforeach
+
+              @if($generalNotifications->isEmpty() && $unevaluatedEvents->isEmpty())
+                <li class="no-notifications">
+                  <p>No new notifications</p>
+                </li>
+              @endif
             </ul>
           </div>
         </div>
@@ -1237,6 +1274,56 @@
         }
     }
 
+    // Notification Mark as Read Functionality
+    function initMarkAsRead() {
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+      if (!csrfToken) {
+          console.error('CSRF token not found.');
+          return;
+      }
+
+      // Target general notifications (with data-id)
+      const generalNotifLinks = document.querySelectorAll('.notif-link[data-id]');
+
+      generalNotifLinks.forEach(link => {
+          link.addEventListener('click', (e) => {
+              if (!link.classList.contains('unread')) {
+                  return; // Already read, let link work normally
+              }
+
+              e.preventDefault(); 
+              
+              const notifId = link.dataset.id;
+              const destinationUrl = link.href;
+              const dot = link.querySelector('.notif-dot'); 
+              const placeholder = link.querySelector('.notif-dot-placeholder');
+
+              // 1. Visually mark as read immediately
+              link.classList.remove('unread');
+              if (dot) dot.style.display = 'none'; 
+              if (placeholder) placeholder.style.display = 'inline-block'; 
+
+              // 2. Send request to server
+              fetch(`/notifications/mark-as-read/${notifId}`, {
+                  method: 'POST',
+                  headers: {
+                      'X-CSRF-TOKEN': csrfToken,
+                      'Accept': 'application/json',
+                      'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({ id: notifId })
+              })
+              .catch(err => {
+                  console.error('Failed to mark notification as read:', err);
+              })
+              .finally(() => {
+                  // 3. Navigate after fetch (success or fail)
+                  window.location.href = destinationUrl;
+              });
+          });
+      });
+    }
+
     // Initialize when DOM is loaded
     document.addEventListener("DOMContentLoaded", () => {
         // Initialize profile editor
@@ -1247,6 +1334,9 @@
 
         // Initialize avatar manager
         const avatarManager = new AvatarManager();
+
+        // Initialize notification mark as read
+        initMarkAsRead();
 
         // === Sidebar & Profile/Events Dropdowns ===
         const menuToggle = document.querySelector('.menu-toggle');

@@ -173,12 +173,18 @@
       <input type="text" id="title" name="title" required>
     </div>
 
-    <!-- Row: Date, Time, Category -->
+    <!-- Row: Start Date, End Date, Time, Category -->
     <div class="form-row">
-      <!-- Date -->
+      <!-- Start Date -->
       <div class="form-group date">
-        <label for="date">Event Date</label>
+        <label for="date">Event Start Date</label>
         <input type="date" id="date" name="event_date" required>
+      </div>
+
+      <!-- End Date -->
+      <div class="form-group date">
+        <label for="endDate">Event End Date</label>
+        <input type="date" id="endDate" name="event_end_date">
       </div>
 
       <!-- Time -->
@@ -218,7 +224,7 @@
       <div class="icon-circle">
         <i class="fa-solid fa-bell"></i>
       </div>
-      <p class="note">This event will take place on September 13, 2025, beginning at 1:00 PM.</p>
+      <p class="note" id="eventDateNote">This event will take place on —, beginning at —.</p>
     </div>
 
     <!-- Location -->
@@ -722,6 +728,55 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // === EVENT DATE NOTE UPDATE ===
+  const startDateInput = document.getElementById("date");
+  const endDateInput = document.getElementById("endDate");
+  const eventDateNote = document.getElementById("eventDateNote");
+
+  function updateEventDateNote() {
+    const startDate = startDateInput.value;
+    const endDate = endDateInput.value;
+    const time = timeInput.value;
+    
+    if (!startDate) {
+      eventDateNote.textContent = "This event will take place on —, beginning at —.";
+      return;
+    }
+    
+    const startDateObj = new Date(startDate);
+    const formattedStartDate = startDateObj.toLocaleDateString("en-US", { 
+      month: "long", 
+      day: "numeric", 
+      year: "numeric" 
+    });
+    
+    let noteText = `This event will take place on ${formattedStartDate}`;
+    
+    if (endDate && endDate !== startDate) {
+      const endDateObj = new Date(endDate);
+      const formattedEndDate = endDateObj.toLocaleDateString("en-US", { 
+        month: "long", 
+        day: "numeric", 
+        year: "numeric" 
+      });
+      noteText += ` to ${formattedEndDate}`;
+    }
+    
+    if (time) {
+      noteText += `, beginning at ${time}`;
+    } else {
+      noteText += `, beginning at —`;
+    }
+    
+    noteText += ".";
+    eventDateNote.textContent = noteText;
+  }
+
+  // Listen for changes to start date, end date, and time
+  startDateInput.addEventListener("change", updateEventDateNote);
+  endDateInput.addEventListener("change", updateEventDateNote);
+  timeInput.addEventListener("input", updateEventDateNote);
+
   // === YOUTH REGISTRATION OPTION TOGGLE ===
   const registrationOptions = document.querySelectorAll('input[name="registration_type"]');
   const createRegSection = document.getElementById("createRegistrationFields");
@@ -990,13 +1045,20 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // === COMPLETE FORM SUBMISSION ===
+  // === COMPLETE FORM SUBMISSION - FIXED END DATE ISSUE ===
   const programForm = document.getElementById("programForm");
   const postedModal = document.getElementById("postedModal");
   const closePostedModal = document.getElementById("closePostedModal");
 
   programForm.addEventListener("submit", function(e) {
     e.preventDefault();
+    
+    // DEBUG: Log all form values before submission
+    console.log('=== FORM DATA BEFORE SUBMISSION ===');
+    const formDataDebug = new FormData(this);
+    for (let [key, value] of formDataDebug.entries()) {
+      console.log(`${key}: ${value}`);
+    }
     
     // Collect custom fields data
     const customFields = [];
@@ -1035,19 +1097,21 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
     
-    // Create form data
+    // Create form data - FIXED: Use the actual form element directly
     const formData = new FormData(this);
     
-    // Add custom fields as JSON string - this is the key fix
+    // Add custom fields as JSON string
     if (customFields.length > 0) {
       formData.set('custom_fields', JSON.stringify(customFields));
     } else {
       formData.set('custom_fields', '[]'); // Empty array as JSON string
     }
 
-    // Remove any array fields that might be causing the error
-    formData.delete('registration_fields[]');
-    formData.delete('default_fields[]');
+    // DEBUG: Log all form values after modification
+    console.log('=== FORM DATA AFTER MODIFICATION ===');
+    for (let [key, value] of formData.entries()) {
+      console.log(`${key}: ${value}`);
+    }
 
     // Show loading state
     const submitBtn = document.querySelector('.postProgramBtn');
@@ -1070,12 +1134,14 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!contentType || !contentType.includes('application/json')) {
         // If not JSON, try to parse as text first to get error details
         return response.text().then(text => {
+          console.error('Server returned non-JSON response:', text);
           throw new Error(`Server returned HTML instead of JSON. Status: ${response.status}. The server might have validation errors or be experiencing issues.`);
         });
       }
       return response.json();
     })
     .then(data => {
+      console.log('Server response:', data);
       if (data.success) {
         postedModal.style.display = "flex";
         // Reset form

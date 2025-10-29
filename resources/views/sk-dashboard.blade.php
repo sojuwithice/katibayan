@@ -17,6 +17,7 @@
     window.populationData = <?php echo json_encode($populationData ?? []); ?>;
     window.ageGroupData = <?php echo json_encode($ageGroupData ?? []); ?>;
     window.remindersData = <?php echo json_encode($remindersData ?? []); ?>;
+    window.monthlyEventsData = <?php echo json_encode($monthlyEventsData ?? []); ?>;
     window.csrfToken = '{{ csrf_token() }}';
   </script>
 </head>
@@ -193,12 +194,12 @@
       <canvas id="engagementChart"></canvas>
     </div>
 
-    <!-- Youth Engagement in Activities (row1 col1) -->
-<div class="card activities-card">
+    <!-- Monthly Events (row1 col1) -->
+<div class="card monthly-events-card">
   <div class="card-header">
-    <h3>Youth Engagement in Activities</h3>
+    <h3>Monthly Events</h3>
   </div>
-  <canvas id="activitiesChart"></canvas>
+  <canvas id="monthlyEventsChart"></canvas>
 </div>
 
     <!-- Youth Age (row1+row2 col2) -->
@@ -916,31 +917,63 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   }
 
-  // === Youth Engagement in Activities Chart ===
-  const activitiesCtx = document.getElementById('activitiesChart')?.getContext('2d');
-  if (activitiesCtx) {
+  // === Monthly Events Chart ===
+  const monthlyEventsCtx = document.getElementById('monthlyEventsChart')?.getContext('2d');
+  if (monthlyEventsCtx) {
     try {
-      new Chart(activitiesCtx, {
+      const monthlyEventsData = window.monthlyEventsData || {};
+      
+      // Use actual data from backend
+      const labels = monthlyEventsData.labels || ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const events = monthlyEventsData.events || [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+      new Chart(monthlyEventsCtx, {
         type: 'bar',
         data: {
-          labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug"],
+          labels: labels,
           datasets: [{
-            label: "Participants",
-            data: [45, 60, 40, 80, 70, 55, 90, 65],
+            label: "Events",
+            data: events,
             backgroundColor: "#3C87C6",
-            borderRadius: 6
+            borderRadius: 6,
+            borderWidth: 0
           }]
         },
         options: {
           responsive: true,
-          plugins: { legend: { display: false } },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const events = context.raw;
+                  return `${events} ${events === 1 ? 'event' : 'events'}`;
+                },
+                title: function(context) {
+                  return `${context[0].label} Events`;
+                }
+              }
+            }
+          },
           scales: {
-            y: { beginAtZero: true }
+            y: { 
+              beginAtZero: true,
+              ticks: {
+                callback: function(value) {
+                  return value + (value === 1 ? ' event' : ' events');
+                }
+              }
+            },
+            x: {
+              grid: {
+                display: false
+              }
+            }
           }
         }
       });
     } catch (error) {
-      console.error('Error creating activities chart:', error);
+      console.error('Error creating monthly events chart:', error);
     }
   }
 

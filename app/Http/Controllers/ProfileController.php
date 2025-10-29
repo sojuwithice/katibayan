@@ -10,6 +10,10 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
 use App\Models\User;
+use App\Models\Notification;
+use App\Models\Event;
+use App\Models\Attendance;
+use App\Models\Evaluation;
 
 class ProfileController extends Controller
 {
@@ -37,8 +41,50 @@ class ProfileController extends Controller
         
         // Get the default password from the database
         $defaultPassword = $user->default_password ?? 'Password not set';
+
+        // --- Notifications for Dropdown ---
+        $generalNotifications = Notification::where('user_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
         
-        return view('profilepage', compact('user', 'age', 'roleBadge', 'defaultPassword'));
+        // Use the loaded collection to count unread for efficiency
+        $unreadNotificationCount = $generalNotifications->where('is_read', 0)->count();
+
+        // --- Evaluation Progress & Count ---
+        $attendedEventsCount = Attendance::where('user_id', $user->id)
+            ->whereNotNull('attended_at')
+            ->whereHas('event', fn($q) => $q->where('barangay_id', $user->barangay_id))
+            ->count();
+            
+        $evaluatedEventsCount = Evaluation::where('user_id', $user->id)
+            ->whereHas('event', fn($q) => $q->where('barangay_id', $user->barangay_id))
+            ->count();
+
+        // Get unevaluated event details for the notification list
+        $unevaluatedEvents = Event::where('barangay_id', $user->barangay_id)
+            ->where('is_launched', true)
+            ->whereHas('attendances', function($query) use ($user) {
+                $query->where('user_id', $user->id)->whereNotNull('attended_at');
+            })
+            ->whereDoesntHave('evaluations', function($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })
+            ->orderBy('event_date', 'desc')
+            ->get();
+
+        // --- Total Notification Count for Badge ---
+        $totalNotificationCount = $unreadNotificationCount + $unevaluatedEvents->count();
+        
+        return view('profilepage', compact(
+            'user', 
+            'age', 
+            'roleBadge', 
+            'defaultPassword',
+            'generalNotifications',
+            'unevaluatedEvents',
+            'totalNotificationCount'
+        ));
     }
 
     public function update(Request $request)
@@ -168,7 +214,8 @@ class ProfileController extends Controller
             return null;
         }
     }
-      public function updateAvatar(Request $request)
+
+    public function updateAvatar(Request $request)
     {
         try {
             $validator = Validator::make($request->all(), [

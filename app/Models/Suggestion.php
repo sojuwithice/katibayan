@@ -14,15 +14,20 @@ class Suggestion extends Model
         'committee',
         'suggestions',
         'barangay_id'
-      
     ];
 
     protected $casts = [
-        'committee' => 'string',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function barangay()
+    {
+        return $this->belongsTo(Barangay::class);
     }
 }

@@ -38,6 +38,9 @@ class SKDashboardController extends Controller
         // Get events for reminders - FILTERED BY SAME BARANGAY
         $remindersData = $this->getEventsForReminders();
 
+        // ✅ NEW: Get monthly events data
+        $monthlyEventsData = $this->getMonthlyEventsData();
+
         // ✅ FIX: Define notifications before passing to view
         $notifications = Notification::where('recipient_role', 'sk')
             ->orderBy('created_at', 'desc')
@@ -51,6 +54,7 @@ class SKDashboardController extends Controller
             'populationData', 
             'ageGroupData',
             'remindersData',
+            'monthlyEventsData', // ✅ NEW: Add monthly events data
             'notifications'
         ));
     }
@@ -224,10 +228,46 @@ class SKDashboardController extends Controller
         ];
     }
 
-    public function showCertificateRequests()
-{
-    $events = Event::withCount('certificateRequests')->get();
-    return view('sk.certificate-request', compact('events'));
-}
+    /**
+     * Get monthly events data for the current year
+     */
+    private function getMonthlyEventsData()
+    {
+        $skUser = Auth::user();
+        
+        // Get events count by month for the current year, filtered by barangay
+        $monthlyEvents = Event::where('barangay_id', $skUser->barangay_id)
+            ->whereYear('event_date', date('Y'))
+            ->selectRaw('MONTH(event_date) as month, COUNT(*) as count')
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get()
+            ->keyBy('month');
 
+        // Initialize all months with 0 events
+        $allMonths = [
+            'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+            'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+        ];
+        
+        $eventsData = array_fill(0, 12, 0);
+        
+        // Fill in actual event counts
+        foreach ($monthlyEvents as $month => $data) {
+            $eventsData[$month - 1] = $data->count; // month is 1-12, array index is 0-11
+        }
+
+        return [
+            'labels' => $allMonths,
+            'events' => $eventsData,
+            'barangay_filter' => $skUser->barangay_id,
+            'year' => date('Y')
+        ];
+    }
+
+    public function showCertificateRequests()
+    {
+        $events = Event::withCount('certificateRequests')->get();
+        return view('sk.certificate-request', compact('events'));
+    }
 }

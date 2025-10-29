@@ -8,8 +8,8 @@ use App\Models\ProgramRegistration;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 
 class ProgramController extends Controller
@@ -37,9 +37,19 @@ class ProgramController extends Controller
     public function store(Request $request): JsonResponse
     {
         try {
+            Log::info('=== PROGRAM STORE REQUEST START ===');
+            Log::info('Raw request data:', $request->all());
+            Log::info('Event end date from request:', [
+                'value' => $request->event_end_date,
+                'type' => gettype($request->event_end_date),
+                'is_null' => is_null($request->event_end_date),
+                'is_empty' => empty($request->event_end_date)
+            ]);
+
             $validated = $request->validate([
                 'title' => 'required|string|max:255',
                 'event_date' => 'required|date',
+                'event_end_date' => 'nullable|date|after_or_equal:event_date',
                 'event_time' => 'required',
                 'category' => 'required|string|max:255',
                 'location' => 'required|string',
@@ -57,17 +67,22 @@ class ProgramController extends Controller
                 'custom_fields' => 'nullable|string',
             ]);
 
+            Log::info('After validation - event_end_date:', [
+                'value' => $validated['event_end_date'] ?? 'NOT_SET',
+                'type' => isset($validated['event_end_date']) ? gettype($validated['event_end_date']) : 'NOT_SET'
+            ]);
+
             // Handle file upload
             if ($request->hasFile('display_image')) {
                 $imagePath = $request->file('display_image')->store('programs', 'public');
                 $validated['display_image'] = $imagePath;
             }
 
-            // Convert time format - FIXED: Ensure proper time format
+            // Convert time format
             $validated['event_time'] = $this->convertTimeTo24Hour($validated['event_time']);
 
+            // CRITICAL FIX: Handle registration times conversion
             if ($validated['registration_type'] === 'create') {
-                // FIXED: Proper time conversion for registration times
                 if (!empty($validated['registration_open_time'])) {
                     $validated['registration_open_time'] = $this->convertTimeTo24Hour($validated['registration_open_time']);
                 }
@@ -90,24 +105,57 @@ class ProgramController extends Controller
                 $validated['custom_fields'] = null;
             }
 
+            // CRITICAL FIX: Calculate number_of_days based on start and end dates
+            if (!empty($validated['event_end_date'])) {
+                $startDate = Carbon::parse($validated['event_date']);
+                $endDate = Carbon::parse($validated['event_end_date']);
+                $validated['number_of_days'] = $startDate->diffInDays($endDate) + 1; // Inclusive of both dates
+                Log::info('Number of days calculated:', [
+                    'start_date' => $validated['event_date'],
+                    'end_date' => $validated['event_end_date'],
+                    'number_of_days' => $validated['number_of_days']
+                ]);
+            } else {
+                $validated['number_of_days'] = 1; // Default to 1 day if no end date
+                Log::info('Number of days set to default 1 - no end date provided');
+            }
+
             // Add user and barangay info
             $validated['user_id'] = Auth::id();
             $validated['barangay_id'] = Auth::user()->barangay_id;
 
+            // Log final data before creation
+            Log::info('Final data before program creation:', $validated);
+
             // Create the program
             $program = Program::create($validated);
+
+            // Log for debugging
+            Log::info('Program created successfully', [
+                'program_id' => $program->id,
+                'event_date' => $program->event_date,
+                'event_end_date' => $program->event_end_date,
+                'number_of_days' => $program->number_of_days
+            ]);
+
+            Log::info('=== PROGRAM STORE REQUEST END ===');
 
             return response()->json([
                 'success' => true,
                 'message' => 'Program created successfully!',
                 'program' => [
                     'id' => $program->id,
-                    'title' => $program->title
+                    'title' => $program->title,
+                    'event_date' => $program->event_date,
+                    'event_end_date' => $program->event_end_date,
+                    'number_of_days' => $program->number_of_days
                 ]
             ]);
 
         } catch (\Exception $e) {
             Log::error('Error creating program: ' . $e->getMessage());
+            Log::error('Request data: ', $request->all());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
             return response()->json([
                 'success' => false,
                 'message' => 'Error creating program: ' . $e->getMessage()
@@ -116,307 +164,309 @@ class ProgramController extends Controller
     }
 
     /**
-     * Display program details for modal (JSON response)
+     * Display program details for modal (JSON response) - UPDATED with end date
      */
     public function show($id)
     {
         try {
             $user = Auth::user();
+            
+            if (!$user) {
+                return response()->json([
+                    'error' => 'User not authenticated',
+                    'message' => 'Please log in to view program details'
+                ], 401);
+            }
+
             $programId = (int)$id;
+            
+            Log::info('Fetching program details', [
+                'program_id' => $programId,
+                'user_id' => $user->id,
+                'user_barangay_id' => $user->barangay_id
+            ]);
             
             $program = Program::where('id', $programId)
                         ->where('barangay_id', $user->barangay_id)
                         ->first();
             
             if (!$program) {
-                return response()->json(['error' => 'Program not found'], 404);
+                Log::warning('Program not found or access denied', [
+                    'program_id' => $programId,
+                    'user_barangay_id' => $user->barangay_id
+                ]);
+                return response()->json([
+                    'error' => 'Program not found',
+                    'message' => 'The program you are looking for does not exist or you do not have access to it.'
+                ], 404);
             }
 
-            // Build response data safely
+            Log::info('Program found', ['program_title' => $program->title]);
+
+            // Build response data safely with null checks
             $responseData = [
                 'id' => $program->id,
-                'title' => $program->title,
-                'description' => $program->description,
+                'title' => $program->title ?? 'No Title',
+                'description' => $program->description ?? 'No description available.',
                 'event_date' => $program->event_date ? Carbon::parse($program->event_date)->format('Y-m-d') : null,
-                'event_time' => $program->event_time,
-                'location' => $program->location,
-                'category' => $program->category,
-                'published_by' => $program->published_by,
-                'registration_type' => $program->registration_type,
-                'link_source' => $program->link_source,
-                'registration_title' => $program->registration_title,
-                'registration_description' => $program->registration_description,
-                'registration_open_date' => $program->registration_open_date,
-                'registration_open_time' => $program->registration_open_time,
-                'registration_close_date' => $program->registration_close_date,
-                'registration_close_time' => $program->registration_close_time,
+                'event_end_date' => $program->event_end_date ? Carbon::parse($program->event_end_date)->format('Y-m-d') : null,
+                'event_time' => $program->event_time ?? null,
+                'location' => $program->location ?? 'Location not specified',
+                'category' => $program->category ?? 'Uncategorized',
+                'published_by' => $program->published_by ?? 'Unknown',
+                'registration_type' => $program->registration_type ?? 'create',
+                'link_source' => $program->link_source ?? null,
+                'registration_title' => $program->registration_title ?? null,
+                'registration_description' => $program->registration_description ?? null,
+                'registration_open_date' => $program->registration_open_date ? Carbon::parse($program->registration_open_date)->format('Y-m-d') : null,
+                'registration_open_time' => $program->registration_open_time ?? null,
+                'registration_close_date' => $program->registration_close_date ? Carbon::parse($program->registration_close_date)->format('Y-m-d') : null,
+                'registration_close_time' => $program->registration_close_time ?? null,
+                'number_of_days' => $program->number_of_days ?? 1,
                 'barangay_id' => $program->barangay_id,
-                'custom_fields' => $program->custom_fields ? json_decode($program->custom_fields, true) : [],
+                'custom_fields' => [],
             ];
 
+            // Safely handle custom_fields JSON
+            try {
+                if ($program->custom_fields) {
+                    $customFields = json_decode($program->custom_fields, true);
+                    if (json_last_error() === JSON_ERROR_NONE) {
+                        $responseData['custom_fields'] = $customFields;
+                    } else {
+                        Log::warning('Invalid JSON in custom_fields', [
+                            'program_id' => $program->id,
+                            'custom_fields' => $program->custom_fields
+                        ]);
+                        $responseData['custom_fields'] = [];
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::error('Error parsing custom_fields JSON: ' . $e->getMessage());
+                $responseData['custom_fields'] = [];
+            }
+
             // Safely handle display_image URL
-            if ($program->display_image) {
-                try {
+            try {
+                if ($program->display_image) {
                     if (Storage::disk('public')->exists($program->display_image)) {
                         $responseData['display_image'] = asset('storage/' . $program->display_image);
                     } else {
+                        Log::warning('Program image not found in storage', [
+                            'program_id' => $program->id,
+                            'image_path' => $program->display_image
+                        ]);
                         $responseData['display_image'] = null;
                     }
-                } catch (\Exception $e) {
+                } else {
                     $responseData['display_image'] = null;
                 }
-            } else {
+            } catch (\Exception $e) {
+                Log::error('Error handling display_image: ' . $e->getMessage());
                 $responseData['display_image'] = null;
             }
+
+            Log::info('Successfully built program response data');
 
             return response()->json($responseData);
             
         } catch (\Exception $e) {
-            Log::error('Error fetching program: ' . $e->getMessage());
+            Log::error('Error fetching program details: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
             return response()->json([
                 'error' => 'Internal server error',
-                'message' => $e->getMessage()
+                'message' => 'Unable to load program details. Please try again later.'
             ], 500);
         }
     }
 
-  
-   /**
- * Store program registration 
- */
-public function storeRegistration(Request $request): JsonResponse
-{
-    try {
-        $user = Auth::user();
-        
-        Log::info('Starting registration process for user: ' . $user->id);
-        
-        $validated = $request->validate([
-            'program_id' => 'required|exists:programs,id',
-            'registration_data' => 'required|json',
-        ]);
-
-        Log::info('Validated data:', $validated);
-
-        // Check if program exists and belongs to user's barangay
-        $program = Program::where('id', $validated['program_id'])
-                        ->where('barangay_id', $user->barangay_id)
-                        ->first();
-
-        if (!$program) {
-            Log::warning('Program not found or not in barangay', [
-                'program_id' => $validated['program_id'],
-                'user_barangay' => $user->barangay_id
-            ]);
-            return response()->json([
-                'success' => false,
-                'message' => 'Program not found or not available in your barangay.'
-            ], 404);
-        }
-
-        Log::info('Program found: ' . $program->title);
-
-        // Check if user already registered for this program
-        $existingRegistration = ProgramRegistration::where('program_id', $program->id)
-                                                ->where('user_id', $user->id)
-                                                ->first();
-
-        if ($existingRegistration) {
-            Log::warning('User already registered', [
-                'user_id' => $user->id,
-                'program_id' => $program->id
-            ]);
-            return response()->json([
-                'success' => false,
-                'message' => 'You have already registered for this program.'
-            ], 409);
-        }
-
-        // FIXED: Enhanced registration period checking with proper datetime handling
-        if ($program->registration_type === 'create') {
-            $now = Carbon::now();
+    /**
+     * Store program registration - COMPLETELY FIXED TIME COMPARISON
+     */
+    public function storeRegistration(Request $request): JsonResponse
+    {
+        try {
+            $user = Auth::user();
             
-            Log::info('Checking registration period for program: ' . $program->id);
-            Log::info('Current time: ' . $now->toDateTimeString());
+            Log::info('=== STARTING REGISTRATION PROCESS ===');
+            Log::info('User ID: ' . $user->id);
+            
+            $validated = $request->validate([
+                'program_id' => 'required|exists:programs,id',
+                'registration_data' => 'required|json',
+            ]);
 
-            // Check registration open time - FIXED PARSING
-            if ($program->registration_open_date && $program->registration_open_time) {
-                try {
-                    // FIXED: Handle different time formats and ensure proper datetime creation
-                    $openDate = Carbon::parse($program->registration_open_date);
-                    $openTime = $this->ensureTimeFormat($program->registration_open_time);
-                    
-                    $registrationOpen = Carbon::create(
-                        $openDate->year,
-                        $openDate->month,
-                        $openDate->day,
-                        $openTime->hour,
-                        $openTime->minute,
-                        $openTime->second
-                    );
-                    
-                    Log::info('Registration opens at: ' . $registrationOpen->toDateTimeString());
-                    Log::info('Current time: ' . $now->toDateTimeString());
-                    Log::info('Is registration open? ' . ($now->gte($registrationOpen) ? 'YES' : 'NO'));
-                    
-                    if ($now->lt($registrationOpen)) {
-                        return response()->json([
-                            'success' => false,
-                            'message' => 'Registration has not opened yet. It opens on ' . $registrationOpen->format('M j, Y g:i A')
-                        ], 400);
-                    }
-                } catch (\Exception $e) {
-                    Log::error('Error parsing registration open datetime: ' . $e->getMessage());
-                    Log::error('Open date: ' . $program->registration_open_date);
-                    Log::error('Open time: ' . $program->registration_open_time);
-                    // Continue with registration if there's an error parsing dates
-                    Log::warning('Continuing registration despite date parsing error');
-                }
+            Log::info('Program ID: ' . $validated['program_id']);
+
+            // Check if program exists and belongs to user's barangay
+            $program = Program::where('id', $validated['program_id'])
+                            ->where('barangay_id', $user->barangay_id)
+                            ->first();
+
+            if (!$program) {
+                Log::warning('Program not found or not in barangay', [
+                    'program_id' => $validated['program_id'],
+                    'user_barangay' => $user->barangay_id
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Program not found or not available in your barangay.'
+                ], 404);
             }
 
-            // Check registration close time - FIXED PARSING
-            if ($program->registration_close_date && $program->registration_close_time) {
-                try {
-                    // FIXED: Handle different time formats and ensure proper datetime creation
-                    $closeDate = Carbon::parse($program->registration_close_date);
-                    $closeTime = $this->ensureTimeFormat($program->registration_close_time);
-                    
-                    $registrationClose = Carbon::create(
-                        $closeDate->year,
-                        $closeDate->month,
-                        $closeDate->day,
-                        $closeTime->hour,
-                        $closeTime->minute,
-                        $closeTime->second
-                    );
-                    
-                    Log::info('Registration closes at: ' . $registrationClose->toDateTimeString());
-                    Log::info('Current time: ' . $now->toDateTimeString());
-                    Log::info('Is registration closed? ' . ($now->gt($registrationClose) ? 'YES' : 'NO'));
-                    
-                    if ($now->gt($registrationClose)) {
-                        return response()->json([
-                            'success' => false,
-                            'message' => 'Registration has closed. It closed on ' . $registrationClose->format('M j, Y g:i A')
-                        ], 400);
-                    }
-                } catch (\Exception $e) {
-                    Log::error('Error parsing registration close datetime: ' . $e->getMessage());
-                    Log::error('Close date: ' . $program->registration_close_date);
-                    Log::error('Close time: ' . $program->registration_close_time);
-                    // Continue with registration if there's an error parsing dates
-                    Log::warning('Continuing registration despite date parsing error');
-                }
+            Log::info('Program found: ' . $program->title);
+
+            // Check if user already registered for this program
+            $existingRegistration = ProgramRegistration::where('program_id', $program->id)
+                                                    ->where('user_id', $user->id)
+                                                    ->first();
+
+            if ($existingRegistration) {
+                Log::warning('User already registered', [
+                    'user_id' => $user->id,
+                    'program_id' => $program->id
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You have already registered for this program.'
+                ], 409);
             }
-        }
 
-        // Generate reference ID
-        $referenceId = 'PROG-' . strtoupper(uniqid());
+            // FIXED: SIMPLIFIED registration period checking
+            if ($program->registration_type === 'create') {
+                $now = Carbon::now();
+                
+                Log::info('=== REGISTRATION PERIOD CHECK ===');
+                Log::info('Current server time: ' . $now->toDateTimeString());
+                Log::info('Current timezone: ' . $now->timezoneName);
 
-        // Parse and enhance registration data
-        $registrationData = json_decode($validated['registration_data'], true);
-        
-        Log::info('Original registration data:', $registrationData);
+                // Check registration open time - SIMPLIFIED APPROACH
+                if ($program->registration_open_date && $program->registration_open_time) {
+                    try {
+                        // Create datetime string and parse it directly
+                        $openDateTimeString = $program->registration_open_date . ' ' . $program->registration_open_time;
+                        $registrationOpen = Carbon::parse($openDateTimeString);
+                        
+                        Log::info('Registration opens at: ' . $registrationOpen->toDateTimeString());
+                        Log::info('Current time: ' . $now->toDateTimeString());
+                        Log::info('Time difference (minutes): ' . $now->diffInMinutes($registrationOpen, false));
+                        
+                        if ($now->lt($registrationOpen)) {
+                            $timeUntilOpen = $now->diffForHumans($registrationOpen, ['syntax' => Carbon::DIFF_RELATIVE_TO_NOW]);
+                            return response()->json([
+                                'success' => false,
+                                'message' => 'Registration has not opened yet. It opens on ' . $registrationOpen->format('M j, Y g:i A') . ' (' . $timeUntilOpen . ')'
+                            ], 400);
+                        }
+                    } catch (\Exception $e) {
+                        Log::error('Error parsing registration open datetime: ' . $e->getMessage());
+                        Log::error('Open date: ' . $program->registration_open_date);
+                        Log::error('Open time: ' . $program->registration_open_time);
+                        Log::error('Stack trace: ' . $e->getTraceAsString());
+                        // Continue with registration if there's an error parsing dates
+                        Log::warning('Continuing registration despite date parsing error');
+                    }
+                } else {
+                    Log::info('No registration open date/time specified, allowing registration');
+                }
 
-        // FIXED: Enhanced registration data structure
-        $enhancedRegistrationData = [
-            'user_profile' => [
-                'full_name' => $user->given_name . ' ' . 
-                              ($user->middle_name ? $user->middle_name . ' ' : '') . 
-                              $user->last_name . 
-                              ($user->suffix ? ' ' . $user->suffix : ''),
-                'email' => $user->email,
-                'contact_no' => $user->contact_no,
-                'age' => $user->date_of_birth ? Carbon::parse($user->date_of_birth)->age : null,
-                'barangay' => $user->barangay->name ?? 'N/A',
-                'user_id' => $user->id
-            ],
-            'custom_fields' => $registrationData['custom_fields'] ?? [],
-            'program_details' => [
+                // Check registration close time - SIMPLIFIED APPROACH
+                if ($program->registration_close_date && $program->registration_close_time) {
+                    try {
+                        // Create datetime string and parse it directly
+                        $closeDateTimeString = $program->registration_close_date . ' ' . $program->registration_close_time;
+                        $registrationClose = Carbon::parse($closeDateTimeString);
+                        
+                        Log::info('Registration closes at: ' . $registrationClose->toDateTimeString());
+                        Log::info('Current time: ' . $now->toDateTimeString());
+                        Log::info('Time difference (minutes): ' . $now->diffInMinutes($registrationClose, false));
+                        
+                        if ($now->gt($registrationClose)) {
+                            $timeSinceClose = $now->diffForHumans($registrationClose, ['syntax' => Carbon::DIFF_RELATIVE_TO_NOW]);
+                            return response()->json([
+                                'success' => false,
+                                'message' => 'Registration has closed. It closed on ' . $registrationClose->format('M j, Y g:i A') . ' (' . $timeSinceClose . ')'
+                            ], 400);
+                        }
+                    } catch (\Exception $e) {
+                        Log::error('Error parsing registration close datetime: ' . $e->getMessage());
+                        Log::error('Close date: ' . $program->registration_close_date);
+                        Log::error('Close time: ' . $program->registration_close_time);
+                        Log::error('Stack trace: ' . $e->getTraceAsString());
+                        // Continue with registration if there's an error parsing dates
+                        Log::warning('Continuing registration despite date parsing error');
+                    }
+                } else {
+                    Log::info('No registration close date/time specified, allowing registration');
+                }
+                
+                Log::info('=== REGISTRATION PERIOD CHECK PASSED ===');
+            }
+
+            // Generate reference ID
+            $referenceId = 'PROG-' . strtoupper(uniqid());
+
+            // Parse and enhance registration data
+            $registrationData = json_decode($validated['registration_data'], true);
+            
+            Log::info('Original registration data:', $registrationData);
+
+            // Enhanced registration data structure
+            $enhancedRegistrationData = [
+                'user_profile' => [
+                    'full_name' => $user->given_name . ' ' . 
+                                  ($user->middle_name ? $user->middle_name . ' ' : '') . 
+                                  $user->last_name . 
+                                  ($user->suffix ? ' ' . $user->suffix : ''),
+                    'email' => $user->email,
+                    'contact_no' => $user->contact_no,
+                    'age' => $user->date_of_birth ? Carbon::parse($user->date_of_birth)->age : null,
+                    'barangay' => $user->barangay->name ?? 'N/A',
+                    'user_id' => $user->id
+                ],
+                'custom_fields' => $registrationData['custom_fields'] ?? [],
+                'program_details' => [
+                    'program_id' => $program->id,
+                    'program_title' => $program->title,
+                    'program_category' => $program->category
+                ],
+                'submitted_at' => Carbon::now()->toDateTimeString(),
+                'registration_id' => $referenceId
+            ];
+
+            Log::info('Enhanced registration data prepared');
+
+            // Create registration with enhanced data
+            $registration = ProgramRegistration::create([
                 'program_id' => $program->id,
-                'program_title' => $program->title,
-                'program_category' => $program->category
-            ],
-            'submitted_at' => Carbon::now()->toDateTimeString(),
-            'registration_id' => $referenceId
-        ];
+                'user_id' => $user->id,
+                'reference_id' => $referenceId,
+                'registration_data' => json_encode($enhancedRegistrationData),
+                'status' => 'registered'
+            ]);
 
-        Log::info('Enhanced registration data prepared');
+            Log::info('Registration created successfully with ID: ' . $registration->id);
 
-        // Create registration with enhanced data
-        $registration = ProgramRegistration::create([
-            'program_id' => $program->id,
-            'user_id' => $user->id,
-            'reference_id' => $referenceId,
-            'registration_data' => json_encode($enhancedRegistrationData),
-            'status' => 'registered'
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Registration submitted successfully!',
+                'reference_id' => $referenceId,
+                'registration' => [
+                    'id' => $registration->id,
+                    'program_title' => $program->title,
+                    'submitted_at' => $registration->created_at->format('M j, Y g:i A')
+                ]
+            ]);
 
-        Log::info('Registration created successfully with ID: ' . $registration->id);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Registration submitted successfully!',
-            'reference_id' => $referenceId,
-            'registration' => [
-                'id' => $registration->id,
-                'program_title' => $program->title,
-                'submitted_at' => $registration->created_at->format('M j, Y g:i A')
-            ]
-        ]);
-
-    } catch (\Exception $e) {
-        Log::error('Error submitting registration: ' . $e->getMessage());
-        Log::error('Stack trace: ' . $e->getTraceAsString());
-        return response()->json([
-            'success' => false,
-            'message' => 'Error submitting registration: ' . $e->getMessage()
-        ], 500);
+        } catch (\Exception $e) {
+            Log::error('Error submitting registration: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error submitting registration: ' . $e->getMessage()
+            ], 500);
+        }
     }
-}
-
-/**
- * Helper method to ensure time is in proper format for Carbon
- */
-private function ensureTimeFormat($timeString)
-{
-    try {
-        // If time is already in proper format, parse it directly
-        if (preg_match('/^\d{2}:\d{2}:\d{2}$/', $timeString)) {
-            return Carbon::createFromFormat('H:i:s', $timeString);
-        }
-        
-        // If time is in 12-hour format with AM/PM
-        if (preg_match('/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i', $timeString, $matches)) {
-            $hour = (int)$matches[1];
-            $minute = $matches[2];
-            $period = strtoupper($matches[3]);
-            
-            if ($period === 'PM' && $hour < 12) {
-                $hour += 12;
-            } elseif ($period === 'AM' && $hour == 12) {
-                $hour = 0;
-            }
-            
-            $timeFormatted = sprintf('%02d:%02d:00', $hour, $minute);
-            return Carbon::createFromFormat('H:i:s', $timeFormatted);
-        }
-        
-        // If just hours and minutes, add seconds
-        if (preg_match('/^\d{1,2}:\d{2}$/', $timeString)) {
-            return Carbon::createFromFormat('H:i:s', $timeString . ':00');
-        }
-        
-        // Default: try to parse with Carbon's flexible parser
-        return Carbon::parse($timeString);
-        
-    } catch (\Exception $e) {
-        Log::error('Error ensuring time format: ' . $e->getMessage());
-        Log::error('Time string: ' . $timeString);
-        // Return current time as fallback
-        return Carbon::now();
-    }
-}
 
     /**
      * Get user's program registrations
@@ -493,9 +543,13 @@ private function ensureTimeFormat($timeString)
                 ], 403);
             }
 
+            Log::info('=== PROGRAM UPDATE REQUEST START ===');
+            Log::info('Update request data:', $request->all());
+
             $validated = $request->validate([
                 'title' => 'required|string|max:255',
                 'event_date' => 'required|date',
+                'event_end_date' => 'nullable|date|after_or_equal:event_date',
                 'event_time' => 'required',
                 'category' => 'required|string|max:255',
                 'location' => 'required|string',
@@ -547,7 +601,31 @@ private function ensureTimeFormat($timeString)
                 $validated['custom_fields'] = null;
             }
 
+            // FIXED: Calculate number_of_days based on start and end dates
+            if (!empty($validated['event_end_date'])) {
+                $startDate = Carbon::parse($validated['event_date']);
+                $endDate = Carbon::parse($validated['event_end_date']);
+                $validated['number_of_days'] = $startDate->diffInDays($endDate) + 1;
+                Log::info('Number of days calculated for update:', [
+                    'start_date' => $validated['event_date'],
+                    'end_date' => $validated['event_end_date'],
+                    'number_of_days' => $validated['number_of_days']
+                ]);
+            } else {
+                $validated['number_of_days'] = 1;
+                Log::info('Number of days set to default 1 for update');
+            }
+
             $program->update($validated);
+
+            Log::info('Program updated successfully', [
+                'program_id' => $program->id,
+                'event_date' => $program->event_date,
+                'event_end_date' => $program->event_end_date,
+                'number_of_days' => $program->number_of_days
+            ]);
+
+            Log::info('=== PROGRAM UPDATE REQUEST END ===');
 
             return response()->json([
                 'success' => true, 
@@ -674,6 +752,7 @@ private function ensureTimeFormat($timeString)
                     'id' => $program->id,
                     'title' => $program->title,
                     'event_date' => $program->event_date,
+                    'event_end_date' => $program->event_end_date,
                     'event_time' => $program->event_time,
                     'category' => $program->category,
                     'total_registrations' => $registrations->count()
@@ -690,45 +769,55 @@ private function ensureTimeFormat($timeString)
         }
     }
 
-   /**
- * FIXED: Improved time conversion method
- */
-private function convertTimeTo24Hour($timeString)
-{
-    try {
-        // If already in 24-hour format, return as is
-        if (preg_match('/^\d{2}:\d{2}:\d{2}$/', $timeString)) {
-            return $timeString;
-        }
-        
-        // If in 12-hour format with AM/PM, convert to 24-hour
-        if (preg_match('/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i', $timeString, $matches)) {
-            $hour = (int)$matches[1];
-            $minute = $matches[2];
-            $period = strtoupper($matches[3]);
+    /**
+     * FIXED: Improved time conversion method with better error handling
+     */
+    private function convertTimeTo24Hour($timeString)
+    {
+        try {
+            Log::info('Converting time to 24-hour: ' . $timeString);
             
-            if ($period === 'PM' && $hour < 12) {
-                $hour += 12;
-            } elseif ($period === 'AM' && $hour == 12) {
-                $hour = 0;
+            // If already in 24-hour format, return as is
+            if (preg_match('/^\d{2}:\d{2}:\d{2}$/', $timeString)) {
+                Log::info('Already in 24-hour format: ' . $timeString);
+                return $timeString;
             }
             
-            return sprintf('%02d:%02d:00', $hour, $minute);
+            // If in 12-hour format with AM/PM, convert to 24-hour
+            if (preg_match('/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i', $timeString, $matches)) {
+                $hour = (int)$matches[1];
+                $minute = $matches[2];
+                $period = strtoupper($matches[3]);
+                
+                if ($period === 'PM' && $hour < 12) {
+                    $hour += 12;
+                } elseif ($period === 'AM' && $hour == 12) {
+                    $hour = 0;
+                }
+                
+                $result = sprintf('%02d:%02d:00', $hour, $minute);
+                Log::info('Converted 12-hour to 24-hour: ' . $timeString . ' -> ' . $result);
+                return $result;
+            }
+            
+            // If just hours and minutes, add seconds
+            if (preg_match('/^\d{1,2}:\d{2}$/', $timeString)) {
+                $result = $timeString . ':00';
+                Log::info('Added seconds to time: ' . $timeString . ' -> ' . $result);
+                return $result;
+            }
+            
+            // Default: try to parse with Carbon and return in 24-hour format
+            $carbonTime = Carbon::parse($timeString);
+            $result = $carbonTime->format('H:i:s');
+            Log::info('Parsed with Carbon and formatted: ' . $timeString . ' -> ' . $result);
+            return $result;
+            
+        } catch (\Exception $e) {
+            Log::error('Error converting time: ' . $e->getMessage());
+            Log::error('Time string that failed: ' . $timeString);
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            return '00:00:00'; // Fallback
         }
-        
-        // If just hours and minutes, add seconds
-        if (preg_match('/^\d{1,2}:\d{2}$/', $timeString)) {
-            return $timeString . ':00';
-        }
-        
-        // Default: try to parse with Carbon and return in 24-hour format
-        $carbonTime = Carbon::parse($timeString);
-        return $carbonTime->format('H:i:s');
-        
-    } catch (\Exception $e) {
-        Log::error('Error converting time: ' . $e->getMessage());
-        Log::error('Time string that failed: ' . $timeString);
-        return '00:00:00'; // Fallback
     }
-}
 }

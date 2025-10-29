@@ -13,11 +13,17 @@ class ProgramRegistration extends Model
         'program_id',
         'user_id',
         'reference_id',
-        'registration_data' // This will store all the dynamic form data
+        'registration_data',
+        'attended', // ADD THIS
+        'attended_at', // ADD THIS
+        'attendance_days', // ADD THIS
+        'marked_by_user_id' // ADD THIS
     ];
 
     protected $casts = [
         'registration_data' => 'array',
+        'attendance_days' => 'array', // ADD THIS CAST
+        'attended' => 'boolean', // ADD THIS CAST
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -58,7 +64,8 @@ class ProgramRegistration extends Model
         
         return array_merge($autoFilled, $customFields);
     }
-     /**
+
+    /**
      * Get the user who marked the attendance
      */
     public function markedBy()
@@ -80,5 +87,33 @@ class ProgramRegistration extends Model
     public function scopeAbsent($query)
     {
         return $query->where('attended', false);
+    }
+
+    /**
+     * Calculate present days from attendance_days
+     */
+    public function getPresentDaysAttribute()
+    {
+        if (!$this->attendance_days) {
+            return 0;
+        }
+        
+        return count(array_filter($this->attendance_days, function($attended) {
+            return $attended === true || $attended === 'true';
+        }));
+    }
+
+    /**
+     * Update attendance based on daily attendance
+     */
+    public function updateAttendanceFromDaily()
+    {
+        $presentDays = $this->present_days;
+        $totalDays = $this->program ? $this->program->number_of_days : 1;
+        
+        $this->update([
+            'attended' => $presentDays > 0,
+            'attended_at' => $presentDays > 0 ? now() : null
+        ]);
     }
 }

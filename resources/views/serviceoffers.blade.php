@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KatiBayan - Profile Page</title>
+  <title>KatiBayan - Service Offers</title>
   <link rel="stylesheet" href="{{ asset('css/serviceoffers.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
+  <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 <body>
   
@@ -35,11 +36,6 @@
       <a href="{{ route('eventpage') }}" class="events-link">
         <i data-lucide="calendar"></i>
         <span class="label">Events and Programs</span>
-      </a>
-
-      <a href="#">
-        <i data-lucide="megaphone"></i>
-        <span class="label">Announcements</span>
       </a>
 
       <a href="{{ route('evaluation') }}">
@@ -108,7 +104,7 @@
           </div>
         </div>
 
-         <!-- Profile Avatar -->
+        <!-- Profile Avatar -->
         <div class="profile-wrapper">
           <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
                alt="User" class="avatar" id="profileToggle">
@@ -138,381 +134,322 @@
                 </a>
               </li>
               <li><i class="fas fa-star"></i> Send Feedback to Katibayan</li>
+              <li class="logout-item">
+                <a href="loginpage" onclick="confirmLogout(event)">
+                  <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+              </li>
             </ul>
+            
+            <!-- Hidden Logout Form -->
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+              @csrf
+            </form>
           </div>
         </div>
       </div>
     </header>
 
+    <!-- Service Offers Section -->
     <section class="service-offer">
-  <div class="service-offer-container">
-    <div class="section-header">
-      <h2>Service Offer</h2>
-    </div>
-    <p class="section-desc">
-      Discover the services offered by the SK. These are designed to make it easier for youth to participate in events,
-      receive recognition, and access opportunities for learning and engagement.
-    </p>
-  </div>
-
-  <div class="service-offer-scroll">
-    <div class="card-grid">
-      <div class="service-card">
-        <img src="{{ asset('images/print.jpeg') }}" alt="Free Printing">
-        <h3>Free Printing Services</h3>
-        <a href="#" class="btn print-btn">Read More</a>
+      <div class="service-offer-container">
+        <div class="section-header">
+          <h2>Service Offer</h2>
+        </div>
+        <p class="section-desc">
+          Discover the services offered by the SK. These are designed to make it easier for youth to participate in events,
+          receive recognition, and access opportunities for learning and engagement.
+        </p>
       </div>
-      <div class="service-card">
-        <img src="{{ asset('images/print.jpeg') }}" alt="Free Printing">
-        <h3>Free Printing Services</h3>
-        <a href="#" class="btn print-btn">Read More</a>
 
+      <div class="service-offer-scroll">
+        <div class="card-grid" id="servicesContainer">
+          @forelse($services as $service)
+          <div class="service-card" data-service-id="{{ $service->id }}">
+            <img src="{{ $service->image ? asset('storage/' . $service->image) : asset('images/print.jpeg') }}" alt="{{ $service->title }}">
+            <h3>{{ $service->title }}</h3>
+            <a href="#" class="btn print-btn read-more-btn" data-service-id="{{ $service->id }}">Read More</a>
+          </div>
+          @empty
+          <div class="no-services">
+            <p>No services available for {{ $barangayName }} yet.</p>
+          </div>
+          @endforelse
+        </div>
       </div>
-      <div class="service-card">
-        <img src="{{ asset('images/print.jpeg') }}" alt="Free Printing">
-        <h3>Free Printing Services</h3>
-        <a href="#" class="btn print-btn">Read More</a>
-
-      </div>
-      <div class="service-card">
-        <img src="{{ asset('images/print.jpeg') }}" alt="Free Printing">
-        <h3>Free Printing Services</h3>
-        <a href="#" class="btn print-btn">Read More</a>
-
-      </div>
-      <div class="service-card">
-        <img src="{{ asset('images/print.jpeg') }}" alt="Free Printing">
-        <h3>Free Printing Services</h3>
-        <a href="#" class="btn print-btn">Read More</a>
-
-      </div>
-    </div>
-  </div>
-</section>
-
-
+    </section>
 
     <!-- Organizational Chart -->
-<section class="org-chart">
-  <div class="org-chart-container">
-    <h2>Organizational Chart</h2>
-    <p class="section-desc">
-      The organizational chart of the Sangguniang Kabataan of Barangay 3 EM’s Barrio East illustrates the structure of its committees
-      and defines the roles and responsibilities of each official.
-    </p>
+    <section class="org-chart">
+      <div class="org-chart-container">
+        <h2>Organizational Chart</h2>
+        <p class="section-desc">
+          The organizational chart of the Sangguniang Kabataan of {{ $barangayName }} illustrates the structure of its committees
+          and defines the roles and responsibilities of each official.
+        </p>
+      </div>
+
+      <!-- Org chart image outside the container -->
+      <div class="org-image">
+        @if($organizationalChart)
+          <img src="{{ asset('storage/' . $organizationalChart->image_path) }}" alt="Organizational Chart of {{ $barangayName }}">
+        @else
+          <div class="no-org-chart">
+            <p>No organizational chart available for {{ $barangayName }} yet.</p>
+          </div>
+        @endif
+      </div>
+    </section>
   </div>
 
-  <!-- Org chart image outside the container -->
-  <div class="org-image">
-    <img src="{{ asset('images/ESKI .png') }}" alt="Organizational Chart">
-  </div>
-</section>
+  <!-- Service Details Modal -->
+  <div id="serviceModal" class="modal">
+    <div class="modal-content">
+      <span id="closeModal" class="close">&times;</span>
+      
+      <div class="modal-body">
+        <img id="modalServiceImage" src="" alt="Service Image" class="modal-poster">
+        <h2 id="modalServiceTitle"></h2>
+        <p id="modalServiceDescription" class="intro"></p>
 
-<!-- Modal -->
-<div id="modalOverlay" class="modal">
-  <div class="modal-content">
-    <span id="closeModal" class="close">&times;</span>
+        <div id="servicesOfferedSection" style="display: none;">
+          <h3>Services Offered</h3>
+          <ul id="modalServicesOffered"></ul>
+        </div>
 
-    
+        <div id="locationSection" style="display: none;">
+          <h3>Pick-Up Location</h3>
+          <p id="modalLocation"></p>
+        </div>
 
-    <div class="modal-body">
-      <img src="{{ asset('images/print.jpeg') }}" alt="Free Printing">
-  <h2>Free Printing Services</h2>
-  <p class="intro">
-    Supporting the youth and students of Barangay 3, EM’s Barrio East, Legazpi City. 
-    As part of our commitment to helping the youth in their education, the Sangguniang Kabataan 
-    of Barangay 3 is offering Free Printing Services. This program aims to ease the burden of 
-    school expenses by providing free printing, scanning, and copying of academic requirements.
-  </p>
+        <div id="howToAvailSection" style="display: none;">
+          <h3>How to Avail</h3>
+          <p id="modalHowToAvail"></p>
+        </div>
 
-  <div>
-    <h3>Services Offered</h3>
-    <ul>
-      <li>Print, scan, and copy</li>
-      <li>Modules, assignments, handouts, and projects</li>
-    </ul>
-
-    <h3>Pick-Up Location</h3>
-    <p>2nd Floor SK Office, Brgy 3 Multi-Purpose Hall, EM’s Barrio East, Legazpi City</p>
-  </div>
-
-  <div>
-    <h3>How to Avail</h3>
-    <p>
-      Send your files through:<br>
-      • FB Messenger: SK Brgy 3 EM’s Barrio East Legazpi City<br>
-      • Email: skbrgy3embarrioeast@gmail.com
-    </p>
-
-    <h3>For Assistance</h3>
-    <p>
-      SK Chairperson: Lovella Mae C. Apuac<br>
-      SK Secretary: Ian G. Atienza
-    </p>
-  </div>
-
-  
-</div>
-
+        <div id="contactInfoSection" style="display: none;">
+          <h3>For Assistance</h3>
+          <p id="modalContactInfo"></p>
+        </div>
+      </div>
     </div>
   </div>
-</div>
 
- 
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // === Lucide icons ===
+      lucide.createIcons();
 
+      // === Elements ===
+      const menuToggle = document.querySelector('.menu-toggle');
+      const sidebar = document.querySelector('.sidebar');
 
+      // Submenus
+      const profileItem = document.querySelector('.profile-item');
+      const profileLink = profileItem?.querySelector('.profile-link');
+      const eventsItem = document.querySelector('.events-item');
+      const eventsLink = eventsItem?.querySelector('.events-link');
 
+      // Profile & notifications dropdown (topbar)
+      const profileWrapper = document.querySelector('.profile-wrapper');
+      const profileToggle = document.getElementById('profileToggle');
+      const profileDropdown = document.querySelector('.profile-dropdown');
 
+      const notifWrapper = document.querySelector(".notification-wrapper");
+      const notifBell = notifWrapper?.querySelector(".fa-bell");
+      const notifDropdown = notifWrapper?.querySelector(".notif-dropdown");
 
+      // CSRF Token for API requests
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
+      // === Sidebar toggle ===
+      menuToggle?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        sidebar.classList.toggle('open');
 
+        if (!sidebar.classList.contains('open')) {
+          profileItem?.classList.remove('open');
+          eventsItem?.classList.remove('open');
+        }
+      });
 
-
-
-
-
-
-    <script>
-document.addEventListener("DOMContentLoaded", () => {
-  // === Lucide icons ===
-  lucide.createIcons();
-
-  // === Elements ===
-  const menuToggle = document.querySelector('.menu-toggle');
-  const sidebar = document.querySelector('.sidebar');
-
-  // Submenus
-  const profileItem = document.querySelector('.profile-item');
-  const profileLink = profileItem?.querySelector('.profile-link');
-  const eventsItem = document.querySelector('.events-item');
-  const eventsLink = eventsItem?.querySelector('.events-link');
-
-  // Profile & notifications dropdown (topbar)
-  const profileWrapper = document.querySelector('.profile-wrapper');
-  const profileToggle = document.getElementById('profileToggle');
-  const profileDropdown = document.querySelector('.profile-dropdown');
-
-  const notifWrapper = document.querySelector(".notification-wrapper");
-  const notifBell = notifWrapper?.querySelector(".fa-bell");
-  const notifDropdown = notifWrapper?.querySelector(".notif-dropdown");
-
-  // === Sidebar toggle ===
-  menuToggle.addEventListener('click', (e) => {
-    e.stopPropagation();
-    sidebar.classList.toggle('open');
-
-    if (!sidebar.classList.contains('open')) {
-      profileItem?.classList.remove('open');
-      eventsItem?.classList.remove('open');
-    }
-  });
-
-  // Helper: close all submenus
-  function closeAllSubmenus() {
-    profileItem?.classList.remove('open');
-    eventsItem?.classList.remove('open');
-  }
-
-  // === Profile submenu toggle ===
-  if (profileItem && profileLink) {
-    profileLink.addEventListener('click', (e) => {
-      e.preventDefault();
-      if (sidebar.classList.contains('open')) {
-        const isOpen = profileItem.classList.contains('open');
-        closeAllSubmenus();
-        if (!isOpen) profileItem.classList.add('open');
+      // Helper: close all submenus
+      function closeAllSubmenus() {
+        profileItem?.classList.remove('open');
+        eventsItem?.classList.remove('open');
       }
-    });
-  }
 
-  // === Events submenu toggle ===
-  if (eventsItem && eventsLink) {
-    eventsLink.addEventListener('click', (e) => {
-      e.preventDefault();
-      if (sidebar.classList.contains('open')) {
-        const isOpen = eventsItem.classList.contains('open');
-        closeAllSubmenus();
-        if (!isOpen) eventsItem.classList.add('open');
+      // === Profile submenu toggle ===
+      if (profileItem && profileLink) {
+        profileLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          if (sidebar.classList.contains('open')) {
+            const isOpen = profileItem.classList.contains('open');
+            closeAllSubmenus();
+            if (!isOpen) profileItem.classList.add('open');
+          }
+        });
       }
-    });
-  }
 
-  // === Close sidebar when clicking outside ===
-  document.addEventListener('click', (e) => {
-    if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
-      sidebar.classList.remove('open');
-      closeAllSubmenus();
-    }
+      // === Close sidebar when clicking outside ===
+      document.addEventListener('click', (e) => {
+        if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+          sidebar.classList.remove('open');
+          closeAllSubmenus();
+        }
 
-    if (profileWrapper && !profileWrapper.contains(e.target)) {
-      profileWrapper.classList.remove('active');
-    }
+        if (profileWrapper && !profileWrapper.contains(e.target)) {
+          profileWrapper.classList.remove('active');
+        }
 
-    if (notifWrapper && !notifWrapper.contains(e.target)) {
-      notifWrapper.classList.remove('active');
-    }
-  });
+        if (notifWrapper && !notifWrapper.contains(e.target)) {
+          notifWrapper.classList.remove('active');
+        }
+      });
 
-  // === Profile dropdown toggle (topbar) ===
-  if (profileToggle) {
-    profileToggle.addEventListener('click', (e) => {
-      e.stopPropagation();
-      profileWrapper.classList.toggle('active');
-      notifWrapper?.classList.remove('active');
-    });
-  }
-
-  profileDropdown?.addEventListener('click', e => e.stopPropagation());
-
-  // === Notifications dropdown toggle ===
-  if (notifBell) {
-    notifBell.addEventListener('click', (e) => {
-      e.stopPropagation();
-      notifWrapper.classList.toggle('active');
-      profileWrapper?.classList.remove('active');
-    });
-  }
-
-  notifDropdown?.addEventListener('click', e => e.stopPropagation());
-
-  // === Calendar ===
-  const weekdays = ["MON","TUE","WED","THU","FRI","SAT","SUN"];
-  const daysContainer = document.querySelector(".calendar .days");
-  const header = document.querySelector(".calendar header h3");
-  let today = new Date();
-  let currentView = new Date();
-
-  const holidays = [
-    "2025-01-01", "2025-04-09", "2025-04-17", "2025-04-18",
-    "2025-05-01", "2025-06-06", "2025-06-12", "2025-08-25",
-    "2025-11-30", "2025-12-25", "2025-12-30"
-  ];
-
-  function renderCalendar(baseDate) {
-    if (!daysContainer || !header) return;
-    daysContainer.innerHTML = "";
-
-    const startOfWeek = new Date(baseDate);
-    startOfWeek.setDate(baseDate.getDate() - (baseDate.getDay() === 0 ? 6 : baseDate.getDay() - 1));
-
-    const middleDay = new Date(startOfWeek);
-    middleDay.setDate(startOfWeek.getDate() + 3);
-    header.textContent = middleDay.toLocaleDateString("en-US", { month: "long", year: "numeric" });
-
-    for (let i = 0; i < 7; i++) {
-      const thisDay = new Date(startOfWeek);
-      thisDay.setDate(startOfWeek.getDate() + i);
-
-      const dayEl = document.createElement("div");
-      dayEl.classList.add("day");
-
-      const weekdayEl = document.createElement("span");
-      weekdayEl.classList.add("weekday");
-      weekdayEl.textContent = weekdays[i];
-
-      const dateEl = document.createElement("span");
-      dateEl.classList.add("date");
-      dateEl.textContent = thisDay.getDate();
-
-      const month = (thisDay.getMonth() + 1).toString().padStart(2,'0');
-      const day = thisDay.getDate().toString().padStart(2,'0');
-      const dateStr = `${thisDay.getFullYear()}-${month}-${day}`;
-
-      if (holidays.includes(dateStr)) dateEl.classList.add('holiday');
-
-      if (
-        thisDay.getDate() === today.getDate() &&
-        thisDay.getMonth() === today.getMonth() &&
-        thisDay.getFullYear() === today.getFullYear()
-      ) dayEl.classList.add("active");
-
-      dayEl.appendChild(weekdayEl);
-      dayEl.appendChild(dateEl);
-      daysContainer.appendChild(dayEl);
-    }
-  }
-
-  renderCalendar(currentView);
-
-  const prevBtn = document.querySelector(".calendar .prev");
-  const nextBtn = document.querySelector(".calendar .next");
-  prevBtn?.addEventListener("click", () => {
-    currentView.setDate(currentView.getDate() - 7);
-    renderCalendar(currentView);
-  });
-  nextBtn?.addEventListener("click", () => {
-    currentView.setDate(currentView.getDate() + 7);
-    renderCalendar(currentView);
-  });
-
-  // === Time auto-update ===
-const timeEl = document.querySelector(".time");
-function updateTime() {
-  if (!timeEl) return;
-  const now = new Date();
-
-  const shortWeekdays = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
-  const shortMonths = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
-
-  const weekday = shortWeekdays[now.getDay()];
-  const month = shortMonths[now.getMonth()];
-  const day = now.getDate();
-
-  let hours = now.getHours();
-  const minutes = now.getMinutes().toString().padStart(2, "0");
-  const ampm = hours >= 12 ? "PM" : "AM";
-  hours = hours % 12 || 12;
-
-  // Example: MON, AUG 8 10:00 AM
-  timeEl.innerHTML = `${weekday}, ${month} ${day} ${hours}:${minutes} <span>${ampm}</span>`;
-}
-updateTime();
-setInterval(updateTime, 60000);
-
-  setInterval(updateTime, 60000);
-
-  // === Password toggle ===
-  const tempPassword = document.getElementById('tempPassword');
-  const toggleIcon = document.querySelector('.toggle-password');
-  if (tempPassword && toggleIcon) {
-    let hidden = true;
-    const realPassword = "marijoy";
-    toggleIcon.addEventListener('click', () => {
-      if (hidden) {
-        tempPassword.textContent = realPassword;
-        toggleIcon.classList.remove('fa-eye-slash');
-        toggleIcon.classList.add('fa-eye');
-        hidden = false;
-      } else {
-        tempPassword.textContent = "•••••";
-        toggleIcon.classList.remove('fa-eye');
-        toggleIcon.classList.add('fa-eye-slash');
-        hidden = true;
+      // === Profile dropdown toggle (topbar) ===
+      if (profileToggle) {
+        profileToggle.addEventListener('click', (e) => {
+          e.stopPropagation();
+          profileWrapper.classList.toggle('active');
+          notifWrapper?.classList.remove('active');
+        });
       }
+
+      profileDropdown?.addEventListener('click', e => e.stopPropagation());
+
+      // === Notifications dropdown toggle ===
+      if (notifBell) {
+        notifBell.addEventListener('click', (e) => {
+          e.stopPropagation();
+          notifWrapper.classList.toggle('active');
+          profileWrapper?.classList.remove('active');
+        });
+      }
+
+      notifDropdown?.addEventListener('click', e => e.stopPropagation());
+
+      // === Time auto-update ===
+      const timeEl = document.querySelector(".time");
+      function updateTime() {
+        if (!timeEl) return;
+        const now = new Date();
+
+        const shortWeekdays = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
+        const shortMonths = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+
+        const weekday = shortWeekdays[now.getDay()];
+        const month = shortMonths[now.getMonth()];
+        const day = now.getDate();
+
+        let hours = now.getHours();
+        const minutes = now.getMinutes().toString().padStart(2, "0");
+        const ampm = hours >= 12 ? "PM" : "AM";
+        hours = hours % 12 || 12;
+
+        timeEl.innerHTML = `${weekday}, ${month} ${day} ${hours}:${minutes} <span>${ampm}</span>`;
+      }
+      updateTime();
+      setInterval(updateTime, 60000);
+
+      // === Service Modal Functionality ===
+      const serviceModal = document.getElementById('serviceModal');
+      const closeModal = document.getElementById('closeModal');
+      const readMoreBtns = document.querySelectorAll('.read-more-btn');
+
+      // Read More functionality
+      readMoreBtns.forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          const serviceId = e.target.dataset.serviceId;
+          await loadServiceDetails(serviceId);
+        });
+      });
+
+      // Close modal
+      closeModal?.addEventListener('click', () => {
+        serviceModal.style.display = 'none';
+      });
+
+      serviceModal?.addEventListener('click', (e) => {
+        if (e.target === serviceModal) {
+          serviceModal.style.display = 'none';
+        }
+      });
+
+      // Load service details function
+      async function loadServiceDetails(serviceId) {
+        try {
+          const response = await fetch(`/services/${serviceId}/details`);
+          const data = await response.json();
+          
+          if (data.success) {
+            const service = data.service;
+            
+            // Populate modal with service data
+            document.getElementById('modalServiceTitle').textContent = service.title;
+            document.getElementById('modalServiceDescription').textContent = service.description;
+            document.getElementById('modalServiceImage').src = service.image ? 
+              `/storage/${service.image}` : '/images/print.jpeg';
+
+            // Show/hide sections based on available data
+            toggleSection('servicesOfferedSection', service.services_offered);
+            toggleSection('locationSection', service.location);
+            toggleSection('howToAvailSection', service.how_to_avail);
+            toggleSection('contactInfoSection', service.contact_info);
+
+            // Populate services offered list
+            if (service.services_offered) {
+              const servicesList = document.getElementById('modalServicesOffered');
+              servicesList.innerHTML = '';
+              try {
+                const servicesArray = JSON.parse(service.services_offered);
+                if (Array.isArray(servicesArray)) {
+                  servicesArray.forEach(serviceItem => {
+                    const li = document.createElement('li');
+                    li.textContent = serviceItem;
+                    servicesList.appendChild(li);
+                  });
+                }
+              } catch (e) {
+                console.error('Error parsing services offered:', e);
+              }
+            }
+
+            // Populate other fields
+            document.getElementById('modalLocation').textContent = service.location || '';
+            document.getElementById('modalHowToAvail').textContent = service.how_to_avail || '';
+            document.getElementById('modalContactInfo').textContent = service.contact_info || '';
+
+            // Show modal
+            serviceModal.style.display = 'flex';
+          } else {
+            alert('Error loading service details');
+          }
+        } catch (error) {
+          console.error('Error loading service details:', error);
+          alert('Error loading service details');
+        }
+      }
+
+      function toggleSection(sectionId, data) {
+        const section = document.getElementById(sectionId);
+        if (section) {
+          section.style.display = data ? 'block' : 'none';
+        }
+      }
+
+      // === Logout confirmation ===
+      function confirmLogout(event) {
+        event.preventDefault();
+        if (confirm('Are you sure you want to logout?')) {
+          document.getElementById('logout-form').submit();
+        }
+      }
+
+      // Make confirmLogout available globally
+      window.confirmLogout = confirmLogout;
     });
-  }
-
-  // === Modal ===
-const modalOverlay = document.getElementById('modalOverlay');
-const closeModal = document.getElementById('closeModal');
-const readMoreBtns = document.querySelectorAll('.print-btn');
-
-readMoreBtns.forEach(btn => {
-  btn.addEventListener('click', (e) => {
-    e.preventDefault();
-    modalOverlay.style.display = 'flex';
-  });
-});
-
-closeModal?.addEventListener('click', () => {
-  modalOverlay.style.display = 'none';
-});
-
-modalOverlay?.addEventListener('click', (e) => {
-  if (e.target === modalOverlay) {
-    modalOverlay.style.display = 'none';
-  }
-});
-
-});
-</script>
+  </script>
+</body>
+</html>
