@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KatiBayan - Landing</title>
   <link rel="stylesheet" href="{{ asset('css/landingpage.css') }}">
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
   <nav class="navbar">
     <div class="logo">
-  <img src="{{ asset('images/sklogo.png') }}" alt="KatiBayan Logo" class="logo-img">
+  <img src="{{ asset('images/KatiBayan-Logo_B.png') }}" alt="KatiBayan Logo" class="logo-img">
   <div class="logo-text">
     <span><span class="blue">K</span>ati<span class="blue">B</span>ayan.</span>
     <small>Katipunan ng Kabataan Web Portal</small>
@@ -25,11 +25,11 @@
     </div>
 
     <!-- Nav links -->
-    <ul class="nav-links" id="nav-links">
-  <li><a href="#">Home</a></li>
-  <li><a href="#">Features</a></li>
-  <li><a href="#">FAQs</a></li>
-  <li><a href="#">About Us</a></li>
+  <ul class="nav-links" id="nav-links">
+  <li><a href="#home">Home</a></li>
+  <li><a href="#features">Features</a></li>
+  <li><a href="#faqs">FAQs</a></li>
+  <li><a href="#about">About Us</a></li>
   <li class="mobile-login">
     <a href="{{ route('loginpage') }}" class="login-btn">Login your Account</a>
   </li>
@@ -49,25 +49,22 @@
   </button>
 </div>
 
-</nav>
-
-
+  </nav>
 <section class="welcome">
   <div class="welcome-container">
+     <div class="login-photo">
+      <img src="{{ asset('images/login.png') }}" alt="User-Login" class="login-img1">
+    </div>
     <div class="welcome-text"> 
       <h1> Welcome to <span class="katibayan"> <span class="yellow">K</span>ati<span class="yellow">B</span>ayan </span> 
-      <br>web portal register now!</br> 
+      <br>Web portal register now!</br> 
     </h1> 
     <p>KatiBayan will help you engage with your SK Council. 
       Register now to be a part of it. If you already have an account, please log in.</p> 
-      <a href="{{ url('/register') }}" class="register-btn">CLICK HERE TO REGISTER</a>
- 
+    <a href="{{ url('/register') }}" class="register-btn">CLICK HERE TO REGISTER</a>
     </div> 
   </div>
-</section>
-
-
-
+  </section>
 
   <section class="explore">
     <button>Wanna know more? Just <span>Explore!</span></button>
@@ -104,7 +101,7 @@
 
 
 <!-- Main Features Section -->
-<section class="features">
+<section class="features" id="features">
     <button>Main Features of <span>Katibayan</span></button>
   </section>
 
@@ -167,11 +164,11 @@
 </section>
 
 <!-- FAQ Section -->
-<section class="faqs">
+<section class="faqs" id="faqs">
   <div class="faqs-left">
     <!-- Blue Label -->
     <div class="faqs-label">FAQS</div>
-    <h2>Frequently asked <span>Questions</span></h2>
+    <h2>Frequently Asked <span>Questions</span></h2>
     <p>about KatiBayan</p>
   </div>
 
@@ -274,7 +271,7 @@
 </section>
 
 <!-- About Us Section -->
-<section class="about-us">
+<section class="about-us" id="about">
   <!-- Top label -->
   <div class="about-label">ABOUT US</div>
 
@@ -284,7 +281,7 @@
     <!-- Left: Image with gradient -->
     <div class="about-image">
       <div class="gradient-circle">
-        <img src="{{ asset('images/phone.png') }}" alt="Phone with Logo">
+        <img src="{{ asset('images/KatiBayan-Logo_B.png') }}" alt="logo">
       </div>
     </div>
 
@@ -300,9 +297,10 @@
         real-time data and analytics.
       </p>
       <p>
-        The KatiBayan Web Portal is a dedicated online platform designed to empower 
-        the Sangguniang Kabataan (SK) in fostering meaningful youth participation 
-        and strengthening community engagement. Built with the vision of streamlining processes,
+        Through its intuitive and data-driven interface, KatiBayan streamlines administrative processes
+        by providing modules for youth profiling, event management, engagement tracking, and performance reporting. 
+        The system also integrates analytics and visualization tools that enable SK officials to generate insights for evidence-based decision-making, 
+        ensuring that programs and initiatives are aligned with the needs and interests of the youth sector.
       </p>
     </div>
 
@@ -311,32 +309,21 @@
 
 
 <!-- Footer Section -->
-<footer class="footer">
-  <div class="footer-container">
-    <!-- Logo -->
-    <div class="footer-logo">
-      <img src="{{ asset('images/sklogo.png') }}" alt="KatiBayan Logo" class="logo-img">
-      <span>Sangguniang Kabataan</span>
-    </div>
-
-    <!-- Contact Info -->
+<footer class="footer">  
+<div class="footer-container">
     <div class="footer-contact">
       <h3>CONTACT INFORMATION</h3>
-      <p>Address: SK Office, Barangay 3, EM’s Barrio East, Legazpi City, Albay</p>
-      <p>Email: skbrrgy3emsbarrioeast@gmail.com</p>
-      <p>Mobile: 09XX-XXX-XXXX</p>
-      <p>Facebook Page: <a href="#">SK Brgy. 3 EM's Barrio East, Legazpi City</a></p>
+      <p>katibayan.system@gmail.com</p>
     </div>
 
     <!-- Quick Links -->
     <div class="footer-links">
       <h3>QUICK LINKS</h3>
       <ul>
-        <li><a href="#">Home</a></li>
-        <li><a href="#">About Us</a></li>
-        <li><a href="#">Programs & Events</a></li>
-        <li><a href="#">Committees</a></li>
-        <li><a href="#">Contact Us</a></li>
+        <li><a href="#home">Home</a></li>
+        <li><a href="#features">Main feature</a></li>
+        <li><a href="#faqs">Faqs</a></li>
+        <li><a href="#about">About us</a></li>
       </ul>
     </div>
 
@@ -449,10 +436,9 @@ toggles.forEach(btn => {
     const isDark = !body.classList.contains('dark-mode');
     applyTheme(isDark);
   });
-});
+  });
 
-
-</script>
+  </script>
 
 <script>
   lucide.createIcons(); 

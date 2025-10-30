@@ -8,6 +8,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SKDashboardController;
+use App\Http\Controllers\SKAnalyticsController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\AdminController;
@@ -55,6 +56,14 @@ Route::get('/profilepage', function () {
     return view('profilepage');
 });
 
+Route::get('/sk-role-view', function () {
+    return view('/sk-role-view');
+});
+
+Route::get('/sk-analytics', function () {
+    return view('/sk-analytics');
+});
+
 // UPDATED: Certificate page route
 Route::get('/certificatepage', [EvaluationController::class, 'certificatePage'])->name('certificatepage');
 
@@ -73,6 +82,10 @@ Route::get('/eventpage', [EventController::class, 'userEvents'])->name('eventpag
 Route::get('/faqspage', function () {
     return view('faqspage'); 
 })->name('faqspage');
+
+Route::get('/sk-analytics', function () {
+    return view('sk-analytics');
+})->name('sk.analytics');
 
 Route::get('/suggestionbox', function () {
     return view('suggestionbox'); 
@@ -195,13 +208,34 @@ Route::get('/view-youth-profile', function () {
     return view('view-youth-profile');
 })->name('view-youth-profile');
 
-Route::get('admindashb', function () {
-    return view('admindashb');
+
+
+Route::get('admin-analytics', function () {
+    return view('admin-analytics');
+})->name('admin-analytics');
+
+
+Route::get('admin-settings', function () {
+    return view('admin-settings');
+})->name('admin-settings');
+
+Route::get('users-feedback', function () {
+    return view('users-feedback');
+})->name('users-feedback');
+
+
+
+
+Route::get('user-management2', function () {
+    return view('user-management2');
 });
 
 // CONTROLLER ROUTES
 
-
+Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
+Route::post('/register/preview', [RegisterController::class, 'preview'])->name('register.preview');
+Route::get('/register/captcha', [RegisterController::class, 'showCaptcha'])->name('register.captcha');
+Route::post('/register/complete', [RegisterController::class, 'complete'])->name('register.complete');
 Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
 Route::post('/register', [RegisterController::class, 'register']);
 
@@ -224,13 +258,13 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 // ========== ADMIN ROUTES ==========
 
 // ✅ Protected admin dashboard
-Route::get('/admin-dashboard', [AdminController::class, 'dashboard'])
-    ->name('admin.dashboard')
+Route::get('/admindashb', [AdminController::class, 'dashboard'])
+    ->name('admindashb')
     ->middleware('auth:admin');
 
 
-Route::get('/user-management', [AdminController::class, 'userManagement']) 
-    ->name('user-management')
+Route::get('/user-management2', [AdminController::class, 'userManagement']) 
+    ->name('user-management2')
     ->middleware('auth:admin'); 
 
 // User approval and rejection routes

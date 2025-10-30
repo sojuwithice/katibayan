@@ -110,28 +110,34 @@
 
          <!-- Profile Avatar -->
         <div class="profile-wrapper">
-          <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
-               alt="User" class="avatar" id="profileToggle">
+          <img src="{{ Auth::check() && Auth::user()->avatar ? asset('storage/' . Auth::user()->avatar) : asset('images/default-avatar.png') }}" 
+     alt="User" class="avatar" id="profileToggle">
+
           <div class="profile-dropdown">
             <div class="profile-header">
-              <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
-                   alt="User" class="profile-avatar">
-              <div class="profile-info">
-                <h4>{{ $user->given_name }} {{ $user->middle_name }} {{ $user->last_name }} {{ $user->suffix }}</h4>
-                <div class="profile-badge">
-                  <span class="badge">{{ $roleBadge }}</span>
-                  <span class="badge">{{ $age }} yrs old</span>
-                </div>
-              </div>
-            </div>
-            <hr>
-            <ul class="profile-menu">
-              <li>
-                <a href="{{ route('profilepage') }}">
-                  <i class="fas fa-user"></i> Profile
-                </a>
-              </li>
-              <li><i class="fas fa-cog"></i> Manage Password</li>
+  <img src="{{ Auth::check() && Auth::user()->avatar ? asset('storage/' . Auth::user()->avatar) : asset('images/default-avatar.png') }}" 
+       alt="User" class="profile-avatar">
+
+  <div class="profile-info">
+    <h4>
+      {{ Auth::user()->given_name ?? '' }}
+      {{ Auth::user()->middle_name ?? '' }}
+      {{ Auth::user()->last_name ?? '' }}
+      {{ Auth::user()->suffix ?? '' }}
+    </h4>
+    <div class="profile-badge">
+      <span class="badge">{{ $roleBadge ?? '' }}</span>
+      <span class="badge">{{ $age ?? '' }} yrs old</span>
+    </div>
+  </div>
+</div>
+<hr>
+  <ul class="profile-menu">
+      <li>
+        <a href="{{ route('profilepage') }}">
+        <i class="fas fa-user"></i> Profile</a>
+      </li>
+      <li><i class="fas fa-cog"></i> Manage Password</li>
               <li>
                 <a href="{{ route('faqspage') }}">
                   <i class="fas fa-question-circle"></i> FAQs
@@ -209,51 +215,53 @@
 </section>
 
 <!-- Modal -->
-<div id="modalOverlay" class="modal">
-  <div class="modal-content">
-    <span id="closeModal" class="close">&times;</span>
+<div class="service-modal" id="serviceModal">
+  <div class="service-modal-content">
+    <span class="close-modal" id="closeModal">&times;</span>
 
-    
+    <div class="modal-header">
+      <img src="{{ asset('images/print.jpeg') }}" alt="Free Printing Poster" class="modal-poster">
+    </div>
 
     <div class="modal-body">
-      <img src="{{ asset('images/print.jpeg') }}" alt="Free Printing">
-  <h2>Free Printing Services</h2>
-  <p class="intro">
-    Supporting the youth and students of Barangay 3, EM’s Barrio East, Legazpi City. 
-    As part of our commitment to helping the youth in their education, the Sangguniang Kabataan 
-    of Barangay 3 is offering Free Printing Services. This program aims to ease the burden of 
-    school expenses by providing free printing, scanning, and copying of academic requirements.
-  </p>
+      <h2>Free Printing Services</h2>
+      <p>
+        Supporting the youth and students of Barangay 3, EM’s Barrio East, Legazpi City. As part of our
+        commitment to helping the youth in their education, the Sangguniang Kabataan of Barangay 3 is offering
+        <strong>Free Printing Services</strong>. This program aims to ease the burden of school expenses by providing
+        free printing, scanning, and copying of academic requirements.
+      </p>
 
-  <div>
-    <h3>Services Offered</h3>
-    <ul>
-      <li>Print, scan, and copy</li>
-      <li>Modules, assignments, handouts, and projects</li>
-    </ul>
+      <div class="modal-sections">
+        <div class="modal-section">
+          <h3>Services Offered</h3>
+          <ul>
+            <li>Print, scan, and copy</li>
+            <li>Modules, assignments, handouts, and projects</li>
+          </ul>
+        </div>
 
-    <h3>Pick-Up Location</h3>
-    <p>2nd Floor SK Office, Brgy 3 Multi-Purpose Hall, EM’s Barrio East, Legazpi City</p>
-  </div>
+        <div class="modal-section">
+          <h3>Pick-Up Location</h3>
+          <p>2nd Floor SK Office, Barangay 3 Multi-Purpose Hall, EM’s Barrio East, Legazpi City</p>
+        </div>
 
-  <div>
-    <h3>How to Avail</h3>
-    <p>
-      Send your files through:<br>
-      • FB Messenger: SK Brgy 3 EM’s Barrio East Legazpi City<br>
-      • Email: skbrgy3embarrioeast@gmail.com
-    </p>
+        <div class="modal-section">
+          <h3>How to Avail</h3>
+          <ul>
+            <li>FB Messenger: SK Brgy 3 EM’s Barrio East Legazpi City</li>
+            <li>Email: skbrgy3embarrioeast@gmail.com</li>
+          </ul>
+        </div>
 
-    <h3>For Assistance</h3>
-    <p>
-      SK Chairperson: Lovella Mae C. Apuac<br>
-      SK Secretary: Ian G. Atienza
-    </p>
-  </div>
-
-  
-</div>
-
+        <div class="modal-section">
+          <h3>For Assistance</h3>
+          <ul>
+            <li>SK Chairperson: Lowell A. Apuac</li>
+            <li>SK Secretary: Ian G. Atiaza</li>
+          </ul>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -493,7 +501,7 @@ setInterval(updateTime, 60000);
   }
 
   // === Modal ===
-const modalOverlay = document.getElementById('modalOverlay');
+const modalOverlay = document.getElementById('serviceModal');
 const closeModal = document.getElementById('closeModal');
 const readMoreBtns = document.querySelectorAll('.print-btn');
 

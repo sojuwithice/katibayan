@@ -1,0 +1,1025 @@
+  * {
+      margin: 0; 
+      padding: 0; 
+      box-sizing: border-box;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    body {
+      background: #e7e7e7;
+      color: #01214A;
+      padding-top: 70px;
+    }
+
+    /* === TOPBAR STYLING === */
+    .topbar {
+      position: fixed;
+      top: 0;              
+      left: 0;
+      right: 0;
+      height: 70px;
+      background: #e7e7e7;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.5rem 2rem;
+      justify-content: space-between;
+      z-index: 2000;       
+      border-bottom: 1px solid #ddd;
+    }         
+
+    /* === Logo Section === */
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;         
+    }
+
+    .logo img {
+      height: 50px;         
+      width: auto;
+    }
+
+   .logo-text {
+  display: flex;
+  flex-direction: column; 
+  line-height: 1rem;
+}
+
+.logo-text span {
+  font-weight: bold;
+  font-size: 1.2rem;
+  color: #0A4780;
+}
+
+.logo-text .blue {
+  color: #0A4780; 
+}
+
+.logo-text small {
+  color: #0A4780;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      margin-left: auto;   
+    }
+
+    /* Time Button */
+    .topbar-right .time {
+      display: inline-flex;          
+      align-items: center;
+      justify-content: center;
+      gap: .2rem;
+      background: #fff;
+      border: none;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.20);
+      border-radius: 50px;
+      padding: .7rem 1.2rem;         
+      font-weight: bold;
+      font-size: 14px;
+      color: #3C87C4;
+      white-space: nowrap;           
+    }
+
+    .topbar-right .time span {
+      color: #FFB703;
+      font-weight: bold;
+    }
+
+    /* Notification and Profile Icons */
+    .topbar-icons {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .notification-wrapper, .profile-wrapper {
+      display: flex;
+      align-items: center;
+    }
+
+    .topbar-icons i {
+      font-size: 22px;
+      color: #3C87C4;
+      cursor: pointer;
+      transition: color 0.3s ease;
+    }
+
+    .topbar-icons i:hover {
+      color: #2a6ca3;
+    }
+
+    .avatar {
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      border: 3px solid #3C87C4;
+      cursor: pointer;
+      transition: border-color 0.3s ease;
+    }
+
+    .avatar:hover {
+      border-color: #2a6ca3;
+    }
+
+     .badge-2 {
+            display: inline-block;
+            padding: 4px 12px;
+            background-color: #FFB703;
+            color: #333;
+            border-radius: 25px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+   .back-to-profile {
+            background-color: #3C87C4;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            text-align: center;
+            display: block;
+        }
+
+        .back-to-profile:hover {
+            background-color: #2a6ca3;
+        }
+    /* Profile Dropdown */
+    .profile-wrapper {
+      position: relative;
+    }
+
+    .profile-dropdown {
+      position: absolute;
+      top: 60px;
+      right: 0;
+      width: 340px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      overflow: hidden;
+      display: none;
+      z-index: 1000;
+    }
+
+    .profile-wrapper.active .profile-dropdown {
+      display: block;
+    }
+
+    .profile-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 15px;
+    }
+
+    .profile-dropdown hr {
+      border: none;               
+      height: 2px;                
+      background-color: #3C87C4;  
+      margin: 0;                  
+    }
+
+    .profile-avatar {
+      width: 55px;
+      height: 55px;
+      border-radius: 50%;
+      border: 3px solid #3C87C4;
+    }
+
+    .profile-info h4 {
+      font-size: 16px;
+      margin: 0;
+      margin-bottom: .3rem;
+    }
+
+    .profile-badge {
+      display: inline-flex;
+      align-items: center;
+      background: #3C87C4;
+      border: 1px solid #3C87C4;
+      border-radius: 25px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      overflow: hidden;
+      font-size: 11px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .profile-badge span {
+      padding: 3px 9px;
+      display: inline-block;
+      white-space: nowrap; 
+    }
+
+    .profile-badge span + span {
+      border-left: 1px solid #F9CD55; 
+    }
+
+    .profile-menu {
+      list-style: none;
+      padding: 10px 0;
+      margin: 0;
+    }
+
+    .profile-menu li {
+      padding: 10px 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .profile-menu li i {
+      color: #3C87C4;
+      font-size: 16px;
+    }
+
+    .profile-menu li:hover {
+      background: #f1f1f1;
+    }
+
+    .profile-menu a {
+      text-decoration: none;
+      color: inherit; 
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%; 
+    }
+
+    /* === Notification === */
+    .notification-wrapper {
+      position: relative;
+      cursor: pointer;
+    }
+
+    .notification-wrapper .fa-bell {
+      font-size: 22px;
+      color: #3C87C4;
+    }
+
+    .notif-count {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      background: #FFB703;
+      color: #fff;
+      font-size: 12px;
+      font-weight: bold;
+      border-radius: 50%;
+      padding: 2px 6px;
+      min-width: 18px;
+      text-align: center;
+    }
+
+    /* Dropdown */
+    .notif-dropdown {
+      position: absolute;
+      top: 40px;
+      right: 0;
+      width: 320px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      z-index: 5000;
+      opacity: 0;
+      transform: translateY(-20px);
+      pointer-events: none;
+      transition: all 0.3s ease;
+    }
+
+    .notif-dropdown .notif-header {
+      font-size: 16px;
+      font-weight: 700;
+      color: #114B8C;
+      padding: 1rem;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .notif-dropdown .notif-header span {
+      background: #3C87C4;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      border-radius: 50%;
+      padding: 2px 8px;
+    }
+
+    /* List */
+    .notif-list {
+      list-style: none;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .notif-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.8rem;
+      padding: 1rem;
+      border-bottom: 1px solid #eee;
+      position: relative;
+    }
+
+    .notif-list li:last-child {
+      border-bottom: none;
+    }
+
+    .notif-icon {
+      width: 40px;
+      height: 40px;
+      background: #3C87C4;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .notif-content strong {
+      font-size: 14px;
+      font-weight: 700;
+      color: #114B8C;
+    }
+
+    .notif-content p {
+      font-size: 13px;
+      color: #444;
+    }
+
+    /* Yellow dot */
+    .notif-dot {
+      width: 10px;
+      height: 10px;
+      background: #FFB703;
+      border-radius: 50%;
+      position: absolute;
+      right: 15px;
+      top: 20px;
+    }
+
+    /* Show dropdown */
+    .notification-wrapper.active .notif-dropdown {
+      display: flex;
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    /* === MAIN CONTENT === */
+    .dashboard-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    /* === WELCOME SECTION === */
+    .welcome-section {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      background: #3C87C4;
+      border-radius: 20px;
+      padding: 14px 15px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      color: #fff;
+      font-weight: 600;
+      font-size: 0.7rem;
+    }
+
+    .welcome-text h1 {
+      font-weight: 900;
+      font-size: 1.5rem;
+      color: #fff;
+    }
+
+    .welcome-text p {
+      font-size: 1.1rem;
+      color: #fff;
+      margin-top: 5px;
+    }
+
+    /* === DASHBOARD GRID === */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      margin-bottom: 30px;
+    }
+
+    .grid-col-1, .grid-col-2 {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* === CARD STYLING === */
+    .card {
+      background-color: #FFFFFF;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      margin-bottom: 15px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card h2 {
+      font-weight: 900;
+      font-size: 1.3rem;
+      color: #3C87C4;
+      margin-bottom: 20px;
+    }
+
+    /* === SK COMMITTEE CARD - SCROLLABLE === */
+   .sk-committee {
+  background: #fff;
+  border-radius: 20px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  height: 500px;
+  overflow-y: auto;
+}
+
+.sk-committee h2 {
+  color: #01214A;
+  margin-bottom: 1rem;
+  text-align: center;
+  font-size: 1.5rem;
+}
+
+.sk-committee ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.committee-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 0.8rem 0;
+  border-bottom: 1px solid #eee;
+  flex-wrap: wrap;
+}
+
+.members-header {
+  font-weight: bold;
+  color: #3C87C4;
+  margin-top: 1rem;
+  padding: 0.5rem 0;
+  font-size: 1.1rem;
+  width: 100%;
+}
+
+.name {
+  font-weight: 600;
+  color: #01214A;
+  min-width: 200px;
+  margin-bottom: 0.5rem;
+}
+
+.role-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  flex: 1;
+}
+
+.role-tag {
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: white;
+  display: inline-block;
+  margin-right: 0.5rem;
+}
+
+.role-chairperson { 
+  background: #FFB703; 
+  color: #01214A; 
+}
+.role-treasurer { background: #3C87C6;}
+.role-secretary { background: #3C87C6; }
+.role-kagawad { background: #3C87C6; }
+
+.committee-role {
+  font-size: 0.8rem;
+  color: #666;
+  padding: 0.2rem 0.5rem;
+  background: #f5f5f5;
+  border-radius: 4px;
+  margin: 0.1rem 0;
+}
+    /* Scrollbar styling for SK Committee */
+    .sk-committee ul::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .sk-committee ul::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
+
+    .sk-committee ul::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 10px;
+    }
+
+    .sk-committee ul::-webkit-scrollbar-thumb:hover {
+      background: #a8a8a8;
+    }
+
+    /* === SEND REPORT CARD === */
+    .send-report {
+      height: 500px;
+      overflow: hidden;
+    }
+
+    .send-report form {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      height: 100%;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+    .form-group label {
+      font-weight: 600;
+      color: #01214A;
+      margin-bottom: 15px;
+      font-size: 0.9rem;
+    }
+    .form-group select {
+      padding: 12px;
+      border: 1px solid #CCC;
+      border-radius: 8px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.9rem;
+      background-color: #FFF;
+    }
+
+    /* File Upload Styling */
+    .file-upload {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .file-input-wrapper {
+      position: relative;
+      overflow: hidden;
+      display: inline-block;
+      width: 100%;
+    }
+
+    .file-input-wrapper input[type=file] {
+      position: absolute;
+      left: 0;
+      top: 0;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+
+    .file-input-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 16px;
+      background: #f8f9fa;
+      border: 2px dashed #3C87C4;
+      border-radius: 8px;
+      color: #3C87C4;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.3s;
+      width: 100%;
+    }
+
+    .file-input-btn:hover {
+      background: #e9ecef;
+      border-color: #2a6ca3;
+    }
+
+    .file-input-btn i {
+      font-size: 16px;
+    }
+
+    .file-list {
+      display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-height: 120px;
+        overflow-y: auto;
+        margin-top: 8px;
+    }
+
+    .file-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: #f8f9fa;
+      border-radius: 6px;
+      border-left: 3px solid #3C87C4;
+      font-size: 12px;
+      transition: all 0.2s;
+    }
+
+    .file-item:hover {
+      background: #e9ecef;
+    }
+
+    .file-name {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-weight: 500;
+    }
+
+    .file-size {
+      color: #666;
+      margin-left: 8px;
+      font-size: 11px;
+    }
+
+    .file-remove {
+      color: #e74c3c;
+      cursor: pointer;
+      margin-left: 10px;
+      transition: color 0.2s;
+    }
+
+    .file-remove:hover {
+      color: #c0392b;
+    }
+
+    .file-empty-state {
+      text-align: center;
+      color: #888;
+      font-size: 12px;
+      padding: 10px;
+      font-style: italic;
+    }
+
+    .file-size-warning {
+      font-size: 12px;
+      color: #666;
+      margin-top: 5px;
+      text-align: center;
+    }
+
+    .send-report .btn-primary {
+      align-self: flex-end;
+      margin-top: auto;
+    }
+
+    /* === PROPOSE PROJECT CARD - SCROLLABLE === */
+    .propose-project-full {
+      width: 100%;
+      margin-top: 20px;
+    }
+
+    .propose-project-full ul {
+      overflow-y: auto;
+      max-height: 400px;
+      padding-right: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .propose-project-full li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 25px;
+      background: #ffffff;
+      border-radius: 8px;
+      border-left: 6px solid #3C87C4;
+      box-shadow: 4px 4px 12px rgba(189, 189, 189, 0.8);
+    }
+
+    .project-info {
+      display: flex;
+      flex-direction: column;
+    }
+    .project-name {
+      font-weight: 600;
+      color: #01214A;
+      font-size: 0.95rem;
+    }
+    .project-status {
+      font-size: 0.8rem;
+      color: #3C87C4;
+      text-decoration: underline;
+      font-weight: 500;
+      margin-top: 2px;
+    }
+    .project-date {
+      font-size: 0.7rem;
+      color: #777;
+      font-weight: 500;
+    }
+
+    /* Scrollbar styling for Propose Project */
+    .propose-project-full ul::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .propose-project-full ul::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
+
+    .propose-project-full ul::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 10px;
+    }
+
+    .propose-project-full ul::-webkit-scrollbar-thumb:hover {
+      background: #a8a8a8;
+    }
+    
+
+    /* === UTILITY CLASSES (Buttons & Tags) === */
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+      background-color: #3C87C4;
+      color: #FFFFFF;
+    }
+    .btn-primary:hover {
+      background-color: #2a6ca3;
+    }
+
+    .btn-secondary {
+      background-color: #FFFFFF;
+      color: #3C87C4;
+      border: 1px solid #E0E0E0;
+    }
+    .btn-secondary:hover {
+      background-color: #F8F8F8;
+      border-color: #CCC;
+    }
+
+    .btn-tertiary {
+      background-color: #F0F0F0;
+      color: #555;
+      border-radius: 8px;
+    }
+    .btn-tertiary:hover {
+      background-color: #E0E0E0;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 50px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-left: 10px;
+    }
+
+    .tag-kagawad {
+      background-color: #FFB703;
+      color: #333;
+    }
+
+
+    /* === COMMITTEE MODAL === */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 3000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .committee-modal {
+      background: white;
+      border-radius: 15px;
+      width: 90%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-header {
+      background: #3C87C4;
+      color: white;
+      padding: 0.8rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h2 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin: 0;
+    }
+
+    .close-modal {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+      padding: 0;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: background 0.3s;
+    }
+
+    .close-modal:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .modal-content {
+      padding: 1.5rem;
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+
+    .modal-section {
+      margin-bottom: 2rem;
+    }
+
+    .modal-section h3 {
+      color: #01214A;
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+      font-weight: 600;
+      border-bottom: 2px solid #3C87C4;
+      padding-bottom: 0.5rem;
+    }
+
+    .committee-options {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+
+    .committee-option {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      padding: 0.7rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background: #f8f9fa;
+      font-size: 0.9rem;
+    }
+
+    .committee-option:hover {
+      border-color: #3C87C4;
+      background: #f0f7ff;
+    }
+
+    .committee-option.selected {
+      border-color: #3C87C4;
+      background: #e3f2fd;
+    }
+
+    .committee-option input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: #3C87C4;
+    }
+
+    .committee-option label {
+      font-weight: 500;
+      color: #01214A;
+      cursor: pointer;
+      flex: 1;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 1rem;
+      padding: 1.5rem;
+      border-top: 1px solid #e0e0e0;
+      background: #f8f9fa;
+    }
+
+    .selected-committee {
+      background: #3C87C4;
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      margin: 0.25rem;
+      display: inline-block;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    /* === RESPONSIVE (Para sa Mobile) === */
+    @media (max-width: 900px) {
+      body {
+        padding: 1rem;
+        padding-top: 80px;
+      }
+      
+      .topbar {
+        padding: 0.5rem 1rem;
+      }
+      
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+
+      .welcome-section {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+      }
+
+      .welcome-text h1 {
+        font-size: 2rem;
+      }
+      
+      .dashboard-grid {
+        height: auto;
+      }
+
+      .sk-committee ul,
+      .propose-project-full ul {
+        max-height: 400px;
+      }
+
+      .propose-project-full,
+      .send-report,
+      .sk-committee {
+        height: auto;
+      }
+
+      .committee-item,
+      .propose-project-full li {
+        padding: 12px 20px;
+      }
+
+      .logo-text .title {
+        font-size: 16px;
+      }
+
+      .logo-text .subtitle {
+        font-size: 11px;
+      }
+
+      .topbar-right .time {
+        font-size: 12px;
+        padding: .5rem 1rem;
+      }
+    }
