@@ -743,23 +743,39 @@ body {
   margin-bottom: 0.3rem;
 }
 
-.modal-section ul {
-  margin-left: 1.5rem;
-  color: #333;
-  margin-bottom: 1rem;
+.modal-body p, 
+.modal-body ul {
+  margin: 5px 0 15px;
+  line-height: 1.6;
+  color: #000;
 }
 
-.modal-section ul li {
-  list-style-type: disc;
-  margin-bottom: 0.3rem;
+/* Printer image bottom full width */
+.modal-body img {
+  grid-column: 1 / -1;   /* span full width ng grid */
+  justify-self: center;  /* i-center horizontally */
+  margin: 20px 0 0;
+  max-width: 220px;
+  border: 3px solid #2f7ddb;
 }
 
-/* Animation */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+
+/* --- Overlay para sa Mobile Sidebar --- */
+body.mobile-sidebar-active::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 9999; /* Mas mababa sa sidebar */
+  transition: opacity 0.3s ease;
 }
 
+.mobile-hamburger {
+  display: none;
+}
 
 
 
@@ -768,8 +784,8 @@ body {
 /* Responsive */
 @media (max-width: 768px) {
 
-    .row {
-    grid-template-columns: 1fr;   
+      .row {
+    grid-template-columns: 1fr;
     gap: 1rem;
   }
 
@@ -777,97 +793,168 @@ body {
     flex-direction: column;
   }
 
-  .main {
-    padding: 1rem;
-    padding-bottom: 5rem;           
-    margin-left: 0; 
-    margin-top: 80px;               
+  /* --- Hamburger Button (sa Topbar) --- */
+  .mobile-hamburger {
+    display: inline-flex;
+    background: none;
+    border: none;
+    font-size: 26px;
+    color: #01214A;
+    cursor: pointer;
   }
 
-
-  /* Sidebar bottom bar */
+  /* --- 'Yung Sidebar (Full-height Blue) --- */
   .sidebar {
-    width: calc(100% - 20px);
-    height: 55px;
-    min-height: auto !important;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
-    bottom: 10px;
-    left: 10px;
-    top: auto;
-    border-radius: 30px;
-    padding: 0 .5rem;
-    overflow-x: auto; 
-    -ms-overflow-style: none;  
-    scrollbar-width: none;
+    background: #3C87C4;
+    color: #fff;
+    width: 250px;
+    left: -260px;
+    top: 0;
+    bottom: 0;
+    height: 100%;
+    border-radius: 0 20px 20px 0;
+    padding-top: 1rem;
+    transition: all 0.3s ease;
+    border: none;
+    box-shadow: 0 5px 35px rgba(0, 33, 74, 0.2);
+    /* (FIX) Nagdagdag ng flex para ma-control 'yung items */
+    display: flex;
+    flex-direction: column;
   }
-  .sidebar::-webkit-scrollbar { display: none; }
+
+  .sidebar.open {
+    left: 0;
+  }
+
+  /* --- (FIX #1) 'YUNG "MENU" BUTTON (NASA GILID) --- */
+  .sidebar .menu-toggle {
+    display: block !important; /* Pinakita na */
+    background: none;
+    color: #fff;
+    border: none;
+    padding: 0.3rem 0.6rem; /* Gaya ng sa desktop */
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    margin: 1rem 1rem 0.5rem 1rem; /* Space sa taas at gilid */
+    align-self: flex-start; /* ETO YUNG NAG-A-ALIGN SA GILID */
+    font-size: 1.5rem;
+  }
+
+  /* --- (FIX #2) 'YUNG DIVIDER --- */
+  .sidebar .divider {
+    display: block !important; /* Pinakita na */
+    width: calc(100% - 2rem); /* Para may space sa gilid */
+    height: 2px;
+    background: rgba(255, 255, 255, 0.6);
+    margin: 0.5rem 1rem 1rem 1rem; /* Space sa baba */
+    align-self: center; /* Para gumitna 'yung linya */
+  }
+
+  /* --- (FIX #3) 'YUNG NAV LINKS (Para 'di crowded) --- */
   .sidebar nav {
-    flex-direction: row;
-    gap: 1rem;
-    margin: 0;
-    width: max-content;
-    justify-content: flex-start;
-    align-items: center;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem; /* Space sa pagitan ng bawat link */
   }
-  .sidebar nav a { justify-content: center; padding: .3rem .6rem; }
-  .sidebar nav a .label { display: none !important; }
+
+  /* --- Main Content Area --- */
+  .main {
+    margin-left: 0 !important;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    transition: transform 0.3s ease;
+    margin-top: 70px;
+    padding-top: 1.5rem;
+    padding-bottom: 5rem;
+    overflow-x: hidden;
+  }
+
+  /* --- Sidebar Links 'Pag Mobile --- */
+  .sidebar nav a {
+    color: #fff;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    box-sizing: border-box; /* Para 'di lumagpas 'yung padding */
+  }
+
+  .sidebar nav a .label {
+    display: inline;
+    font-weight: 500;
+    font-size: 1rem;
+  }
+
+  .sidebar nav a i {
+    color: #fff;
+    opacity: 0.8;
+  }
+
+  /* --- Active Link (Pill Shape) --- */
   .sidebar nav a.active {
     background: #fff;
     color: #1C6DD0;
+    border-radius: 50px;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .sidebar nav a.active i {
+    opacity: 1;
+    color: #1C6DD0;
+  }
+
+  /* --- Link Hover --- */
+  .sidebar nav a:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+  }
+
+  .sidebar nav a.active:hover {
+    background: #fff;
+    color: #1C6DD0;
+  }
+
+  /* --- Submenu Links --- */
+  .submenu a {
+    color: #fff;
+  }
+
+  /* === TOPBAR === */
+  .topbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+  }
+
+  .topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .topbar-left .time {
+    font-size: 12px;
+  }
+
+  .topbar-left .fa-bell {
+    font-size: 16px;
+  }
+
+  .topbar-left .avatar {
+    width: 34px;
+    height: 34px;
     border-radius: 50%;
   }
-  .sidebar .menu-toggle,
-  .sidebar .divider { display: none !important; }
 
-  /* Topbar adjustments */
-  .topbar { padding: 0.5rem 1rem; }
-  .logo { display: none !important; 
-    flex: 1;
-    max-width: 160px;
-    margin: 0 auto;
-    padding: .25rem .5rem;
-    border-radius: 30px;
-    gap: .3rem;
-  }
-  
-  .topbar-right i.fa-search { display: none; }
-
-  .main {
-    margin: 0;
-    padding: 1rem;
-    padding-bottom: 5rem;
-    margin-top: 80px;
+  /* Itago 'yung logo sa topbar 'pag mobile */
+  .logo {
+    display: none !important;
   }
 
-  /* Profile card content */
-  .profile-card {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    padding: 1.2rem;
-  }
-  .avatar-wrapper {
-    margin: 0 0 1rem 0;
-  }
-  .profile-info h2 {
-    font-size: 22px;
-    justify-content: center;
-    text-align: center;
-  }
-  .badges-row { justify-content: center; }
-  .status { justify-content: center; }
-  .address { justify-content: center; font-size: 11px; }
-
-  .profile-card .edit-btn {
-    top: 8px;
-    right: 8px;
-    font-size: 18px;
-    padding: 4px 6px;
-  }
-
-  /* Notification dropdown fix */
+  /* Notification Dropdown */
   .notif-dropdown {
     position: fixed;
     top: 60px;
@@ -876,19 +963,27 @@ body {
     width: auto;
     max-height: 70vh;
     border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     padding: 1rem;
     overflow-y: auto;
     display: none;
     animation: slideDown 0.3s ease;
   }
+
   .notification-wrapper.active .notif-dropdown {
     display: flex;
   }
-  @keyframes slideDown {
-    from { transform: translateY(-20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-  }
 
+  @keyframes slideDown {
+    from {
+      transform: translateY(-20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
   /* Service Offer Section */
 .service-offer {
   padding: 20px 10px;

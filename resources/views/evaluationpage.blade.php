@@ -11,7 +11,7 @@
 </head>
 <body>
   
-  <!-- Sidebar -->
+<!-- Sidebar -->
   <aside class="sidebar">
     <button class="menu-toggle">Menu</button>
     <div class="divider"></div>
@@ -32,16 +32,11 @@
         </div>
       </div>
 
-      <a href="{{ route('eventpage') }}">
+      <a href="{{ route('eventpage') }}" class="events-link">
         <i data-lucide="calendar"></i>
         <span class="label">Events and Programs</span>
       </a>
-
-      <a href="#">
-        <i data-lucide="megaphone"></i>
-        <span class="label">Announcements</span>
-      </a>
-
+      
       <a href="{{ route('evaluation') }}" class="active">
           <i data-lucide="user-star"></i>
           <span class="label">Evaluation</span>
@@ -59,6 +54,9 @@
 
     <!-- Topbar -->
     <header class="topbar">
+      <button id="mobileMenuBtn" class="mobile-hamburger">
+  <i data-lucide="menu"></i>
+</button>
       <div class="logo">
         <img src="{{ asset('images/logo.png') }}" alt="Logo">
         <div class="logo-text">
@@ -779,5 +777,29 @@
       }
     }
   </script>
+
+  <script>
+  const mobileBtn = document.getElementById('mobileMenuBtn');
+  const sidebar = document.querySelector('.sidebar');
+  const mainContent = document.querySelector('.main'); // (BAGO)
+
+  mobileBtn?.addEventListener('click', (e) => {
+    e.stopPropagation(); // (BAGO)
+    sidebar.classList.toggle('open');
+    document.body.classList.toggle('mobile-sidebar-active'); // (BAGO)
+  });
+
+  // Close sidebar when clicking outside (mobile only)
+  document.addEventListener('click', (e) => {
+    if (window.innerWidth <= 768 &&
+      sidebar.classList.contains('open') && // (BAGO) Check kung open
+      !sidebar.contains(e.target) &&
+      !mobileBtn.contains(e.target)) {
+      
+      sidebar.classList.remove('open');
+      document.body.classList.remove('mobile-sidebar-active'); // (BAGO)
+    }
+  });
+</script>
 </body>
 </html>

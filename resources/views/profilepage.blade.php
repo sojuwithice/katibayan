@@ -21,14 +21,14 @@
         <i data-lucide="layout-dashboard"></i>
         <span class="label">Dashboard</span>
       </a>
-      <div class="profile-item nav-item">
+      <div class="profile-item nav-item" >
         <a href="#" class="profile-link">
           <i data-lucide="circle-user"></i>
           <span class="label">Profile</span>
           <i data-lucide="chevron-down" class="submenu-arrow"></i>
         </a>
         <div class="submenu">
-          <a href="{{ route('profilepage') }}" class="active">My Profile</a>
+          <a href="{{ route('profilepage') }}"class="active">My Profile</a>
           <a href="{{ route('certificatepage') }}">Certificates</a>
         </div>
       </div>
@@ -37,17 +37,16 @@
         <i data-lucide="calendar"></i>
         <span class="label">Events and Programs</span>
       </a>
-
+      
       <a href="{{ route('evaluation') }}">
           <i data-lucide="user-star"></i>
           <span class="label">Evaluation</span>
       </a>
 
-        <a href="{{ route('serviceoffers') }}">
-          <i data-lucide="hand-heart"></i>
-          <span class="label">Service Offer</span>
-        </a>
-
+      <a href="{{ route('serviceoffers') }}">
+        <i data-lucide="hand-heart"></i>
+        <span class="label">Service Offer</span>
+      </a>
     </nav>
   </aside>
 
@@ -56,6 +55,9 @@
 
     <!-- Topbar -->
     <header class="topbar">
+      <button id="mobileMenuBtn" class="mobile-hamburger">
+  <i data-lucide="menu"></i>
+</button>
       <div class="logo">
         <img src="{{ asset('images/logo.png') }}" alt="Logo">
         <div class="logo-text">
@@ -155,7 +157,7 @@
               <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
                    alt="User" class="profile-avatar">
               <div class="profile-info">
-                <h4>{{ $user ? $user->given_name . ' ' . ($user->middle_name ? $user->middle_name . ' ' : '') . $user->last_name . ' ' . ($user->suffix ? $user->suffix : '') : 'Guest User' }}</h4>
+                <h4>{{ $user->given_name }} {{ $user->middle_name }} {{ $user->last_name }} {{ $user->suffix }}</h4>
                 <div class="profile-badge">
                   <span class="badge">{{ $roleBadge }}</span>
                   <span class="badge">{{ $age }} yrs old</span>
@@ -177,17 +179,18 @@
               </li>
               <li><i class="fas fa-star"></i> Send Feedback to Katibayan</li>
               <li class="logout-item">
-                <a href="#" onclick="confirmLogout(event)">
+                <a href="loginpage" onclick="confirmLogout(event)">
                   <i class="fas fa-sign-out-alt"></i> Logout
                 </a>
               </li>
             </ul>
+            
+            <!-- Hidden Logout Form -->
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+              @csrf
+            </form>
           </div>
         </div>
-
-        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-          @csrf
-        </form>
       </div>
     </header>
 
@@ -1472,5 +1475,29 @@
         lucide.createIcons();
     });
   </script>
+
+  <script>
+  const mobileBtn = document.getElementById('mobileMenuBtn');
+  const sidebar = document.querySelector('.sidebar');
+  const mainContent = document.querySelector('.main'); // (BAGO)
+
+  mobileBtn?.addEventListener('click', (e) => {
+    e.stopPropagation(); // (BAGO)
+    sidebar.classList.toggle('open');
+    document.body.classList.toggle('mobile-sidebar-active'); // (BAGO)
+  });
+
+  // Close sidebar when clicking outside (mobile only)
+  document.addEventListener('click', (e) => {
+    if (window.innerWidth <= 768 &&
+      sidebar.classList.contains('open') && // (BAGO) Check kung open
+      !sidebar.contains(e.target) &&
+      !mobileBtn.contains(e.target)) {
+      
+      sidebar.classList.remove('open');
+      document.body.classList.remove('mobile-sidebar-active'); // (BAGO)
+    }
+  });
+</script>
 </body>
 </html>

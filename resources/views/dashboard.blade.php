@@ -60,6 +60,10 @@
 
     <!-- Topbar -->
     <header class="topbar">
+      <button id="mobileMenuBtn" class="mobile-hamburger">
+  <i data-lucide="menu"></i>
+</button>
+
       <div class="logo">
         <img src="{{ asset('images/logo.png') }}" alt="Logo">
         <div class="logo-text">
@@ -591,16 +595,16 @@
   </div>
 
   <script>
-    // CSRF Token for AJAX requests
-    window.csrfToken = '{{ csrf_token() }}';
-  
+  // CSRF Token for AJAX requests
+  window.csrfToken = '{{ csrf_token() }}';
+
   /**
    * Updates the time in the topbar.
    */
   function updateTime() {
     const timeEl = document.querySelector(".time");
     if (!timeEl) return;
-    
+
     const now = new Date();
     const shortWeekdays = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
     const shortMonths = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
@@ -612,43 +616,43 @@
     const ampm = hours >= 12 ? "PM" : "AM";
     hours = hours % 12 || 12;
 
-      timeEl.innerHTML = `${weekday}, ${month} ${day} ${hours}:${minutes} <span>${ampm}</span>`;
+    timeEl.innerHTML = `${weekday}, ${month} ${day} ${hours}:${minutes} <span>${ampm}</span>`;
+  }
+
+  /**
+   * Initializes sidebar toggle and profile submenu.
+   */
+  function initSidebar() {
+    const menuToggle = document.querySelector('.menu-toggle');
+    const sidebar = document.querySelector('.sidebar');
+    const profileItem = document.querySelector('.profile-item');
+    const profileLink = profileItem?.querySelector('.profile-link');
+
+    if (menuToggle && sidebar) {
+      menuToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        sidebar.classList.toggle('open');
+        if (!sidebar.classList.contains('open')) {
+          profileItem?.classList.remove('open');
+        }
+      });
     }
 
-    /**
-     * Initializes sidebar toggle and profile submenu.
-     */
-    function initSidebar() {
-      const menuToggle = document.querySelector('.menu-toggle');
-      const sidebar = document.querySelector('.sidebar');
-      const profileItem = document.querySelector('.profile-item');
-      const profileLink = profileItem?.querySelector('.profile-link');
-
-      if (menuToggle && sidebar) {
-        menuToggle.addEventListener('click', (e) => {
-          e.stopPropagation();
-          sidebar.classList.toggle('open');
-          if (!sidebar.classList.contains('open')) {
-            profileItem?.classList.remove('open');
-          }
-        });
-      }
-
-      function closeAllSubmenus() {
-        profileItem?.classList.remove('open');
-      }
-
-      if (profileItem && profileLink) {
-        profileLink.addEventListener('click', (e) => {
-          e.preventDefault();
-          if (sidebar.classList.contains('open')) {
-            const isOpen = profileItem.classList.contains('open');
-            closeAllSubmenus();
-            if (!isOpen) profileItem.classList.add('open');
-          }
-        });
-      }
+    function closeAllSubmenus() {
+      profileItem?.classList.remove('open');
     }
+
+    if (profileItem && profileLink) {
+      profileLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (sidebar.classList.contains('open')) {
+          const isOpen = profileItem.classList.contains('open');
+          closeAllSubmenus();
+          if (!isOpen) profileItem.classList.add('open');
+        }
+      });
+    }
+  }
 
   /**
    * Initializes topbar dropdowns (notifications, profile)
@@ -659,11 +663,11 @@
     updateTime();
     setInterval(updateTime, 60000);
 
-      // --- Elements ---
-      const notifWrapper = document.querySelector(".notification-wrapper");
-      const profileWrapper = document.querySelector(".profile-wrapper");
-      const profileToggle = document.getElementById("profileToggle");
-      const profileDropdown = profileWrapper?.querySelector(".profile-dropdown");
+    // --- Elements ---
+    const notifWrapper = document.querySelector(".notification-wrapper");
+    const profileWrapper = document.querySelector(".profile-wrapper");
+    const profileToggle = document.getElementById("profileToggle");
+    const profileDropdown = profileWrapper?.querySelector(".profile-dropdown");
 
     // --- Notifications Dropdown ---
     if (notifWrapper) {
@@ -673,7 +677,7 @@
         notifWrapper.classList.toggle("active");
         profileWrapper?.classList.remove("active");
       });
-      
+
       const dropdown = notifWrapper.querySelector(".notif-dropdown");
       dropdown?.addEventListener("click", (e) => e.stopPropagation());
 
@@ -683,7 +687,7 @@
           e.preventDefault(); // Pigilan 'yung default link behavior
           const eventId = this.getAttribute('data-event-id');
           const programId = this.getAttribute('data-program-id');
-          
+
           if (openEvaluationModal) {
             if (eventId) {
               openEvaluationModal(eventId, 'event'); // Specify activity type
@@ -691,31 +695,35 @@
               openEvaluationModal(programId, 'program'); // Specify activity type
             }
           }
-          notifWrapper.classList.remove('active'); 
+          notifWrapper.classList.remove('active');
         });
       });
     }
 
-      // --- Profile Dropdown ---
-      if (profileWrapper && profileToggle && profileDropdown) {
-        profileToggle.addEventListener("click", (e) => {
-          e.stopPropagation();
-          profileWrapper.classList.toggle("active");
-          notifWrapper?.classList.remove("active");
-        });
+    // --- Profile Dropdown ---
+    if (profileWrapper && profileToggle && profileDropdown) {
+      profileToggle.addEventListener("click", (e) => {
+        e.stopPropagation();
+        profileWrapper.classList.toggle("active");
+        notifWrapper?.classList.remove("active");
+      });
 
-        profileDropdown.addEventListener("click", (e) => e.stopPropagation());
-      }
+      profileDropdown.addEventListener("click", (e) => e.stopPropagation());
+    }
 
-      // --- Global Click Listener for Topbar/Sidebar ---
+    // --- Global Click Listener for Topbar/Sidebar ---
       document.addEventListener("click", (e) => {
         const sidebar = document.querySelector('.sidebar');
         const menuToggle = document.querySelector('.menu-toggle');
         
-        if (sidebar && !sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+        // (FIX) Only run this sidebar logic on DESKTOP. 
+        // Mobile has its own listener in the other script tag.
+        if (window.innerWidth > 768 && sidebar && !sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
           sidebar.classList.remove('open');
           document.querySelector('.profile-item')?.classList.remove('open');
         }
+
+        // Ito ay para sa profile at notif dropdowns (OK ito)
         if (profileWrapper && !profileWrapper.contains(e.target)) {
           profileWrapper.classList.remove('active');
         }
@@ -725,153 +733,156 @@
       });
 
 
-    }
+  }
 
-    /**
-     * Initializes the 7-day week calendar.
-     */
-    function initCalendar() {
-      const calendar = document.querySelector(".calendar");
-      if (!calendar) return; 
+  /**
+   * Initializes the 7-day week calendar.
+   */
+  function initCalendar() {
+    const calendar = document.querySelector(".calendar");
+    if (!calendar) return;
 
-      const daysContainer = calendar.querySelector(".days");
-      const header = calendar.querySelector("header h3");
-      const prevBtn = calendar.querySelector(".prev");
-      const nextBtn = calendar.querySelector(".next");
-      
-      if (!daysContainer || !header || !prevBtn || !nextBtn) return;
+    const daysContainer = calendar.querySelector(".days");
+    const header = calendar.querySelector("header h3");
+    const prevBtn = calendar.querySelector(".prev");
+    const nextBtn = calendar.querySelector(".next");
+
+    if (!daysContainer || !header || !prevBtn || !nextBtn) return;
 
     const weekdays = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
     const holidays = [
       // (Assuming 2024 for example, update this as needed)
       "2024-01-01", "2024-04-09", "2024-04-10", "2024-05-01",
-      "2024-06-12", "2024-08-26", "2024-11-30", "2024-12-25", 
+      "2024-06-12", "2024-08-26", "2024-11-30", "2024-12-25",
       "2024-12-30", "2024-12-31"
     ];
     let today = new Date();
     let currentView = new Date();
 
-      function renderCalendar(baseDate) {
-        daysContainer.innerHTML = "";
+    function renderCalendar(baseDate) {
+      daysContainer.innerHTML = "";
 
-        const startOfWeek = new Date(baseDate);
-        startOfWeek.setDate(baseDate.getDate() - (baseDate.getDay() === 0 ? 6 : baseDate.getDay() - 1));
+      const startOfWeek = new Date(baseDate);
+      startOfWeek.setDate(baseDate.getDate() - (baseDate.getDay() === 0 ? 6 : baseDate.getDay() - 1));
 
-        const middleDay = new Date(startOfWeek);
-        middleDay.setDate(startOfWeek.getDate() + 3);
-        header.textContent = middleDay.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+      const middleDay = new Date(startOfWeek);
+      middleDay.setDate(startOfWeek.getDate() + 3);
+      header.textContent = middleDay.toLocaleDateString("en-US", {
+        month: "long",
+        year: "numeric"
+      });
 
-        for (let i = 0; i < 7; i++) {
-          const thisDay = new Date(startOfWeek);
-          thisDay.setDate(startOfWeek.getDate() + i);
+      for (let i = 0; i < 7; i++) {
+        const thisDay = new Date(startOfWeek);
+        thisDay.setDate(startOfWeek.getDate() + i);
 
-          const dayEl = document.createElement("div");
-          dayEl.classList.add("day");
+        const dayEl = document.createElement("div");
+        dayEl.classList.add("day");
 
-          const weekdayEl = document.createElement("span");
-          weekdayEl.classList.add("weekday");
-          weekdayEl.textContent = weekdays[i];
+        const weekdayEl = document.createElement("span");
+        weekdayEl.classList.add("weekday");
+        weekdayEl.textContent = weekdays[i];
 
-          const dateEl = document.createElement("span");
-          dateEl.classList.add("date");
-          dateEl.textContent = thisDay.getDate();
+        const dateEl = document.createElement("span");
+        dateEl.classList.add("date");
+        dateEl.textContent = thisDay.getDate();
 
-          const dateStr = `${thisDay.getFullYear()}-${(thisDay.getMonth() + 1).toString().padStart(2, '0')}-${thisDay.getDate().toString().padStart(2, '0')}`;
+        const dateStr = `${thisDay.getFullYear()}-${(thisDay.getMonth() + 1).toString().padStart(2, '0')}-${thisDay.getDate().toString().padStart(2, '0')}`;
 
-          if (holidays.includes(dateStr)) {
-            dateEl.classList.add('holiday');
-          }
-
-          if (thisDay.getDate() === today.getDate() && 
-              thisDay.getMonth() === today.getMonth() && 
-              thisDay.getFullYear() === today.getFullYear()) {
-            dayEl.classList.add("active");
-          }
-
-          dayEl.appendChild(weekdayEl);
-          dayEl.appendChild(dateEl);
-          daysContainer.appendChild(dayEl);
+        if (holidays.includes(dateStr)) {
+          dateEl.classList.add('holiday');
         }
+
+        if (thisDay.getDate() === today.getDate() &&
+          thisDay.getMonth() === today.getMonth() &&
+          thisDay.getFullYear() === today.getFullYear()) {
+          dayEl.classList.add("active");
+        }
+
+        dayEl.appendChild(weekdayEl);
+        dayEl.appendChild(dateEl);
+        daysContainer.appendChild(dayEl);
       }
-
-      renderCalendar(currentView);
-
-      prevBtn.addEventListener("click", () => {
-        currentView.setDate(currentView.getDate() - 7);
-        renderCalendar(currentView);
-      });
-      
-      nextBtn.addEventListener("click", () => {
-        currentView.setDate(currentView.getDate() + 7);
-        renderCalendar(currentView);
-      });
     }
 
-    /**
-     * Initializes the Welcome Slider / Carousel.
-     */
-    function initWelcomeSlider() {
-      const welcomeSection = document.querySelector(".welcome");
-      if (!welcomeSection) return; 
+    renderCalendar(currentView);
 
-      const slideTrack = welcomeSection.querySelector(".slides");
-      const slides = welcomeSection.querySelectorAll(".slide");
-      const dotsContainer = welcomeSection.querySelector(".dots");
+    prevBtn.addEventListener("click", () => {
+      currentView.setDate(currentView.getDate() - 7);
+      renderCalendar(currentView);
+    });
 
-      if (!slideTrack || slides.length === 0 || !dotsContainer) return;
+    nextBtn.addEventListener("click", () => {
+      currentView.setDate(currentView.getDate() + 7);
+      renderCalendar(currentView);
+    });
+  }
 
-      let currentIndex = 0;
-      let autoPlay;
-      const dots = [];
+  /**
+   * Initializes the Welcome Slider / Carousel.
+   */
+  function initWelcomeSlider() {
+    const welcomeSection = document.querySelector(".welcome");
+    if (!welcomeSection) return;
 
-      slides.forEach((_, i) => {
-        const dot = document.createElement("button");
-        if (i === 0) dot.classList.add("active");
-        dot.addEventListener("click", () => {
-          currentIndex = i;
-          updateSlide();
-          restartAuto();
-        });
-        dotsContainer.appendChild(dot);
-        dots.push(dot);
+    const slideTrack = welcomeSection.querySelector(".slides");
+    const slides = welcomeSection.querySelectorAll(".slide");
+    const dotsContainer = welcomeSection.querySelector(".dots");
+
+    if (!slideTrack || slides.length === 0 || !dotsContainer) return;
+
+    let currentIndex = 0;
+    let autoPlay;
+    const dots = [];
+
+    slides.forEach((_, i) => {
+      const dot = document.createElement("button");
+      if (i === 0) dot.classList.add("active");
+      dot.addEventListener("click", () => {
+        currentIndex = i;
+        updateSlide();
+        restartAuto();
       });
+      dotsContainer.appendChild(dot);
+      dots.push(dot);
+    });
 
     function updateSlide() {
       // (FIX) Recalculate width on update, important for resize
       const containerWidth = welcomeSection.getBoundingClientRect().width;
       if (containerWidth === 0) return; // Avoid error if hidden
       slideTrack.style.transform = `translateX(-${currentIndex * containerWidth}px)`;
-      
+
       dots.forEach(dot => dot.classList.remove("active"));
-      if(dots[currentIndex]) dots[currentIndex].classList.add("active");
+      if (dots[currentIndex]) dots[currentIndex].classList.add("active");
     }
 
-      function nextSlide() {
-        currentIndex = (currentIndex + 1) % slides.length;
-        updateSlide();
-      }
-      
-      function startAuto() {
-        stopAuto(); 
-        autoPlay = setInterval(nextSlide, 4000);
-      }
-      
-      function stopAuto() {
-        clearInterval(autoPlay);
-      }
-      
-      function restartAuto() {
-        stopAuto();
-        startAuto();
-      }
-
+    function nextSlide() {
+      currentIndex = (currentIndex + 1) % slides.length;
       updateSlide();
-      startAuto();
-
-      welcomeSection.addEventListener("mouseenter", stopAuto);
-      welcomeSection.addEventListener("mouseleave", startAuto);
-      window.addEventListener("resize", updateSlide);
     }
+
+    function startAuto() {
+      stopAuto();
+      autoPlay = setInterval(nextSlide, 4000);
+    }
+
+    function stopAuto() {
+      clearInterval(autoPlay);
+    }
+
+    function restartAuto() {
+      stopAuto();
+      startAuto();
+    }
+
+    updateSlide();
+    startAuto();
+
+    welcomeSection.addEventListener("mouseenter", stopAuto);
+    welcomeSection.addEventListener("mouseleave", startAuto);
+    window.addEventListener("resize", updateSlide);
+  }
 
   /**
    * (FIXED STRUCTURE)
@@ -880,17 +891,17 @@
    */
   function initEvaluationModal() {
     const evalModal = document.getElementById('evaluationModal');
-    
+
     // (FIX) Define the opener function here
     function openEvaluationModal(activityId, activityType = 'event') {
       if (!evalModal) {
         console.error("Evaluation modal not found in DOM.");
         return;
       }
-      
+
       // Determine the API endpoint based on activity type
       const apiUrl = activityType === 'event' ? `/events/${activityId}` : `/programs/${activityId}`;
-      
+
       // Fetch activity details
       fetch(apiUrl)
         .then(response => {
@@ -908,11 +919,11 @@
           alert('Error loading activity details');
         });
     }
-    
+
     // If modal doesn't exist, return a dummy function to avoid errors
     if (!evalModal) {
-      return function() { 
-        console.warn("Tried to open evaluation modal, but it was not found."); 
+      return function() {
+        console.warn("Tried to open evaluation modal, but it was not found.");
       };
     }
 
@@ -928,7 +939,7 @@
       star.addEventListener('click', function() {
         const rating = this.getAttribute('data-rating');
         document.getElementById('rating').value = rating;
-        
+
         evalStars.forEach((s, index) => {
           s.classList.toggle('active', index < rating);
         });
@@ -957,10 +968,10 @@
       const formData = new FormData(evalForm);
       const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-        if (!formData.get('rating')) {
-          alert('Please provide a rating');
-          return;
-        }
+      if (!formData.get('rating')) {
+        alert('Please provide a rating');
+        return;
+      }
 
       // Determine which field to set based on activity type
       const activityType = formData.get('activity_type');
@@ -971,37 +982,39 @@
       }
 
       fetch('/evaluation', {
-        method: 'POST',
-        headers: {
-          'X-CSRF-TOKEN': csrfToken,
-          'Accept': 'application/json'
-        },
-        body: formData // Send as FormData
-      })
-      .then(response => {
-        if (!response.ok) {
-           return response.json().then(err => { throw err; });
-        }
-        return response.json();
-      })
-      .then(data => {
-        if (data.success) {
-          alert('Evaluation submitted successfully!');
-          closeModal();
-          location.reload(); // Reload to update progress/notifications
-        } else {
-          // Handle validation errors or other specific errors
-          let errorMsg = data.message || 'Submission failed.';
-          if (data.errors) {
-            errorMsg += '\n' + Object.values(data.errors).join('\n');
+          method: 'POST',
+          headers: {
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json'
+          },
+          body: formData // Send as FormData
+        })
+        .then(response => {
+          if (!response.ok) {
+            return response.json().then(err => {
+              throw err;
+            });
           }
-          alert(errorMsg);
-        }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        alert(error.message || 'An error occurred while submitting.');
-      });
+          return response.json();
+        })
+        .then(data => {
+          if (data.success) {
+            alert('Evaluation submitted successfully!');
+            closeModal();
+            location.reload(); // Reload to update progress/notifications
+          } else {
+            // Handle validation errors or other specific errors
+            let errorMsg = data.message || 'Submission failed.';
+            if (data.errors) {
+              errorMsg += '\n' + Object.values(data.errors).join('\n');
+            }
+            alert(errorMsg);
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert(error.message || 'An error occurred while submitting.');
+        });
     });
 
     // (FIX) Return the opener function
@@ -1018,14 +1031,14 @@
       console.warn("Feedback modal or trigger not found.");
       return;
     }
-    
+
     const feedbackCloseBtn = document.getElementById('closeModal');
     const feedbackStars = document.querySelectorAll('#starRating i');
     const feedbackRatingInput = document.getElementById('ratingInput');
-    
+
     const feedbackForm = document.getElementById('feedbackForm');
     const submitBtn = feedbackForm?.querySelector('.submit-btn');
-    
+
     const successModal = document.getElementById('successModal');
     const closeSuccessBtn = document.getElementById('closeSuccessModal');
 
@@ -1054,15 +1067,15 @@
         option.addEventListener('click', () => {
           const value = option.getAttribute('data-value');
           const text = option.textContent.trim();
-          
-          if(selectedText) selectedText.textContent = text;
-          if(realSelect) realSelect.value = value; 
-          trigger?.classList.add('selected'); 
-          
+
+          if (selectedText) selectedText.textContent = text;
+          if (realSelect) realSelect.value = value;
+          trigger?.classList.add('selected');
+
           customSelect.classList.remove('open');
         });
       });
-      
+
       // Close custom select on outside click
       document.addEventListener('click', () => {
         customSelect.classList.remove('open');
@@ -1075,10 +1088,10 @@
       feedbackModal.style.display = 'flex';
     });
 
-      // Close modal
-      feedbackCloseBtn?.addEventListener('click', () => {
-        feedbackModal.style.display = 'none';
-      });
+    // Close modal
+    feedbackCloseBtn?.addEventListener('click', () => {
+      feedbackModal.style.display = 'none';
+    });
 
     // Close when clicking outside
     window.addEventListener('click', (e) => {
@@ -1090,153 +1103,155 @@
       }
     });
 
-      // Star rating system
-      feedbackStars.forEach(star => {
-        star.addEventListener('click', () => {
-          const rating = star.getAttribute('data-value');
-          if(feedbackRatingInput) feedbackRatingInput.value = rating;
+    // Star rating system
+    feedbackStars.forEach(star => {
+      star.addEventListener('click', () => {
+        const rating = star.getAttribute('data-value');
+        if (feedbackRatingInput) feedbackRatingInput.value = rating;
 
-          feedbackStars.forEach(s => {
-            s.classList.remove('fas');
-            s.classList.add('far');
-          });
-          for (let i = 0; i < rating; i++) {
-            feedbackStars[i].classList.remove('far');
-            feedbackStars[i].classList.add('fas');
-          }
+        feedbackStars.forEach(s => {
+          s.classList.remove('fas');
+          s.classList.add('far');
         });
+        for (let i = 0; i < rating; i++) {
+          feedbackStars[i].classList.remove('far');
+          feedbackStars[i].classList.add('fas');
+        }
       });
+    });
 
     // AJAX Form Submission
-    if (feedbackForm) { 
+    if (feedbackForm) {
       feedbackForm.addEventListener('submit', function(e) {
-          e.preventDefault(); 
-          
-          const formData = new FormData(feedbackForm);
-          const submitButtonText = submitBtn.textContent;
-          
-          if(submitBtn) {
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Submitting...';
-          }
+        e.preventDefault();
 
-          fetch(feedbackForm.action, {
-              method: 'POST',
-              headers: {
-                  'X-CSRF-TOKEN': formData.get('_token'),
-                  'Accept': 'application/json' 
-              },
-              body: formData
+        const formData = new FormData(feedbackForm);
+        const submitButtonText = submitBtn.textContent;
+
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'Submitting...';
+        }
+
+        fetch(feedbackForm.action, {
+            method: 'POST',
+            headers: {
+              'X-CSRF-TOKEN': formData.get('_token'),
+              'Accept': 'application/json'
+            },
+            body: formData
           })
           .then(response => response.json()) // Assume it always returns JSON
           .then(data => {
-              if (data.success) { 
-                  feedbackModal.style.display = 'none';
-                  if(successModal) successModal.style.display = 'flex';
-              } else {
-                  // Handle validation errors or other errors
-                  let errorMsg = data.message || 'Submission failed.';
-                  if (data.errors) {
-                    errorMsg += '\n' + Object.values(data.errors).join('\n');
-                  }
-                  throw new Error(errorMsg);
+            if (data.success) {
+              feedbackModal.style.display = 'none';
+              if (successModal) successModal.style.display = 'flex';
+            } else {
+              // Handle validation errors or other errors
+              let errorMsg = data.message || 'Submission failed.';
+              if (data.errors) {
+                errorMsg += '\n' + Object.values(data.errors).join('\n');
               }
+              throw new Error(errorMsg);
+            }
           })
           .catch(error => {
-              console.error('Error:', error);
-              alert(error.message || 'An error occurred. Please try again.');
+            console.error('Error:', error);
+            alert(error.message || 'An error occurred. Please try again.');
           })
           .finally(() => {
-              // Reset form in finally block
-              if(submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.textContent = submitButtonText;
-              }
-              
-              feedbackForm.reset();
-              feedbackStars.forEach(s => {
-                s.classList.remove('fas');
-                s.classList.add('far');
-              });
-              if(feedbackRatingInput) feedbackRatingInput.value = '';
-              
-              // Reset custom select
-              const selectedText = document.getElementById('selectedFeedbackType');
-              const trigger = customSelect?.querySelector('.custom-select-trigger');
-              const realSelect = document.getElementById('type');
-              if(selectedText) selectedText.textContent = 'Select feedback type';
-              trigger?.classList.remove('selected');
-              if(realSelect) realSelect.value = '';
+            // Reset form in finally block
+            if (submitBtn) {
+              submitBtn.disabled = false;
+              submitBtn.textContent = submitButtonText;
+            }
+
+            feedbackForm.reset();
+            feedbackStars.forEach(s => {
+              s.classList.remove('fas');
+              s.classList.add('far');
+            });
+            if (feedbackRatingInput) feedbackRatingInput.value = '';
+
+            // Reset custom select
+            const selectedText = document.getElementById('selectedFeedbackType');
+            const trigger = customSelect?.querySelector('.custom-select-trigger');
+            const realSelect = document.getElementById('type');
+            if (selectedText) selectedText.textContent = 'Select feedback type';
+            trigger?.classList.remove('selected');
+            if (realSelect) realSelect.value = '';
           });
       });
-    } 
+    }
 
     // Close success modal
     closeSuccessBtn?.addEventListener('click', () => {
-        if(successModal) successModal.style.display = 'none';
+      if (successModal) successModal.style.display = 'none';
     });
   }
 
   function initMarkAsRead() {
-  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-  if (!csrfToken) {
-    console.error('CSRF token not found.');
-    return;
-  }
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    if (!csrfToken) {
+      console.error('CSRF token not found.');
+      return;
+    }
 
-  // Select all notifications with a data-id attribute
-  document.querySelectorAll('.notif-link[data-id]').forEach(link => {
-    link.addEventListener('click', function(e) {
-      e.preventDefault();
-      const notifId = this.dataset.id;
-      const destinationUrl = this.href;
+    // Select all notifications with a data-id attribute
+    document.querySelectorAll('.notif-link[data-id]').forEach(link => {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const notifId = this.dataset.id;
+        const destinationUrl = this.href;
 
-      // Remove notification visually
-      const notifItem = this.closest('li');
-      notifItem?.remove();
+        // Remove notification visually
+        const notifItem = this.closest('li');
+        notifItem?.remove();
 
-      // Update notification count
-      const countEl = document.querySelector('.notif-count');
-      if (countEl) {
-        let currentCount = parseInt(countEl.textContent) || 0;
-        countEl.textContent = Math.max(0, currentCount - 1);
-        if (parseInt(countEl.textContent) === 0) {
-          countEl.remove();
-          // Optional: remove red dot on bell icon
-          const bellDot = document.querySelector('.notif-dot');
-          if (bellDot) bellDot.remove();
+        // Update notification count
+        const countEl = document.querySelector('.notif-count');
+        if (countEl) {
+          let currentCount = parseInt(countEl.textContent) || 0;
+          countEl.textContent = Math.max(0, currentCount - 1);
+          if (parseInt(countEl.textContent) === 0) {
+            countEl.remove();
+            // Optional: remove red dot on bell icon
+            const bellDot = document.querySelector('.notif-dot');
+            if (bellDot) bellDot.remove();
+          }
         }
-      }
 
-      // If no notifications left, show "No new notifications"
-      const notifList = document.querySelector('.notif-list');
-      if (notifList && notifList.children.length === 0) {
-        notifList.innerHTML = `<li class="no-notifications"><p>No new notifications</p></li>`;
-      }
-
-      // Send AJAX request to mark as read
-      fetch(`/notifications/${notifId}/read`, {
-        method: 'POST',
-        headers: {
-          'X-CSRF-TOKEN': csrfToken,
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ id: notifId })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (!data.success) console.error('Error marking notification as read:', data.message);
-      })
-      .catch(err => console.error('Fetch error:', err))
-      .finally(() => {
-        if (destinationUrl && destinationUrl !== '#') {
-          window.location.href = destinationUrl;
+        // If no notifications left, show "No new notifications"
+        const notifList = document.querySelector('.notif-list');
+        if (notifList && notifList.children.length === 0) {
+          notifList.innerHTML = `<li class="no-notifications"><p>No new notifications</p></li>`;
         }
+
+        // Send AJAX request to mark as read
+        fetch(`/notifications/${notifId}/read`, {
+            method: 'POST',
+            headers: {
+              'X-CSRF-TOKEN': csrfToken,
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              id: notifId
+            })
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (!data.success) console.error('Error marking notification as read:', data.message);
+          })
+          .catch(err => console.error('Fetch error:', err))
+          .finally(() => {
+            if (destinationUrl && destinationUrl !== '#') {
+              window.location.href = destinationUrl;
+            }
+          });
       });
     });
-  });
-}
+  }
 
   /**
    * Initializes Certificate Claim
@@ -1244,41 +1259,43 @@
    * Kapag cliniclick ang card, mag-mark as read at diretso redirect.
    */
   function initCertificateModal() {
-    
+
     const announcementCards = document.querySelectorAll('.certificate-schedule-announcement');
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-    const redirectUrl = '{{ route('certificatepage') }}'; 
+    const redirectUrl = '{{ route('certificatepage') }}';
 
     announcementCards.forEach(card => {
       card.addEventListener('click', (event) => {
         event.preventDefault(); // Para mapigilan ang default behavior
 
         // Kunin 'yung ID para sa "mark as read"
-        const annId = card.dataset.announcementId; 
+        const annId = card.dataset.announcementId;
 
         if (!annId) {
-            // Kung walang ID, i-redirect na lang
-            window.location.href = redirectUrl;
-            return;
+          // Kung walang ID, i-redirect na lang
+          window.location.href = redirectUrl;
+          return;
         }
 
         // 1. Mark as read (POST request)
         fetch(`/notifications/mark-as-read/${annId}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': csrfToken
-          },
-          body: JSON.stringify({ id: annId }) 
-        })
-        .catch(error => {
-          console.error('Error marking notification as read:', error);
-          // Kahit mag-error sa pag-mark as read, i-redirect pa rin
-        })
-        .finally(() => {
-          // 2. Redirect
-          window.location.href = redirectUrl;
-        });
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-TOKEN': csrfToken
+            },
+            body: JSON.stringify({
+              id: annId
+            })
+          })
+          .catch(error => {
+            console.error('Error marking notification as read:', error);
+            // Kahit mag-error sa pag-mark as read, i-redirect pa rin
+          })
+          .finally(() => {
+            // 2. Redirect
+            window.location.href = redirectUrl;
+          });
       });
     });
   }
@@ -1295,30 +1312,54 @@
   }
 
 
+
   // ==========================================================
   //  APP INITIALIZATION (MAIN)
   // ==========================================================
   document.addEventListener("DOMContentLoaded", () => {
     // Initialize Lucide icons first
     lucide.createIcons();
-    
+
     // Initialize all components
     initSidebar();
-    
+
     // (FIX) Kunin 'yung function na nireturn ng initEvaluationModal()
-    const openEvalModalFn = initEvaluationModal(); 
-    
+    const openEvalModalFn = initEvaluationModal();
+
     // Ipasa 'yung function sa initTopbar()
-    initTopbar(openEvalModalFn); 
-    
+    initTopbar(openEvalModalFn);
+
     initCalendar(); // <-- Ito 'yung para sa calendar
     initWelcomeSlider();
     initFeedbackModal();
     initMarkAsRead();
     initCertificateModal();
+
+  });
+</script>
+
+<script>
+  const mobileBtn = document.getElementById('mobileMenuBtn');
+  const sidebar = document.querySelector('.sidebar');
+  const mainContent = document.querySelector('.main'); // (BAGO)
+
+  mobileBtn?.addEventListener('click', (e) => {
+    e.stopPropagation(); // (BAGO)
+    sidebar.classList.toggle('open');
+    document.body.classList.toggle('mobile-sidebar-active'); // (BAGO)
   });
 
-
+  // Close sidebar when clicking outside (mobile only)
+  document.addEventListener('click', (e) => {
+    if (window.innerWidth <= 768 &&
+      sidebar.classList.contains('open') && // (BAGO) Check kung open
+      !sidebar.contains(e.target) &&
+      !mobileBtn.contains(e.target)) {
+      
+      sidebar.classList.remove('open');
+      document.body.classList.remove('mobile-sidebar-active'); // (BAGO)
+    }
+  });
 </script>
 </body>
 </html>

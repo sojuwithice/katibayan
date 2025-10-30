@@ -12,12 +12,12 @@
 </head>
 <body>
   
-  <!-- Sidebar -->
+    <!-- Sidebar -->
   <aside class="sidebar">
     <button class="menu-toggle">Menu</button>
     <div class="divider"></div>
     <nav class="nav">
-      <a href="{{ route('dashboard.index') }}">
+      <a href="{{ route('dashboard.index') }}" >
         <i data-lucide="layout-dashboard"></i>
         <span class="label">Dashboard</span>
       </a>
@@ -37,7 +37,7 @@
         <i data-lucide="calendar"></i>
         <span class="label">Events and Programs</span>
       </a>
-
+      
       <a href="{{ route('evaluation') }}">
           <i data-lucide="user-star"></i>
           <span class="label">Evaluation</span>
@@ -45,17 +45,19 @@
 
       <a href="{{ route('serviceoffers') }}">
         <i data-lucide="hand-heart"></i>
-        <span class="label">Service Offer</span>
+        <span class="label">Service Offer </span>
       </a>
-
     </nav>
   </aside>
 
-  <!-- Main Content -->
+  <!-- Main -->
   <div class="main">
 
     <!-- Topbar -->
     <header class="topbar">
+      <button id="mobileMenuBtn" class="mobile-hamburger">
+  <i data-lucide="menu"></i>
+</button>
       <div class="logo">
         <img src="{{ asset('images/logo.png') }}" alt="Logo">
         <div class="logo-text">
@@ -426,5 +428,29 @@
       };
     });
   </script>
+
+  <script>
+  const mobileBtn = document.getElementById('mobileMenuBtn');
+  const sidebar = document.querySelector('.sidebar');
+  const mainContent = document.querySelector('.main'); // (BAGO)
+
+  mobileBtn?.addEventListener('click', (e) => {
+    e.stopPropagation(); // (BAGO)
+    sidebar.classList.toggle('open');
+    document.body.classList.toggle('mobile-sidebar-active'); // (BAGO)
+  });
+
+  // Close sidebar when clicking outside (mobile only)
+  document.addEventListener('click', (e) => {
+    if (window.innerWidth <= 768 &&
+      sidebar.classList.contains('open') && // (BAGO) Check kung open
+      !sidebar.contains(e.target) &&
+      !mobileBtn.contains(e.target)) {
+      
+      sidebar.classList.remove('open');
+      document.body.classList.remove('mobile-sidebar-active'); // (BAGO)
+    }
+  });
+</script>
 </body>
 </html>
