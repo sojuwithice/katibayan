@@ -178,25 +178,22 @@
       // === Elements ===
       const menuToggle = document.querySelector('.menu-toggle');
       const sidebar = document.querySelector('.sidebar');
-
-      // Submenus
       const profileItem = document.querySelector('.profile-item');
       const profileLink = profileItem?.querySelector('.profile-link');
-
-      // Profile & notifications dropdown (topbar)
       const profileWrapper = document.querySelector('.profile-wrapper');
       const profileToggle = document.getElementById('profileToggle');
       const profileDropdown = document.querySelector('.profile-dropdown');
-
       const notifWrapper = document.querySelector(".notification-wrapper");
       const notifBell = notifWrapper?.querySelector(".fa-bell");
       const notifDropdown = notifWrapper?.querySelector(".notif-dropdown");
+      const modalOverlay = document.getElementById('modalOverlay');
+      const closeModal = document.getElementById('closeModal');
+      const timeEl = document.querySelector(".time");
 
       // === Sidebar toggle ===
       menuToggle?.addEventListener('click', (e) => {
         e.stopPropagation();
         sidebar.classList.toggle('open');
-
         if (!sidebar.classList.contains('open')) {
           profileItem?.classList.remove('open');
         }
@@ -219,23 +216,21 @@
         });
       }
 
-      // === Close sidebar when clicking outside ===
+      // === Global Click Listeners (Close dropdowns/sidebar) ===
       document.addEventListener('click', (e) => {
         if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
           sidebar.classList.remove('open');
           closeAllSubmenus();
         }
-
         if (profileWrapper && !profileWrapper.contains(e.target)) {
           profileWrapper.classList.remove('active');
         }
-
         if (notifWrapper && !notifWrapper.contains(e.target)) {
           notifWrapper.classList.remove('active');
         }
       });
 
-      // === Profile dropdown toggle (topbar) ===
+      // === Topbar Dropdowns ===
       if (profileToggle) {
         profileToggle.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -243,10 +238,8 @@
           notifWrapper?.classList.remove('active');
         });
       }
-
       profileDropdown?.addEventListener('click', e => e.stopPropagation());
 
-      // === Notifications dropdown toggle ===
       if (notifBell) {
         notifBell.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -254,31 +247,69 @@
           profileWrapper?.classList.remove('active');
         });
       }
-
       notifDropdown?.addEventListener('click', e => e.stopPropagation());
 
       // === Time auto-update ===
-      const timeEl = document.querySelector(".time");
       function updateTime() {
         if (!timeEl) return;
         const now = new Date();
-
         const shortWeekdays = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
         const shortMonths = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
-
         const weekday = shortWeekdays[now.getDay()];
         const month = shortMonths[now.getMonth()];
         const day = now.getDate();
-
         let hours = now.getHours();
         const minutes = now.getMinutes().toString().padStart(2, "0");
         const ampm = hours >= 12 ? "PM" : "AM";
         hours = hours % 12 || 12;
-
         timeEl.innerHTML = `${weekday}, ${month} ${day} ${hours}:${minutes} <span>${ampm}</span>`;
       }
       updateTime();
       setInterval(updateTime, 60000);
+
+      
+      // === (HELPER FUNCTION) Para sa status button ===
+      // (INAYOS NATIN 'TO PARA GAMITIN 'YUNG 'can_request_again' LOGIC)
+      // === (HELPER FUNCTION) Para sa status button ===
+      // (FIXED: In-update para sa event_id at program_id)
+      function getCertificateAction(cert) {
+        const status = cert.request_status;
+        
+        // --- ITO YUNG BAGO ---
+        // Alamin kung event_id o program_id ang gagamitin
+        const isEvent = !!cert.event_id; // true kung may event_id
+        const activityId = isEvent ? cert.event_id : cert.program_id;
+        const idType = isEvent ? 'data-event-id' : 'data-program-id';
+        // --- END NG BAGO ---
+
+        // Rule 1: Kung claimed na, tapos na.
+        if (status === 'claimed') {
+            return `<button class="print-btn status-claimed" disabled>Claimed</button>`;
+        }
+
+        // Rule 2: Kung pwede siya mag-request (base sa logic ng Controller)
+        if (cert.can_request_again) {
+            const buttonText = (status === null) ? 'Print Request' : 'Request Again';
+            // Gagamitin na natin yung 'idType' at 'activityId'
+            return `<button class="print-btn" ${idType}="${activityId}">${buttonText}</button>`;
+        }
+
+        // Rule 3: Kung HINDI siya pwede mag-request
+        switch (status) {
+          case 'requesting': 
+            return `<button class="print-btn status-pending" disabled>Request Pending</button>`;
+          case 'accepted': 
+            return `<button class="print-btn status-accepted" disabled>Accepted</button>`;
+          case 'ready_for_pickup':
+            return `<button class="print-btn status-ready" disabled>Ready to Claim</button>`;
+          case 'rejected':
+            return `<button class="print-btn status-rejected" disabled>Request Rejected</button>`;
+          default: 
+            // Para sa mga kaso na hindi nahabol (e.g. max na)
+            return `<button class="print-btn status-pending" disabled>Request Limit Reached</button>`;
+        }
+      }
+
 
       // === Load Certificates ===
       async function loadCertificates() {
@@ -289,9 +320,7 @@
               'Accept': 'application/json'
             }
           });
-          
           const data = await response.json();
-          
           if (data.success) {
             displayCertificates(data.certificates);
           } else {
@@ -304,74 +333,72 @@
         }
       }
 
-      // === Display Certificates ===
+      // === (FIX #1) 'displayCertificates' para gamitin ang 'getCertificateAction' ===
       function displayCertificates(certificates) {
         const container = document.getElementById('certificatesContainer');
         const emptyState = document.getElementById('emptyState');
-        const certHeader = document.getElementById('certHeader');
         const certCountText = document.getElementById('certificateCountText');
-        
+
         if (!certificates || certificates.length === 0) {
           showEmptyState();
           return;
         }
-        
-        // Update header
+
         certCountText.textContent = `You have a total of ${certificates.length} certificate${certificates.length !== 1 ? 's' : ''}.`;
-        
-        // Hide empty state
         emptyState.style.display = 'none';
-        
-        // Group certificates by month
+
         const groupedCerts = groupCertificatesByMonth(certificates);
-        
-        // Generate HTML for certificate groups
         let html = '';
-        
+
         for (const [monthYear, certs] of Object.entries(groupedCerts)) {
           html += `
             <div class="certificates-group">
               <h3>${monthYear}</h3>
               <div class="cert-grid">
           `;
+
           
-          certs.forEach(cert => {
-            html += `
-              <div class="cert-card" data-event-id="${cert.event_id}">
-                <div class="cert-img">
-                  <img src="${cert.event_image || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0jOTk5IHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5FdmVudCBJbWFnZTwvdGV4dD48L3N2Zz4='}" 
-                       alt="${cert.event_title}" class="cert-image" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0jOTk5IHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5FdmVudCBJbWFnZTwvdGV4dD48L3N2Zz4='">
-                </div>
-                <div class="cert-info">
-                  <div class="cert-text">
-                    <p class="cert-title">Certificate completed in:</p>
-                    <p class="cert-desc">${cert.event_title}</p>
-                    <p class="cert-date">${cert.event_date}</p>
-                  </div>
-                  <button class="print-btn" data-event-id="${cert.event_id}">Print with SK</button>
-                </div>
+          html += certs.map(cert => `
+            <div class="cert-card" data-event-id="${cert.event_id}">
+              <div class="cert-img">
+                <img
+                  src="${cert.event_image || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0jOTk5IHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5FdmVudCBJbWFnZTwvdGV4dD48L3N2Zz4='}"
+                  alt="${cert.event_title}"
+                  class="cert-image"
+                  onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0jOTk5IHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5FdmVudCBJbWFnZTwvdGV4dD48L3N2Zz4='"
+                >
               </div>
-            `;
-          });
-          
-          html += `
+              <div class="cert-info">
+                <div class="cert-text">
+                  <p class="cert-title">Certificate completed in:</p>
+                  <p class="cert-desc">${cert.event_title}</p>
+                  <p class="cert-date">${cert.event_date}</p>
+                </div>
+                
+                ${getCertificateAction(cert)}
+
               </div>
             </div>
-          `;
+          `).join('');
+
+          html += `</div></div>`;
         }
-        
+
         container.innerHTML = html;
-        
-        // Add event listeners to print buttons
-        document.querySelectorAll('.print-btn').forEach(btn => {
-          btn.addEventListener('click', handlePrintRequest);
+
+        // (BINAGO) In-update natin 'yung listener
+        container.addEventListener('click', e => {
+          // Titingnan niya kung 'print-btn' at HINDI disabled 'yung na-click
+          if (e.target.classList.contains('print-btn') && !e.target.disabled) {
+            handlePrintRequest(e);
+          }
         });
       }
+
 
       // === Group Certificates by Month ===
       function groupCertificatesByMonth(certificates) {
         const groups = {};
-        
         certificates.forEach(cert => {
           // Parse the evaluation date
           const evalDate = new Date(cert.evaluated_at);
@@ -379,14 +406,11 @@
             month: 'long', 
             year: 'numeric' 
           });
-          
           if (!groups[monthYear]) {
             groups[monthYear] = [];
           }
-          
           groups[monthYear].push(cert);
         });
-        
         return groups;
       }
 
@@ -395,46 +419,68 @@
         const container = document.getElementById('certificatesContainer');
         const emptyState = document.getElementById('emptyState');
         const certCountText = document.getElementById('certificateCountText');
-        
         container.innerHTML = '';
         emptyState.style.display = 'flex';
         certCountText.textContent = 'You have a total of 0 certificates.';
       }
 
-      // === Handle Print Request ===
-      function handlePrintRequest(e) {
-        const eventId = e.target.getAttribute('data-event-id');
+      // === (FIX #2) 'handlePrintRequest' para mag-update ng button ===
+      // === (FIX #2) 'handlePrintRequest' para mag-update ng button ===
+      // (FIXED: In-update para magpadala ng event_id O program_id)
+      async function handlePrintRequest(e) {
+        const printButton = e.target;
+        const originalText = printButton.textContent;
         
-        // Show the modal
-        const modalOverlay = document.getElementById('modalOverlay');
-        modalOverlay.style.display = 'flex';
+        // --- ITO YUNG BAGONG LOGIC ---
+        const eventId = printButton.getAttribute('data-event-id');
+        const programId = printButton.getAttribute('data-program-id');
         
-        // In a real implementation, you would send a request to generate/print the certificate
-        console.log('Print requested for event:', eventId);
-        
-        // You could add AJAX call here to request certificate generation
-        /*
-        fetch('/evaluation/request-print', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-          },
-          body: JSON.stringify({ event_id: eventId })
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
+        const payload = {};
+        if (eventId && eventId !== 'null') {
+            payload.event_id = eventId;
+        } else if (programId && programId !== 'null') {
+            payload.program_id = programId;
+        } else {
+            alert('Error: Activity ID not found.');
+            return;
+        }
+        // --- END NG BAGONG LOGIC ---
+
+        printButton.disabled = true;
+        printButton.textContent = 'Submitting...';
+
+        try {
+          // Ang URL ay '/certificate-request' na, base sa routes mo
+          const response = await fetch('/certificate-request', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify(payload) // Ipapadala na 'yung payload
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
             modalOverlay.style.display = 'flex';
+            printButton.textContent = 'Request Pending';
+            printButton.classList.add('status-pending');
+
+          } else {
+            alert('Error: ' + (data.message || 'Something went wrong.'));
+            printButton.disabled = false;
+            printButton.textContent = originalText;
           }
-        });
-        */
+        } catch (error) {
+          console.error('Error sending request:', error);
+          alert('An error occurred while sending your request.');
+          printButton.disabled = false;
+          printButton.textContent = originalText;
+        }
       }
 
       // === Modal Handling ===
-      const modalOverlay = document.getElementById('modalOverlay');
-      const closeModal = document.getElementById('closeModal');
-
       closeModal?.addEventListener('click', () => {
         modalOverlay.style.display = 'none';
       });
@@ -452,6 +498,7 @@
 
       // Start the page
       initializePage();
+
     });
   </script>
 </body>

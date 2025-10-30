@@ -7,11 +7,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>KatiBayan - Dashboard</title>
   <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 </head>
 
 <body>
@@ -70,49 +71,86 @@
       <div class="topbar-right">
         <div class="time">MON 10:00 <span>AM</span></div>
 
-        <!-- Notifications -->
-        <div class="notification-wrapper">
-          <i class="fas fa-bell"></i>
-          @if($notificationCount > 0)
-            <span class="notif-count">{{ $notificationCount }}</span>
-          @endif
-          <div class="notif-dropdown">
-            <div class="notif-header">
-              <strong>Notification</strong> 
-              @if($notificationCount > 0)
+    <!-- Notifications -->
+<div class="notification-wrapper">
+    <i class="fas fa-bell"></i>
+    @if($notificationCount > 0)
+        <span class="notif-count">{{ $notificationCount }}</span>
+    @endif
+    <div class="notif-dropdown">
+        <div class="notif-header">
+            <strong>Notification</strong>
+            @if($notificationCount > 0)
                 <span>{{ $notificationCount }}</span>
-              @endif
-            </div>
-            <ul class="notif-list">
-              @if($unevaluatedEvents->count() > 0)
-                @foreach($unevaluatedEvents as $event)
-                  <li class="evaluation-notification" data-event-id="{{ $event->id }}">
-                    <div class="notif-icon" style="background-color: #4CAF50;">
-                      <i class="fas fa-star" style="color: white;"></i>
-                    </div>
-                    <div class="notif-content">
-                      <strong>Program Evaluation Required</strong>
-                      <p>Please evaluate "{{ $event->title }}"</p>
-                      <small>Attended on {{ $event->attendances->first()->attended_at->format('M j, Y') }}</small>
-                    </div>
-                    <span class="notif-dot unread"></span>
-                  </li>
-                @endforeach
-              @else
-                <li class="no-notifications">
-                  <div class="notif-content">
-                    <p>No new notifications</p>
-                  </div>
-                </li>
-              @endif
-            </ul>
-            @if($unevaluatedEvents->count() > 0)
-              <div class="notif-footer">
-                <a href="{{ route('evaluation') }}" class="view-all-evaluations">View All Evaluations</a>
-              </div>
             @endif
-          </div>
         </div>
+        
+        <ul class="notif-list">
+
+            @foreach ($generalNotifications as $notif)
+                @php
+                    $link = '#'; // Default
+                    if ($notif->type == 'certificate_schedule') {
+                        $link = route('certificatepage'); 
+                    }
+                @endphp
+                
+                <li>
+                    <a href="{{ $link }}" class="notif-link {{ $notif->is_read == 0 ? 'unread' : '' }}" data-id="{{ $notif->id }}">
+                        
+                        <div class="notif-dot-container">
+                            @if ($notif->is_read == 0)
+                                <span class="notif-dot"></span>
+                            @else
+                                <span class="notif-dot-placeholder"></span>
+                            @endif
+                        </div>
+
+                        <div class="notif-main-content">
+                            <div class="notif-header-line">
+                                <strong>{{ $notif->title }}</strong>
+                                <span class="notif-timestamp">
+                                    {{ $notif->created_at->format('m/d/Y g:i A') }}
+                                </span>
+                            </div>
+                            <p class="notif-message">{{ $notif->message }}</p>
+                        </div>
+                    </a>
+                </li>
+            @endforeach
+
+            @foreach($unevaluatedActivities as $activity)
+                <li>
+                    <a href="{{ route('evaluation.show', $activity['id']) }}" class="notif-link unread" 
+                       data-{{ $activity['type'] }}-id="{{ $activity['id'] }}">
+                        
+                        <div class="notif-dot-container">
+                            <span class="notif-dot"></span>
+                        </div>
+                        
+                        <div class="notif-main-content">
+                            <div class="notif-header-line">
+                                <strong>{{ ucfirst($activity['type']) }} Evaluation Required</strong>
+                                <span class="notif-timestamp">
+                                    {{ $activity['created_at']->format('m/d/Y g:i A') }}
+                                </span>
+                            </div>
+                            <p class="notif-message">Please evaluate "{{ $activity['title'] }}"</p>
+                        </div>
+                    </a>
+                </li>
+            @endforeach
+
+            @if($generalNotifications->isEmpty() && $unevaluatedActivities->isEmpty())
+                <li class="no-notifications">
+                    <p>No new notifications</p>
+                </li>
+            @endif
+
+        </ul>
+        
+    </div>
+</div>
 
         <!-- Profile Avatar -->
         <div class="profile-wrapper">
@@ -161,93 +199,92 @@
     </header>
 
     <div id="feedbackModal" class="modal-overlay">
-  <div class="modal-content">
-    <span class="close-btn" id="closeModal">&times;</span>
+      <div class="modal-content">
+        <span class="close-btn" id="closeModal">&times;</span>
 
-    <h2>Send us feedback</h2>
-    <p>Help us improve by sharing your thoughts, suggestions, and experiences with our service.</p>
+        <h2>Send us feedback</h2>
+        <p>Help us improve by sharing your thoughts, suggestions, and experiences with our service.</p>
 
-    <div class="feedback-options">
-      <div class="option-card">
-        <i class="fas fa-star"></i>
-        <p><strong>Star Rating</strong><br>Rate your experience with 1–5 stars</p>
-      </div>
-      <div class="option-card">
-        <i class="fas fa-comment"></i> 
-        <p><strong>Comment Section</strong><br>Share your thoughts</p>
-      </div>
-      <div class="option-card">
-        <i class="fas fa-bolt"></i>
-        <p><strong>Quick Submission</strong><br>Simple and intuitive feedback process</p>
-      </div>
-    </div>
-
-    <h3>Enjoying it? Rate us!</h3>
-    <div class="star-rating" id="starRating">
-      <i class="far fa-star" data-value="1"></i>
-      <i class="far fa-star" data-value="2"></i>
-      <i class="far fa-star" data-value="3"></i>
-      <i class="far fa-star" data-value="4"></i>
-      <i class="far fa-star" data-value="5"></i>
-    </div>
-
-    <form id="feedbackForm" action="{{ route('feedback.submit') }}" method="POST">
-      @csrf
-      
-      <label for="type">Feedback Type</label>
-      
-      <div class="custom-select-wrapper" id="customSelect">
-        <div class="custom-select-trigger">
-          <span id="selectedFeedbackType">Select feedback type</span>
-          <div class="custom-arrow"></div>
-        </div>
-        
-        <div class="custom-options-list">
-          <div class="custom-option" data-value="suggestion">
-            <span class="dot suggestion"></span> Suggestion
+        <div class="feedback-options">
+          <div class="option-card">
+            <i class="fas fa-star"></i>
+            <p><strong>Star Rating</strong><br>Rate your experience with 1–5 stars</p>
           </div>
-          <div class="custom-option" data-value="bug">
-            <span class="dot bug"></span> Bug or Issue
+          <div class="option-card">
+            <i class="fas fa-comment"></i> 
+            <p><strong>Comment Section</strong><br>Share your thoughts</p>
           </div>
-          <div class="custom-option" data-value="appreciation">
-            <span class="dot appreciation"></span> Appreciation
-          </div>
-          <div class="custom-option" data-value="others">
-            <span class="dot others"></span> Others
+          <div class="option-card">
+            <i class="fas fa-bolt"></i>
+            <p><strong>Quick Submission</strong><br>Simple and intuitive feedback process</p>
           </div>
         </div>
-        
-        <select id="type" name="type" required style="display: none;">
-          <option value="" disabled selected>Select feedback type</option>
-          <option value="suggestion">Suggestion</option>
-          <option value="bug">Bug or Issue</option>
-          <option value="appreciation">Appreciation</option>
-          <option value="others">Others</option>
-        </select>
-      </div>
-      <label for="message">Your message</label>
-      <textarea id="message" name="message" rows="5" required></textarea>
 
-      <input type="hidden" name="rating" id="ratingInput">
-      
-      <div class="form-actions">
-        <button type="submit" class="submit-btn">Submit</button>
-      </div>
-    </form>
-  </div>
-</div>
+        <h3>Enjoying it? Rate us!</h3>
+        <div class="star-rating" id="starRating">
+          <i class="far fa-star" data-value="1"></i>
+          <i class="far fa-star" data-value="2"></i>
+          <i class="far fa-star" data-value="3"></i>
+          <i class="far fa-star" data-value="4"></i>
+          <i class="far fa-star" data-value="5"></i>
+        </div>
 
-<div id="successModal" class="modal-overlay simple-alert-modal">
-  <div class="modal-content">
-    <div class="success-icon">
-      <i class="fas fa-check"></i>
+        <form id="feedbackForm" action="{{ route('feedback.submit') }}" method="POST">
+          @csrf
+          
+          <label for="type">Feedback Type</label>
+          
+          <div class="custom-select-wrapper" id="customSelect">
+            <div class="custom-select-trigger">
+              <span id="selectedFeedbackType">Select feedback type</span>
+              <div class="custom-arrow"></div>
+            </div>
+            
+            <div class="custom-options-list">
+              <div class="custom-option" data-value="suggestion">
+                <span class="dot suggestion"></span> Suggestion
+              </div>
+              <div class="custom-option" data-value="bug">
+                <span class="dot bug"></span> Bug or Issue
+              </div>
+              <div class="custom-option" data-value="appreciation">
+                <span class="dot appreciation"></span> Appreciation
+              </div>
+              <div class="custom-option" data-value="others">
+                <span class="dot others"></span> Others
+              </div>
+            </div>
+            
+            <select id="type" name="type" required style="display: none;">
+              <option value="" disabled selected>Select feedback type</option>
+              <option value="suggestion">Suggestion</option>
+              <option value="bug">Bug or Issue</option>
+              <option value="appreciation">Appreciation</option>
+              <option value="others">Others</option>
+            </select>
+          </div>
+          <label for="message">Your message</label>
+          <textarea id="message" name="message" rows="5" required></textarea>
+
+          <input type="hidden" name="rating" id="ratingInput">
+          
+          <div class="form-actions">
+            <button type="submit" class="submit-btn">Submit</button>
+          </div>
+        </form>
+      </div>
     </div>
-    <h2>Submitted</h2>
-    <p>Thank you for your feedback! Your thoughts help us improve.</p>
-    <button id="closeSuccessModal" class="ok-btn">Ok</button>
-  </div>
-</div>
 
+    <div id="successModal" class="modal-overlay simple-alert-modal">
+      <div class="modal-content">
+        <div class="success-icon">
+          <i class="fas fa-check"></i>
+        </div>
+        <h2>Submitted</h2>
+        <p>Thank you for your feedback! Your thoughts help us improve.</p>
+        <button id="closeSuccessModal" class="ok-btn">Ok</button>
+      </div>
+    </div>
 
     <!-- === Pages Container === -->
     <div id="dashboard-page" class="page active">
@@ -340,23 +377,23 @@
               <div class="card-content">
                 <div class="text">
                   <h4>Evaluation</h4>
-                  <p>
-                    @if($eventsToEvaluate > 0)
-                      You have {{ $eventsToEvaluate }} program{{ $eventsToEvaluate > 1 ? 's' : '' }} to evaluate.
-                    @else
-                      All evaluations completed!
-                    @endif
-                  </p>
+                <p>
+    @if($activitiesToEvaluate > 0)
+        You have {{ $activitiesToEvaluate }} {{ $activitiesToEvaluate == 1 ? 'activity' : 'activities' }} to evaluate.
+    @else
+        All evaluations completed!
+    @endif
+</p>
                 </div>
                 <div class="icon">
                   <i data-lucide="thumbs-up"></i>
                 </div>
               </div>
-              <div class="progress-footer" style="--progress: {{ $attendedEvents > 0 ? ($evaluatedEvents / $attendedEvents * 100) : 0 }}%">
+              <div class="progress-footer" style="--progress: {{ $totalActivities > 0 ? ($evaluatedActivities / $totalActivities * 100) : 0 }}%">
                 <div class="bar">
                   <span style="width: var(--progress)"></span>
                 </div>
-                <small>{{ $evaluatedEvents }}/{{ $attendedEvents }}</small>
+                <small>{{ $evaluatedActivities }}/{{ $totalActivities }}</small>
               </div>
             </div>
 
@@ -409,34 +446,85 @@
           </div>
         </div>
 
-        <!-- Announcements -->
         <div class="announcements-section">
-          <h3 class="announcements-title">Announcements</h3>
-          <div class="announcements">
-            <div class="card">
-              <div class="card-content">
-                <div class="icon"><i class="fas fa-info"></i></div>
-                <div class="text">
-                  <strong>Important Announcement: No Office Today</strong>
-                  <p>The office is closed today. We sincerely apologize for any inconvenience.</p>
-                </div>
-              </div>
-              <button class="options">⋯</button>
-            </div>
-            <div class="card">
-              <div class="card-content">
-                <div class="icon">
-                  <i class="fas fa-print"></i>
-                </div>
-                <div class="text">
-                  <strong>Notice: No Printing Service Today</strong>
-                  <p>Please be informed that printing services are closed today.</p>
-                </div>
-              </div>
-              <button class="options">⋯</button>
-            </div>
+  <h3 class="announcements-title">Announcements</h3>
+  <div class="announcements" id="announcementsList"> {{-- Added ID --}}
+
+    @forelse ($announcements as $announcement)
+      {{-- Check if this is a certificate schedule announcement --}}
+      @php
+        $isCertificateSchedule = optional($announcement)->type == 'certificate_schedule';
+        preg_match("/'([^']+)'/", optional($announcement)->message, $matches);
+        $eventTitleFromMessage = $matches[1] ?? null;
+        $announcementId = optional($announcement)->id;
+        $relatedEventId = null; 
+      @endphp
+
+      {{-- Add data attributes and a class to the card --}}
+      <div class="card {{ $isCertificateSchedule ? 'certificate-schedule-announcement' : '' }}"
+           @if($isCertificateSchedule && $announcementId)
+             data-announcement-id="{{ $announcementId }}"
+           @endif
+           style="{{ $isCertificateSchedule ? 'cursor: pointer;' : '' }}"
+           >
+        <div class="card-content">
+          <div class="icon">
+            @if($isCertificateSchedule)
+               <i class="fas fa-calendar-check" style="color: #FFCA3A;"></i>
+            @else
+               <i class="fas fa-info-circle"></i>
+            @endif
+          </div>
+          <div class="text">
+            <strong>{{ optional($announcement)->title }}</strong>
+            <p>{{ optional($announcement)->message }}</p>
+            <small style="color: #888; margin-top: 5px; display: block;">
+                 Posted: {{ optional($announcement)->created_at?->diffForHumans() ?? 'Just now' }}
+            </small>
           </div>
         </div>
+      </div>
+    
+    @empty
+
+      {{-- === ITO YUNG FIX (Naka-Gitna) === --}}
+      <div style="
+          display: flex;
+          flex-direction: column;
+          justify-content: center; 
+          align-items: center;     
+          height: 100%;            
+          min-height: 200px;       
+          padding: 20px;
+          color: #999;
+      ">
+        
+        <i class="fas fa-bell-slash" style="
+            font-size: 2.5rem; 
+            color: #ccc; 
+            margin-bottom: 15px;
+        "></i>
+        
+        <strong style="
+            font-size: 1.1rem; 
+            color: #888; 
+            display: block; 
+            margin-bottom: 5px;
+            font-weight: 600;
+        ">
+          No Announcements Yet
+        </strong>
+        
+        <p style="font-size: 0.9rem; margin: 0; color: #999;">
+          Check back later for new updates.
+        </p>
+      </div>
+      {{-- === END NG FIX === --}}
+
+    @endforelse
+
+  </div>
+</div>
 
         <!-- Suggestion Box -->
         <div class="suggestion-box">
@@ -456,13 +544,14 @@
     <div class="modal-content">
       <span class="close">&times;</span>
       <div class="modal-header">
-        <h2>Evaluate Event</h2>
-        <span id="modalEventName" class="event-name"></span>
+        <h2>Evaluate Activity</h2>
+        <span id="modalActivityName" class="activity-name"></span>
       </div>
       <div class="modal-body">
         <form id="evaluationForm">
           @csrf
-          <input type="hidden" id="evaluationEventId" name="event_id">
+          <input type="hidden" id="evaluationActivityId" name="activity_id">
+          <input type="hidden" id="evaluationActivityType" name="activity_type">
           
           <div class="rating-section">
             <label>Overall Rating:</label>
@@ -478,11 +567,11 @@
 
           <div class="form-group">
             <label for="comments">Comments/Suggestions:</label>
-            <textarea id="comments" name="comments" rows="4" placeholder="Share your thoughts about the event..."></textarea>
+            <textarea id="comments" name="comments" rows="4" placeholder="Share your thoughts about the activity..."></textarea>
           </div>
 
           <div class="form-group">
-            <label>Would you recommend this event to others?</label>
+            <label>Would you recommend this activity to others?</label>
             <div class="recommendation">
               <label>
                 <input type="radio" name="recommend" value="yes" required> Yes
@@ -502,7 +591,12 @@
   </div>
 
   <script>
+    // CSRF Token for AJAX requests
+    window.csrfToken = '{{ csrf_token() }}';
   
+  /**
+   * Updates the time in the topbar.
+   */
   function updateTime() {
     const timeEl = document.querySelector(".time");
     if (!timeEl) return;
@@ -518,55 +612,58 @@
     const ampm = hours >= 12 ? "PM" : "AM";
     hours = hours % 12 || 12;
 
-    timeEl.innerHTML = `${weekday}, ${month} ${day} ${hours}:${minutes} <span>${ampm}</span>`;
-  }
+      timeEl.innerHTML = `${weekday}, ${month} ${day} ${hours}:${minutes} <span>${ampm}</span>`;
+    }
+
+    /**
+     * Initializes sidebar toggle and profile submenu.
+     */
+    function initSidebar() {
+      const menuToggle = document.querySelector('.menu-toggle');
+      const sidebar = document.querySelector('.sidebar');
+      const profileItem = document.querySelector('.profile-item');
+      const profileLink = profileItem?.querySelector('.profile-link');
+
+      if (menuToggle && sidebar) {
+        menuToggle.addEventListener('click', (e) => {
+          e.stopPropagation();
+          sidebar.classList.toggle('open');
+          if (!sidebar.classList.contains('open')) {
+            profileItem?.classList.remove('open');
+          }
+        });
+      }
+
+      function closeAllSubmenus() {
+        profileItem?.classList.remove('open');
+      }
+
+      if (profileItem && profileLink) {
+        profileLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          if (sidebar.classList.contains('open')) {
+            const isOpen = profileItem.classList.contains('open');
+            closeAllSubmenus();
+            if (!isOpen) profileItem.classList.add('open');
+          }
+        });
+      }
+    }
 
   /**
-   * Initializes sidebar toggle and profile submenu.
+   * Initializes topbar dropdowns (notifications, profile)
+   * and handles global clicks to close them.
    */
-  function initSidebar() {
-    const menuToggle = document.querySelector('.menu-toggle');
-    const sidebar = document.querySelector('.sidebar');
-    const profileItem = document.querySelector('.profile-item');
-    const profileLink = profileItem?.querySelector('.profile-link');
-
-    if (menuToggle && sidebar) {
-      menuToggle.addEventListener('click', (e) => {
-        e.stopPropagation();
-        sidebar.classList.toggle('open');
-        if (!sidebar.classList.contains('open')) {
-          profileItem?.classList.remove('open');
-        }
-      });
-    }
-
-    function closeAllSubmenus() {
-      profileItem?.classList.remove('open');
-    }
-
-    if (profileItem && profileLink) {
-      profileLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        if (sidebar.classList.contains('open')) {
-          const isOpen = profileItem.classList.contains('open');
-          closeAllSubmenus();
-          if (!isOpen) profileItem.classList.add('open');
-        }
-      });
-    }
-  }
-
-  
-  function initTopbar(openEvaluationModal) {
+  function initTopbar(openEvaluationModal) { // Tumatanggap ng function
     // --- Time ---
     updateTime();
     setInterval(updateTime, 60000);
 
-    // --- Elements ---
-    const notifWrapper = document.querySelector(".notification-wrapper");
-    const profileWrapper = document.querySelector(".profile-wrapper");
-    const profileToggle = document.getElementById("profileToggle");
-    const profileDropdown = profileWrapper?.querySelector(".profile-dropdown");
+      // --- Elements ---
+      const notifWrapper = document.querySelector(".notification-wrapper");
+      const profileWrapper = document.querySelector(".profile-wrapper");
+      const profileToggle = document.getElementById("profileToggle");
+      const profileDropdown = profileWrapper?.querySelector(".profile-dropdown");
 
     // --- Notifications Dropdown ---
     if (notifWrapper) {
@@ -580,202 +677,253 @@
       const dropdown = notifWrapper.querySelector(".notif-dropdown");
       dropdown?.addEventListener("click", (e) => e.stopPropagation());
 
-      // Handle evaluation notification clicks
-      notifWrapper.querySelectorAll('.evaluation-notification').forEach(notification => {
-        notification.addEventListener('click', function() {
+      // Handle evaluation notification clicks for both events and programs
+      notifWrapper.querySelectorAll('.notif-link[data-event-id], .notif-link[data-program-id]').forEach(notification => {
+        notification.addEventListener('click', function(e) {
+          e.preventDefault(); // Pigilan 'yung default link behavior
           const eventId = this.getAttribute('data-event-id');
+          const programId = this.getAttribute('data-program-id');
+          
           if (openEvaluationModal) {
-            openEvaluationModal(eventId);
+            if (eventId) {
+              openEvaluationModal(eventId, 'event'); // Specify activity type
+            } else if (programId) {
+              openEvaluationModal(programId, 'program'); // Specify activity type
+            }
           }
           notifWrapper.classList.remove('active'); 
         });
       });
     }
 
-    // --- Profile Dropdown ---
-    if (profileWrapper && profileToggle && profileDropdown) {
-      profileToggle.addEventListener("click", (e) => {
-        e.stopPropagation();
-        profileWrapper.classList.toggle("active");
-        notifWrapper?.classList.remove("active");
+      // --- Profile Dropdown ---
+      if (profileWrapper && profileToggle && profileDropdown) {
+        profileToggle.addEventListener("click", (e) => {
+          e.stopPropagation();
+          profileWrapper.classList.toggle("active");
+          notifWrapper?.classList.remove("active");
+        });
+
+        profileDropdown.addEventListener("click", (e) => e.stopPropagation());
+      }
+
+      // --- Global Click Listener for Topbar/Sidebar ---
+      document.addEventListener("click", (e) => {
+        const sidebar = document.querySelector('.sidebar');
+        const menuToggle = document.querySelector('.menu-toggle');
+        
+        if (sidebar && !sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+          sidebar.classList.remove('open');
+          document.querySelector('.profile-item')?.classList.remove('open');
+        }
+        if (profileWrapper && !profileWrapper.contains(e.target)) {
+          profileWrapper.classList.remove('active');
+        }
+        if (notifWrapper && !notifWrapper.contains(e.target)) {
+          notifWrapper.classList.remove('active');
+        }
       });
 
-      profileDropdown.addEventListener("click", (e) => e.stopPropagation());
+
     }
 
-    // --- Global Click Listener for Topbar/Sidebar ---
-    document.addEventListener("click", (e) => {
-      const sidebar = document.querySelector('.sidebar');
-      const menuToggle = document.querySelector('.menu-toggle');
+    /**
+     * Initializes the 7-day week calendar.
+     */
+    function initCalendar() {
+      const calendar = document.querySelector(".calendar");
+      if (!calendar) return; 
+
+      const daysContainer = calendar.querySelector(".days");
+      const header = calendar.querySelector("header h3");
+      const prevBtn = calendar.querySelector(".prev");
+      const nextBtn = calendar.querySelector(".next");
       
-      if (sidebar && !sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
-        sidebar.classList.remove('open');
-        document.querySelector('.profile-item')?.classList.remove('open');
-      }
-      if (profileWrapper && !profileWrapper.contains(e.target)) {
-        profileWrapper.classList.remove('active');
-      }
-      if (notifWrapper && !notifWrapper.contains(e.target)) {
-        notifWrapper.classList.remove('active');
-      }
-    });
-  }
-
-  /**
-   * Initializes the 7-day week calendar.
-   */
-  function initCalendar() {
-    const calendar = document.querySelector(".calendar");
-    if (!calendar) return; 
-
-    const daysContainer = calendar.querySelector(".days");
-    const header = calendar.querySelector("header h3");
-    const prevBtn = calendar.querySelector(".prev");
-    const nextBtn = calendar.querySelector(".next");
-    
-    if (!daysContainer || !header || !prevBtn || !nextBtn) return;
+      if (!daysContainer || !header || !prevBtn || !nextBtn) return;
 
     const weekdays = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
     const holidays = [
-      "2025-01-01", "2025-04-09", "2025-04-17", "2025-04-18",
-      "2025-05-01", "2025-06-06", "2025-06-12", "2025-08-25",
-      "2025-11-30", "2025-12-25", "2025-12-30"
+      // (Assuming 2024 for example, update this as needed)
+      "2024-01-01", "2024-04-09", "2024-04-10", "2024-05-01",
+      "2024-06-12", "2024-08-26", "2024-11-30", "2024-12-25", 
+      "2024-12-30", "2024-12-31"
     ];
     let today = new Date();
     let currentView = new Date();
 
-    function renderCalendar(baseDate) {
-      daysContainer.innerHTML = "";
+      function renderCalendar(baseDate) {
+        daysContainer.innerHTML = "";
 
-      const startOfWeek = new Date(baseDate);
-      startOfWeek.setDate(baseDate.getDate() - (baseDate.getDay() === 0 ? 6 : baseDate.getDay() - 1));
+        const startOfWeek = new Date(baseDate);
+        startOfWeek.setDate(baseDate.getDate() - (baseDate.getDay() === 0 ? 6 : baseDate.getDay() - 1));
 
-      const middleDay = new Date(startOfWeek);
-      middleDay.setDate(startOfWeek.getDate() + 3);
-      header.textContent = middleDay.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+        const middleDay = new Date(startOfWeek);
+        middleDay.setDate(startOfWeek.getDate() + 3);
+        header.textContent = middleDay.toLocaleDateString("en-US", { month: "long", year: "numeric" });
 
-      for (let i = 0; i < 7; i++) {
-        const thisDay = new Date(startOfWeek);
-        thisDay.setDate(startOfWeek.getDate() + i);
+        for (let i = 0; i < 7; i++) {
+          const thisDay = new Date(startOfWeek);
+          thisDay.setDate(startOfWeek.getDate() + i);
 
-        const dayEl = document.createElement("div");
-        dayEl.classList.add("day");
+          const dayEl = document.createElement("div");
+          dayEl.classList.add("day");
 
-        const weekdayEl = document.createElement("span");
-        weekdayEl.classList.add("weekday");
-        weekdayEl.textContent = weekdays[i];
+          const weekdayEl = document.createElement("span");
+          weekdayEl.classList.add("weekday");
+          weekdayEl.textContent = weekdays[i];
 
-        const dateEl = document.createElement("span");
-        dateEl.classList.add("date");
-        dateEl.textContent = thisDay.getDate();
+          const dateEl = document.createElement("span");
+          dateEl.classList.add("date");
+          dateEl.textContent = thisDay.getDate();
 
-        const dateStr = `${thisDay.getFullYear()}-${(thisDay.getMonth() + 1).toString().padStart(2, '0')}-${thisDay.getDate().toString().padStart(2, '0')}`;
+          const dateStr = `${thisDay.getFullYear()}-${(thisDay.getMonth() + 1).toString().padStart(2, '0')}-${thisDay.getDate().toString().padStart(2, '0')}`;
 
-        if (holidays.includes(dateStr)) {
-          dateEl.classList.add('holiday');
+          if (holidays.includes(dateStr)) {
+            dateEl.classList.add('holiday');
+          }
+
+          if (thisDay.getDate() === today.getDate() && 
+              thisDay.getMonth() === today.getMonth() && 
+              thisDay.getFullYear() === today.getFullYear()) {
+            dayEl.classList.add("active");
+          }
+
+          dayEl.appendChild(weekdayEl);
+          dayEl.appendChild(dateEl);
+          daysContainer.appendChild(dayEl);
         }
-
-        if (thisDay.getDate() === today.getDate() && 
-            thisDay.getMonth() === today.getMonth() && 
-            thisDay.getFullYear() === today.getFullYear()) {
-          dayEl.classList.add("active");
-        }
-
-        dayEl.appendChild(weekdayEl);
-        dayEl.appendChild(dateEl);
-        daysContainer.appendChild(dayEl);
       }
+
+      renderCalendar(currentView);
+
+      prevBtn.addEventListener("click", () => {
+        currentView.setDate(currentView.getDate() - 7);
+        renderCalendar(currentView);
+      });
+      
+      nextBtn.addEventListener("click", () => {
+        currentView.setDate(currentView.getDate() + 7);
+        renderCalendar(currentView);
+      });
     }
 
-    renderCalendar(currentView);
+    /**
+     * Initializes the Welcome Slider / Carousel.
+     */
+    function initWelcomeSlider() {
+      const welcomeSection = document.querySelector(".welcome");
+      if (!welcomeSection) return; 
 
-    prevBtn.addEventListener("click", () => {
-      currentView.setDate(currentView.getDate() - 7);
-      renderCalendar(currentView);
-    });
-    
-    nextBtn.addEventListener("click", () => {
-      currentView.setDate(currentView.getDate() + 7);
-      renderCalendar(currentView);
-    });
-  }
+      const slideTrack = welcomeSection.querySelector(".slides");
+      const slides = welcomeSection.querySelectorAll(".slide");
+      const dotsContainer = welcomeSection.querySelector(".dots");
 
-  /**
-   * Initializes the Welcome Slider / Carousel.
-   */
-  function initWelcomeSlider() {
-    const welcomeSection = document.querySelector(".welcome");
-    if (!welcomeSection) return; 
+      if (!slideTrack || slides.length === 0 || !dotsContainer) return;
 
-    const slideTrack = welcomeSection.querySelector(".slides");
-    const slides = welcomeSection.querySelectorAll(".slide");
-    const dotsContainer = welcomeSection.querySelector(".dots");
+      let currentIndex = 0;
+      let autoPlay;
+      const dots = [];
 
-    if (!slideTrack || slides.length === 0 || !dotsContainer) return;
-
-    let currentIndex = 0;
-    let autoPlay;
-    const dots = [];
-
-    slides.forEach((_, i) => {
-      const dot = document.createElement("button");
-      if (i === 0) dot.classList.add("active");
-      dot.addEventListener("click", () => {
-        currentIndex = i;
-        updateSlide();
-        restartAuto();
+      slides.forEach((_, i) => {
+        const dot = document.createElement("button");
+        if (i === 0) dot.classList.add("active");
+        dot.addEventListener("click", () => {
+          currentIndex = i;
+          updateSlide();
+          restartAuto();
+        });
+        dotsContainer.appendChild(dot);
+        dots.push(dot);
       });
-      dotsContainer.appendChild(dot);
-      dots.push(dot);
-    });
 
     function updateSlide() {
+      // (FIX) Recalculate width on update, important for resize
       const containerWidth = welcomeSection.getBoundingClientRect().width;
+      if (containerWidth === 0) return; // Avoid error if hidden
       slideTrack.style.transform = `translateX(-${currentIndex * containerWidth}px)`;
+      
       dots.forEach(dot => dot.classList.remove("active"));
-      dots[currentIndex].classList.add("active");
+      if(dots[currentIndex]) dots[currentIndex].classList.add("active");
     }
 
-    function nextSlide() {
-      currentIndex = (currentIndex + 1) % slides.length;
+      function nextSlide() {
+        currentIndex = (currentIndex + 1) % slides.length;
+        updateSlide();
+      }
+      
+      function startAuto() {
+        stopAuto(); 
+        autoPlay = setInterval(nextSlide, 4000);
+      }
+      
+      function stopAuto() {
+        clearInterval(autoPlay);
+      }
+      
+      function restartAuto() {
+        stopAuto();
+        startAuto();
+      }
+
       updateSlide();
-    }
-    
-    function startAuto() {
-      stopAuto(); 
-      autoPlay = setInterval(nextSlide, 4000);
-    }
-    
-    function stopAuto() {
-      clearInterval(autoPlay);
-    }
-    
-    function restartAuto() {
-      stopAuto();
       startAuto();
+
+      welcomeSection.addEventListener("mouseenter", stopAuto);
+      welcomeSection.addEventListener("mouseleave", startAuto);
+      window.addEventListener("resize", updateSlide);
     }
-
-    updateSlide();
-    startAuto();
-
-    welcomeSection.addEventListener("mouseenter", stopAuto);
-    welcomeSection.addEventListener("mouseleave", startAuto);
-    window.addEventListener("resize", updateSlide);
-  }
 
   /**
-   * Initializes the Event Evaluation Modal.
+   * (FIXED STRUCTURE)
+   * Initializes the Activity Evaluation Modal.
+   * Returns the function to open the modal.
    */
   function initEvaluationModal() {
     const evalModal = document.getElementById('evaluationModal');
-    if (!evalModal) return;
+    
+    // (FIX) Define the opener function here
+    function openEvaluationModal(activityId, activityType = 'event') {
+      if (!evalModal) {
+        console.error("Evaluation modal not found in DOM.");
+        return;
+      }
+      
+      // Determine the API endpoint based on activity type
+      const apiUrl = activityType === 'event' ? `/events/${activityId}` : `/programs/${activityId}`;
+      
+      // Fetch activity details
+      fetch(apiUrl)
+        .then(response => {
+          if (!response.ok) throw new Error('Activity not found or server error');
+          return response.json();
+        })
+        .then(activity => {
+          document.getElementById('modalActivityName').textContent = activity.title;
+          document.getElementById('evaluationActivityId').value = activity.id;
+          document.getElementById('evaluationActivityType').value = activityType;
+          evalModal.style.display = 'block';
+        })
+        .catch(error => {
+          console.error('Error fetching activity details:', error);
+          alert('Error loading activity details');
+        });
+    }
+    
+    // If modal doesn't exist, return a dummy function to avoid errors
+    if (!evalModal) {
+      return function() { 
+        console.warn("Tried to open evaluation modal, but it was not found."); 
+      };
+    }
 
+    // --- Modal exists, proceed with setup ---
     const evalCloseIcon = evalModal.querySelector('.close');
     const evalCloseBtn = evalModal.querySelector('.close-btn');
     const evalSubmitBtn = evalModal.querySelector('.submit-evaluation-btn');
     const evalStars = evalModal.querySelectorAll('.star');
     const evalForm = document.getElementById('evaluationForm');
 
+    // Star rating logic
     evalStars.forEach(star => {
       star.addEventListener('click', function() {
         const rating = this.getAttribute('data-rating');
@@ -787,21 +935,7 @@
       });
     });
 
-    function openEvaluationModal(eventId) {
-      fetch(`/events/${eventId}`)
-        .then(response => response.json())
-        .then(event => {
-          document.getElementById('modalEventName').textContent = event.title;
-          document.getElementById('evaluationEventId').value = event.id;
-          evalModal.style.display = 'block';
-        })
-        .catch(error => {
-          console.error('Error fetching event details:', error);
-          alert('Error loading event details');
-        });
-    }
-
-    // Close modal functions
+    // Close modal function
     const closeModal = () => {
       evalModal.style.display = 'none';
       // Reset form
@@ -811,46 +945,66 @@
 
     evalCloseIcon?.addEventListener('click', closeModal);
     evalCloseBtn?.addEventListener('click', closeModal);
+    // Close on outside click
     evalModal.addEventListener('click', (e) => {
       if (e.target === evalModal) {
         closeModal();
       }
     });
 
-    // Submit evaluation
+    // Submit evaluation logic
     evalSubmitBtn?.addEventListener('click', function() {
       const formData = new FormData(evalForm);
+      const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-      if (!formData.get('rating')) {
-        alert('Please provide a rating');
-        return;
+        if (!formData.get('rating')) {
+          alert('Please provide a rating');
+          return;
+        }
+
+      // Determine which field to set based on activity type
+      const activityType = formData.get('activity_type');
+      if (activityType === 'event') {
+        formData.set('event_id', formData.get('activity_id'));
+      } else {
+        formData.set('program_id', formData.get('activity_id'));
       }
 
-      fetch('/evaluations', {
+      fetch('/evaluation', {
         method: 'POST',
         headers: {
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
+          'X-CSRF-TOKEN': csrfToken,
+          'Accept': 'application/json'
         },
-        body: JSON.stringify(Object.fromEntries(formData))
+        body: formData // Send as FormData
       })
-      .then(response => response.json())
+      .then(response => {
+        if (!response.ok) {
+           return response.json().then(err => { throw err; });
+        }
+        return response.json();
+      })
       .then(data => {
         if (data.success) {
           alert('Evaluation submitted successfully!');
           closeModal();
-          location.reload();
+          location.reload(); // Reload to update progress/notifications
         } else {
-          alert('Error submitting evaluation: ' + data.error);
+          // Handle validation errors or other specific errors
+          let errorMsg = data.message || 'Submission failed.';
+          if (data.errors) {
+            errorMsg += '\n' + Object.values(data.errors).join('\n');
+          }
+          alert(errorMsg);
         }
       })
       .catch(error => {
         console.error('Error:', error);
-        alert('Error submitting evaluation');
+        alert(error.message || 'An error occurred while submitting.');
       });
     });
 
+    // (FIX) Return the opener function
     return openEvaluationModal;
   }
 
@@ -858,10 +1012,12 @@
    * Initializes the "Send Feedback" Modal.
    */
   function initFeedbackModal() {
-    const feedbackTriggerBtn = document.querySelector('.profile-menu li:nth-child(4)'); // "Send Feedback" item
+    const feedbackTriggerBtn = document.querySelector('.profile-menu li:nth-child(4) a'); // "Send Feedback" item
     const feedbackModal = document.getElementById('feedbackModal');
-    if (!feedbackTriggerBtn || !feedbackModal) return;
-
+    if (!feedbackTriggerBtn || !feedbackModal) {
+      console.warn("Feedback modal or trigger not found.");
+      return;
+    }
     
     const feedbackCloseBtn = document.getElementById('closeModal');
     const feedbackStars = document.querySelectorAll('#starRating i');
@@ -869,87 +1025,89 @@
     
     const feedbackForm = document.getElementById('feedbackForm');
     const submitBtn = feedbackForm?.querySelector('.submit-btn');
-
     
     const successModal = document.getElementById('successModal');
     const closeSuccessBtn = document.getElementById('closeSuccessModal');
 
-
-   
+    // Custom Select Box Logic
     const customSelect = document.getElementById('customSelect');
-    const trigger = customSelect?.querySelector('.custom-select-trigger');
-    const selectedText = document.getElementById('selectedFeedbackType');
-    const optionsList = customSelect?.querySelector('.custom-options-list');
-    const options = customSelect?.querySelectorAll('.custom-option');
-    const realSelect = document.getElementById('type');
+    if (customSelect) {
+      const trigger = customSelect.querySelector('.custom-select-trigger');
+      const selectedText = document.getElementById('selectedFeedbackType');
+      const optionsList = customSelect.querySelector('.custom-options-list');
+      const options = customSelect.querySelectorAll('.custom-option');
+      const realSelect = document.getElementById('type');
 
-    // Toggle dropdown
-    trigger?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      customSelect.classList.toggle('open');
-    });
-
-    // Handle option click
-    options?.forEach(option => {
-      option.addEventListener('click', () => {
-        const value = option.getAttribute('data-value');
-        const text = option.textContent.trim();
-        
-        if(selectedText) selectedText.textContent = text;
-        if(realSelect) realSelect.value = value; 
-        trigger?.classList.add('selected'); 
-        
-        customSelect?.classList.remove('open');
+      // Toggle dropdown
+      trigger?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        customSelect.classList.toggle('open');
       });
-    });
+      // Toggle dropdown
+      trigger?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        customSelect.classList.toggle('open');
+      });
 
-    
-    document.addEventListener('click', () => {
-      customSelect?.classList.remove('open');
-    });
-
+      // Handle option click
+      options?.forEach(option => {
+        option.addEventListener('click', () => {
+          const value = option.getAttribute('data-value');
+          const text = option.textContent.trim();
+          
+          if(selectedText) selectedText.textContent = text;
+          if(realSelect) realSelect.value = value; 
+          trigger?.classList.add('selected'); 
+          
+          customSelect.classList.remove('open');
+        });
+      });
+      
+      // Close custom select on outside click
+      document.addEventListener('click', () => {
+        customSelect.classList.remove('open');
+      });
+    }
 
     // Open modal
-    feedbackTriggerBtn.addEventListener('click', () => {
+    feedbackTriggerBtn.addEventListener('click', (e) => {
+      e.preventDefault(); // Prevent link from navigating
       feedbackModal.style.display = 'flex';
     });
 
-    // Close modal
-    feedbackCloseBtn?.addEventListener('click', () => {
-      feedbackModal.style.display = 'none';
-    });
+      // Close modal
+      feedbackCloseBtn?.addEventListener('click', () => {
+        feedbackModal.style.display = 'none';
+      });
 
     // Close when clicking outside
     window.addEventListener('click', (e) => {
       if (e.target === feedbackModal) {
         feedbackModal.style.display = 'none';
       }
-      // (BAGO) Isara rin 'yung success modal
       if (e.target === successModal) {
         successModal.style.display = 'none';
       }
     });
 
-    // Star rating system
-    feedbackStars.forEach(star => {
-      star.addEventListener('click', () => {
-        const rating = star.getAttribute('data-value');
-        if(feedbackRatingInput) feedbackRatingInput.value = rating;
+      // Star rating system
+      feedbackStars.forEach(star => {
+        star.addEventListener('click', () => {
+          const rating = star.getAttribute('data-value');
+          if(feedbackRatingInput) feedbackRatingInput.value = rating;
 
-        feedbackStars.forEach(s => {
-          s.classList.remove('fas');
-          s.classList.add('far');
+          feedbackStars.forEach(s => {
+            s.classList.remove('fas');
+            s.classList.add('far');
+          });
+          for (let i = 0; i < rating; i++) {
+            feedbackStars[i].classList.remove('far');
+            feedbackStars[i].classList.add('fas');
+          }
         });
-        for (let i = 0; i < rating; i++) {
-          feedbackStars[i].classList.remove('far');
-          feedbackStars[i].classList.add('fas');
-        }
       });
-    });
 
-    // ==================================
-    // === (BAGO) AJAX FORM SUBMISSION ===
-    // ==================================
+    // AJAX Form Submission
     if (feedbackForm) { 
       feedbackForm.addEventListener('submit', function(e) {
           e.preventDefault(); 
@@ -970,22 +1128,18 @@
               },
               body: formData
           })
-          .then(response => {
-              const contentType = response.headers.get("content-type");
-              if (response.ok && contentType && contentType.includes("application/json")) {
-                  return response.json();
-              }
-              return response.text().then(text => {
-                  console.error('Server returned non-JSON response:', text);
-                  throw new Error('Server returned an unexpected response. Check logs.');
-              });
-          })
+          .then(response => response.json()) // Assume it always returns JSON
           .then(data => {
               if (data.success) { 
                   feedbackModal.style.display = 'none';
                   if(successModal) successModal.style.display = 'flex';
               } else {
-                  throw new Error(data.message || 'Submission failed.');
+                  // Handle validation errors or other errors
+                  let errorMsg = data.message || 'Submission failed.';
+                  if (data.errors) {
+                    errorMsg += '\n' + Object.values(data.errors).join('\n');
+                  }
+                  throw new Error(errorMsg);
               }
           })
           .catch(error => {
@@ -993,6 +1147,7 @@
               alert(error.message || 'An error occurred. Please try again.');
           })
           .finally(() => {
+              // Reset form in finally block
               if(submitBtn) {
                 submitBtn.disabled = false;
                 submitBtn.textContent = submitButtonText;
@@ -1004,6 +1159,11 @@
                 s.classList.add('far');
               });
               if(feedbackRatingInput) feedbackRatingInput.value = '';
+              
+              // Reset custom select
+              const selectedText = document.getElementById('selectedFeedbackType');
+              const trigger = customSelect?.querySelector('.custom-select-trigger');
+              const realSelect = document.getElementById('type');
               if(selectedText) selectedText.textContent = 'Select feedback type';
               trigger?.classList.remove('selected');
               if(realSelect) realSelect.value = '';
@@ -1011,9 +1171,127 @@
       });
     } 
 
+    // Close success modal
     closeSuccessBtn?.addEventListener('click', () => {
         if(successModal) successModal.style.display = 'none';
     });
+  }
+
+  function initMarkAsRead() {
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+  if (!csrfToken) {
+    console.error('CSRF token not found.');
+    return;
+  }
+
+  // Select all notifications with a data-id attribute
+  document.querySelectorAll('.notif-link[data-id]').forEach(link => {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      const notifId = this.dataset.id;
+      const destinationUrl = this.href;
+
+      // Remove notification visually
+      const notifItem = this.closest('li');
+      notifItem?.remove();
+
+      // Update notification count
+      const countEl = document.querySelector('.notif-count');
+      if (countEl) {
+        let currentCount = parseInt(countEl.textContent) || 0;
+        countEl.textContent = Math.max(0, currentCount - 1);
+        if (parseInt(countEl.textContent) === 0) {
+          countEl.remove();
+          // Optional: remove red dot on bell icon
+          const bellDot = document.querySelector('.notif-dot');
+          if (bellDot) bellDot.remove();
+        }
+      }
+
+      // If no notifications left, show "No new notifications"
+      const notifList = document.querySelector('.notif-list');
+      if (notifList && notifList.children.length === 0) {
+        notifList.innerHTML = `<li class="no-notifications"><p>No new notifications</p></li>`;
+      }
+
+      // Send AJAX request to mark as read
+      fetch(`/notifications/${notifId}/read`, {
+        method: 'POST',
+        headers: {
+          'X-CSRF-TOKEN': csrfToken,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ id: notifId })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (!data.success) console.error('Error marking notification as read:', data.message);
+      })
+      .catch(err => console.error('Fetch error:', err))
+      .finally(() => {
+        if (destinationUrl && destinationUrl !== '#') {
+          window.location.href = destinationUrl;
+        }
+      });
+    });
+  });
+}
+
+  /**
+   * Initializes Certificate Claim
+   * (BINAGO) - Inalis na ang modal. 
+   * Kapag cliniclick ang card, mag-mark as read at diretso redirect.
+   */
+  function initCertificateModal() {
+    
+    const announcementCards = document.querySelectorAll('.certificate-schedule-announcement');
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    const redirectUrl = '{{ route('certificatepage') }}'; 
+
+    announcementCards.forEach(card => {
+      card.addEventListener('click', (event) => {
+        event.preventDefault(); // Para mapigilan ang default behavior
+
+        // Kunin 'yung ID para sa "mark as read"
+        const annId = card.dataset.announcementId; 
+
+        if (!annId) {
+            // Kung walang ID, i-redirect na lang
+            window.location.href = redirectUrl;
+            return;
+        }
+
+        // 1. Mark as read (POST request)
+        fetch(`/notifications/mark-as-read/${annId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+          },
+          body: JSON.stringify({ id: annId }) 
+        })
+        .catch(error => {
+          console.error('Error marking notification as read:', error);
+          // Kahit mag-error sa pag-mark as read, i-redirect pa rin
+        })
+        .finally(() => {
+          // 2. Redirect
+          window.location.href = redirectUrl;
+        });
+      });
+    });
+  }
+
+  /**
+   * Handles logout confirmation.
+   * This is called directly from the HTML's onclick attribute.
+   */
+  function confirmLogout(event) {
+    event.preventDefault(); // Prevent the <a> tag's default action
+    if (confirm('Are you sure you want to logout?')) {
+      document.getElementById('logout-form').submit();
+    }
   }
 
 
@@ -1021,16 +1299,26 @@
   //  APP INITIALIZATION (MAIN)
   // ==========================================================
   document.addEventListener("DOMContentLoaded", () => {
+    // Initialize Lucide icons first
     lucide.createIcons();
     
-    // I-initialize 'yung mga component
+    // Initialize all components
     initSidebar();
-    const openEvalModalFn = initEvaluationModal(); // Kunin 'yung function
-    initTopbar(openEvalModalFn); // Ipasa 'yung function sa topbar
-    initCalendar();
+    
+    // (FIX) Kunin 'yung function na nireturn ng initEvaluationModal()
+    const openEvalModalFn = initEvaluationModal(); 
+    
+    // Ipasa 'yung function sa initTopbar()
+    initTopbar(openEvalModalFn); 
+    
+    initCalendar(); // <-- Ito 'yung para sa calendar
     initWelcomeSlider();
     initFeedbackModal();
+    initMarkAsRead();
+    initCertificateModal();
   });
+
+
 </script>
 </body>
 </html>

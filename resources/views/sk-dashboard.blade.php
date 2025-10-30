@@ -7,8 +7,9 @@
   <link rel="stylesheet" href="{{ asset('css/sk-dashboard.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Load Lucide with proper fallback -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 
   <!-- Pass PHP data to JavaScript -->
   <script>
@@ -16,6 +17,7 @@
     window.populationData = <?php echo json_encode($populationData ?? []); ?>;
     window.ageGroupData = <?php echo json_encode($ageGroupData ?? []); ?>;
     window.remindersData = <?php echo json_encode($remindersData ?? []); ?>;
+    window.monthlyEventsData = <?php echo json_encode($monthlyEventsData ?? []); ?>;
     window.csrfToken = '{{ csrf_token() }}';
   </script>
 </head>
@@ -27,25 +29,25 @@
   <div class="divider"></div>
   <nav class="nav">
     <a href="{{ route('sk.dashboard') }}" class="active">
-      <i data-lucide="layout-dashboard"></i>
+      <i data-lucide="layout-dashboard" class="lucide-icon"></i>
       <span class="label">Dashboard</span>
     </a>
 
     <a href="#">
-      <i data-lucide="chart-pie"></i>
+      <i data-lucide="chart-pie" class="lucide-icon"></i>
       <span class="label">Analytics</span>
     </a>
 
     <a href="{{ route('youth-profilepage') }}">
-      <i data-lucide="users"></i>
+      <i data-lucide="users" class="lucide-icon"></i>
       <span class="label">Youth Profile</span>
     </a>
 
     <div class="nav-item">
       <a href="#" class="nav-link">
-        <i data-lucide="calendar"></i>
+        <i data-lucide="calendar" class="lucide-icon"></i>
         <span class="label">Events and Programs</span>
-        <i data-lucide="chevron-down" class="submenu-arrow"></i>
+        <i data-lucide="chevron-down" class="submenu-arrow lucide-icon"></i>
       </a>
       <div class="submenu">
         <a href="{{ route('sk-eventpage') }}">Events List</a>
@@ -54,27 +56,27 @@
     </div>
 
     <a href="{{ route('sk-evaluation-feedback') }}">
-      <i data-lucide="message-square-quote"></i>
+      <i data-lucide="message-square-quote" class="lucide-icon"></i>
       <span class="label">Feedbacks</span>
     </a>
 
     <a href="{{ route('sk-polls') }}">
-      <i data-lucide="vote"></i>
+      <i data-lucide="vote" class="lucide-icon"></i>
       <span class="label">Polls</span>
     </a>
 
     <a href="{{ route('youth-suggestion') }}">
-      <i data-lucide="lightbulb"></i>
+      <i data-lucide="lightbulb" class="lucide-icon"></i>
       <span class="label">Suggestion Box</span>
     </a>
     
     <a href="{{ route('reports') }}">
-      <i data-lucide="file-chart-column"></i>
+      <i data-lucide="file-chart-column" class="lucide-icon"></i>
       <span class="label">Reports</span>
     </a>
 
     <a href="{{ route('sk-services-offer') }}">
-      <i data-lucide="hand-heart"></i>
+      <i data-lucide="hand-heart" class="lucide-icon"></i>
       <span class="label">Service Offer</span>
     </a>
 
@@ -98,21 +100,37 @@
       <div class="topbar-right">
         <div class="time">MON 10:00 <span>AM</span></div>
 
-        <!-- Notifications -->
         <div class="notification-wrapper">
-          <i class="fas fa-bell" id="notificationBell"></i>
-          <span class="notif-count" id="notificationCount">0</span>
-          <div class="notif-dropdown">
-            <div class="notif-header">
-              <strong>Notifications</strong> 
-              <span id="notificationsHeaderCount">0</span>
-              <button class="mark-all-read" id="markAllRead">Mark all as read</button>
-            </div>
-            <ul class="notif-list" id="notificationsList">
-              <li class="notif-loading">Loading notifications...</li>
-            </ul>
+  <i class="fas fa-bell"></i>
+  <span class="notif-count">{{ $notifications->count() }}</span>
+
+  <div class="notif-dropdown">
+    <div class="notif-header">
+      <strong>Notification</strong>
+      <span>{{ $notifications->count() }}</span>
+    </div>
+
+    <ul class="notif-list">
+      @forelse($notifications as $notif)
+        <li>
+          <div class="notif-icon"></div>
+          <div class="notif-content">
+            <strong>{{ $notif->title ?? 'No Title' }}</strong>
+            <p>{{ $notif->message ?? 'No message available' }}</p>
           </div>
-        </div>
+          <span class="notif-dot"></span>
+        </li>
+      @empty
+        <li>
+          <div class="notif-content">
+            <p>No notifications available</p>
+          </div>
+        </li>
+      @endforelse
+    </ul>
+  </div>
+</div>
+
 
         <!-- Profile Avatar -->
         <div class="profile-wrapper">
@@ -176,12 +194,12 @@
       <canvas id="engagementChart"></canvas>
     </div>
 
-    <!-- Youth Engagement in Activities (row1 col1) -->
-<div class="card activities-card">
+    <!-- Monthly Events (row1 col1) -->
+<div class="card monthly-events-card">
   <div class="card-header">
-    <h3>Youth Engagement in Activities</h3>
+    <h3>Monthly Events</h3>
   </div>
-  <canvas id="activitiesChart"></canvas>
+  <canvas id="monthlyEventsChart"></canvas>
 </div>
 
     <!-- Youth Age (row1+row2 col2) -->
@@ -417,10 +435,66 @@
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-  // === Lucide icons + sidebar toggle ===
-  lucide.createIcons();
+// Lucide Icons Initialization with Error Handling
+function initializeLucideIcons() {
+    if (typeof lucide === 'undefined') {
+        console.warn('Lucide not loaded, using Font Awesome fallback');
+        replaceLucideIcons();
+        return;
+    }
+    
+    try {
+        lucide.createIcons();
+        console.log('Lucide icons initialized successfully');
+    } catch (error) {
+        console.error('Error initializing Lucide:', error);
+        replaceLucideIcons();
+    }
+}
+
+// Fallback function to replace Lucide icons with Font Awesome
+function replaceLucideIcons() {
+    console.log('Using Font Awesome as fallback for icons');
+    
+    const iconMap = {
+        'layout-dashboard': 'fas fa-chart-pie',
+        'chart-pie': 'fas fa-chart-pie',
+        'users': 'fas fa-users',
+        'calendar': 'fas fa-calendar-alt',
+        'chevron-down': 'fas fa-chevron-down',
+        'message-square-quote': 'fas fa-comment-alt',
+        'vote': 'fas fa-vote-yea',
+        'lightbulb': 'fas fa-lightbulb',
+        'file-chart-column': 'fas fa-chart-bar',
+        'hand-heart': 'fas fa-hands-helping',
+        'bell': 'fas fa-bell',
+        'user': 'fas fa-user',
+        'cog': 'fas fa-cog',
+        'question-circle': 'fas fa-question-circle',
+        'star': 'fas fa-star',
+        'sign-out-alt': 'fas fa-sign-out-alt',
+        'chevron-left': 'fas fa-chevron-left',
+        'chevron-right': 'fas fa-chevron-right',
+        'arrow-left': 'fas fa-arrow-left'
+    };
+
+    document.querySelectorAll('.lucide-icon').forEach(icon => {
+        const iconName = icon.getAttribute('data-lucide');
+        if (iconName && iconMap[iconName]) {
+            const faIcon = document.createElement('i');
+            faIcon.className = iconMap[iconName];
+            icon.parentNode.replaceChild(faIcon, icon);
+        }
+    });
+}
+
+
+
+document.addEventListener("DOMContentLoaded", function() {
+  // Initialize Lucide icons first
+  initializeLucideIcons();
   
+  // === sidebar toggle ===
   const menuToggle = document.querySelector('.menu-toggle');
   const sidebar = document.querySelector('.sidebar');
 
@@ -441,12 +515,12 @@ document.addEventListener("DOMContentLoaded", () => {
       const parentItem = trigger.closest('.nav-item');
       const wasOpen = parentItem.classList.contains('open');
 
-      // Isara muna lahat ng ibang bukas na submenu
+      // Close all other submenus
       document.querySelectorAll('.nav-item').forEach(item => {
         item.classList.remove('open');
       });
 
-      // Kung hindi pa bukas yung pinindot mo, buksan mo siya.
+      // Open clicked submenu if it wasn't open
       if (!wasOpen) {
         parentItem.classList.add('open');
       }
@@ -701,7 +775,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   document.addEventListener("click", (e) => {
-    if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+    if (sidebar && !sidebar.contains(e.target) && menuToggle && !menuToggle.contains(e.target)) {
       sidebar.classList.remove('open');
     }
     if (profileWrapper && !profileWrapper.contains(e.target)) profileWrapper.classList.remove('active');
@@ -789,253 +863,277 @@ document.addEventListener("DOMContentLoaded", () => {
     return categoryMap[category] || category.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
   }
 
-  // === Highlight Holidays in Events ===
-  document.querySelectorAll('.events li').forEach(eventItem => {
-    const dateEl = eventItem.querySelector('.date span');
-    const monthEl = eventItem.querySelector('.date strong');
-    if (!dateEl || !monthEl) return;
-
-    const monthMap = {
-      JAN: "01", FEB: "02", MAR: "03", APR: "04", MAY: "05", JUN: "06",
-      JUL: "07", AUG: "08", SEP: "09", OCT: "10", NOV: "11", DEC: "12"
-    };
-    const monthNum = monthMap[monthEl.textContent.trim().toUpperCase()];
-    const day = dateEl.textContent.trim().padStart(2,'0');
-    const dateStr = `2025-${monthNum}-${day}`;
-
-    if (holidays.includes(dateStr)) {
-      eventItem.querySelector('.date').classList.add('holiday');
-    }
-  });
-
   // === Youth Engagement Chart ===
   const engagementCtx = document.getElementById('engagementChart')?.getContext('2d');
   if (engagementCtx) {
-    new Chart(engagementCtx, {
-      type: 'bar',
-      data: {
-        labels: ['Active', 'Less Active', 'Inactive'], 
-        datasets: [{
-          label: 'Youth Count',
-          data: [120, 80, 60],
-          backgroundColor: ['#3C87C6', '#7EE081', '#C3423F'],
-          borderRadius: 10
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: {
-            display: true,
-            position: 'right',
-            labels: {
-              boxWidth: 12,
-              boxHeight: 12,
-              padding: 10,
-              font: { size: 10 },
-              generateLabels: (chart) => {
-                const dataset = chart.data.datasets[0];
-                const customLabels = ['Active Youth', 'Less Active Youth', 'Inactive Youth']; 
-                return dataset.data.map((_, index) => ({
-                  text: customLabels[index],
-                  fillStyle: dataset.backgroundColor[index],
-                  strokeStyle: dataset.backgroundColor[index],
-                  index: index
-                }));
+    try {
+      new Chart(engagementCtx, {
+        type: 'bar',
+        data: {
+          labels: ['Active', 'Less Active', 'Inactive'], 
+          datasets: [{
+            label: 'Youth Count',
+            data: [120, 80, 60],
+            backgroundColor: ['#3C87C6', '#7EE081', '#C3423F'],
+            borderRadius: 10
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              display: true,
+              position: 'right',
+              labels: {
+                boxWidth: 12,
+                boxHeight: 12,
+                padding: 10,
+                font: { size: 10 },
+                generateLabels: (chart) => {
+                  const dataset = chart.data.datasets[0];
+                  const customLabels = ['Active Youth', 'Less Active Youth', 'Inactive Youth']; 
+                  return dataset.data.map((_, index) => ({
+                    text: customLabels[index],
+                    fillStyle: dataset.backgroundColor[index],
+                    strokeStyle: dataset.backgroundColor[index],
+                    index: index
+                  }));
+                }
+              }
+            },
+            title: { display: false }
+          },
+          scales: {
+            x: {
+              ticks: { display: false },
+              grid: { drawTicks: false, drawBorder: false }
+            },
+            y: { beginAtZero: true }
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Error creating engagement chart:', error);
+    }
+  }
+
+  // === Monthly Events Chart ===
+  const monthlyEventsCtx = document.getElementById('monthlyEventsChart')?.getContext('2d');
+  if (monthlyEventsCtx) {
+    try {
+      const monthlyEventsData = window.monthlyEventsData || {};
+      
+      // Use actual data from backend
+      const labels = monthlyEventsData.labels || ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const events = monthlyEventsData.events || [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+      new Chart(monthlyEventsCtx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: "Events",
+            data: events,
+            backgroundColor: "#3C87C6",
+            borderRadius: 6,
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const events = context.raw;
+                  return `${events} ${events === 1 ? 'event' : 'events'}`;
+                },
+                title: function(context) {
+                  return `${context[0].label} Events`;
+                }
               }
             }
           },
-          title: { display: false }
-        },
-        scales: {
-          x: {
-            ticks: { display: false },
-            grid: { drawTicks: false, drawBorder: false }
-          },
-          y: { beginAtZero: true }
+          scales: {
+            y: { 
+              beginAtZero: true,
+              ticks: {
+                callback: function(value) {
+                  return value + (value === 1 ? ' event' : ' events');
+                }
+              }
+            },
+            x: {
+              grid: {
+                display: false
+              }
+            }
+          }
         }
-      }
-    });
-  }
-
-  // === Youth Engagement in Activities Chart ===
-const activitiesCtx = document.getElementById('activitiesChart')?.getContext('2d');
-if (activitiesCtx) {
-  new Chart(activitiesCtx, {
-    type: 'bar',
-    data: {
-      labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug"],
-      datasets: [{
-        label: "Participants",
-        data: [45, 60, 40, 80, 70, 55, 90, 65],
-        backgroundColor: "#3C87C6",
-        borderRadius: 6
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: { legend: { display: false } },
-      scales: {
-        y: { beginAtZero: true }
-      }
+      });
+    } catch (error) {
+      console.error('Error creating monthly events chart:', error);
     }
-  });
-}
+  }
 
   // === Youth Demographics Chart ===
   const demoCtx = document.getElementById('demographicsChart')?.getContext('2d');
   if (demoCtx) {
-    // Get data from window object
-    const demographicsData = window.demographicsData || {};
-    
-    console.log('Demographics Data:', demographicsData);
-    
-    // Use actual data from database
-    const labels = demographicsData.labels || [
-      'In-School Youth',
-      'Out-of-School Youth',
-      'Working Youth',
-      'Person with disabilities',
-      'Indigenous'
-    ];
-    
-    const maleData = demographicsData.male_data || [0, 0, 0, 0, 0];
-    const femaleData = demographicsData.female_data || [0, 0, 0, 0, 0];
+    try {
+      const demographicsData = window.demographicsData || {};
+      
+      const labels = demographicsData.labels || [
+        'In-School Youth',
+        'Out-of-School Youth',
+        'Working Youth',
+        'Person with disabilities',
+        'Indigenous'
+      ];
+      
+      const maleData = demographicsData.male_data || [0, 0, 0, 0, 0];
+      const femaleData = demographicsData.female_data || [0, 0, 0, 0, 0];
 
-    new Chart(demoCtx, {
-      type: 'bar',
-      data: {
-        labels: labels,
-        datasets: [
-          { 
-            label: 'Male', 
-            data: maleData, 
-            backgroundColor: '#3C87C6',
-            barPercentage: 0.6,
-            categoryPercentage: 0.8
-          },
-          { 
-            label: 'Female', 
-            data: femaleData, 
-            backgroundColor: '#E96BA8',
-            barPercentage: 0.6,
-            categoryPercentage: 0.8
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        indexAxis: 'y', 
-        scales: {
-          x: { 
-            beginAtZero: true, 
-            grid: { 
-              drawBorder: false,
-              color: "rgba(0,0,0,0.1)"
+      new Chart(demoCtx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            { 
+              label: 'Male', 
+              data: maleData, 
+              backgroundColor: '#3C87C6',
+              barPercentage: 0.6,
+              categoryPercentage: 0.8
             },
-            ticks: {
-              color: '#01214A',
-              font: {
-                size: 11
+            { 
+              label: 'Female', 
+              data: femaleData, 
+              backgroundColor: '#E96BA8',
+              barPercentage: 0.6,
+              categoryPercentage: 0.8
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: 'y', 
+          scales: {
+            x: { 
+              beginAtZero: true, 
+              grid: { 
+                drawBorder: false,
+                color: "rgba(0,0,0,0.1)"
+              },
+              ticks: {
+                color: '#01214A',
+                font: {
+                  size: 11
+                }
               }
+            },
+            y: { 
+              ticks: { 
+                color: '#01214A', 
+                font: { 
+                  weight: 600,
+                  size: 11
+                } 
+              }, 
+              grid: { 
+                display: false 
+              } 
             }
           },
-          y: { 
-            ticks: { 
-              color: '#01214A', 
-              font: { 
-                weight: 600,
-                size: 11
-              } 
-            }, 
-            grid: { 
-              display: false 
-            } 
-          }
-        },
-        plugins: {
-          legend: { display: false },
-          title: { display: false },
-          tooltip: {
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            titleFont: { size: 12 },
-            bodyFont: { size: 11 },
-            callbacks: {
-              label: function(context) {
-                return `${context.dataset.label}: ${context.raw} youth`;
+          plugins: {
+            legend: { display: false },
+            title: { display: false },
+            tooltip: {
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              titleFont: { size: 12 },
+              bodyFont: { size: 11 },
+              callbacks: {
+                label: function(context) {
+                  return `${context.dataset.label}: ${context.raw} youth`;
+                }
               }
             }
           }
         }
-      }
-    });
+      });
+    } catch (error) {
+      console.error('Error creating demographics chart:', error);
+    }
   }
 
   // === Youth Age Chart ===
   const ageCtx = document.getElementById('ageChart')?.getContext('2d');
   if (ageCtx) {
-    // Get age group data from window object - FILTERED BY SAME BARANGAY
-    const ageGroupData = window.ageGroupData || {};
-    const childCount = ageGroupData.child_count || 0;
-    const coreCount = ageGroupData.core_count || 0;
-    const adultCount = ageGroupData.adult_count || 0;
-    
-    console.log('Age Group Data:', ageGroupData);
-    
-    new Chart(ageCtx, {
-      type: 'pie',
-      data: {
-        labels: ["Child Youth 15-17", "Core Youth 18-24", "Adult Youth 25-30"],
-        datasets: [{
-          label: "Age Group",
-          data: [childCount, coreCount, adultCount], 
-          backgroundColor: ["#FFCA3A", "#3C87C6", "#8AC926"],
-          borderWidth: 1,
-          borderColor: "#fff"
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: { legend: { display: false } }
-      }
-    });
+    try {
+      const ageGroupData = window.ageGroupData || {};
+      const childCount = ageGroupData.child_count || 0;
+      const coreCount = ageGroupData.core_count || 0;
+      const adultCount = ageGroupData.adult_count || 0;
+      
+      new Chart(ageCtx, {
+        type: 'pie',
+        data: {
+          labels: ["Child Youth 15-17", "Core Youth 18-24", "Adult Youth 25-30"],
+          datasets: [{
+            label: "Age Group",
+            data: [childCount, coreCount, adultCount], 
+            backgroundColor: ["#FFCA3A", "#3C87C6", "#8AC926"],
+            borderWidth: 1,
+            borderColor: "#fff"
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } }
+        }
+      });
+    } catch (error) {
+      console.error('Error creating age chart:', error);
+    }
   }
 
   // === Youth Population Chart ===
   const populationChart = document.getElementById('populationChart');
   if (populationChart) {
-    const ctx = populationChart.getContext('2d');
-    
-    // Get population data from window object - FILTERED BY SAME BARANGAY
-    const populationData = window.populationData || {};
-    const maleCount = populationData.male_count || 0;
-    const femaleCount = populationData.female_count || 0;
-    const totalCount = populationData.total_count || 0;
-    
-    // Update the population numbers in the HTML
-    document.getElementById('populationTotal').textContent = totalCount;
-    document.getElementById('maleCount').textContent = maleCount;
-    document.getElementById('femaleCount').textContent = femaleCount;
-    
-    new Chart(ctx, {
-      type: 'doughnut',
-      data: {
-        labels: ['Female', 'Male'],
-        datasets: [{
-          data: [femaleCount, maleCount],
-          backgroundColor: ['#f48fb1', '#114B8C'],
-          borderWidth: 0,
-          cutout: '70%' 
-        }]
-      },
-      options: {
-        plugins: {
-          legend: { display: false }, 
-          tooltip: { enabled: true }
+    try {
+      const ctx = populationChart.getContext('2d');
+      const populationData = window.populationData || {};
+      const maleCount = populationData.male_count || 0;
+      const femaleCount = populationData.female_count || 0;
+      const totalCount = populationData.total_count || 0;
+      
+      // Update the population numbers in the HTML
+      document.getElementById('populationTotal').textContent = totalCount;
+      document.getElementById('maleCount').textContent = maleCount;
+      document.getElementById('femaleCount').textContent = femaleCount;
+      
+      new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Female', 'Male'],
+          datasets: [{
+            data: [femaleCount, maleCount],
+            backgroundColor: ['#f48fb1', '#114B8C'],
+            borderWidth: 0,
+            cutout: '70%' 
+          }]
+        },
+        options: {
+          plugins: {
+            legend: { display: false }, 
+            tooltip: { enabled: true }
+          }
         }
-      }
-    });
+      });
+    } catch (error) {
+      console.error('Error creating population chart:', error);
+    }
   }
 
   // Load reminders when page loads
@@ -1047,28 +1145,25 @@ if (activitiesCtx) {
       updateNotificationCount();
   }, 30000);
 
-document.querySelectorAll('.options-btn, .header-options').forEach(btn => {
-  btn.addEventListener('click', (e) => {
-    e.stopPropagation();
+  // Options dropdown functionality
+  document.querySelectorAll('.options-btn, .header-options').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
 
-    const dropdown = btn.nextElementSibling;
-    if (!dropdown || !dropdown.classList.contains('options-dropdown')) return;
+      const dropdown = btn.nextElementSibling;
+      if (!dropdown || !dropdown.classList.contains('options-dropdown')) return;
 
-    document.querySelectorAll('.options-dropdown.show').forEach(d => {
-      if (d !== dropdown) d.classList.remove('show');
+      document.querySelectorAll('.options-dropdown.show').forEach(d => {
+        if (d !== dropdown) d.classList.remove('show');
+      });
+
+      dropdown.classList.toggle('show');
     });
-
-    
-    dropdown.classList.toggle('show');
   });
-});
 
-document.addEventListener('click', () => {
-  document.querySelectorAll('.options-dropdown.show').forEach(d => d.classList.remove('show'));
-});
-
-
-  
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.options-dropdown.show').forEach(d => d.classList.remove('show'));
+  });
 });
 </script>
 </body>

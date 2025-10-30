@@ -8,15 +8,6 @@
     
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <meta http-equiv="Content-Security-Policy" content="
-        default-src 'self'; 
-        font-src 'self' https://fonts.gstatic.com; 
-        style-src 'self' https://fonts.googleapis.com https://cdnjs.cloudflare.com 'unsafe-inline';
-        script-src 'self' https://unpkg.com 'unsafe-inline';
-        img-src 'self' data:;
-        connect-src 'self';
-    ">
   <title>KatiBayan - Login</title>
   <link rel="stylesheet" href="{{ asset('css/login.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet">

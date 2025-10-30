@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Suggestion;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
 
 class SuggestionController extends Controller
 {
@@ -26,10 +27,28 @@ class SuggestionController extends Controller
         ]);
 
         try {
+            // Check if user is authenticated
+            if (!Auth::check()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You must be logged in to submit a suggestion.'
+                ], 401);
+            }
+
+            $user = Auth::user();
+
             $suggestion = Suggestion::create([
-                'user_id' => Auth::id(),
+                'user_id' => $user->id,
                 'committee' => $validated['committee'],
                 'suggestions' => $validated['suggestions'],
+                'barangay_id' => $user->barangay_id // ADD THIS LINE
+            ]);
+
+            Log::info('Suggestion submitted successfully', [
+                'user_id' => $user->id,
+                'suggestion_id' => $suggestion->id,
+                'committee' => $validated['committee'],
+                'barangay_id' => $user->barangay_id
             ]);
 
             return response()->json([
@@ -38,9 +57,15 @@ class SuggestionController extends Controller
             ]);
 
         } catch (\Exception $e) {
+            Log::error('Failed to submit suggestion', [
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to submit suggestion. Please try again.'
+                'message' => 'Failed to submit suggestion: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -59,11 +84,16 @@ class SuggestionController extends Controller
         try {
             $user = Auth::user();
             
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not authenticated'
+                ], 401);
+            }
+            
             // Get suggestions from the same barangay
             $suggestions = Suggestion::with('user')
-                ->whereHas('user', function($query) use ($user) {
-                    $query->where('barangay_id', $user->barangay_id);
-                })
+                ->where('barangay_id', $user->barangay_id)
                 ->orderBy('created_at', 'desc')
                 ->get();
 
@@ -72,9 +102,14 @@ class SuggestionController extends Controller
                 'suggestions' => $suggestions
             ]);
         } catch (\Exception $e) {
+            Log::error('Failed to fetch suggestions', [
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage()
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to fetch suggestions'
+                'message' => 'Failed to fetch suggestions: ' . $e->getMessage()
             ], 500);
         }
     }

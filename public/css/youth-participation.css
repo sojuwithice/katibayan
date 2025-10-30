@@ -290,6 +290,7 @@ body {
 .profile-wrapper {
   position: relative;
   display: inline-block;
+  z-index: 10001;
 }
 
 .avatar {
@@ -310,7 +311,7 @@ body {
   box-shadow: 0 4px 15px rgba(0,0,0,0.1);
   overflow: hidden;
   display: none;
-  z-index: 1000;
+  z-index: 10002;
 }
 
 .profile-wrapper.active .profile-dropdown {
@@ -402,6 +403,7 @@ body {
 .notification-wrapper {
   position: relative;
   cursor: pointer;
+  z-index: 10001;
 }
 
 .notification-wrapper .fa-bell {
@@ -432,7 +434,7 @@ body {
   box-shadow: 0 4px 10px rgba(0,0,0,0.2);
   flex-direction: column;
   overflow: hidden;
-  z-index: 5000;
+  z-index: 10002;
   opacity: 0;                 
   transform: translateY(-20px); 
   pointer-events: none;        
@@ -586,7 +588,7 @@ body {
   position: relative;
   width: 200px;
   cursor: pointer;
-  z-index: 1000;
+  z-index: 10000;
 }
 
 .custom-select .selected {
@@ -634,7 +636,7 @@ body {
   border-top: none;
   border-radius: 0 0 8px 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
+  z-index: 10003;
   display: none;
   max-height: 200px;
   overflow-y: auto;

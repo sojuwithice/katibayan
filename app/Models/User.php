@@ -93,4 +93,44 @@ public function barangay()
     {
         return $this->hasMany(Event::class);
     }
+
+    public function certificateRequests()
+{
+    return $this->hasMany(CertificateRequest::class);
+}
+
+// Computed full name
+public function getNameAttribute()
+{
+    $name = $this->given_name;
+
+    if ($this->middle_name) {
+        $name .= ' ' . strtoupper(substr($this->middle_name, 0, 1)) . '.';
+    }
+
+    if ($this->last_name) {
+        $name .= ' ' . $this->last_name;
+    }
+
+    if ($this->suffix) {
+        $name .= ' ' . $this->suffix;
+    }
+
+    return trim($name);
+}
+
+// Computed age (from date_of_birth)
+public function getAgeAttribute()
+{
+    return $this->date_of_birth ? $this->date_of_birth->age : null;
+}
+
+// Computed purok
+public function getPurokAttribute()
+{
+    return $this->purok_zone ?? 'N/A';
+}
+
+
+
 }

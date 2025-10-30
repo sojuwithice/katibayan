@@ -574,6 +574,49 @@ body {
   color: #114B8C;
 }
 
+/* Activity Type Sections */
+.activity-type-section {
+  margin-bottom: 2.5rem;
+}
+
+.activity-type-section h3 {
+  color: #333;
+  margin-bottom: 1.2rem;
+  font-size: 1.3rem;
+  border-bottom: 2px solid #e9ecef;
+  padding-bottom: 0.5rem;
+}
+
+.activity-type-section h4 {
+  color: #666;
+  margin: 1.5rem 0 1rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+/* Activity Type Badges */
+.activity-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 4px 10px;
+  border-radius: 15px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: white;
+  z-index: 2;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.event-badge {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.program-badge {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
 /* Program Cards */
 .program-list {
   display: flex;
@@ -589,12 +632,16 @@ body {
   padding: 1.2rem;
   box-shadow: 0 4px 10px rgba(0,0,0,0.12);
   justify-content: space-between;
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
   min-height: 130px;
   width: 100%;
   position: relative; 
 }
 
+.program-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+}
 
 .program-img-wrapper {
   position: relative;
@@ -624,10 +671,25 @@ body {
   background: #3C87C4;      
   border-radius: 50%;
   box-shadow: 0 0 3px rgba(0,0,0,0.25);
+  transition: background 0.3s ease;
 }
 
 .status-dot.hidden {
   display: none;
+}
+
+.status-dot.completed {
+  background: #28a745;
+}
+
+.status-dot.completed i {
+  color: white;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
 }
 
 
@@ -646,6 +708,18 @@ body {
 .program-info .date {
   font-size: .9rem;
   color: #777;
+  margin-bottom: 0.3rem;
+}
+
+.location {
+  font-size: 14px;
+  color: #666;
+  margin-top: 5px;
+}
+
+.location i {
+  margin-right: 5px;
+  color: #3C87C4;
 }
 
 /* Evaluate Button */
@@ -659,22 +733,84 @@ body {
   font-size: .9rem;
   cursor: pointer;
   transition: all 0.3s ease;
+  white-space: nowrap;
 }
 
 .evaluate-btn:hover {
   background: #3C87C4;
   color: #fff;
+  transform: scale(1.05);
 }
 
 /* After submit state */
 .evaluate-btn.done {
-  background: #F5C33D; 
+  background: #28a745; 
   color: #fff;
   cursor: default;
-  border: 2px solid #F5C33D;
+  border: 2px solid #28a745;
+  transform: none;
 }
 .evaluate-btn.done i {
   color: #fff;
+  margin-right: 5px;
+}
+
+.evaluate-btn.done:hover {
+  background: #28a745;
+  transform: none;
+}
+
+/* Evaluated Section */
+.evaluated-section {
+  margin-top: 40px;
+  border-top: 2px solid #e9ecef;
+  padding-top: 30px;
+}
+
+.evaluated-section h3 {
+  color: #333;
+  margin-bottom: 20px;
+  font-size: 1.4rem;
+}
+
+.program-card.evaluated {
+  opacity: 0.8;
+  background: #f9f9f9;
+  border-left: 4px solid #28a745;
+}
+
+.program-card.evaluated:hover {
+  transform: none;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+}
+
+/* No Events Message */
+.no-events-message {
+  text-align: center;
+  padding: 60px 20px;
+  color: #666;
+  background: #fff;
+  border-radius: 15px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.no-events-message i {
+  font-size: 48px;
+  margin-bottom: 15px;
+  color: #ccc;
+}
+
+.no-events-message p {
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+  color: #555;
+}
+
+.no-events-message .sub-message {
+  font-size: 14px;
+  color: #888;
+  margin-top: 5px;
+  font-style: italic;
 }
 
 /* Modal background */
@@ -769,19 +905,22 @@ h2 {
   margin-bottom: .3rem;
   font-size: 0.95rem;
   color: #01214A;
+  background: #f9f9f9;
 }
 
 /* Questions */
 .question {
   margin: 1.5rem 0;
-  
+  padding: 1rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
 }
 
 .question p {
   font-weight: 500;
   margin-bottom: 1.5rem;
   color: #01214A;
-  margin-top: 2rem;
+  margin-top: 0;
 }
 
 .required {
@@ -930,6 +1069,7 @@ h2 {
   outline: none;
   margin: 1rem 0 1.5rem;
   transition: border-color 0.2s ease;
+  font-family: inherit;
 }
 
 
@@ -1038,6 +1178,41 @@ h2 {
 
 .success .ok-btn:hover {
   background: #2b6ca3;
+}
+
+/* Form validation styles */
+.question {
+  transition: all 0.3s ease;
+}
+
+.question:has(input[type="radio"]:not(:checked)) {
+  border: 2px solid transparent;
+}
+
+.question.error {
+  border: 2px solid #ff4444;
+  background: #fff5f5;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+/* Animation for modal */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Highlight effect for anchor navigation */
+.program-card:target {
+  background: #f0f8ff;
+  border-left: 4px solid #3C87C4;
+  animation: highlight 2s ease;
+}
+
+@keyframes highlight {
+  0% { background: #f0f8ff; }
+  50% { background: #e1f0ff; }
+  100% { background: #f0f8ff; }
 }
 
 
@@ -1181,31 +1356,50 @@ h2 {
     to { transform: translateY(0); opacity: 1; }
   }
 
+  /* Program Cards Mobile */
   .program-card {
     min-height: 150px; 
     padding: 1rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
   }
 
-  .programs-header h2 {
-    font-size: 1.5rem;
+  .program-img-wrapper {
+    width: 100%;
+    justify-content: center;
   }
 
   .program-img {
-    width: 120px;   
-    height: 80px;
+    width: 100%;
+    height: 120px;
+    margin-left: 0;
+  }
+
+  .activity-badge {
+    top: 8px;
+    left: 8px;
+    font-size: 0.6rem;
+    padding: 3px 8px;
+  }
+
+  .program-info {
+    margin: 0;
+    width: 100%;
   }
 
   .program-info h3 {
-    font-size: .80rem;
+    font-size: .90rem;
   }
 
   .program-info .date {
-    font-size: .7rem;
+    font-size: .8rem;
   }
 
   .evaluate-btn {
     font-size: .80rem;
     padding: .3rem .7rem;
+    align-self: flex-end;
   }
   
   .modal-content {
@@ -1223,74 +1417,71 @@ h2 {
     font-size: 0.75rem;
   }
 
+  /* Activity Type Sections Mobile */
+  .activity-type-section h3 {
+    font-size: 1.1rem;
+  }
+
+  .activity-type-section h4 {
+    font-size: 1rem;
+  }
+
+  .evaluated-section h3 {
+    font-size: 1.2rem;
+  }
+
 }
 
 @media (max-width: 480px) {
+  .program-card {
+    padding: 0.8rem;
+  }
+
+  .program-img {
+    height: 100px;
+  }
+
+  .activity-badge {
+    font-size: 0.55rem;
+    padding: 2px 6px;
+  }
+
+  .program-info h3 {
+    font-size: .85rem;
+  }
+
+  .evaluate-btn {
+    font-size: .75rem;
+    padding: .2rem .6rem;
+  }
+
+  .no-events-message {
+    padding: 40px 15px;
+  }
+
+  .no-events-message i {
+    font-size: 36px;
+  }
+
+  .no-events-message p {
+    font-size: 1rem;
+  }
+}
+
+/* Print styles for certificates */
+@media print {
+  .sidebar,
+  .topbar,
+  .evaluate-btn {
+    display: none !important;
+  }
   
+  .main {
+    margin-left: 0;
+    padding: 0;
+  }
+  
+  .programs-section {
+    margin-top: 0;
+  }
 }
-
-/* Evaluation specific styles */
-.no-events-message {
-  text-align: center;
-  padding: 40px;
-  color: #666;
-}
-
-.no-events-message i {
-  font-size: 48px;
-  margin-bottom: 15px;
-  color: #ccc;
-}
-
-.no-events-message .sub-message {
-  font-size: 14px;
-  color: #888;
-  margin-top: 5px;
-}
-
-.evaluated-section {
-  margin-top: 40px;
-  border-top: 1px solid #eee;
-  padding-top: 30px;
-}
-
-.evaluated-section h3 {
-  color: #333;
-  margin-bottom: 20px;
-}
-
-.program-card.evaluated {
-  opacity: 0.7;
-  background: #f9f9f9;
-}
-
-.evaluate-btn.done {
-  background: #28a745;
-  cursor: not-allowed;
-}
-
-.status-dot.completed {
-  background: #28a745;
-}
-
-.location {
-  font-size: 14px;
-  color: #666;
-  margin-top: 5px;
-}
-
-.location i {
-  margin-right: 5px;
-}
-
-/* Form validation styles */
-.question {
-  transition: all 0.3s ease;
-}
-
-.question:has(input[type="radio"]:not(:checked)) {
-  border: 2px solid transparent;
-}
-
-
-

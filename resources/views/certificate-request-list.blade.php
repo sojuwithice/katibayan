@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>KatiBayan - Dashboard</title>
   <link rel="stylesheet" href="{{ asset('css/certificate-request-list.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
@@ -159,35 +160,69 @@
       </div>
     </header>
 
-    <main class="container">
-  <!-- Header Title -->
-      <!-- Program Info Card -->
-    <section class="certificate-card">
+    {{-- 
+  Dito sa taas, kailangan nating alamin kung 'event' o 'program' 'yung activity
+  para malagay sa 'data-activity-type'. Kailangan 'to ng JavaScript mo mamaya.
+--}}
+@php
+    $activityType = ($activity instanceof \App\Models\Event) ? 'event' : 'program';
+@endphp
+
+{{-- 
+  1. Pinalitan 'data-event-id' ng 'data-activity-id' at 'data-activity-type'
+  2. Pinalitan '$event->id' ng '$activity->id'
+--}}
+<main class="container" data-activity-id="{{ $activity->id }}" data-activity-type="{{ $activityType }}">
+  <section class="certificate-card">
   <p class="certificate-label">Claiming of Certificate for:</p>
   <div class="certificate-content">
-    <!-- Left: Program Image -->
+
     <div class="certificate-image">
-      <img src="{{ asset('images/linis.jpg') }}" alt="Program Certificate">
+
+      {{-- 3. Nagdagdag ng logic para kunin 'yung tamang image column --}}
+      @php
+        // Kukunin 'yung 'image' (para sa event) O 'yung 'display_image' (para sa program)
+        $imageUrl = $activity->image ?? $activity->display_image; 
+      @endphp
+
+      {{-- 4. Pinalitan '$event->image' ng '$imageUrl' at '$event->title' ng '$activity->title' --}}
+      <img src="{{ $imageUrl ? asset('storage/' . $imageUrl) : asset('images/default_cert_image.jpg') }}" 
+           alt="{{ $activity->title }}">
     </div>
 
-    <!-- Right: Program Details -->
     <div class="certificate-details">
       <p><strong>Title:</strong></p>
+
+      {{-- 5. Pinalitan '$event->title' ng '$activity->title' --}}
       <h3 class="cert-title">
-        Kalinisan sa bagong Pilipinas Program (Kalinga at Inisyatiba para sa malinis na bayan)
+        {{ $activity->title }}
       </h3>
-      <p class="cert-subtitle">NATIONWIDE SIMULTANEOUS CLEAN UP DRIVE</p>
-      <p class="cert-date">September 15, 2025</p>
+
+      {{-- 6. Pinalitan '$event->description' ng '$activity->description' --}}
+      <p class="cert-subtitle">{{ $activity->description ? $activity->description : 'No description provided.' }}</p>
+
+      {{-- 7. Pinalitan '$event->event_date' ng '$activity->event_date' at ginamitan ng Carbon::parse --}}
+      <p class="cert-date">{{ \Carbon\Carbon::parse($activity->event_date)->format('F j, Y') }}</p>
+
     </div>
   </div>
-    </section>
+</section>
 
     <!-- Certificate Request Header -->
 <div class="request-header">
   <h3>Certificate Request List</h3>
-  <button class="accept-btn">Accept Request</button>
+
+  @if ($requests->contains('status', 'requesting'))
+    {{-- Kung mayroon pang kahit isang "requesting", ipakita ang normal na button --}}
+    <button class="accept-btn">Accept Request</button>
+  @else
+    {{-- Kung lahat ay na-process na (accepted, claimed, etc.), ipakita ang disabled na button --}}
+    <button class="accept-btn accepted-btn" disabled>Accepted</button>
+  @endif
+
 </div>
 
+<!-- Certificate Request Table -->
 <!-- Certificate Request Table -->
 <section class="request-list">
   <div class="table-wrapper">
@@ -199,46 +234,53 @@
           <th>Age</th>
           <th>Purok</th>
           <th>Status</th>
-          <th>Certificate Status</th>
-        </tr>
+          <th>Certificate Status</th> </tr>
       </thead>
       <tbody>
-        <tr>
-          <td>KKBA-EMS3-2025-0012</td>
-          <td>Precious O. Balimbing</td>
-          <td>18</td>
-          <td>Purok 6</td>
-          <td class="status requesting">Requesting</td>
-          <td class="status pending">Pending</td>
-        </tr>
-        <tr>
-          <td>KKBA-EMS3-2025-0013</td>
-          <td>Red D. Lopez</td>
-          <td>18</td>
-          <td>Purok 6</td>
-          <td class="status requesting">Requesting</td>
-          <td class="status pending">Pending</td>
-        </tr>
-        <tr>
-          <td>KKBA-EMS3-2025-0013</td>
-          <td>Shanchai D. Guard</td>
-          <td>18</td>
-          <td>Purok 6</td>
-          <td class="status requesting">Requesting</td>
-          <td class="status pending">Pending</td>
-        </tr>
-        <tr>
-          <td>KKBA-EMS3-2025-0013</td>
-          <td>Poloy Y. Poy</td>
-          <td>18</td>
-          <td>Purok 6</td>
-          <td class="status requesting">Requesting</td>
-          <td class="status pending">Pending</td>
-        </tr>
-      </tbody>
+@forelse ($requests as $req)
+  <tr data-request-id="{{ $req->id }}">
+    <td>{{ $req->user->account_number ?? 'N/A' }}</td>
+    <td>{{ $req->user->name ?? 'Unknown' }}</td>
+    <td>{{ $req->user->age ?? 'N/A' }}</td>
+    <td>{{ $req->user->purok ?? 'N/A' }}</td>
+
+    {{-- STATUS CELL (Request Status) --}}
+    {{-- Ito ay magiging 'Requesting' or 'Accepted' lang --}}
+    <td class="status {{ $req->status }}" id="status-cell-{{ $req->id }}">
+      @if($req->status === 'requesting')
+        Requesting
+      @else
+        Accepted {{-- Kahit 'ready_for_pickup' or 'claimed' pa, 'Accepted' ang display --}}
+      @endif
+    </td>
+
+    {{-- ACTION CELL (Certificate Status) --}}
+    {{-- Ito ang magbabago-bago: Pending -> Accepted -> Claim Button -> Claimed --}}
+    <td class="action-cell" id="action-cell-{{ $req->id }}">
+      @if($req->status === 'ready_for_pickup')
+        <button class="claim-btn" data-id="{{ $req->id }}">Claim</button>
+
+      @elseif($req->status === 'claimed')
+        <span class="status-claimed">Claimed</span>
+
+      @elseif($req->status === 'accepted')
+        <span class="status-pending">Accepted</span>
+        
+      @else {{-- 'requesting' --}}
+        <span class="status-pending">Pending</span>
+      @endif
+    </td>
+  </tr>
+@empty
+  <tr>
+    <td colspan="6" style="text-align:center;">No requests for this event yet.</td>
+  </tr>
+@endforelse
+</tbody>
     </table>
   </div>
 </section>
+
 
 
 <!-- Accepted Modal -->
@@ -420,6 +462,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ===== Dashboard Weekly Calendar =====
+  // (Walang binago rito, okay na 'to)
   const weekdays = ["MON","TUE","WED","THU","FRI","SAT","SUN"];
   const daysContainer = document.querySelector(".calendar .days");
   const header = document.querySelector(".calendar header h3");
@@ -483,6 +526,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ===== Real-time Clock =====
+  // (Walang binago rito, okay na 'to)
   const timeEl = document.querySelector(".time");
   function updateTime() {
     if (!timeEl) return;
@@ -502,6 +546,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setInterval(updateTime, 60000);
 
   // ===== Notifications + Profile Dropdown =====
+  // (Walang binago rito, okay na 'to)
   const notifWrapper = document.querySelector(".notification-wrapper");
   const profileWrapper = document.querySelector(".profile-wrapper");
   const profileToggle = document.getElementById("profileToggle");
@@ -519,57 +564,170 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   document.addEventListener("click", (e) => {
-    if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) sidebar?.classList.remove('open');
+    if (sidebar && !sidebar.contains(e.target) && !menuToggle.contains(e.target)) sidebar?.classList.remove('open');
     if (profileWrapper && !profileWrapper.contains(e.target)) profileWrapper.classList.remove('active');
     if (notifWrapper && !notifWrapper.contains(e.target)) notifWrapper.classList.remove('active');
     document.querySelectorAll('.options-dropdown').forEach(drop => drop.classList.remove('show'));
   });
 
-  // ===== Accepted Modal =====
+  // ==========================================================
+  // SETUP PARA SA AJAX
+  // ==========================================================
+  
+  const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+  const mainContainer = document.querySelector('main.container');
+  
+  // --- FIX #1: Kunin 'yung tamang ID at Type galing sa <main> tag ---
+  const activityId = mainContainer ? mainContainer.dataset.activityId : null;
+  const activityType = mainContainer ? mainContainer.dataset.activityType : null; // Ito ay magiging 'event' o 'program'
+  // --- END NG FIX #1 ---
+
+  let toastContainer = document.querySelector('.toast-container');
+  if (!toastContainer) {
+    toastContainer = document.createElement('div');
+    toastContainer.className = 'toast-container';
+    document.body.appendChild(toastContainer);
+  }
+
+  function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    let iconClass = '';
+    if (type === 'success') iconClass = 'fa-solid fa-circle-check';
+    if (type === 'error') iconClass = 'fa-solid fa-circle-xmark';
+    if (type === 'info') iconClass = 'fa-solid fa-circle-info';
+    if (type === 'warning') iconClass = 'fa-solid fa-triangle-exclamation';
+    toast.innerHTML = `<i class="${iconClass} toast-icon"></i> <span>${message}</span>`;
+    toastContainer.appendChild(toast);
+    setTimeout(() => { toast.remove(); }, 3000);
+  }
+
+
+  // ==========================================================
+  // STEP 1: ACCEPTED MODAL LOGIC
+  // ==========================================================
+  
   const acceptBtn = document.querySelector('.accept-btn');
   const acceptedModal = document.getElementById('acceptedModal');
 
-  acceptBtn?.addEventListener('click', () => acceptedModal.style.display = 'flex');
-  acceptedModal?.addEventListener('click', (e) => {
-    if (e.target === acceptedModal) acceptedModal.style.display = 'none';
+  acceptBtn?.addEventListener('click', () => {
+    
+    // --- FIX #2: I-check 'yung 'activityId' ---
+    if (!activityId) {
+        showToast('Activity ID not found. Cannot proceed.', 'error'); // Ito 'yung error mo
+        return;
+    }
+    // --- END NG FIX #2 ---
+
+    acceptBtn.disabled = true;
+    acceptBtn.textContent = 'Accepting...';
+
+    // --- FIX #3: Gumawa ng dynamic payload ---
+    const payload = {};
+    if (activityType === 'event') {
+        payload.event_id = activityId;
+    } else {
+        payload.program_id = activityId;
+    }
+    // --- END NG FIX #3 ---
+
+    fetch('/accept-requests', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        },
+        body: JSON.stringify(payload) // Ginamit na 'yung dynamic payload
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Failed to accept requests. Please try again.');
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log(data.message); 
+        acceptBtn.textContent = 'Accepted';
+        acceptBtn.classList.add('accepted-btn'); 
+
+        document.querySelectorAll('.certificate-table tbody .status.requesting').forEach(cell => {
+            cell.textContent = 'Accepted';
+            cell.classList.remove('requesting');
+            cell.classList.add('accepted');
+        });
+
+        acceptedModal.style.display = 'flex';
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast(error.message, 'error');
+        acceptBtn.disabled = false;
+        acceptBtn.textContent = 'Accept Request';
+    });
   });
 
-  // ===== Schedule Modal =====
+  // (Walang binago rito)
+  // acceptedModal?.addEventListener('click', (e) => {
+  //   if (e.target === acceptedModal) acceptedModal.style.display = 'none';
+  // });
+
+
+  // ==========================================================
+  // STEP 2: SCHEDULE MODAL LOGIC
+  // ==========================================================
+  
+  // (Walang binago rito, okay na 'to)
   const scheduleBtn = document.getElementById("scheduleBtn");
   const scheduleModal = document.getElementById("scheduleModal");
-  const closeScheduleBtn = scheduleModal?.querySelector(".close-btn");
-  scheduleModal.style.display = "none";
+  const closeScheduleBtn = scheduleModal?.querySelector(".close-btn"); // Para 'to sa 'X' button kung meron
+  if (scheduleModal) scheduleModal.style.display = "none"; // Nagdagdag ng check kung !null
 
   scheduleBtn?.addEventListener("click", () => {
-    acceptedModal.style.display = "none";
-    scheduleModal.style.display = "flex";
+    if (acceptedModal) acceptedModal.style.display = "none";
+    if (scheduleModal) scheduleModal.style.display = "flex";
   });
 
-  closeScheduleBtn?.addEventListener("click", () => scheduleModal.style.display = "none");
-  window.addEventListener("click", (e) => { if (e.target === scheduleModal) scheduleModal.style.display = "none"; });
+  closeScheduleBtn?.addEventListener("click", () => {
+    if (scheduleModal) scheduleModal.style.display = "none"
+  });
 
-  // ===== Schedule Modal Calendar =====
-  const calendarGrid = scheduleModal.querySelector(".calendar-grid");
-  const monthDisplay = scheduleModal.querySelector(".month-display");
-  const prevMonthBtn = scheduleModal.querySelector(".calendar-header .nav-btn:first-child");
-  const nextMonthBtn = scheduleModal.querySelector(".calendar-header .nav-btn:last-child");
+
+  // ==========================================================
+  // STEP 3: SCHEDULE MODAL CALENDAR & TIME
+  // ==========================================================
+
+  // (Walang binago rito, okay na 'to)
+  const calendarGrid = scheduleModal?.querySelector(".calendar-grid");
+  const monthDisplay = scheduleModal?.querySelector(".month-display");
+  const prevMonthBtn = scheduleModal?.querySelector(".calendar-header .nav-btn:first-child");
+  const nextMonthBtn = scheduleModal?.querySelector(".calendar-header .nav-btn:last-child");
 
   let currentMonth = today.getMonth();
   let currentYear = today.getFullYear();
   let selectedDate = null;
 
   function renderScheduleCalendar(month, year) {
+    if (!calendarGrid || !monthDisplay) return;
+    
     const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
     monthDisplay.textContent = `${monthNames[month]} ${year}`;
     calendarGrid.innerHTML = "";
 
+    const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    dayLabels.forEach(day => {
+        const dayEl = document.createElement('div');
+        dayEl.classList.add('day-label');
+        dayEl.textContent = day;
+        calendarGrid.appendChild(dayEl);
+    });
+
     const firstDay = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-    // Empty slots for alignment
-    for (let i = 0; i < (firstDay === 0 ? 6 : firstDay - 1); i++) {
+    let startDay = (firstDay === 0) ? 6 : firstDay - 1;
+    for (let i = 0; i < startDay; i++) {
       const empty = document.createElement('div');
-      empty.classList.add('day');
+      empty.classList.add('day', 'empty');
       calendarGrid.appendChild(empty);
     }
 
@@ -577,18 +735,27 @@ document.addEventListener("DOMContentLoaded", () => {
       const day = document.createElement('div');
       day.classList.add('day');
       day.textContent = d;
+      
+      const thisDate = new Date(year, month, d);
+      const todayMidnight = new Date(today.toDateString());
 
-      // Highlight today but allow selection
-      if (d === today.getDate() && month === today.getMonth() && year === today.getFullYear() && !selectedDate) {
-        day.classList.add('active', 'today');
+      if (thisDate < todayMidnight) {
+          day.classList.add('disabled');
+      } else {
+          day.addEventListener('click', () => {
+              selectedDate = d;
+              calendarGrid.querySelectorAll('.day.active').forEach(el => el.classList.remove('active'));
+              day.classList.add('active');
+          });
       }
 
-      day.addEventListener('click', () => {
-        selectedDate = d;
-        calendarGrid.querySelectorAll('.day').forEach(el => el.classList.remove('active'));
-        day.classList.add('active');
-      });
-
+      if (d === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+        day.classList.add('today');
+        if (!selectedDate) {
+            day.classList.add('active');
+            selectedDate = d;
+        }
+      }
       calendarGrid.appendChild(day);
     }
   }
@@ -596,156 +763,223 @@ document.addEventListener("DOMContentLoaded", () => {
   prevMonthBtn?.addEventListener('click', () => {
     currentMonth--;
     if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+    selectedDate = null;
     renderScheduleCalendar(currentMonth, currentYear);
   });
 
   nextMonthBtn?.addEventListener('click', () => {
     currentMonth++;
     if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+    selectedDate = null;
     renderScheduleCalendar(currentMonth, currentYear);
   });
 
   renderScheduleCalendar(currentMonth, currentYear);
 
-  // ===== Time Picker =====
-const timePicker = scheduleModal.querySelector('.time-picker');
+  const timePicker = scheduleModal?.querySelector('.time-picker');
+  const timeColumns = timePicker?.querySelectorAll('.time-column');
+  const hourColumn = timeColumns ? timeColumns[0] : null;
+  const minColumn = timeColumns ? timeColumns[1] : null;
+  const hourValue = hourColumn?.querySelector('.time-value');
+  const minValue = minColumn?.querySelector('.time-value');
+  const hourUp = hourColumn?.querySelector('button:first-of-type');
+  const hourDown = hourColumn?.querySelector('button:last-of-type');
+  const minUp = minColumn?.querySelector('button:first-of-type'); 
+  const minDown = minColumn?.querySelector('button:last-of-type');
+  const ampmBtns = timePicker?.querySelectorAll('.ampm-btn');
+  let selectedAmPm = 'AM';
 
-// Hour & Minute columns
-const timeColumns = timePicker.querySelectorAll('.time-column');
-const hourColumn = timeColumns[0];
-const minColumn = timeColumns[1];
-
-const hourValue = hourColumn.querySelector('.time-value');
-const minValue = minColumn.querySelector('.time-value');
-
-// Buttons
-const hourUp = hourColumn.querySelector('button:first-of-type');
-const hourDown = hourColumn.querySelector('button:last-of-type');
-const minUp = minColumn.querySelector('button:first-of-type');
-const minDown = minColumn.querySelector('button:last-of-type');
-
-// AM/PM buttons
-const ampmBtns = timePicker.querySelectorAll('.ampm-btn');
-let selectedAmPm = 'AM';
-
-// ===== Hour Controls =====
-hourUp.addEventListener('click', () => {
-  let val = parseInt(hourValue.textContent);
-  val = val === 12 ? 1 : val + 1;
-  hourValue.textContent = val.toString().padStart(2, '0');
-});
-
-hourDown.addEventListener('click', () => {
-  let val = parseInt(hourValue.textContent);
-  val = val === 1 ? 12 : val - 1;
-  hourValue.textContent = val.toString().padStart(2, '0');
-});
-
-// ===== Minute Controls =====
-minUp.addEventListener('click', () => {
-  let val = parseInt(minValue.textContent);
-  val = val === 59 ? 0 : val + 1;
-  minValue.textContent = val.toString().padStart(2, '0');
-});
-
-minDown.addEventListener('click', () => {
-  let val = parseInt(minValue.textContent);
-  val = val === 0 ? 59 : val - 1;
-  minValue.textContent = val.toString().padStart(2, '0');
-});
-
-// ===== AM/PM Toggle =====
-ampmBtns.forEach(btn => {
-  btn.addEventListener('click', () => {
-    ampmBtns.forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    selectedAmPm = btn.textContent;
+  hourUp?.addEventListener('click', () => {
+    let val = parseInt(hourValue.textContent);
+    val = val === 12 ? 1 : val + 1;
+    hourValue.textContent = val.toString().padStart(2, '0');
   });
-});
+  hourDown?.addEventListener('click', () => {
+    let val = parseInt(hourValue.textContent);
+    val = val === 1 ? 12 : val - 1;
+    hourValue.textContent = val.toString().padStart(2, '0');
+  });
+  minUp?.addEventListener('click', () => {
+    let val = parseInt(minValue.textContent);
+    val = (val + 1) % 60;
+    minValue.textContent = val.toString().padStart(2, '0');
+  });
+  minDown?.addEventListener('click', () => {
+    let val = parseInt(minValue.textContent);
+    val = (val - 1 + 60) % 60;
+    minValue.textContent = val.toString().padStart(2, '0');
+  });
+  ampmBtns?.forEach(btn => {
+    btn.addEventListener('click', () => {
+      ampmBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedAmPm = btn.textContent;
+    });
+  });
 
+// ==========================================================
+// STEP 4: CONFIRM SCHEDULE LOGIC (FULLY FIXED)
+// ==========================================================
 
+const confirmBtn = scheduleModal?.querySelector('.schedule-confirm');
+const locationInput = scheduleModal?.querySelector('#location');
 
-  // ===== Confirm Schedule =====
-const confirmBtn = scheduleModal.querySelector('.schedule-confirm');
-const locationInput = scheduleModal.querySelector('#location');
-
-// Create toast container if not exists
-let toastContainer = document.querySelector('.toast-container');
-if (!toastContainer) {
-  toastContainer = document.createElement('div');
-  toastContainer.className = 'toast-container';
-  document.body.appendChild(toastContainer);
-}
-
-function showToast(message, type = 'success') {
-  const toast = document.createElement('div');
-  toast.className = `toast ${type}`;
-
-  // Piliin icon depende sa type
-  let iconClass = '';
-  if (type === 'success') iconClass = 'fa-solid fa-circle-check';
-  if (type === 'error') iconClass = 'fa-solid fa-circle-xmark';
-  if (type === 'info') iconClass = 'fa-solid fa-circle-info';
-  if (type === 'warning') iconClass = 'fa-solid fa-triangle-exclamation';
-
-  toast.innerHTML = `
-    <i class="${iconClass} toast-icon"></i>
-    <span>${message}</span>
-  `;
-
-  toastContainer.appendChild(toast);
-
-  // Auto remove after 3s
-  setTimeout(() => {
-    toast.remove();
-  }, 3000);
-}
-
-confirmBtn?.addEventListener('click', () => {
-  if (!selectedDate) { 
-    showToast('Please select a date.', 'error'); 
-    return; 
-  }
-  if (!locationInput.value.trim()) {
-    showToast('Please enter a location.', 'error'); 
-    return;
-  }
-
-  const scheduleData = {
-    date: `${selectedDate} ${monthDisplay.textContent.split(' ')[0]} ${monthDisplay.textContent.split(' ')[1]}`,
-    time: `${hourValue.textContent}:${minValue.textContent} ${selectedAmPm}`,
-    location: locationInput.value
-  };
-
-  console.log('Scheduled:', scheduleData);
-  showToast(`Schedule set for ${scheduleData.date}, ${scheduleData.time} at ${scheduleData.location}`, 'success');
-
-  // === Close modal
-  scheduleModal.style.display = 'none';
-
-  // === Update Accept Button
-  const acceptBtn = document.querySelector('.accept-btn');
-  if (acceptBtn) {
-    acceptBtn.textContent = 'Accepted';
-    acceptBtn.disabled = true;
-    acceptBtn.classList.add('accepted-btn'); 
-  }
-
-  // === Update Table Status (Requesting -> Accepted)
-  document.querySelectorAll('.certificate-table tbody tr').forEach(row => {
-    const statusCell = row.querySelector('.status.requesting');
-    if (statusCell) {
-      statusCell.textContent = 'Accepted';
-      statusCell.classList.remove('requesting');
-      statusCell.classList.add('accepted');
+confirmBtn?.addEventListener('click', async () => {
+    if (!selectedDate) {
+        showToast('Please select a date.', 'error');
+        return;
     }
+
+    const location = locationInput.value.trim();
+    if (!location) {
+        showToast('Please enter a location.', 'error');
+        return;
+    }
+
+    const formattedDate = `${currentYear}-${(currentMonth + 1)
+        .toString()
+        .padStart(2, '0')}-${selectedDate.toString().padStart(2, '0')}`;
+
+    const formattedTime = `${hourValue.textContent}:${minValue.textContent} ${selectedAmPm}`;
+
+    // --- FIX #4: Gumawa ng dynamic schedule data ---
+    const scheduleData = {
+        date: formattedDate,
+        time: formattedTime,
+        location: location,
+    };
+
+    if (activityType === 'event') {
+        scheduleData.event_id = activityId;
+    } else {
+        scheduleData.program_id = activityId;
+    }
+    // --- END NG FIX #4 ---
+
+    console.log("Sending to /set-schedule:", scheduleData);
+
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = "Setting...";
+
+    try {
+        const res = await fetch("/set-schedule", {
+            method: "POST",
+            cache: "no-store", 
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": csrfToken, 
+            },
+            body: JSON.stringify(scheduleData), // Ginamit na 'yung dynamic data
+        });
+
+        if (!res.ok) {
+            const err = await res.json().catch(() => null);
+            throw new Error(err?.message || `Error ${res.status}`);
+        }
+
+        const data = await res.json();
+        console.log("Success:", data);
+
+        scheduleModal.style.display = "none";
+        showToast(data.message || "Schedule set successfully!", "success");
+
+        setTimeout(() => {
+            window.location.reload(true); 
+        }, 800); 
+
+    } catch (error) {
+        console.error("Schedule Error:", error);
+        showToast(error.message, "error");
+
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = "Set schedule";
+    }
+});
+
+
+
+  // ==========================================================
+  // STEP 5: CLAIM BUTTON LOGIC (FIXED FOR CSRF MISMATCH)
+  // ==========================================================
+
+  // (Walang binago rito, okay na 'to)
+  const tableWrapper = document.querySelector('.table-wrapper');
+
+  tableWrapper?.addEventListener('click', async (e) => {
+      // Titingnan kung 'claim-btn' ang na-click
+      if (!e.target.classList.contains('claim-btn')) {
+          return;
+      }
+
+      const claimButton = e.target;
+      const id = claimButton.dataset.id;
+      
+      if (!id) return;
+
+      // I-disable ang button habang nagp-process
+      claimButton.disabled = true;
+      claimButton.textContent = 'Claiming...';
+
+      try {
+          const res = await fetch("{{ route('certificate.claim') }}", {
+              method: "POST",
+              headers: {
+                  "Content-Type": "application/json",
+                  "Accept": "application/json",
+                  "X-CSRF-TOKEN": csrfToken // Ito 'yung token
+              },
+              body: JSON.stringify({ id: id })
+          });
+
+          // --- ITO YUNG PANGUNAHING FIX ---
+          // I-check kung ang error ay 419 (CSRF Mismatch)
+          if (res.status === 419) {
+              throw new Error('Your session has expired. The page will reload.');
+          }
+          // --- END NG FIX ---
+
+          if (!res.ok) {
+              const errData = await res.json().catch(() => null);
+              const errorMsg = errData?.message || `Failed with status ${res.status}`;
+              throw new Error(errorMsg);
+          }
+
+          const data = await res.json();
+          
+          if (data.success) { 
+              showToast(data.message || 'Certificate claimed!', 'success');
+              
+              // Mag-reload para ma-update 'yung status sa "Claimed"
+              setTimeout(() => {
+                  location.reload();
+              }, 1500); // 1.5 second delay
+          
+          } else {
+              throw new Error(data.message || 'Claiming failed. Please try again.');
+          }
+
+      } catch (error) {
+          console.error('Error claiming certificate:', error);
+          showToast(error.message, 'error');
+          
+          // --- ITO YUNG PANGALAWANG BAHAGI NG FIX ---
+          // Kung 'yung error ay galing sa 419, mag-force reload
+          if (error.message.includes('session has expired')) {
+              setTimeout(() => {
+                  location.reload(true); // true = force hard reload
+              }, 2000); // 2 second delay
+          } else {
+              // Para sa ibang error, ibalik lang 'yung button
+              if (claimButton) {
+                  claimButton.disabled = false;
+                  claimButton.textContent = 'Claim';
+              }
+          }
+      }
   });
-});
+  
 
-
-
-});
-
+}); 
 </script>
 
 </body>

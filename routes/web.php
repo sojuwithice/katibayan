@@ -30,11 +30,13 @@ use App\Http\Controllers\UserLoginController;
 use App\Models\Admin;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\FeedbackController;
-use App\Http\Controllers\ProgramController; 
-use App\Http\Controllers\YouthProgramRegistrationController; 
-use App\Http\Controllers\YouthAssistanceController; 
-use App\Http\Controllers\NotificationController; 
-
+use App\Http\Controllers\CertificateRequestController;
+use App\Http\Controllers\CertificateController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ProgramController;
+use App\Http\Controllers\ServiceOffersController;
+use App\Http\Controllers\YouthProgramRegistrationController;
+use App\Http\Controllers\YouthAssistanceController;
 
 Route::get('/', function () {
     return view('landingpage');
@@ -87,15 +89,13 @@ Route::get('/sk-analytics', function () {
     return view('sk-analytics');
 })->name('sk.analytics');
 
-Route::get('/suggestionbox', function () {
-    return view('suggestionbox'); 
-})->name('suggestionbox');
+
+// FIXED: Suggestion Box route - use controller instead of direct view
+Route::get('/suggestionbox', [SuggestionController::class, 'index'])->name('suggestionbox');
 
 Route::view('/attendance', 'attendancepage')->name('attendancepage');
 
-Route::get('/serviceoffers', function () {
-    return view('serviceoffers');
-})->name('serviceoffers');
+Route::get('/service-offers', [ServiceOffersController::class, 'index'])->name('serviceoffers');
 
 // ========== POLLS ROUTES ==========
 Route::get('/polls', [PollsController::class, 'index'])->name('polls.page');
@@ -109,13 +109,20 @@ Route::post('/sk-polls', [SKPollsController::class, 'store'])->name('sk-polls.st
 Route::get('/sk-polls/{pollId}/respondents', [SKPollsController::class, 'getRespondents'])->name('sk-polls.respondents');
 Route::delete('/sk-polls/{pollId}', [SKPollsController::class, 'destroy'])->name('sk-polls.destroy');
 
+// ========== EVALUATION ROUTES ==========
 Route::get('/evaluation', [EvaluationController::class, 'index'])->name('evaluation');
 Route::post('/evaluation', [EvaluationController::class, 'store']);
-Route::get('/evaluation/check/{eventId}', [EvaluationController::class, 'checkEvaluation']);
 
-// NEW: Certificate routes
+// INILAGAY SA ITAAS: Unahin ang mga specific routes
 Route::get('/evaluation/certificates', [EvaluationController::class, 'getCertificates'])->name('evaluation.certificates');
+Route::get('/evaluation/check', [EvaluationController::class, 'checkEvaluation'])->name('evaluation.check');
 Route::post('/evaluation/request-print', [EvaluationController::class, 'requestPrint'])->name('evaluation.request-print');
+
+// INILAGAY SA BABA: Ihuli ang mga may wildcard
+Route::get('/evaluation/check/{eventId}', [EvaluationController::class, 'checkEvaluation']);
+Route::get('/evaluation/{id}', [EvaluationController::class, 'show'])->name('evaluation.show');
+
+
 
 // FIXED: SK Dashboard route - use controller instead of direct view
 Route::get('/sk-dashboard', [SKDashboardController::class, 'index'])->name('sk.dashboard');
@@ -123,7 +130,7 @@ Route::get('/sk-dashboard', [SKDashboardController::class, 'index'])->name('sk.d
 // FIXED: Youth Profile route - use controller instead of direct view
 Route::get('/youth-profilepage', [YouthProfileController::class, 'index'])->name('youth-profilepage');
 
-// ========== PROGRAM ROUTES ========== ADD THESE ROUTES
+// ========== PROGRAM ROUTES ==========
 Route::get('/create-program', [ProgramController::class, 'create'])->name('create-program');
 Route::post('/programs', [ProgramController::class, 'store'])->name('programs.store');
 Route::get('/programs', [ProgramController::class, 'index'])->name('programs.index');
@@ -132,17 +139,14 @@ Route::get('/programs/{id}/edit', [ProgramController::class, 'edit'])->name('pro
 Route::put('/programs/{id}', [ProgramController::class, 'update'])->name('programs.update');
 Route::delete('/programs/{id}', [ProgramController::class, 'destroy'])->name('programs.destroy');
 
+// Program registration routes
+Route::post('/program-registrations', [ProgramController::class, 'storeRegistration'])->name('programs.store-registration');
+Route::get('/my-program-registrations', [ProgramController::class, 'getUserRegistrations'])->name('programs.my-registrations');
+Route::get('/programs/{programId}/registrations', [ProgramController::class, 'getProgramRegistrations'])->name('programs.registrations');
+
 Route::get('/edit-event', function () {
     return view('edit-event'); 
 })->name('edit-event');
-
-Route::get('/certificate-request', function () {
-    return view('certificate-request'); 
-})->name('certificate-request');
-
-Route::get('/certificate-request-list', function () {
-    return view('certificate-request-list'); 
-})->name('certificate-request-list');
 
 Route::get('/youth-participation', [YouthParticipationController::class, 'index'])
     ->name('youth-participation')
@@ -169,11 +173,7 @@ Route::get('/sk-eval-review', function () {
     return view('sk-eval-review');
 })->name('sk-eval-review');
 
-
-
-
-//CONTROLLER ROUTES
-
+// CONTROLLER ROUTES
 
 Route::get('/edit-program', function () {
     return view('edit-program');
@@ -196,10 +196,6 @@ Route::get('/list-of-eval-respondents', function () {
     return view('list-of-eval-respondents');
 })->name('list-of-eval-respondents');
 
-Route::get('/sk-services-offer', function () {
-    return view('sk-services-offer');
-})->name('sk-services-offer');
-
 Route::get('/reports', function () {
     return view('reports');
 })->name('reports');
@@ -208,36 +204,39 @@ Route::get('/view-youth-profile', function () {
     return view('view-youth-profile');
 })->name('view-youth-profile');
 
+// ========== ADMIN ROUTES ==========
+Route::get('admindashb', function () {
+    return view('admindashb');
+})->name('admindashb')->middleware('auth:admin');
+
+// ADD THE MISSING ADMIN ROUTES:
+Route::get('/admin/analytics', function () {
+    return view('admin-analytics'); // You'll need to create this view
+})->name('admin-analytics')->middleware('auth:admin');
+
+Route::get('/admin/user-management', [AdminController::class, 'userManagement'])
+    ->name('user-management2')
+    ->middleware('auth:admin');
+
+Route::get('/admin/user-feedback', function () {
+    return view('admin-user-feedback'); // You'll need to create this view
+})->name('users-feedback')->middleware('auth:admin');
+
+Route::get('/admin/settings', function () {
+    return view('admin-settings'); // You'll need to create this view
+})->name('admin-settings')->middleware('auth:admin');
+
+// ========== REGISTRATION ROUTES ==========
+// FIXED: Add the missing registration routes
+Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
+Route::post('/register/preview', [RegisterController::class, 'preview'])->name('register.preview'); // ADD THIS LINE
+Route::get('/register/captcha', [RegisterController::class, 'showCaptcha'])->name('register.captcha'); // ADD THIS LINE
+Route::post('/register/complete', [RegisterController::class, 'complete'])->name('register.complete'); // ADD THIS LINE
 
 
-Route::get('admin-analytics', function () {
-    return view('admin-analytics');
-})->name('admin-analytics');
 
-
-Route::get('admin-settings', function () {
-    return view('admin-settings');
-})->name('admin-settings');
-
-Route::get('users-feedback', function () {
-    return view('users-feedback');
-})->name('users-feedback');
-
-
-
-
-Route::get('user-management2', function () {
-    return view('user-management2');
-});
 
 // CONTROLLER ROUTES
-
-Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
-Route::post('/register/preview', [RegisterController::class, 'preview'])->name('register.preview');
-Route::get('/register/captcha', [RegisterController::class, 'showCaptcha'])->name('register.captcha');
-Route::post('/register/complete', [RegisterController::class, 'complete'])->name('register.complete');
-Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
-Route::post('/register', [RegisterController::class, 'register']);
 
 Route::get('/profile', [ProfileController::class, 'index'])->name('profilepage');
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
@@ -253,8 +252,6 @@ Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
 
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
-
-
 // ========== ADMIN ROUTES ==========
 
 // ✅ Protected admin dashboard
@@ -262,9 +259,8 @@ Route::get('/admindashb', [AdminController::class, 'dashboard'])
     ->name('admindashb')
     ->middleware('auth:admin');
 
-
-Route::get('/user-management2', [AdminController::class, 'userManagement']) 
-    ->name('user-management2')
+Route::get('/user-management', [AdminController::class, 'userManagement']) 
+    ->name('user-management')
     ->middleware('auth:admin'); 
 
 // User approval and rejection routes
@@ -276,7 +272,9 @@ Route::get('/admin/login', [AdminLoginController::class, 'showLoginForm'])->name
 Route::post('/admin/login', [AdminLoginController::class, 'login'])->name('admin.login.post');
 Route::post('/admin/logout', [AdminLoginController::class, 'logout'])->name('admin.logout');
 
-
+// ========== SUGGESTION ROUTES ==========
+// FIXED: Add the suggestion store route
+Route::post('/suggestions', [SuggestionController::class, 'store'])->name('suggestions.store');
 
 Route::middleware(['auth'])->group(function () {
     // Profile routes
@@ -285,21 +283,15 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/profile/check-session', [ProfileController::class, 'checkSession'])->name('profile.checkSession');
     Route::get('/profile/user-data', [ProfileController::class, 'getUserData'])->name('profile.userData');
 
+    Route::post('/profile/change-password', [ProfileController::class, 'changePassword'])->name('profile.change-password');
+    // Avatar routes
+    Route::post('/profile/avatar/update', [ProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
+    Route::post('/profile/avatar/remove', [ProfileController::class, 'removeAvatar'])->name('profile.avatar.remove');
+    Route::get('/profile/data', [ProfileController::class, 'getProfileData'])->name('profile.data');
 
-Route::post('/profile/change-password', [ProfileController::class, 'changePassword'])->name('profile.change-password');
-// Avatar routes
-Route::post('/profile/avatar/update', [ProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
-Route::post('/profile/avatar/remove', [ProfileController::class, 'removeAvatar'])->name('profile.avatar.remove');
-Route::get('/profile/data', [ProfileController::class, 'getProfileData'])->name('profile.data');
-
-// Attendance routes
-Route::post('/attendance/mark', [AttendanceController::class, 'markAttendance'])->name('attendance.mark');
-Route::get('/attendance/my-attendances', [AttendanceController::class, 'getUserAttendances'])->name('attendance.my');
-
-
-
-
-
+    // Attendance routes
+    Route::post('/attendance/mark', [AttendanceController::class, 'markAttendance'])->name('attendance.mark');
+    Route::get('/attendance/my-attendances', [AttendanceController::class, 'getUserAttendances'])->name('attendance.my');
     
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
@@ -328,6 +320,9 @@ Route::get('/attendance/my-attendances', [AttendanceController::class, 'getUserA
     // SK Suggestions Route
     Route::get('/sk-suggestions', [SuggestionController::class, 'getSKSuggestions'])->name('sk.suggestions');
     
+    // Suggestion Box Route - ADDED INSIDE AUTH MIDDLEWARE
+    Route::get('/suggestionbox', [SuggestionController::class, 'index'])->name('suggestionbox');
+    
     // Protected Poll Routes (for voting)
     Route::post('/polls/{pollId}/vote', [PollsController::class, 'vote'])->name('polls.vote');
     Route::get('/polls/{pollId}/results', [PollsController::class, 'getPollResults'])->name('polls.results');
@@ -345,6 +340,11 @@ Route::get('/attendance/my-attendances', [AttendanceController::class, 'getUserA
     Route::put('/programs/{id}', [ProgramController::class, 'update'])->name('programs.update');
     Route::delete('/programs/{id}', [ProgramController::class, 'destroy'])->name('programs.destroy');
     
+    // Protected Program Registration Routes
+    Route::post('/program-registrations', [ProgramController::class, 'storeRegistration'])->name('programs.store-registration');
+    Route::get('/my-program-registrations', [ProgramController::class, 'getUserRegistrations'])->name('programs.my-registrations');
+    Route::get('/programs/{programId}/registrations', [ProgramController::class, 'getProgramRegistrations'])->name('programs.registrations');
+    
     // Protected Youth Registration List Route
     Route::get('/youth-registration-list/{programId}', [YouthProgramRegistrationController::class, 'showRegistrationList'])
         ->name('youth-registration-list');
@@ -357,7 +357,30 @@ Route::get('/attendance/my-attendances', [AttendanceController::class, 'getUserA
     // Get attendance statistics for a program
     Route::get('/program/{programId}/attendance-stats', [YouthProgramRegistrationController::class, 'getAttendanceStats'])
         ->name('program.attendance-stats');
+        
+    // ========== DAILY ATTENDANCE ROUTES ==========
+    // Get daily attendance data for a specific registration - ADDED THIS ROUTE
+    Route::get('/youth-program-registration/daily-attendance/{registrationId}', [YouthProgramRegistrationController::class, 'getDailyAttendance'])
+        ->name('youth-program-registration.daily-attendance');
+        
+    // ========== EVALUATION ROUTES (PROTECTED) ==========
+    Route::post('/evaluation', [EvaluationController::class, 'store']);
+    Route::get('/evaluation/check', [EvaluationController::class, 'checkEvaluation'])->name('evaluation.check');
+    Route::get('/evaluation/{id}', [EvaluationController::class, 'show'])->name('evaluation.show');
+
+    // ========== SERVICE OFFERS ROUTES (PROTECTED) ==========
+    
+    Route::post('/services', [ServiceOffersController::class, 'storeService'])->name('services.store');
+    Route::put('/services/{id}', [ServiceOffersController::class, 'updateService'])->name('services.update');
+    Route::delete('/services/{id}', [ServiceOffersController::class, 'deleteService'])->name('services.delete');
+    Route::get('/services/{id}/details', [ServiceOffersController::class, 'getServiceDetails'])->name('services.details');
+    Route::post('/organizational-chart', [ServiceOffersController::class, 'storeOrganizationalChart'])->name('organizational-chart.store');
 });
+
+// ========== SERVICE OFFERS ROUTES ==========
+// MOVED OUTSIDE AUTH MIDDLEWARE - This should be accessible to authenticated users
+Route::get('/sk-services-offer', [ServiceOffersController::class, 'index'])->name('sk-services-offer')->middleware('auth');
+Route::get('/service-offers', [ServiceOffersController::class, 'serviceoffers'])->name('serviceoffers')->middleware('auth');
 
 Route::post('/polls/{pollId}/reset-vote', [PollsController::class, 'resetVote'])->name('polls.reset-vote');
 
@@ -383,28 +406,64 @@ Route::get('/auth/google/callback', [GoogleController::class, 'callback'])->name
 Route::get('/evaluation/respondents/{event_id}', [EvaluationRespondentsController::class, 'showRespondents'])
     ->name('evaluation.respondents');
 
-
 Route::controller(ForgotPasswordController::class)
     ->prefix('forgot-password')
     ->as('forgot-password.')
     ->group(function () {
         Route::post('/send-otp', 'sendOtp')->name('send-otp');
         Route::post('/verify-otp', 'verifyOtp')->name('verify-otp');
-        Route::post('/reset', 'resetPassword')->name('reset'); // Renamed method to resetPassword for clarity
+        Route::post('/reset', 'resetPassword')->name('reset');
 });
-
 
 Route::post('/feedback/submit', [FeedbackController::class, 'store'])->name('feedback.submit');
 
+// ✅ Certificate Request Routes
+Route::get('/certificate-request', [CertificateRequestController::class, 'index'])->name('certificate-request');
+Route::post('/certificate-request', [CertificateRequestController::class, 'store'])->name('certificate.request');
+
+// --- ITO 'YUNG TAMANG FIX ---
+// Pinalitan natin 'yung URL at 'yung pangalan (name) para tumugma sa view
+Route::get('/certificate-request/{type}/{id}', [CertificateRequestController::class, 'showList'])->name('certificate.showList');
+
+
+// 'Yung mga route sa baba ay para sa CertificateController, kaya okay lang iwan 'yan
+Route::get('/certificate-request-list/{event_id}', [CertificateController::class, 'showCertificateRequests'])->name('certificate-request-list');
+Route::post('/accept-requests', [CertificateController::class, 'acceptRequests'])->name('certificate.accept');
+Route::post('/set-schedule', [CertificateController::class, 'setSchedule'])->name('certificate.setSchedule');
+
+// Sa web.php
+
+Route::get('/evaluation', [EvaluationController::class, 'index'])->name('evaluation');
+
+Route::post('/notifications/mark-as-read/{id}', [NotificationController::class, 'markAsRead'])
+       ->name('notifications.markAsRead')
+       ->middleware('auth');
+
+Route::post('/certificate/mark-as-claimed', [CertificateController::class, 'confirmClaimed'])
+    ->middleware('auth') // Ensure only logged-in users can access
+    ->name('certificates.confirmClaimed');
+
+    Route::get('/certificate-requests/{event_id}/status', [CertificateController::class, 'getStatuses'])
+    ->middleware(['auth', 'role:sk']) // Example middleware
+    ->name('certificate.getStatuses');
+
+   Route::post('/certificate/mark-as-claimed', [CertificateController::class, 'confirmClaimed'])
+     ->name('certificate.markAsClaimed');
+
+     Route::post('/certificate/claim', [CertificateController::class, 'claimCertificate']);
+
+
+     Route::get('/certificate-request-list/{event_id}', [CertificateController::class, 'showCertificateRequests'])
+    ->name('certificate-request-list');
+
+   Route::post('/certificate/claim', [App\Http\Controllers\CertificateController::class, 'claimCertificate'])
+    ->name('certificate.claim');
+
+
+//programs
+
 Route::post('/programs', [ProgramController::class, 'store'])
     ->name('programs.store');
-// Program registration routes
-Route::post('/program-registrations', [ProgramController::class, 'storeRegistration'])->name('programs.store-registration');
-Route::get('/my-program-registrations', [ProgramController::class, 'getUserRegistrations'])->name('programs.my-registrations');
-// Add this route for fetching program registrations
-Route::get('/youth-program-registration/{programId}/registrations', [YouthProgramRegistrationController::class, 'getProgramRegistrations'])
-    ->name('youth-program-registration.registrations')
-    ->middleware('auth');
     
 Route::get('/events/{id}/edit', [EventController::class, 'edit'])->name('edit-event');
 Route::put('/events/{id}', [EventController::class, 'update'])->name('events.update');
@@ -414,3 +473,6 @@ Route::get('/notifications', [NotificationController::class, 'getNotifications']
 Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
 Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
 
+// ========== DAILY ATTENDANCE ROUTES ==========
+Route::post('/programs/update-daily-attendance', [YouthProgramRegistrationController::class, 'updateDailyAttendance'])
+    ->name('programs.update-daily-attendance');

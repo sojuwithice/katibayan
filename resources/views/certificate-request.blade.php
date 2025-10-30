@@ -170,13 +170,13 @@
   <div class="events-header">
     <h3>Events and Programs Attended by the Youth</h3>
     <div class="dropdown">
-    <button class="filter-btn">
-        This Month 
+      <button class="filter-btn">
+        This Month
         <span class="circle-icon">
-        <i class="fas fa-chevron-down"></i>
+          <i class="fas fa-chevron-down"></i>
         </span>
-    </button>
-    <ul class="dropdown-menu">
+      </button>
+      <ul class="dropdown-menu">
         <li><a href="#">This Week</a></li>
         <li><a href="#">Last Week</a></li>
         <li><a href="#">This Month</a></li>
@@ -184,47 +184,61 @@
         <li><a href="#">This Year</a></li>
         <li><a href="#">Last Year</a></li>
         <li><a href="#">All Time</a></li>
-    </ul>
+      </ul>
     </div>
   </div>
 
-    <!-- Event Card 1 -->
-<div class="event-card highlight" data-date="2025-09-09">
-  <div class="event-info">
-    <h4>Kalinisan sa Bagong Pilipinas Program</h4>
-    <p class="event-date">Held on September 9, 2025, at 1:00 PM.</p>
-    <p class="event-subtext">100 out of 190 youth are requesting for this program certificate</p>
-  </div>
-  <div class="event-action">
-  <span class="circle-badge">100</span>
-  <a href="{{ route('certificate-request-list') }}" class="arrow-btn">
-    <i class="fas fa-chevron-right"></i>
-  </a>
-</div>
-</div>
+  <div class="cards-container">
 
-<!-- Event Card 2 -->
-<div class="event-card" data-date="2025-09-09">
-  <div class="event-info">
-    <h4>International Day Against Drug Abuse and Illicit Trafficking</h4>
-    <p class="event-date">Held on September 9, 2025, at 1:00 PM.</p>
-  </div>
-  <div class="event-action">
-    <button class="arrow-btn"><i class="fas fa-chevron-right"></i></button>
-  </div>
-</div>
+    {{-- Ginamit na natin 'yung array keys (e.g., $req['key']) --}}
+    @foreach ($requests as $req)
+      
+      {{-- Ginamit na natin 'yung bago at generic na data attributes --}}
+      <div class="event-card" 
+           data-date="{{ $req['date'] ? \Carbon\Carbon::parse($req['date'])->toDateString() : now()->toDateString() }}" 
+           data-activity-id="{{ $req['activity_id'] }}"
+           data-activity-type="{{ $req['activity_type'] }}">
 
-    <!-- Event Card 3 -->
-    <div class="event-card" data-date="2025-08-09">
-      <div class="event-info">
-        <h4>International Day Against Drug Abuse and Illicit Trafficking</h4>
-        <p class="event-date">Held on August 9, 2025, at 1:00 PM.</p>
+        <div class="event-info">
+          
+          {{-- Ginamit '$req['title']' --}}
+          <h4>{{ $req['title'] ?? 'Untitled Activity' }}</h4> 
+          
+          {{-- Ginamit '$req['date']' --}}
+          @if($req['date'])
+          <p class="event-date">
+            Held on {{ \Carbon\Carbon::parse($req['date'])->format('F j, Y') }}.
+          </p>
+          @endif
+
+          {{-- Ginamit '$req['total_requests']'. Tinanggal ko muna 'yung attendees_count --}}
+          <p class="event-subtext">
+            {{ $req['total_requests'] }} youth are requesting for this certificate.
+          </p>
+          
+          {{-- Nagdagdag ng badge para malaman kung event o program --}}
+          <span class="activity-badge" style="background-color: {{ $req['activity_type'] == 'event' ? '#007bff' : '#28a745' }}; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.8em;">
+            {{ ucfirst($req['activity_type']) }}
+          </span>
+          
+        </div>
+        <div class="event-action">
+          {{-- Ginamit '$req['total_requests']' --}}
+          <span class="circle-badge">{{ $req['total_requests'] }}</span> 
+          
+          {{-- Ginamit 'yung bagong route structure --}}
+          <a href="{{ route('certificate.showList', ['type' => $req['activity_type'], 'id' => $req['activity_id']]) }}" class="arrow-btn">
+            <i class="fas fa-chevron-right"></i>
+          </a>
+        </div>
       </div>
-      <div class="event-action">
-        <button class="arrow-btn"><i class="fas fa-chevron-right"></i></button>
-      </div>
-    </div>
-  </section>
+    @endforeach
+
+    @if ($requests->isEmpty())
+      <p style="text-align:center; margin-top:2rem;">No certificate requests found.</p>
+    @endif
+  </div>
+
 </main>
 
 
@@ -420,73 +434,169 @@ evaluationLink?.addEventListener('click', (e) => {
 
 //filter dropdown
 const dropdown = document.querySelector(".dropdown");
-const btn = dropdown.querySelector(".filter-btn");
-const label = btn.childNodes[0]; 
-const options = dropdown.querySelectorAll(".dropdown-menu li a");
-
-
-btn.addEventListener("click", (e) => {
-  e.stopPropagation();
-  dropdown.classList.toggle("open");
-});
-
-options.forEach(option => {
-  option.addEventListener("click", (e) => {
-    e.preventDefault();
-    label.textContent = option.textContent + " "; 
-    dropdown.classList.remove("open");
-
+if (dropdown) {
+    const btn = dropdown.querySelector(".filter-btn");
+    const label = btn.childNodes[0]; // Ito yung text node "This Month"
+    const options = dropdown.querySelectorAll(".dropdown-menu li a");
+    const cards = document.querySelectorAll(".event-card"); // Kunin lahat ng cards
     
-    const filter = option.textContent.trim();
-    const cards = document.querySelectorAll(".event-card");
-    const now = new Date();
+    // FIX 1: Tama na ang selector para sa "No requests" message
+    const noRequestsMessage = document.querySelector(".cards-container > p");
 
-    cards.forEach(card => {
-      const dateStr = card.dataset.date; 
-      const cardDate = new Date(dateStr);
-      let show = true;
-
-      if (filter === "This Week") {
-        const startOfWeek = new Date(now);
-        startOfWeek.setDate(now.getDate() - now.getDay() + 1);
-        const endOfWeek = new Date(startOfWeek);
-        endOfWeek.setDate(startOfWeek.getDate() + 6);
-        show = cardDate >= startOfWeek && cardDate <= endOfWeek;
-      }
-      else if (filter === "Last Week") {
-        const startOfLastWeek = new Date(now);
-        startOfLastWeek.setDate(now.getDate() - now.getDay() - 6);
-        const endOfLastWeek = new Date(startOfLastWeek);
-        endOfLastWeek.setDate(startOfLastWeek.getDate() + 6);
-        show = cardDate >= startOfLastWeek && cardDate <= endOfLastWeek;
-      }
-      else if (filter === "This Month") {
-        show = cardDate.getMonth() === now.getMonth() &&
-               cardDate.getFullYear() === now.getFullYear();
-      }
-      else if (filter === "Last Month") {
-        const lastMonth = new Date(now);
-        lastMonth.setMonth(now.getMonth() - 1);
-        show = cardDate.getMonth() === lastMonth.getMonth() &&
-               cardDate.getFullYear() === lastMonth.getFullYear();
-      }
-      else if (filter === "This Year") {
-        show = cardDate.getFullYear() === now.getFullYear();
-      }
-      else if (filter === "Last Year") {
-        show = cardDate.getFullYear() === now.getFullYear() - 1;
-      }
-      else if (filter === "All Time") {
-        show = true;
-      }
-
-      card.style.display = show ? "flex" : "none";
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      dropdown.classList.toggle("open");
     });
-  });
+
+    options.forEach(option => {
+      option.addEventListener("click", (e) => {
+        e.preventDefault();
+        label.textContent = option.textContent + " "; 
+        dropdown.classList.remove("open");
+
+        const filter = option.textContent.trim();
+        const now = new Date();
+        let cardsShown = 0; // Counter para sa visible cards
+
+        cards.forEach(card => {
+          const dateStr = card.dataset.date; // e.g., "2025-10-20 09:00:00"
+          if (!dateStr) {
+            card.style.display = "none";
+            return;
+          }
+
+          // ===== ITO ANG PINAKAMALAKING PAGBABAGO (FIX 2) =====
+          // Manually parse ang date para maiwasan ang timezone issue
+          // Kinukuha natin 'yung "2025-10-20" na part
+          const dateOnlyStr = dateStr.split(' ')[0]; 
+          const parts = dateOnlyStr.split('-'); // ["2025", "10", "20"]
+          
+          // Gumawa ng date na sigurado tayong local timezone at 12:00 AM
+          // Note: months ay 0-indexed (Jan=0, Feb=1, ... Oct=9)
+          const cardDate = new Date(parts[0], parts[1] - 1, parts[2]);
+          // Hindi na kailangan ng .setHours(0,0,0,0) kasi 12AM na 'to by default
+          // =======================================================
+          
+
+          let show = true;
+          
+          // Gumawa ng 'today' na 12:00 AM din ang oras
+          const today = new Date(now);
+          today.setHours(0, 0, 0, 0);
+
+
+          if (filter === "This Week") {
+            const startOfWeek = new Date(today);
+            startOfWeek.setDate(today.getDate() - (today.getDay() === 0 ? 6 : today.getDay() - 1));
+            
+            const endOfWeek = new Date(startOfWeek);
+            endOfWeek.setDate(startOfWeek.getDate() + 6);
+            endOfWeek.setHours(23, 59, 59, 999); 
+
+            show = cardDate >= startOfWeek && cardDate <= endOfWeek;
+          }
+          else if (filter === "Last Week") {
+            const startOfThisWeek = new Date(today);
+            startOfThisWeek.setDate(today.getDate() - (today.getDay() === 0 ? 6 : today.getDay() - 1));
+
+            const startOfLastWeek = new Date(startOfThisWeek);
+            startOfLastWeek.setDate(startOfThisWeek.getDate() - 7);
+
+            const endOfLastWeek = new Date(startOfLastWeek);
+            endOfLastWeek.setDate(startOfLastWeek.getDate() + 6);
+            endOfLastWeek.setHours(23, 59, 59, 999); 
+
+            show = cardDate >= startOfLastWeek && cardDate <= endOfLastWeek;
+          }
+          else if (filter === "This Month") {
+            show = cardDate.getMonth() === now.getMonth() &&
+                   cardDate.getFullYear() === now.getFullYear();
+          }
+          else if (filter === "Last Month") {
+            const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+            show = cardDate.getMonth() === lastMonth.getMonth() &&
+                   cardDate.getFullYear() === lastMonth.getFullYear();
+          }
+          else if (filter === "This Year") {
+            show = cardDate.getFullYear() === now.getFullYear();
+          }
+          else if (filter === "Last Year") {
+            show = cardDate.getFullYear() === now.getFullYear() - 1;
+          }
+          else if (filter === "All Time") {
+            show = true;
+          }
+
+          // Itago o ipakita ang card
+          card.style.display = show ? "flex" : "none";
+          if (show) {
+            cardsShown++;
+          }
+        });
+
+        // Ipakita o itago yung "No requests" message
+        if (noRequestsMessage) {
+            noRequestsMessage.style.display = (cardsShown === 0) ? "block" : "none";
+        }
+
+      });
+    });
+
+    document.addEventListener("click", () => {
+      dropdown.classList.remove("open");
+    });
+}
+
+// ... (ilagay ito bago mag '});' sa dulo ng script)
+
+// --- FUNCTION PARA KUNIN 'YUNG MGA NA-VIEW NANG ACTIVITIES ---
+// (In-update para sa 'event' at 'program')
+function getViewedActivities() {
+    const viewed = localStorage.getItem('viewedCertificateActivities'); // Pinalitan 'yung key
+    return viewed ? JSON.parse(viewed) : [];
+}
+
+// --- 1. Tatakbo ito kapag nag-load ang page ---
+// (In-update para basahin 'yung 'data-activity-id' at 'data-activity-type')
+const viewedActivityIds = getViewedActivities();
+document.querySelectorAll('.event-card').forEach(card => {
+    // Kunin 'yung bagong data attributes
+    const activityId = card.dataset.activityId; 
+    const activityType = card.dataset.activityType;
+    const uniqueActivityId = `${activityType}_${activityId}`; // Gagawa ng key e.g., "program_4"
+
+    // Kung 'yung unique ID ay nasa listahan ng viewed, itago 'yung badge
+    if (activityId && viewedActivityIds.includes(uniqueActivityId)) {
+        const badge = card.querySelector('.circle-badge');
+        if (badge) {
+            badge.style.display = 'none';
+        }
+    }
 });
 
-document.addEventListener("click", () => {
-  dropdown.classList.remove("open");
+// --- 2. Tatakbo ito kapag may na-click na arrow button ---
+// (In-update para i-save 'yung unique ID)
+const cardsContainer = document.querySelector('.cards-container');
+cardsContainer?.addEventListener('click', (e) => {
+    const arrowBtn = e.target.closest('.arrow-btn');
+    if (!arrowBtn) return; 
+
+    // Hanapin 'yung parent card at kunin 'yung bagong data attributes
+    const card = arrowBtn.closest('.event-card');
+    const activityId = card?.dataset.activityId; 
+    const activityType = card?.dataset.activityType;
+    
+    if (activityId && activityType) {
+        const uniqueActivityId = `${activityType}_${activityId}`; // e.g., "event_17"
+        
+        let viewed = getViewedActivities();
+        
+        if (!viewed.includes(uniqueActivityId)) {
+            viewed.push(uniqueActivityId);
+            // I-save ulit 'yung updated na listahan sa bagong key
+            localStorage.setItem('viewedCertificateActivities', JSON.stringify(viewed));
+        }
+    }
 });
   
 });

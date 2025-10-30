@@ -9,13 +9,18 @@ class Notification extends Model
 {
     use HasFactory;
 
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
     protected $fillable = [
-        'user_id',
-        'evaluation_id',
-        'type',
+        'title',
         'message',
+        'type',
+        'recipient_role',
         'is_read',
-        'read_at'
+        'user_id',
     ];
 
     protected $casts = [

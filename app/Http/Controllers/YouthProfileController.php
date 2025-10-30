@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\CertificateRequest;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
@@ -25,16 +26,23 @@ class YouthProfileController extends Controller
         // Determine role badge based on actual enum values
         $roleBadge = $user->role === 'sk' ? 'SK Member' : 'KK Member';
 
-        // Get all users (both SK and KK) from the same barangay as the logged-in user
+        // Get all approved users from the same barangay
         $users = User::with(['region', 'province', 'city', 'barangay'])
                     ->where('account_status', 'approved')
-                    ->where('barangay_id', $user->barangay_id) // Same barangay only
+                    ->where('barangay_id', $user->barangay_id)
                     ->orderBy('last_name')
                     ->get();
 
-        // Count certificate requests (placeholder - you'll need to implement this)
-        $certificateRequestsCount = 0; // Replace with actual count logic
+        // ✅ Count certificate requests by users in the same barangay
+        $certificateRequestsCount = CertificateRequest::whereIn('user_id', function ($query) use ($user) {
+                $query->select('id')
+                      ->from('users')
+                      ->where('barangay_id', $user->barangay_id)
+                      ->where('account_status', 'approved');
+            })
+            ->count();
 
+        // Return to the youth-profilepage view with all data
         return view('youth-profilepage', compact('users', 'certificateRequestsCount', 'user', 'age', 'roleBadge'));
     }
 }

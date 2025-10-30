@@ -12,6 +12,7 @@ class Evaluation extends Model
     protected $fillable = [
         'user_id',
         'event_id',
+        'program_id',
         'ratings',
         'comments',
         'submitted_at',
@@ -37,4 +38,13 @@ class Evaluation extends Model
     {
         return $this->belongsTo(Event::class);
     }
+      public function notifications()
+    {
+        return $this->hasMany(Notification::class);
+    }
+    public function program()
+    {
+        return $this->belongsTo(Program::class);
+    }
+
 }

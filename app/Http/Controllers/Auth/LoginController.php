@@ -43,17 +43,35 @@ class LoginController extends Controller
             return $this->sendLockoutResponse($request);
         }
 
-        if (Auth::attempt($credentials, $request->boolean('remember'))) {
+        // FIRST: Try to login as ADMIN
+        $adminCredentials = [
+            'username' => $request->input('account_number'),
+            'password' => $request->input('password'),
+        ];
+
+        if (Auth::guard('admin')->attempt($adminCredentials, $request->boolean('remember'))) {
+            $request->session()->regenerate();
+            $this->clearLoginAttempts($request);
+            
+            // FIXED: Redirect directly to the admindashb view
+            return redirect()->route('admindashb')
+                ->with('success', 'Welcome, Admin!');
+        }
+
+        // SECOND: Try to login as regular USER
+        $userCredentials = [
+            'account_number' => $request->input('account_number'),
+            'password' => $request->input('password'),
+        ];
+
+        if (Auth::attempt($userCredentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
             $this->clearLoginAttempts($request);
 
             $user = Auth::user();
 
             // Role-based redirect
-            if ($user->role === 'admin') {
-                return redirect()->intended('/admin-dashboard')
-                    ->with('success', 'Welcome, Admin!');
-            } elseif ($user->role === 'sk') {
+            if ($user->role === 'sk') {
                 return redirect()->intended('/sk-dashboard')
                     ->with('success', 'Logged in successfully.');
             } elseif ($user->role === 'kk') {
@@ -93,7 +111,13 @@ class LoginController extends Controller
     // Logout
     public function logout(Request $request)
     {
-        Auth::logout();
+        // Check if admin is logged in
+        if (Auth::guard('admin')->check()) {
+            Auth::guard('admin')->logout();
+        } else {
+            Auth::logout();
+        }
+        
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 

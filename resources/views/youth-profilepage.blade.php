@@ -191,6 +191,7 @@
             <h3>Request for Certificates</h3>
             <div class="bottom-row">
               <p>Youth are requesting for certificate <span class="count">{{ $certificateRequestsCount ?? 0 }}</span></p>
+
               <span class="arrow">
                 <i class="fa-solid fa-chevron-right"></i>
               </span>
@@ -869,6 +870,69 @@
           document.getElementById('logout-form').submit();
         }
       }
+
+      const mainRequestLink = document.querySelector('a.btn[href*="certificate-request"]'); 
+      const mainRequestKey = 'viewedMainCertificateRequestsCount'; // Pinalitan ang key name
+      
+      if (mainRequestLink) {
+        const countBadge = mainRequestLink.querySelector('span.count');
+        
+        if (countBadge) {
+          const currentCount = parseInt(countBadge.textContent) || 0;
+          
+          const storedCount = parseInt(localStorage.getItem(mainRequestKey)) || 0;
+
+          if (currentCount <= storedCount) {
+            countBadge.style.display = 'none';
+          }
+
+          mainRequestLink.addEventListener('click', () => {
+            localStorage.setItem(mainRequestKey, currentCount.toString());
+          });
+        }
+      }
+      
+      const eventListKey = 'viewedCertificateEventsMap'; 
+      
+      function getViewedEventsMap() {
+        const viewed = localStorage.getItem(eventListKey);
+        return viewed ? JSON.parse(viewed) : {}; 
+      }
+
+      const viewedEventsMap = getViewedEventsMap();
+      document.querySelectorAll('.event-card').forEach(card => {
+        const eventId = card.dataset.eventId; 
+        const badge = card.querySelector('.circle-badge');
+        
+        if (eventId && badge) {
+          const currentCount = parseInt(badge.textContent) || 0;
+          const storedCount = viewedEventsMap[eventId] || 0;
+          
+          if (currentCount <= storedCount) {
+            badge.style.display = 'none';
+          }
+        }
+      });
+
+      const cardsContainer = document.querySelector('.cards-container');
+      cardsContainer?.addEventListener('click', (e) => {
+        const arrowBtn = e.target.closest('.arrow-btn');
+        if (!arrowBtn) return; 
+
+        const card = arrowBtn.closest('.event-card');
+        const eventId = card?.dataset.eventId; 
+        const badge = card?.querySelector('.circle-badge');
+        
+        if (eventId && badge) {
+
+          const currentCount = parseInt(badge.textContent) || 0;
+
+          let viewedMap = getViewedEventsMap();
+          viewedMap[eventId] = currentCount;
+          
+          localStorage.setItem(eventListKey, JSON.stringify(viewedMap));
+        }
+      });
     });
   </script>
 </body>
