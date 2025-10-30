@@ -189,22 +189,45 @@
   </div>
 
   <div class="cards-container">
+
+    {{-- Ginamit na natin 'yung array keys (e.g., $req['key']) --}}
     @foreach ($requests as $req)
-      {{-- NILAGYAN NATIN NG data-event-id DITO --}}
-      <div class="event-card" data-date="{{ $req->event->date ?? now()->format('Y-m-d') }}" data-event-id="{{ $req->event_id }}">
+      
+      {{-- Ginamit na natin 'yung bago at generic na data attributes --}}
+      <div class="event-card" 
+           data-date="{{ $req['date'] ? \Carbon\Carbon::parse($req['date'])->toDateString() : now()->toDateString() }}" 
+           data-activity-id="{{ $req['activity_id'] }}"
+           data-activity-type="{{ $req['activity_type'] }}">
 
         <div class="event-info">
-          <h4>{{ $req->event->title ?? 'Untitled Event' }}</h4>
+          
+          {{-- Ginamit '$req['title']' --}}
+          <h4>{{ $req['title'] ?? 'Untitled Activity' }}</h4> 
+          
+          {{-- Ginamit '$req['date']' --}}
+          @if($req['date'])
           <p class="event-date">
-            Held on {{ \Carbon\Carbon::parse($req->event->date)->format('F j, Y \\a\\t g:i A') }}.
+            Held on {{ \Carbon\Carbon::parse($req['date'])->format('F j, Y') }}.
           </p>
+          @endif
+
+          {{-- Ginamit '$req['total_requests']'. Tinanggal ko muna 'yung attendees_count --}}
           <p class="event-subtext">
-            {{ $req->total_requests }} out of {{ $req->event->attendees_count ?? '---' }} youth are requesting for this program certificate
+            {{ $req['total_requests'] }} youth are requesting for this certificate.
           </p>
+          
+          {{-- Nagdagdag ng badge para malaman kung event o program --}}
+          <span class="activity-badge" style="background-color: {{ $req['activity_type'] == 'event' ? '#007bff' : '#28a745' }}; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.8em;">
+            {{ ucfirst($req['activity_type']) }}
+          </span>
+          
         </div>
         <div class="event-action">
-          <span class="circle-badge">{{ $req->total_requests }}</span>
-          <a href="{{ route('certificate-request-list', $req->event_id) }}" class="arrow-btn">
+          {{-- Ginamit '$req['total_requests']' --}}
+          <span class="circle-badge">{{ $req['total_requests'] }}</span> 
+          
+          {{-- Ginamit 'yung bagong route structure --}}
+          <a href="{{ route('certificate.showList', ['type' => $req['activity_type'], 'id' => $req['activity_id']]) }}" class="arrow-btn">
             <i class="fas fa-chevron-right"></i>
           </a>
         </div>
@@ -215,7 +238,6 @@
       <p style="text-align:center; margin-top:2rem;">No certificate requests found.</p>
     @endif
   </div>
-  </section>
 
 </main>
 
@@ -525,53 +547,57 @@ if (dropdown) {
     });
 }
 
-function getViewedEvents() {
-    const viewed = localStorage.getItem('viewedCertificateEvents');
+// ... (ilagay ito bago mag '});' sa dulo ng script)
+
+// --- FUNCTION PARA KUNIN 'YUNG MGA NA-VIEW NANG ACTIVITIES ---
+// (In-update para sa 'event' at 'program')
+function getViewedActivities() {
+    const viewed = localStorage.getItem('viewedCertificateActivities'); // Pinalitan 'yung key
     return viewed ? JSON.parse(viewed) : [];
-  }
+}
 
-  // --- 1. Tatakbo ito kapag nag-load ang page ---
-  // Titingnan nito kung alin ang mga event na na-view na
-  const viewedEventIds = getViewedEvents();
-  document.querySelectorAll('.event-card').forEach(card => {
-    // Kunin ang event ID galing sa `data-event-id` na nilagay natin sa HTML
-    const eventId = card.dataset.eventId; 
-    
-    // Kung 'yung ID ay nasa listahan ng viewed, itago 'yung badge
-    if (eventId && viewedEventIds.includes(eventId)) {
-      const badge = card.querySelector('.circle-badge');
-      if (badge) {
-        badge.style.display = 'none';
-      }
+// --- 1. Tatakbo ito kapag nag-load ang page ---
+// (In-update para basahin 'yung 'data-activity-id' at 'data-activity-type')
+const viewedActivityIds = getViewedActivities();
+document.querySelectorAll('.event-card').forEach(card => {
+    // Kunin 'yung bagong data attributes
+    const activityId = card.dataset.activityId; 
+    const activityType = card.dataset.activityType;
+    const uniqueActivityId = `${activityType}_${activityId}`; // Gagawa ng key e.g., "program_4"
+
+    // Kung 'yung unique ID ay nasa listahan ng viewed, itago 'yung badge
+    if (activityId && viewedActivityIds.includes(uniqueActivityId)) {
+        const badge = card.querySelector('.circle-badge');
+        if (badge) {
+            badge.style.display = 'none';
+        }
     }
-  });
+});
 
-  // --- 2. Tatakbo ito kapag may na-click na arrow button ---
-  // Gagamit tayo ng 'event delegation'
-  const cardsContainer = document.querySelector('.cards-container');
-  cardsContainer?.addEventListener('click', (e) => {
-    // Titingnan kung 'yung arrow button (o 'yung icon sa loob) ang na-click
+// --- 2. Tatakbo ito kapag may na-click na arrow button ---
+// (In-update para i-save 'yung unique ID)
+const cardsContainer = document.querySelector('.cards-container');
+cardsContainer?.addEventListener('click', (e) => {
     const arrowBtn = e.target.closest('.arrow-btn');
-    if (!arrowBtn) return; // Kung hindi, huwag ituloy
+    if (!arrowBtn) return; 
 
-    // Hanapin 'yung parent card at kunin 'yung event ID
+    // Hanapin 'yung parent card at kunin 'yung bagong data attributes
     const card = arrowBtn.closest('.event-card');
-    const eventId = card?.dataset.eventId; 
+    const activityId = card?.dataset.activityId; 
+    const activityType = card?.dataset.activityType;
     
-    if (eventId) {
-      // Kunin 'yung listahan galing sa localStorage
-      let viewed = getViewedEvents();
-      
-      // Idagdag 'yung bagong ID kung wala pa ito sa listahan
-      if (!viewed.includes(eventId)) {
-        viewed.push(eventId);
-        // I-save ulit 'yung updated na listahan
-        localStorage.setItem('viewedCertificateEvents', JSON.stringify(viewed));
-      }
+    if (activityId && activityType) {
+        const uniqueActivityId = `${activityType}_${activityId}`; // e.g., "event_17"
+        
+        let viewed = getViewedActivities();
+        
+        if (!viewed.includes(uniqueActivityId)) {
+            viewed.push(uniqueActivityId);
+            // I-save ulit 'yung updated na listahan sa bagong key
+            localStorage.setItem('viewedCertificateActivities', JSON.stringify(viewed));
+        }
     }
-    
-    // Hahayaan nating mag-navigate 'yung link
-  });
+});
   
 });
 </script>

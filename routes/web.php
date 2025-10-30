@@ -98,13 +98,17 @@ Route::delete('/sk-polls/{pollId}', [SKPollsController::class, 'destroy'])->name
 // ========== EVALUATION ROUTES ==========
 Route::get('/evaluation', [EvaluationController::class, 'index'])->name('evaluation');
 Route::post('/evaluation', [EvaluationController::class, 'store']);
-Route::get('/evaluation/{id}', [EvaluationController::class, 'show'])->name('evaluation.show');
-Route::get('/evaluation/check/{eventId}', [EvaluationController::class, 'checkEvaluation']);
-Route::get('/evaluation/check', [EvaluationController::class, 'checkEvaluation'])->name('evaluation.check');
 
-// NEW: Certificate routes
+// INILAGAY SA ITAAS: Unahin ang mga specific routes
 Route::get('/evaluation/certificates', [EvaluationController::class, 'getCertificates'])->name('evaluation.certificates');
+Route::get('/evaluation/check', [EvaluationController::class, 'checkEvaluation'])->name('evaluation.check');
 Route::post('/evaluation/request-print', [EvaluationController::class, 'requestPrint'])->name('evaluation.request-print');
+
+// INILAGAY SA BABA: Ihuli ang mga may wildcard
+Route::get('/evaluation/check/{eventId}', [EvaluationController::class, 'checkEvaluation']);
+Route::get('/evaluation/{id}', [EvaluationController::class, 'show'])->name('evaluation.show');
+
+
 
 // FIXED: SK Dashboard route - use controller instead of direct view
 Route::get('/sk-dashboard', [SKDashboardController::class, 'index'])->name('sk.dashboard');
@@ -399,13 +403,16 @@ Route::post('/feedback/submit', [FeedbackController::class, 'store'])->name('fee
 // ✅ Certificate Request Routes
 Route::get('/certificate-request', [CertificateRequestController::class, 'index'])->name('certificate-request');
 Route::post('/certificate-request', [CertificateRequestController::class, 'store'])->name('certificate.request');
-Route::get('/certificate-request-list/{event_id}', [CertificateRequestController::class, 'showList'])->name('certificate-request-list');
+
+// --- ITO 'YUNG TAMANG FIX ---
+// Pinalitan natin 'yung URL at 'yung pangalan (name) para tumugma sa view
+Route::get('/certificate-request/{type}/{id}', [CertificateRequestController::class, 'showList'])->name('certificate.showList');
 
 
+// 'Yung mga route sa baba ay para sa CertificateController, kaya okay lang iwan 'yan
 Route::get('/certificate-request-list/{event_id}', [CertificateController::class, 'showCertificateRequests'])->name('certificate-request-list');
 Route::post('/accept-requests', [CertificateController::class, 'acceptRequests'])->name('certificate.accept');
 Route::post('/set-schedule', [CertificateController::class, 'setSchedule'])->name('certificate.setSchedule');
-
 
 // Sa web.php
 

@@ -270,9 +270,17 @@
       
       // === (HELPER FUNCTION) Para sa status button ===
       // (INAYOS NATIN 'TO PARA GAMITIN 'YUNG 'can_request_again' LOGIC)
+      // === (HELPER FUNCTION) Para sa status button ===
+      // (FIXED: In-update para sa event_id at program_id)
       function getCertificateAction(cert) {
         const status = cert.request_status;
-        const eventId = cert.event_id;
+        
+        // --- ITO YUNG BAGO ---
+        // Alamin kung event_id o program_id ang gagamitin
+        const isEvent = !!cert.event_id; // true kung may event_id
+        const activityId = isEvent ? cert.event_id : cert.program_id;
+        const idType = isEvent ? 'data-event-id' : 'data-program-id';
+        // --- END NG BAGO ---
 
         // Rule 1: Kung claimed na, tapos na.
         if (status === 'claimed') {
@@ -282,11 +290,11 @@
         // Rule 2: Kung pwede siya mag-request (base sa logic ng Controller)
         if (cert.can_request_again) {
             const buttonText = (status === null) ? 'Print Request' : 'Request Again';
-            return `<button class="print-btn" data-event-id="${eventId}">${buttonText}</button>`;
+            // Gagamitin na natin yung 'idType' at 'activityId'
+            return `<button class="print-btn" ${idType}="${activityId}">${buttonText}</button>`;
         }
 
-        // Rule 3: Kung HINDI siya pwede mag-request (naka-cooldown, max na, o pending)
-        // Ipakita lang 'yung current status niya (WALANG COUNT).
+        // Rule 3: Kung HINDI siya pwede mag-request
         switch (status) {
           case 'requesting': 
             return `<button class="print-btn status-pending" disabled>Request Pending</button>`;
@@ -417,46 +425,58 @@
       }
 
       // === (FIX #2) 'handlePrintRequest' para mag-update ng button ===
+      // === (FIX #2) 'handlePrintRequest' para mag-update ng button ===
+      // (FIXED: In-update para magpadala ng event_id O program_id)
       async function handlePrintRequest(e) {
-        const printButton = e.target; // Kunin 'yung button mismo
-        const eventId = printButton.getAttribute('data-event-id');
-        const originalText = printButton.textContent; // (BAGO) I-save 'yung original text
+        const printButton = e.target;
+        const originalText = printButton.textContent;
         
-        // (BAGO) I-disable agad ang button at palitan ang text
+        // --- ITO YUNG BAGONG LOGIC ---
+        const eventId = printButton.getAttribute('data-event-id');
+        const programId = printButton.getAttribute('data-program-id');
+        
+        const payload = {};
+        if (eventId && eventId !== 'null') {
+            payload.event_id = eventId;
+        } else if (programId && programId !== 'null') {
+            payload.program_id = programId;
+        } else {
+            alert('Error: Activity ID not found.');
+            return;
+        }
+        // --- END NG BAGONG LOGIC ---
+
         printButton.disabled = true;
         printButton.textContent = 'Submitting...';
 
         try {
+          // Ang URL ay '/certificate-request' na, base sa routes mo
           const response = await fetch('/certificate-request', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
             },
-            body: JSON.stringify({ event_id: eventId })
+            body: JSON.stringify(payload) // Ipapadala na 'yung payload
           });
 
           const data = await response.json();
 
           if (response.ok) {
-            modalOverlay.style.display = 'flex'; // Ipakita 'yung success modal
-            
-            // (BAGO) Palitan na 'yung button permanently to 'Request Pending'
+            modalOverlay.style.display = 'flex';
             printButton.textContent = 'Request Pending';
-            printButton.classList.add('status-pending'); // Idagdag 'yung class para sa kulay
+            printButton.classList.add('status-pending');
 
           } else {
             alert('Error: ' + (data.message || 'Something went wrong.'));
-            // (BAGO) Kung nag-error, ibalik 'yung button sa dati
             printButton.disabled = false;
-            printButton.textContent = originalText; // Ibalik 'yung dating text
+            printButton.textContent = originalText;
           }
         } catch (error) {
           console.error('Error sending request:', error);
           alert('An error occurred while sending your request.');
-          // (BAGO) Kung nag-error, ibalik 'yung button sa dati
           printButton.disabled = false;
-          printButton.textContent = originalText; // Ibalik 'yung dating text
+          printButton.textContent = originalText;
         }
       }
 

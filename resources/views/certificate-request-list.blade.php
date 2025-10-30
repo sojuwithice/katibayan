@@ -160,29 +160,49 @@
       </div>
     </header>
 
-    <main class="container" data-event-id="{{ $event->id }}">
-  <!-- Header Title -->
-      <!-- Program Info Card -->
-    <section class="certificate-card">
+    {{-- 
+  Dito sa taas, kailangan nating alamin kung 'event' o 'program' 'yung activity
+  para malagay sa 'data-activity-type'. Kailangan 'to ng JavaScript mo mamaya.
+--}}
+@php
+    $activityType = ($activity instanceof \App\Models\Event) ? 'event' : 'program';
+@endphp
+
+{{-- 
+  1. Pinalitan 'data-event-id' ng 'data-activity-id' at 'data-activity-type'
+  2. Pinalitan '$event->id' ng '$activity->id'
+--}}
+<main class="container" data-activity-id="{{ $activity->id }}" data-activity-type="{{ $activityType }}">
+  <section class="certificate-card">
   <p class="certificate-label">Claiming of Certificate for:</p>
   <div class="certificate-content">
 
     <div class="certificate-image">
 
-      <img src="{{ $event->image ? asset('storage/' . $event->image) : asset('images/default_cert_image.jpg') }}" 
-     alt="{{ $event->title }}">
+      {{-- 3. Nagdagdag ng logic para kunin 'yung tamang image column --}}
+      @php
+        // Kukunin 'yung 'image' (para sa event) O 'yung 'display_image' (para sa program)
+        $imageUrl = $activity->image ?? $activity->display_image; 
+      @endphp
+
+      {{-- 4. Pinalitan '$event->image' ng '$imageUrl' at '$event->title' ng '$activity->title' --}}
+      <img src="{{ $imageUrl ? asset('storage/' . $imageUrl) : asset('images/default_cert_image.jpg') }}" 
+           alt="{{ $activity->title }}">
     </div>
 
     <div class="certificate-details">
       <p><strong>Title:</strong></p>
 
+      {{-- 5. Pinalitan '$event->title' ng '$activity->title' --}}
       <h3 class="cert-title">
-        {{ $event->title }}
+        {{ $activity->title }}
       </h3>
 
-      <p class="cert-subtitle">{{ $event->description ? $event->description : 'No description provided.' }}</p>
+      {{-- 6. Pinalitan '$event->description' ng '$activity->description' --}}
+      <p class="cert-subtitle">{{ $activity->description ? $activity->description : 'No description provided.' }}</p>
 
-      <p class="cert-date">{{ $event->event_date->format('F j, Y') }}</p>
+      {{-- 7. Pinalitan '$event->event_date' ng '$activity->event_date' at ginamitan ng Carbon::parse --}}
+      <p class="cert-date">{{ \Carbon\Carbon::parse($activity->event_date)->format('F j, Y') }}</p>
 
     </div>
   </div>
@@ -442,6 +462,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ===== Dashboard Weekly Calendar =====
+  // (Walang binago rito, okay na 'to)
   const weekdays = ["MON","TUE","WED","THU","FRI","SAT","SUN"];
   const daysContainer = document.querySelector(".calendar .days");
   const header = document.querySelector(".calendar header h3");
@@ -505,6 +526,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ===== Real-time Clock =====
+  // (Walang binago rito, okay na 'to)
   const timeEl = document.querySelector(".time");
   function updateTime() {
     if (!timeEl) return;
@@ -524,6 +546,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setInterval(updateTime, 60000);
 
   // ===== Notifications + Profile Dropdown =====
+  // (Walang binago rito, okay na 'to)
   const notifWrapper = document.querySelector(".notification-wrapper");
   const profileWrapper = document.querySelector(".profile-wrapper");
   const profileToggle = document.getElementById("profileToggle");
@@ -541,7 +564,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   document.addEventListener("click", (e) => {
-    if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) sidebar?.classList.remove('open');
+    if (sidebar && !sidebar.contains(e.target) && !menuToggle.contains(e.target)) sidebar?.classList.remove('open');
     if (profileWrapper && !profileWrapper.contains(e.target)) profileWrapper.classList.remove('active');
     if (notifWrapper && !notifWrapper.contains(e.target)) notifWrapper.classList.remove('active');
     document.querySelectorAll('.options-dropdown').forEach(drop => drop.classList.remove('show'));
@@ -553,7 +576,11 @@ document.addEventListener("DOMContentLoaded", () => {
   
   const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
   const mainContainer = document.querySelector('main.container');
-  const eventId = mainContainer ? mainContainer.dataset.eventId : null;
+  
+  // --- FIX #1: Kunin 'yung tamang ID at Type galing sa <main> tag ---
+  const activityId = mainContainer ? mainContainer.dataset.activityId : null;
+  const activityType = mainContainer ? mainContainer.dataset.activityType : null; // Ito ay magiging 'event' o 'program'
+  // --- END NG FIX #1 ---
 
   let toastContainer = document.querySelector('.toast-container');
   if (!toastContainer) {
@@ -584,13 +611,25 @@ document.addEventListener("DOMContentLoaded", () => {
   const acceptedModal = document.getElementById('acceptedModal');
 
   acceptBtn?.addEventListener('click', () => {
-    if (!eventId) {
-        showToast('Event ID not found. Cannot proceed.', 'error');
+    
+    // --- FIX #2: I-check 'yung 'activityId' ---
+    if (!activityId) {
+        showToast('Activity ID not found. Cannot proceed.', 'error'); // Ito 'yung error mo
         return;
     }
+    // --- END NG FIX #2 ---
 
     acceptBtn.disabled = true;
     acceptBtn.textContent = 'Accepting...';
+
+    // --- FIX #3: Gumawa ng dynamic payload ---
+    const payload = {};
+    if (activityType === 'event') {
+        payload.event_id = activityId;
+    } else {
+        payload.program_id = activityId;
+    }
+    // --- END NG FIX #3 ---
 
     fetch('/accept-requests', {
         method: 'POST',
@@ -598,7 +637,7 @@ document.addEventListener("DOMContentLoaded", () => {
             'Content-Type': 'application/json',
             'X-CSRF-TOKEN': csrfToken
         },
-        body: JSON.stringify({ event_id: eventId })
+        body: JSON.stringify(payload) // Ginamit na 'yung dynamic payload
     })
     .then(response => {
         if (!response.ok) {
@@ -627,7 +666,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // === FIX 1: TINANGGAL YUNG EVENT LISTENER PARA SA CLICK OUTSIDE ===
+  // (Walang binago rito)
   // acceptedModal?.addEventListener('click', (e) => {
   //   if (e.target === acceptedModal) acceptedModal.style.display = 'none';
   // });
@@ -637,28 +676,31 @@ document.addEventListener("DOMContentLoaded", () => {
   // STEP 2: SCHEDULE MODAL LOGIC
   // ==========================================================
   
+  // (Walang binago rito, okay na 'to)
   const scheduleBtn = document.getElementById("scheduleBtn");
   const scheduleModal = document.getElementById("scheduleModal");
   const closeScheduleBtn = scheduleModal?.querySelector(".close-btn"); // Para 'to sa 'X' button kung meron
-  scheduleModal.style.display = "none";
+  if (scheduleModal) scheduleModal.style.display = "none"; // Nagdagdag ng check kung !null
 
   scheduleBtn?.addEventListener("click", () => {
-    acceptedModal.style.display = "none";
-    scheduleModal.style.display = "flex";
+    if (acceptedModal) acceptedModal.style.display = "none";
+    if (scheduleModal) scheduleModal.style.display = "flex";
   });
 
-  closeScheduleBtn?.addEventListener("click", () => scheduleModal.style.display = "none");
-  // Tinanggal na rin dito yung click outside
+  closeScheduleBtn?.addEventListener("click", () => {
+    if (scheduleModal) scheduleModal.style.display = "none"
+  });
 
 
   // ==========================================================
   // STEP 3: SCHEDULE MODAL CALENDAR & TIME
   // ==========================================================
 
-  const calendarGrid = scheduleModal.querySelector(".calendar-grid");
-  const monthDisplay = scheduleModal.querySelector(".month-display");
-  const prevMonthBtn = scheduleModal.querySelector(".calendar-header .nav-btn:first-child");
-  const nextMonthBtn = scheduleModal.querySelector(".calendar-header .nav-btn:last-child");
+  // (Walang binago rito, okay na 'to)
+  const calendarGrid = scheduleModal?.querySelector(".calendar-grid");
+  const monthDisplay = scheduleModal?.querySelector(".month-display");
+  const prevMonthBtn = scheduleModal?.querySelector(".calendar-header .nav-btn:first-child");
+  const nextMonthBtn = scheduleModal?.querySelector(".calendar-header .nav-btn:last-child");
 
   let currentMonth = today.getMonth();
   let currentYear = today.getFullYear();
@@ -734,40 +776,40 @@ document.addEventListener("DOMContentLoaded", () => {
 
   renderScheduleCalendar(currentMonth, currentYear);
 
-  const timePicker = scheduleModal.querySelector('.time-picker');
-  const timeColumns = timePicker.querySelectorAll('.time-column');
-  const hourColumn = timeColumns[0];
-  const minColumn = timeColumns[1];
-  const hourValue = hourColumn.querySelector('.time-value');
-  const minValue = minColumn.querySelector('.time-value');
-  const hourUp = hourColumn.querySelector('button:first-of-type');
-  const hourDown = hourColumn.querySelector('button:last-of-type');
-  const minUp = minColumn.querySelector('button:first-of-type'); 
-  const minDown = minColumn.querySelector('button:last-of-type');
-  const ampmBtns = timePicker.querySelectorAll('.ampm-btn');
+  const timePicker = scheduleModal?.querySelector('.time-picker');
+  const timeColumns = timePicker?.querySelectorAll('.time-column');
+  const hourColumn = timeColumns ? timeColumns[0] : null;
+  const minColumn = timeColumns ? timeColumns[1] : null;
+  const hourValue = hourColumn?.querySelector('.time-value');
+  const minValue = minColumn?.querySelector('.time-value');
+  const hourUp = hourColumn?.querySelector('button:first-of-type');
+  const hourDown = hourColumn?.querySelector('button:last-of-type');
+  const minUp = minColumn?.querySelector('button:first-of-type'); 
+  const minDown = minColumn?.querySelector('button:last-of-type');
+  const ampmBtns = timePicker?.querySelectorAll('.ampm-btn');
   let selectedAmPm = 'AM';
 
-  hourUp.addEventListener('click', () => {
+  hourUp?.addEventListener('click', () => {
     let val = parseInt(hourValue.textContent);
     val = val === 12 ? 1 : val + 1;
     hourValue.textContent = val.toString().padStart(2, '0');
   });
-  hourDown.addEventListener('click', () => {
+  hourDown?.addEventListener('click', () => {
     let val = parseInt(hourValue.textContent);
     val = val === 1 ? 12 : val - 1;
     hourValue.textContent = val.toString().padStart(2, '0');
   });
-  minUp.addEventListener('click', () => {
+  minUp?.addEventListener('click', () => {
     let val = parseInt(minValue.textContent);
     val = (val + 1) % 60;
     minValue.textContent = val.toString().padStart(2, '0');
   });
-  minDown.addEventListener('click', () => {
+  minDown?.addEventListener('click', () => {
     let val = parseInt(minValue.textContent);
     val = (val - 1 + 60) % 60;
     minValue.textContent = val.toString().padStart(2, '0');
   });
-  ampmBtns.forEach(btn => {
+  ampmBtns?.forEach(btn => {
     btn.addEventListener('click', () => {
       ampmBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
@@ -775,12 +817,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // ==========================================================
+// ==========================================================
 // STEP 4: CONFIRM SCHEDULE LOGIC (FULLY FIXED)
 // ==========================================================
 
-const confirmBtn = scheduleModal.querySelector('.schedule-confirm');
-const locationInput = scheduleModal.querySelector('#location');
+const confirmBtn = scheduleModal?.querySelector('.schedule-confirm');
+const locationInput = scheduleModal?.querySelector('#location');
 
 confirmBtn?.addEventListener('click', async () => {
     if (!selectedDate) {
@@ -800,12 +842,19 @@ confirmBtn?.addEventListener('click', async () => {
 
     const formattedTime = `${hourValue.textContent}:${minValue.textContent} ${selectedAmPm}`;
 
+    // --- FIX #4: Gumawa ng dynamic schedule data ---
     const scheduleData = {
-        event_id: eventId,
         date: formattedDate,
         time: formattedTime,
         location: location,
     };
+
+    if (activityType === 'event') {
+        scheduleData.event_id = activityId;
+    } else {
+        scheduleData.program_id = activityId;
+    }
+    // --- END NG FIX #4 ---
 
     console.log("Sending to /set-schedule:", scheduleData);
 
@@ -815,12 +864,12 @@ confirmBtn?.addEventListener('click', async () => {
     try {
         const res = await fetch("/set-schedule", {
             method: "POST",
-            cache: "no-store", // 🔥 prevents stale reload
+            cache: "no-store", 
             headers: {
                 "Content-Type": "application/json",
-                "X-CSRF-TOKEN": csrfToken, // Siguraduhin na 'csrfToken' ay defined sa taas
+                "X-CSRF-TOKEN": csrfToken, 
             },
-            body: JSON.stringify(scheduleData),
+            body: JSON.stringify(scheduleData), // Ginamit na 'yung dynamic data
         });
 
         if (!res.ok) {
@@ -834,9 +883,8 @@ confirmBtn?.addEventListener('click', async () => {
         scheduleModal.style.display = "none";
         showToast(data.message || "Schedule set successfully!", "success");
 
-        // ✅ AUTO RELOAD (HARD RELOAD NA NGAYON)
         setTimeout(() => {
-            window.location.reload(true); // <--- ITO YUNG FIX
+            window.location.reload(true); 
         }, 800); 
 
     } catch (error) {
@@ -851,70 +899,84 @@ confirmBtn?.addEventListener('click', async () => {
 
 
   // ==========================================================
-// STEP 5: CLAIM BUTTON LOGIC (FIXED)
-// ==========================================================
+  // STEP 5: CLAIM BUTTON LOGIC (FIXED FOR CSRF MISMATCH)
+  // ==========================================================
 
-const tableWrapper = document.querySelector('.table-wrapper');
+  // (Walang binago rito, okay na 'to)
+  const tableWrapper = document.querySelector('.table-wrapper');
 
-tableWrapper?.addEventListener('click', async (e) => {
-    // Titingnan kung 'claim-btn' ang na-click
-    if (!e.target.classList.contains('claim-btn')) {
-        return;
-    }
+  tableWrapper?.addEventListener('click', async (e) => {
+      // Titingnan kung 'claim-btn' ang na-click
+      if (!e.target.classList.contains('claim-btn')) {
+          return;
+      }
 
-    const claimButton = e.target;
-    const id = claimButton.dataset.id;
-    
-    if (!id) return;
+      const claimButton = e.target;
+      const id = claimButton.dataset.id;
+      
+      if (!id) return;
 
-    // I-disable ang button habang nagp-process
-    claimButton.disabled = true;
-    claimButton.textContent = 'Claiming...';
+      // I-disable ang button habang nagp-process
+      claimButton.disabled = true;
+      claimButton.textContent = 'Claiming...';
 
-    try {
-        const res = await fetch("{{ route('certificate.claim') }}", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json",
-                "X-CSRF-TOKEN": csrfToken
-            },
-            body: JSON.stringify({ id: id })
-        });
+      try {
+          const res = await fetch("{{ route('certificate.claim') }}", {
+              method: "POST",
+              headers: {
+                  "Content-Type": "application/json",
+                  "Accept": "application/json",
+                  "X-CSRF-TOKEN": csrfToken // Ito 'yung token
+              },
+              body: JSON.stringify({ id: id })
+          });
 
-        if (!res.ok) {
-            const errData = await res.json().catch(() => null);
-            const errorMsg = errData?.message || `Failed with status ${res.status}`;
-            throw new Error(errorMsg);
-        }
+          // --- ITO YUNG PANGUNAHING FIX ---
+          // I-check kung ang error ay 419 (CSRF Mismatch)
+          if (res.status === 419) {
+              throw new Error('Your session has expired. The page will reload.');
+          }
+          // --- END NG FIX ---
 
-        const data = await res.json();
-        
-        if (data.success) { 
-            
-            showToast(data.message || 'Certificate claimed!', 'success');
-        
-            // --- FIX: Ibinalik ang auto-reload ---
-            setTimeout(() => {
-                location.reload();
-            }, 1500); // 1.5 second delay
-            // --- END NG FIX ---
-        
-        } else {
-            throw new Error(data.message || 'Claiming failed. Please try again.');
-        }
+          if (!res.ok) {
+              const errData = await res.json().catch(() => null);
+              const errorMsg = errData?.message || `Failed with status ${res.status}`;
+              throw new Error(errorMsg);
+          }
 
-    } catch (error) {
-        console.error('Error claiming certificate:', error);
-        showToast(error.message, 'error');
-        
-        // Ibalik yung button sa dati kapag nagka-error
-        if (claimButton) {
-            claimButton.disabled = false;
-            claimButton.textContent = 'Claim';
-        }
-    }
-});
+          const data = await res.json();
+          
+          if (data.success) { 
+              showToast(data.message || 'Certificate claimed!', 'success');
+              
+              // Mag-reload para ma-update 'yung status sa "Claimed"
+              setTimeout(() => {
+                  location.reload();
+              }, 1500); // 1.5 second delay
+          
+          } else {
+              throw new Error(data.message || 'Claiming failed. Please try again.');
+          }
+
+      } catch (error) {
+          console.error('Error claiming certificate:', error);
+          showToast(error.message, 'error');
+          
+          // --- ITO YUNG PANGALAWANG BAHAGI NG FIX ---
+          // Kung 'yung error ay galing sa 419, mag-force reload
+          if (error.message.includes('session has expired')) {
+              setTimeout(() => {
+                  location.reload(true); // true = force hard reload
+              }, 2000); // 2 second delay
+          } else {
+              // Para sa ibang error, ibalik lang 'yung button
+              if (claimButton) {
+                  claimButton.disabled = false;
+                  claimButton.textContent = 'Claim';
+              }
+          }
+      }
+  });
   
 
 }); 

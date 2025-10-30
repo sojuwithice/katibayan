@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class EvaluationController extends Controller
 {
@@ -348,6 +349,13 @@ class EvaluationController extends Controller
 
     /**
      * Get certificates for evaluated events AND programs
+     * (FIX #8: Pinalitan ang 'request_status' ng Programs 
+     * mula 'null' -> 'not_applicable' para sa tamang button display)
+     */
+    /**
+     * Get certificates for evaluated events AND programs
+     * (FIX #9: FINAL FIX. Kino-query na pareho ang events at programs
+     * gamit ang bagong 'program_id' column sa 'certificate_requests')
      */
     public function getCertificates(): JsonResponse
     {
@@ -357,13 +365,12 @@ class EvaluationController extends Controller
 
             Log::info("Fetching certificates for user: {$userId}, Barangay: {$user->barangay_id}");
 
-            // Get evaluated events
+            // --- Get evaluated events (OKAY NA ITO) ---
             $evaluatedEvents = Event::select(
                     'events.id', 
                     'events.title',
                     'events.event_date',
                     'events.image',
-                    'events.barangay_id',
                     'certificate_requests.status as request_status',
                     'certificate_requests.request_count',
                     'certificate_requests.updated_at as request_updated_at'
@@ -379,72 +386,55 @@ class EvaluationController extends Controller
                     $query->where('user_id', $userId)
                           ->select('id', 'event_id', 'submitted_at', 'created_at');
                 }])
-                ->where('events.barangay_id', $user->barangay_id)
                 ->get()
                 ->map(function ($event) {
                     $evaluation = $event->evaluations->first();
-                    
-                    // Safely handle event_date
                     $eventDate = 'Date not available';
                     if ($event->event_date) {
                         try {
                             $eventDate = $event->event_date instanceof Carbon ? $event->event_date->format('F d, Y') : Carbon::parse($event->event_date)->format('F d, Y');
-                        } catch (\Exception $e) { 
-                            Log::error("Error parsing event date for event {$event->id}: " . $e->getMessage());
-                        }
+                        } catch (\Exception $e) { Log::error("Error parsing event date: " . $e->getMessage()); }
                     }
-                    
-                    // Safely handle evaluated_at
                     $evaluatedAt = $evaluation?->submitted_at ?? $evaluation?->created_at ?? now();
-                    $evaluationDate = $evaluatedAt instanceof Carbon ? $evaluatedAt->format('F d, Y') : Carbon::parse($evaluatedAt)->format('F d, Y');
-                    
-                    // Build image URL safely
                     $eventImage = null;
                     if ($event->image) {
                         try {
                             if (Storage::disk('public')->exists($event->image)) {
                                 $eventImage = asset('storage/' . $event->image);
-                            } else { 
-                                Log::warning("Event image not found: " . $event->image);
-                            }
-                        } catch (\Exception $e) { 
-                            Log::error("Error generating image URL for event {$event->id}: " . $e->getMessage());
-                        }
+                            } else { Log::warning("Event image not found: " . $event->image); }
+                        } catch (\Exception $e) { Log::error("Error generating image URL: " . $e->getMessage()); }
                     }
-
                     $canRequestAgain = false;
                     $requestCount = $event->request_count ?? 0;
-
                     if ($event->request_status === null) {
                         $canRequestAgain = true;
                     } else if ($event->request_status !== 'claimed' && $requestCount < 2) {
-                        $lastRequestTime = Carbon::parse($event->request_updated_at);
-                        if ($lastRequestTime->isBefore(Carbon::now()->subDays(7))) {
-                            $canRequestAgain = true;
+                        if ($event->request_updated_at) {
+                            $lastRequestTime = Carbon::parse($event->request_updated_at);
+                            if ($lastRequestTime->isBefore(Carbon::now()->subDays(7))) {
+                                $canRequestAgain = true;
+                            }
                         }
                     }
-
                     return [
-                        'activity_type' => 'event',
-                        'activity_id' => $event->id,
-                        'activity_title' => $event->title,
-                        'activity_date' => $eventDate,
-                        'activity_image' => $eventImage,
+                        'event_id' => $event->id,
+                        'program_id' => null, // Malinaw na null ito
+                        'event_title' => $event->title,
+                        'event_date' => $eventDate,
+                        'event_image' => $eventImage,
                         'evaluated_at' => $evaluatedAt,
-                        'evaluation_date' => $evaluationDate,
                         'request_status' => $event->request_status,
                         'request_count' => $requestCount,
                         'can_request_again' => $canRequestAgain
                     ];
                 });
 
-            // Get evaluated programs
+            // --- Get evaluated programs (ITO YUNG INAYOS) ---
             $evaluatedPrograms = Program::select(
                     'programs.id', 
                     'programs.title',
                     'programs.event_date',
                     'programs.display_image as image',
-                    'programs.barangay_id',
                     'certificate_requests.status as request_status',
                     'certificate_requests.request_count',
                     'certificate_requests.updated_at as request_updated_at'
@@ -452,67 +442,55 @@ class EvaluationController extends Controller
                 ->whereHas('evaluations', function($query) use ($userId) {
                     $query->where('user_id', $userId);
                 })
+                // --- ITO NA YUNG TAMANG JOIN ---
                 ->leftJoin('certificate_requests', function($join) use ($userId) {
-                    $join->on('programs.id', '=', 'certificate_requests.program_id')
+                    $join->on('programs.id', '=', 'certificate_requests.program_id') // Gamit na 'yung program_id
                          ->where('certificate_requests.user_id', '=', $userId);
                 })
                 ->with(['evaluations' => function($query) use ($userId) {
                     $query->where('user_id', $userId)
                           ->select('id', 'program_id', 'submitted_at', 'created_at');
                 }])
-                ->where('programs.barangay_id', $user->barangay_id)
                 ->get()
                 ->map(function ($program) {
                     $evaluation = $program->evaluations->first();
-                    
-                    // Safely handle event_date
                     $programDate = 'Date not available';
                     if ($program->event_date) {
                         try {
                             $programDate = $program->event_date instanceof Carbon ? $program->event_date->format('F d, Y') : Carbon::parse($program->event_date)->format('F d, Y');
-                        } catch (\Exception $e) { 
-                            Log::error("Error parsing program date for program {$program->id}: " . $e->getMessage());
-                        }
+                        } catch (\Exception $e) { Log::error("Error parsing program date: " . $e->getMessage()); }
                     }
-                    
-                    // Safely handle evaluated_at
                     $evaluatedAt = $evaluation?->submitted_at ?? $evaluation?->created_at ?? now();
-                    $evaluationDate = $evaluatedAt instanceof Carbon ? $evaluatedAt->format('F d, Y') : Carbon::parse($evaluatedAt)->format('F d, Y');
-                    
-                    // Build image URL safely
                     $programImage = null;
                     if ($program->image) {
                         try {
                             if (Storage::disk('public')->exists($program->image)) {
                                 $programImage = asset('storage/' . $program->image);
-                            } else { 
-                                Log::warning("Program image not found: " . $program->image);
-                            }
-                        } catch (\Exception $e) { 
-                            Log::error("Error generating image URL for program {$program->id}: " . $e->getMessage());
-                        }
+                            } else { Log::warning("Program image not found: " . $program->image); }
+                        } catch (\Exception $e) { Log::error("Error generating image URL: " . $e->getMessage()); }
                     }
-
+                    
+                    // --- Gagamitin na rin natin 'yung totoong data ---
                     $canRequestAgain = false;
                     $requestCount = $program->request_count ?? 0;
-
                     if ($program->request_status === null) {
                         $canRequestAgain = true;
                     } else if ($program->request_status !== 'claimed' && $requestCount < 2) {
-                        $lastRequestTime = Carbon::parse($program->request_updated_at);
-                        if ($lastRequestTime->isBefore(Carbon::now()->subDays(7))) {
-                            $canRequestAgain = true;
+                        if ($program->request_updated_at) {
+                            $lastRequestTime = Carbon::parse($program->request_updated_at);
+                            if ($lastRequestTime->isBefore(Carbon::now()->subDays(7))) {
+                                $canRequestAgain = true;
+                            }
                         }
                     }
 
                     return [
-                        'activity_type' => 'program',
-                        'activity_id' => $program->id,
-                        'activity_title' => $program->title,
-                        'activity_date' => $programDate,
-                        'activity_image' => $programImage,
+                        'event_id' => null, // Malinaw na null ito
+                        'program_id' => $program->id, // Ipasa na 'yung program_id
+                        'event_title' => $program->title,
+                        'event_date' => $programDate,
+                        'event_image' => $programImage,
                         'evaluated_at' => $evaluatedAt,
-                        'evaluation_date' => $evaluationDate,
                         'request_status' => $program->request_status,
                         'request_count' => $requestCount,
                         'can_request_again' => $canRequestAgain
@@ -526,7 +504,7 @@ class EvaluationController extends Controller
 
             return response()->json([
                 'success' => true,
-                'certificates' => $allCertificates,
+                'certificates' => $allCertificates->values(),
                 'total_count' => $allCertificates->count()
             ]);
 
