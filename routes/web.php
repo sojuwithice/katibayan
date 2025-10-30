@@ -204,27 +204,8 @@ Route::get('/view-youth-profile', function () {
     return view('view-youth-profile');
 })->name('view-youth-profile');
 
-// ========== ADMIN ROUTES ==========
-Route::get('admindashb', function () {
-    return view('admindashb');
-})->name('admindashb')->middleware('auth:admin');
 
-// ADD THE MISSING ADMIN ROUTES:
-Route::get('/admin/analytics', function () {
-    return view('admin-analytics'); // You'll need to create this view
-})->name('admin-analytics')->middleware('auth:admin');
 
-Route::get('/admin/user-management', [AdminController::class, 'userManagement'])
-    ->name('user-management2')
-    ->middleware('auth:admin');
-
-Route::get('/admin/user-feedback', function () {
-    return view('admin-user-feedback'); // You'll need to create this view
-})->name('users-feedback')->middleware('auth:admin');
-
-Route::get('/admin/settings', function () {
-    return view('admin-settings'); // You'll need to create this view
-})->name('admin-settings')->middleware('auth:admin');
 
 // ========== REGISTRATION ROUTES ==========
 // FIXED: Add the missing registration routes
@@ -271,6 +252,23 @@ Route::patch('/admin/users/{id}/reject', [AdminController::class, 'reject'])->na
 Route::get('/admin/login', [AdminLoginController::class, 'showLoginForm'])->name('admin.login');
 Route::post('/admin/login', [AdminLoginController::class, 'login'])->name('admin.login.post');
 Route::post('/admin/logout', [AdminLoginController::class, 'logout'])->name('admin.logout');
+
+// ADD THE MISSING ADMIN ROUTES:
+Route::get('/admin/analytics', function () {
+    return view('admin-analytics'); // You'll need to create this view
+})->name('admin-analytics')->middleware('auth:admin');
+
+Route::get('/admin/user-management', [AdminController::class, 'userManagement'])
+    ->name('user-management2')
+    ->middleware('auth:admin');
+
+Route::get('/users-feedback', function () {
+    return view('users-feedback');
+})->name('users-feedback')->middleware('auth:admin');
+
+Route::get('/admin/settings', function () {
+    return view('admin-settings'); // You'll need to create this view
+})->name('admin-settings')->middleware('auth:admin');
 
 // ========== SUGGESTION ROUTES ==========
 // FIXED: Add the suggestion store route
