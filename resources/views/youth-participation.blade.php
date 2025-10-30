@@ -18,65 +18,63 @@
 <body>
   
   <!-- Sidebar -->
-  <!-- Sidebar -->
   <aside class="sidebar">
-  <button class="menu-toggle">Menu</button>
-  <div class="divider"></div>
-  <nav class="nav">
-    <a href="{{ route('sk.dashboard') }}">
-      <i data-lucide="layout-dashboard"></i>
-      <span class="label">Dashboard</span>
-    </a>
-
-    <a href="#">
-      <i data-lucide="chart-pie"></i>
-      <span class="label">Analytics</span>
-    </a>
-
-    <a href="{{ route('youth-profilepage') }}">
-      <i data-lucide="users"></i>
-      <span class="label">Youth Profile</span>
-    </a>
-
-    <div class="nav-item">
-      <a href="#" class="nav-link">
-        <i data-lucide="calendar"></i>
-        <span class="label">Events and Programs</span>
-        <i data-lucide="chevron-down" class="submenu-arrow"></i>
+    <button class="menu-toggle">Menu</button>
+    <div class="divider"></div>
+    <nav class="nav">
+      <a href="{{ route('sk.dashboard') }}">
+        <i data-lucide="layout-dashboard"></i>
+        <span class="label">Dashboard</span>
       </a>
-      <div class="submenu">
-        <a href="{{ route('sk-eventpage') }}">Events List</a>
-        <a href="{{ route('youth-program-registration') }}">Youth Registration</a>
+
+      <a href="#">
+        <i data-lucide="chart-pie"></i>
+        <span class="label">Analytics</span>
+      </a>
+
+      <a href="{{ route('youth-profilepage') }}">
+        <i data-lucide="users"></i>
+        <span class="label">Youth Profile</span>
+      </a>
+
+      <div class="nav-item">
+        <a href="#" class="nav-link">
+          <i data-lucide="calendar"></i>
+          <span class="label">Events and Programs</span>
+          <i data-lucide="chevron-down" class="submenu-arrow"></i>
+        </a>
+        <div class="submenu">
+          <a href="{{ route('sk-eventpage') }}">Events List</a>
+          <a href="{{ route('youth-program-registration') }}">Youth Registration</a>
+        </div>
       </div>
-    </div>
 
-    <a href="{{ route('sk-evaluation-feedback') }}">
-      <i data-lucide="message-square-quote"></i>
-      <span class="label">Feedbacks</span>
-    </a>
+      <a href="{{ route('sk-evaluation-feedback') }}">
+        <i data-lucide="message-square-quote"></i>
+        <span class="label">Feedbacks</span>
+      </a>
 
-    <a href="{{ route('sk-polls') }}">
-      <i data-lucide="vote"></i>
-      <span class="label">Polls</span>
-    </a>
+      <a href="{{ route('sk-polls') }}">
+        <i data-lucide="vote"></i>
+        <span class="label">Polls</span>
+      </a>
 
-    <a href="{{ route('youth-suggestion') }}">
-      <i data-lucide="lightbulb"></i>
-      <span class="label">Suggestion Box</span>
-    </a>
-    
-    <a href="{{ route('reports') }}">
-      <i data-lucide="file-chart-column"></i>
-      <span class="label">Reports</span>
-    </a>
+      <a href="{{ route('youth-suggestion') }}">
+        <i data-lucide="lightbulb"></i>
+        <span class="label">Suggestion Box</span>
+      </a>
+      
+      <a href="{{ route('reports') }}">
+        <i data-lucide="file-chart-column"></i>
+        <span class="label">Reports</span>
+      </a>
 
-    <a href="{{ route('sk-services-offer') }}">
-      <i data-lucide="hand-heart"></i>
-      <span class="label">Service Offer</span>
-    </a>
-
-  </nav>
-</aside>
+      <a href="{{ route('sk-services-offer') }}">
+        <i data-lucide="hand-heart"></i>
+        <span class="label">Service Offer</span>
+      </a>
+    </nav>
+  </aside>
 
   <!-- Main -->
   <div class="main">
@@ -95,7 +93,7 @@
         <div class="time">MON 10:00 <span>AM</span></div>
 
         <!-- Notifications -->
-        <div class="notification-wrapper">
+        <div class="notification-wrapper" id="notificationWrapper">
           <i class="fas fa-bell"></i>
           <span class="notif-count">3</span>
           <div class="notif-dropdown">
@@ -132,7 +130,7 @@
         </div>
 
         <!-- Profile Avatar -->
-        <div class="profile-wrapper">
+        <div class="profile-wrapper" id="profileWrapper">
           <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
                alt="User" class="avatar" id="profileToggle">
           <div class="profile-dropdown">
@@ -266,7 +264,9 @@
             @if($topYouth->count() > 0)
               @foreach($topYouth as $index => $youth)
                 <li>
-                  <img src="{{ $youth['avatar'] ? asset('storage/' . $youth['avatar']) : 'https://i.pravatar.cc/40?img=' . ($index + 1) }}" alt="{{ $youth['name'] }}">
+                  <!-- Fixed: Use the same avatar logic as profile section -->
+                  <img src="{{ $youth['avatar'] ? asset('storage/' . $youth['avatar']) : asset('images/default-avatar.png') }}" 
+                       alt="{{ $youth['name'] }}" class="youth-avatar">
                   <div>
                     <strong>{{ $youth['name'] }}</strong><br>
                     <a href="#">{{ $youth['attendance_count'] }} Events and Programs Attended</a>
@@ -287,38 +287,43 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-  // === Lucide icons + sidebar toggle ===
-  lucide.createIcons();
-  
-  const menuToggle = document.querySelector('.menu-toggle');
-  const sidebar = document.querySelector('.sidebar');
-
-  if (menuToggle && sidebar) {
-    menuToggle.addEventListener('click', (e) => {
-      e.stopPropagation();
-      sidebar.classList.toggle('open');
-    });
-  }
-
-  // === Submenus ===
-  const submenuTriggers = document.querySelectorAll('.nav-item > .nav-link');
-
-  submenuTriggers.forEach(trigger => {
-    trigger.addEventListener('click', (e) => {
-      e.preventDefault(); 
+      // === Lucide icons + sidebar toggle ===
+      lucide.createIcons();
       
-      const parentItem = trigger.closest('.nav-item');
-      const wasOpen = parentItem.classList.contains('open');
+      const menuToggle = document.querySelector('.menu-toggle');
+      const sidebar = document.querySelector('.sidebar');
+      
+      // Define variables for dropdown elements
+      const notifWrapper = document.getElementById('notificationWrapper');
+      const profileWrapper = document.getElementById('profileWrapper');
+      const profileToggle = document.getElementById('profileToggle');
 
-      document.querySelectorAll('.nav-item').forEach(item => {
-        item.classList.remove('open');
-      });
-
-      if (!wasOpen) {
-        parentItem.classList.add('open');
+      if (menuToggle && sidebar) {
+        menuToggle.addEventListener('click', (e) => {
+          e.stopPropagation();
+          sidebar.classList.toggle('open');
+        });
       }
-    });
-  });
+
+      // === Submenus ===
+      const submenuTriggers = document.querySelectorAll('.nav-item > .nav-link');
+
+      submenuTriggers.forEach(trigger => {
+        trigger.addEventListener('click', (e) => {
+          e.preventDefault(); 
+          
+          const parentItem = trigger.closest('.nav-item');
+          const wasOpen = parentItem.classList.contains('open');
+
+          document.querySelectorAll('.nav-item').forEach(item => {
+            item.classList.remove('open');
+          });
+
+          if (!wasOpen) {
+            parentItem.classList.add('open');
+          }
+        });
+      });
 
       // Time auto-update
       const timeEl = document.querySelector(".time");
@@ -369,6 +374,8 @@
 
       // Committee Filter Dropdown functionality
       const committeeSelect = document.querySelector("#committee");
+      let currentCategoryFilter = 'all';
+      
       if (committeeSelect) {
         const selected = committeeSelect.querySelector(".selected");
         const options = committeeSelect.querySelector(".options");
