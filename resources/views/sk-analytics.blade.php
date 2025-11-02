@@ -8,6 +8,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Load Lucide for theme toggle -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
   
   <!-- Pass PHP data to JavaScript -->
   <script>
@@ -91,6 +93,11 @@
 
       <div class="topbar-right">
         <div class="time">MON 10:00 <span>AM</span></div>
+
+        <!-- Theme Toggle Button -->
+        <button class="theme-toggle" id="themeToggle">
+          <i data-lucide="sun"></i>
+        </button>
 
         <!-- Notifications -->
         <div class="notification-wrapper">
@@ -338,8 +345,81 @@
   </div>
 
   <script>
+    // === DARK/LIGHT MODE TOGGLE ===
+    const body = document.body;
+    const themeToggle = document.getElementById('themeToggle');
+
+    // Function to apply theme
+    function applyTheme(isDark) {
+      body.classList.toggle('dark-mode', isDark);
+      // Show sun when dark mode, moon when light mode
+      const icon = isDark ? 'sun' : 'moon';
+
+      if (themeToggle) {
+        themeToggle.innerHTML = `<i data-lucide="${icon}"></i>`;
+      }
+
+      // Re-initialize Lucide icons
+      if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+      }
+      
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+    }
+
+    // Load saved theme
+    const savedTheme = localStorage.getItem('theme') === 'dark';
+    applyTheme(savedTheme);
+
+    // Add event listener to theme toggle
+    if (themeToggle) {
+      themeToggle.addEventListener('click', () => {
+        const isDark = !body.classList.contains('dark-mode');
+        applyTheme(isDark);
+      });
+    }
+
+    // Lucide Icons Initialization with Error Handling
+    function initializeLucideIcons() {
+        if (typeof lucide === 'undefined') {
+            console.warn('Lucide not loaded, using Font Awesome fallback');
+            replaceLucideIcons();
+            return;
+        }
+        
+        try {
+            lucide.createIcons();
+            console.log('Lucide icons initialized successfully');
+        } catch (error) {
+            console.error('Error initializing Lucide:', error);
+            replaceLucideIcons();
+        }
+    }
+
+    // Fallback function to replace Lucide icons with Font Awesome
+    function replaceLucideIcons() {
+        console.log('Using Font Awesome as fallback for icons');
+        
+        const iconMap = {
+            'moon': 'fas fa-moon',
+            'sun': 'fas fa-sun'
+        };
+
+        const themeToggle = document.getElementById('themeToggle');
+        if (themeToggle) {
+            const icon = savedTheme ? 'sun' : 'moon';
+            if (iconMap[icon]) {
+                themeToggle.innerHTML = `<i class="${iconMap[icon]}"></i>`;
+            }
+        }
+    }
+
     document.addEventListener("DOMContentLoaded", function() {
       console.log("DOM loaded, initializing charts...");
+      
+      // Initialize Lucide icons first
+      initializeLucideIcons();
       
       // Initialize all charts
       initializeCharts();

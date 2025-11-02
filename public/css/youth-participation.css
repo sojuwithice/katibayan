@@ -1,3 +1,52 @@
+/* === Global Theme Variables === */
+:root {
+  --bg-color: #e7e7e7;
+  --text-color: #01214A;
+  --card-bg: #fff;
+  --sidebar-bg: #3C87C4;
+  --topbar-bg: #e7e7e7;
+  --primary-color: #3C87C4;
+  --accent-color: #FFB703;
+  --border-color: #fff;
+}
+
+[data-theme="dark"] {
+  --bg-color: #121212;
+  --text-color: #eee;
+  --card-bg: #1e1e1e;
+  --sidebar-bg: #1a1a1a;
+  --topbar-bg: #2a2a2a;
+  --primary-color: #3C87C4;
+  --accent-color: #FFB703;
+  --border-color: #333;
+}
+/* === Theme Toggle Button === */
+.theme-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  color: #3C87C4;
+}
+
+.theme-toggle:hover {
+  background: rgba(60, 135, 196, 0.1);
+  transform: scale(1.1);
+}
+
+.theme-toggle svg,
+.theme-toggle i {
+  width: 24px;
+  height: 24px;
+  stroke-width: 2.4;
+  color: #3C87C4;
+  transition: color 0.3s ease;
+}
 * {
   margin: 0; 
   padding: 0; 
@@ -6,8 +55,9 @@
 }
 
 body {
-  background: #e7e7e7;
-  color: #01214A;
+  background: var(--bg-color);
+  color: var(--text-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .dashboard {
@@ -17,12 +67,12 @@ body {
 
 /* Sidebar base */
 .sidebar {
-  background: #3C87C4;
+  background: var(--sidebar-bg);
   color: #fff;
   width: 90px;
   min-height: 400px;
   border-radius: 25px;
-  border: 0.2rem solid #fff;
+  border: 0.2rem solid var(--border-color);
   padding: 1rem 0;
   display: flex;
   flex-direction: column;
@@ -213,7 +263,7 @@ body {
   left: 0;
   right: 0;
   height: 70px;
-  background: #e7e7e7;
+  background: var(--topbar-bg);
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -243,13 +293,13 @@ body {
 .logo-text .title {
   font-size: 18px;
   font-weight: 700;
-  color: #01214A;
+  color: var(--text-color);
 }
 
 .logo-text .subtitle {
   font-size: 13px;
   font-weight: 500;
-  color: #3C87C4;
+  color: var(--primary-color);
 }
 
 .topbar-right {
@@ -265,26 +315,26 @@ body {
   align-items: center;
   justify-content: center;
   gap: .2rem;
-  background: #fff;
+  background: var(--card-bg);
   border: none;
   box-shadow: 0 2px 6px rgba(0,0,0,0.20);
   border-radius: 50px;
   padding: .9rem 1rem;         
   font-weight: bold;
   font-size: 15px;
-  color: #3C87C4;
+  color: var(--primary-color);
   white-space: nowrap;           
   max-width: 100%;               
 }
 .topbar-right .time span {
-  color: #FFB703;
+  color: var(--accent-color);
   font-weight: bold;
 }
 
 /* Bell + avatar */
 .topbar-right i {
   font-size: 25px;
-  color: #3C87C4;
+  color: var(--primary-color);
 }
 
 .profile-wrapper {
@@ -297,7 +347,7 @@ body {
   width: 45px;
   height: 45px;
   border-radius: 50%;
-  border: 3px solid #3C87C4;
+  border: 3px solid var(--primary-color);
   cursor: pointer;
 }
 
@@ -306,7 +356,7 @@ body {
   top: 60px;
   right: 0;
   width: 280px;
-  background: #fff;
+  background: var(--card-bg);
   border-radius: 12px;
   box-shadow: 0 4px 15px rgba(0,0,0,0.1);
   overflow: hidden;
@@ -328,7 +378,7 @@ body {
 .profile-dropdown hr {
   border: none;               
   height: 2px;                
-  background-color: #3C87C4;  
+  background-color: var(--primary-color);  
   margin: 0;                  
 }
 
@@ -336,20 +386,21 @@ body {
   width: 55px;
   height: 55px;
   border-radius: 50%;
-  border: 3px solid #3C87C4;
+  border: 3px solid var(--primary-color);
 }
 
 .profile-info h4 {
   font-size: 16px;
   margin: 0;
   margin-bottom: .3rem;
+  color: var(--text-color);
 }
 
 .profile-badge {
   display: inline-flex;
   align-items: center;
-  background: #3C87C4;
-  border: 1px solid #3C87C4;
+  background: var(--primary-color);
+  border: 1px solid var(--primary-color);
   border-radius: 25px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
   overflow: hidden;
@@ -363,7 +414,7 @@ body {
 }
 
 .profile-badge span + span {
-  border-left: 1px solid #F9CD55; 
+  border-left: 1px solid var(--accent-color); 
 }
 
 .profile-menu {
@@ -379,15 +430,16 @@ body {
   gap: 10px;
   cursor: pointer;
   transition: background 0.2s;
+  color: var(--text-color);
 }
 
 .profile-menu li i {
-  color: #3C87C4;
+  color: var(--primary-color);
   font-size: 16px;
 }
 
 .profile-menu li:hover {
-  background: #f1f1f1;
+  background: rgba(60, 135, 196, 0.1);
 }
 
 .profile-menu a {
@@ -408,14 +460,14 @@ body {
 
 .notification-wrapper .fa-bell {
   font-size: 22px;
-  color: #3C87C4;
+  color: var(--primary-color);
 }
 
 .notif-count {
   position: absolute;
   top: -6px;
   right: -6px;
-  background: #FFB703;
+  background: var(--accent-color);
   color: #fff;
   font-size: 12px;
   font-weight: bold;
@@ -429,7 +481,7 @@ body {
   top: 40px;
   right: 0;
   width: 320px;
-  background: #fff;
+  background: var(--card-bg);
   border-radius: 12px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.2);
   flex-direction: column;
@@ -444,16 +496,16 @@ body {
 .notif-dropdown .notif-header {
   font-size: 16px;
   font-weight: 700;
-  color: #114B8C;
+  color: var(--text-color);
   padding: 1rem;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--border-color);
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
 .notif-dropdown .notif-header span {
-  background: #3C87C4;
+  background: var(--primary-color);
   color: #fff;
   font-size: 13px;
   font-weight: 700;
@@ -472,7 +524,7 @@ body {
   align-items: flex-start;
   gap: 0.8rem;
   padding: 1rem;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--border-color);
   position: relative;
 }
 .notif-list li:last-child {
@@ -482,7 +534,7 @@ body {
 .notif-icon {
   width: 40px;
   height: 40px;
-  background: #3C87C4;
+  background: var(--primary-color);
   border-radius: 50%;
   flex-shrink: 0;
 }
@@ -490,18 +542,19 @@ body {
 .notif-content strong {
   font-size: 14px;
   font-weight: 700;
-  color: #114B8C;
+  color: var(--text-color);
 }
 .notif-content p {
   font-size: 13px;
-  color: #444;
+  color: var(--text-color);
+  opacity: 0.8;
 }
 
 /* Yellow dot */
 .notif-dot {
   width: 10px;
   height: 10px;
-  background: #FFB703;
+  background: var(--accent-color);
   border-radius: 50%;
   position: absolute;
   right: 15px;
@@ -522,18 +575,18 @@ body {
   display: flex;
   justify-content: space-between; 
   align-items: center;
-  background-color: #fff;
+  background-color: var(--card-bg);
   border-radius: 15px;
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
   padding: 15px 25px;
-  border-left: 6px solid #3C87C4;
+  border-left: 6px solid var(--primary-color);
 }
 
 /* Title */
 .welcome-card h2 {
   font-size: 2rem;
   font-weight: 700;
-  color: #3C87C4;
+  color: var(--primary-color);
   margin: 0;
 }
 
@@ -541,12 +594,12 @@ body {
 .year-badge {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #3C87C4;
-  border: 2px solid #3C87C4;
+  color: var(--primary-color);
+  border: 2px solid var(--primary-color);
   border-radius: 30px;
   padding: 6px 14px;
-  background-color: #fff;
-  box-shadow: 3px 3px 0 #3C87C4; 
+  background-color: var(--card-bg);
+  box-shadow: 3px 3px 0 var(--primary-color); 
 }
 
 /* Layout */
@@ -559,11 +612,12 @@ body {
 
 /* Cards */
 .card {
-  background: #fff;
+  background: var(--card-bg);
   border-radius: 12px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.15);
   overflow: hidden;
   padding: 0;
+  border: 1px solid var(--border-color);
 }
 
 /* Committee Filter Dropdown */
@@ -573,14 +627,14 @@ body {
   align-items: center;
   gap: 0.5rem;
   padding: 1rem 1.2rem;
-  background: #f8f9fa;
-  border-bottom: 1px solid #eee;
+  background: var(--bg-color);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .committee-filter label {
   font-size: 0.9rem;
   font-weight: 600;
-  color: #333;
+  color: var(--text-color);
 }
 
 /* Custom Select Styles */
@@ -596,16 +650,16 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 0.5rem 1rem;
-  background: #fff;
-  border: 1.5px solid #3C87C4;
+  background: var(--card-bg);
+  border: 1.5px solid var(--primary-color);
   border-radius: 8px;
   font-size: 0.9rem;
-  color: #333;
+  color: var(--text-color);
   transition: all 0.3s ease;
 }
 
 .custom-select .selected:hover {
-  border-color: #1C6DD0;
+  border-color: var(--primary-color);
   box-shadow: 0 2px 4px rgba(60, 135, 196, 0.2);
 }
 
@@ -619,7 +673,7 @@ body {
   width: 16px;
   height: 16px;
   transition: transform 0.3s ease;
-  color: #3C87C4;
+  color: var(--primary-color);
 }
 
 .custom-select.open .dropdown-icon {
@@ -631,8 +685,8 @@ body {
   top: 100%;
   left: 0;
   right: 0;
-  background: #fff;
-  border: 1.5px solid #3C87C4;
+  background: var(--card-bg);
+  border: 1.5px solid var(--primary-color);
   border-top: none;
   border-radius: 0 0 8px 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -650,15 +704,15 @@ body {
   padding: 0.7rem 1rem;
   list-style: none;
   font-size: 0.9rem;
-  color: #333;
-  border-bottom: 1px solid #f0f0f0;
+  color: var(--text-color);
+  border-bottom: 1px solid var(--border-color);
   transition: all 0.2s ease;
   cursor: pointer;
 }
 
 .custom-select .options li:hover {
-  background: #f8f9fa;
-  color: #3C87C4;
+  background: rgba(60, 135, 196, 0.1);
+  color: var(--primary-color);
 }
 
 .custom-select .options li:last-child {
@@ -667,8 +721,8 @@ body {
 
 .custom-select .options li[data-value="all"] {
   font-weight: 600;
-  color: #3C87C4;
-  background: #f8f9fa;
+  color: var(--primary-color);
+  background: rgba(60, 135, 196, 0.1);
 }
 
 /* Ensure the dropdown appears above other elements */
@@ -678,7 +732,7 @@ body {
 }
 
 .participation-card {
-  border: 1px solid #000;
+  border: 1px solid var(--border-color);
 }
 
 .participation-table {
@@ -688,7 +742,7 @@ body {
 }
 
 .participation-table th {
-  background: #3C87C4;
+  background: var(--primary-color);
   color: #fff;
   text-align: center;
   padding: 1.2rem 1.5rem;
@@ -722,25 +776,27 @@ body {
   text-align: left;
   vertical-align: middle;
   padding: 1.2rem 1.5rem;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--border-color);
   font-size: 1rem;
+  color: var(--text-color);
 }
 
 .participation-table td em {
   font-style: italic;
-  color: #333;
+  color: var(--text-color);
 }
 
 .participation-table small {
-  color: #444;
+  color: var(--text-color);
+  opacity: 0.8;
   font-size: 0.9rem;
 }
 
 /* Button */
 .btn-view {
-  background: #fff;
-  border: 1.5px solid #4A90E2;
-  color: #4A90E2;
+  background: var(--card-bg);
+  border: 1.5px solid var(--primary-color);
+  color: var(--primary-color);
   padding: 0.3rem 1rem;
   border-radius: 20px;
   font-size: 0.85rem;
@@ -751,7 +807,7 @@ body {
 }
 
 .btn-view:hover {
-  background: #4A90E2;
+  background: var(--primary-color);
   color: #fff;
 }
 
@@ -763,7 +819,7 @@ body {
 
 /* Header*/
 .top-youth-card .card-header {
-  border-bottom: 2px solid #3C87C4;
+  border-bottom: 2px solid var(--primary-color);
   padding: 1rem 1.2rem 0.5rem 1.2rem;
   display: flex;
   justify-content: space-between;
@@ -774,7 +830,7 @@ body {
 .top-youth-card .card-header h3 {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #3C87C4;
+  color: var(--primary-color);
   margin: 0;
   margin-bottom: .5rem;
 }
@@ -788,13 +844,14 @@ body {
 .top-youth-card .see-all a {
   font-size: 0.85rem;
   font-weight: 100;
-  color: #4A90E2;
+  color: var(--primary-color);
   text-decoration: none;
 }
 
 .top-youth-card .see-all a:hover {
-  color: #114B8C;              
+  color: var(--primary-color);              
   text-decoration: underline;  
+  opacity: 0.8;
 }
 
 /* Youth List */
@@ -821,13 +878,45 @@ body {
 
 .youth-list strong {
   font-size: 0.95rem;
-  color: #01214A;
+  color: var(--text-color);
 }
 
 .youth-list a {
   font-size: 0.85rem;
-  color: #4A90E2;
+  color: var(--primary-color);
   text-decoration: none;
+}
+
+.youth-list a:hover {
+  text-decoration: underline;
+}
+
+/* Dark mode specific adjustments */
+[data-theme="dark"] .sidebar nav a.active {
+  background: #2a2a2a;
+  color: #fff;
+}
+
+[data-theme="dark"] .submenu a.active {
+  background: #2a2a2a;
+  color: #fff;
+}
+
+[data-theme="dark"] .profile-menu li:hover,
+[data-theme="dark"] .custom-select .options li:hover {
+  background: #333;
+}
+
+[data-theme="dark"] .committee-filter {
+  background: #2a2a2a;
+}
+
+[data-theme="dark"] .participation-table td {
+  border-bottom-color: #444;
+}
+
+[data-theme="dark"] .participation-table td em {
+  opacity: 0.8;
 }
 
 /* ===============================
@@ -890,8 +979,8 @@ body {
   }
 
   .sidebar nav a.active {
-    background: #fff;
-    color: #1C6DD0;
+    background: var(--card-bg);
+    color: var(--primary-color);
     border-radius: 50%;
   }
 
@@ -1009,11 +1098,19 @@ body {
 
   .welcome-card {
     padding: 12px;
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
   }
 
   .welcome-card h2 {
     font-size: 1rem;
     text-align: center;
+  }
+
+  .year-badge {
+    font-size: 1rem;
+    padding: 4px 10px;
   }
 
   .committee-filter {
@@ -1024,5 +1121,14 @@ body {
   
   .custom-select {
     width: 100%;
+  }
+
+  .participation-table {
+    font-size: 0.8rem;
+  }
+
+  .participation-table th,
+  .participation-table td {
+    padding: 0.8rem 0.5rem;
   }
 }
