@@ -4,27 +4,36 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KatiBayan - SK Analytics</title>
-   <link rel="stylesheet" href="{{ asset('css/sk-analytics.css') }}">
+  <link rel="stylesheet" href="{{ asset('css/sk-analytics.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- Pass PHP data to JavaScript -->
+  <script>
+    window.demographicsData = <?php echo json_encode($demographicsData ?? []); ?>;
+    window.populationData = <?php echo json_encode($populationData ?? []); ?>;
+    window.ageGroupData = <?php echo json_encode($ageGroupData ?? []); ?>;
+    window.csrfToken = '{{ csrf_token() }}';
+  </script>
+</head>
 <body>
   <!-- Sidebar -->
-   <aside class="sidebar">
+  <aside class="sidebar">
     <button class="menu-toggle">Menu</button>
     <div class="divider"></div>
     <nav class="nav">
-      <a href="#">
+      <a href="{{ route('sk.dashboard') }}">
         <i class="fas fa-chart-pie"></i>
         <span class="label">Dashboard</span>
       </a>
 
-      <a href="#" class="active">
+      <a href="{{ route('sk.analytics') }}" class="active">
         <i class="fa-solid fa-chart-simple"></i>
         <span class="label">Analytics</span>
       </a>
 
-      <a href="#">
+      <a href="{{ route('youth-profilepage') }}">
         <i class="fas fa-users"></i>
         <span class="label">Youth Profile</span>
       </a>
@@ -36,32 +45,32 @@
           <i class="fas fa-chevron-down submenu-arrow"></i>
         </a>
         <div class="submenu">
-          <a href="#">Events List</a>
-          <a href="#">Youth Registration</a>
+          <a href="{{ route('sk-eventpage') }}">Events List</a>
+          <a href="{{ route('youth-program-registration') }}">Youth Registration</a>
         </div>
       </div>
 
-      <a href="#">
+      <a href="{{ route('sk-evaluation-feedback') }}">
         <i class="fas fa-comment-alt"></i>
         <span class="label">Feedbacks</span>
       </a>
 
-      <a href="#">
+      <a href="{{ route('sk-polls') }}">
         <i class="fas fa-vote-yea"></i>
         <span class="label">Polls</span>
       </a>
 
-      <a href="#">
+      <a href="{{ route('youth-suggestion') }}">
         <i class="fas fa-lightbulb"></i>
         <span class="label">Suggestion Box</span>
       </a>
       
-      <a href="#">
+      <a href="{{ route('reports') }}">
         <i class="fas fa-chart-bar"></i>
         <span class="label">Reports</span>
       </a>
 
-      <a href="#">
+      <a href="{{ route('sk-services-offer') }}">
         <i class="fas fa-hands-helping"></i>
         <span class="label">Service Offer</span>
       </a>
@@ -86,81 +95,79 @@
         <!-- Notifications -->
         <div class="notification-wrapper">
           <i class="fas fa-bell" id="notificationBell"></i>
-          <span class="notif-count" id="notificationCount">3</span>
+          <span class="notif-count" id="notificationCount">{{ $notifications->count() }}</span>
           <div class="notif-dropdown">
             <div class="notif-header">
               <strong>Notifications</strong> 
-              <span id="notificationsHeaderCount">3</span>
+              <span id="notificationsHeaderCount">{{ $notifications->count() }}</span>
               <button class="mark-all-read" id="markAllRead">Mark all as read</button>
             </div>
             <ul class="notif-list" id="notificationsList">
-              <li class="notification-item unread" data-id="1">
-                <div class="notif-icon">
-                  <i class="fas fa-star unread"></i>
-                </div>
-                <div class="notif-content">
-                  <strong>New Event Registration</strong>
-                  <p>5 minutes ago</p>
-                </div>
-                <span class="notif-dot"></span>
-              </li>
-              <li class="notification-item unread" data-id="2">
-                <div class="notif-icon">
-                  <i class="fas fa-star unread"></i>
-                </div>
-                <div class="notif-content">
-                  <strong>Youth Profile Updated</strong>
-                  <p>1 hour ago</p>
-                </div>
-                <span class="notif-dot"></span>
-              </li>
-              <li class="notification-item read" data-id="3">
-                <div class="notif-icon">
-                  <i class="fas fa-star read"></i>
-                </div>
-                <div class="notif-content">
-                  <strong>Monthly Report Ready</strong>
-                  <p>Yesterday</p>
-                </div>
-              </li>
+              @forelse($notifications as $notif)
+                <li class="notification-item {{ $notif->is_read ? 'read' : 'unread' }}" data-id="{{ $notif->id }}">
+                  <div class="notif-icon">
+                    <i class="fas fa-star {{ $notif->is_read ? 'read' : 'unread' }}"></i>
+                  </div>
+                  <div class="notif-content">
+                    <strong>{{ $notif->title ?? 'No Title' }}</strong>
+                    <p>{{ $notif->message ?? 'No message available' }}</p>
+                  </div>
+                  @if(!$notif->is_read)
+                    <span class="notif-dot"></span>
+                  @endif
+                </li>
+              @empty
+                <li class="notification-item read">
+                  <div class="notif-content">
+                    <p>No notifications available</p>
+                  </div>
+                </li>
+              @endforelse
             </ul>
           </div>
         </div>
 
         <!-- Profile Avatar -->
         <div class="profile-wrapper">
-          <div class="avatar" id="profileToggle" style="background: #3C87C4; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">SK</div>
+          <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+               alt="User" class="avatar" id="profileToggle">
           <div class="profile-dropdown">
             <div class="profile-header">
-              <div class="profile-avatar" style="background: #3C87C4; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">SK</div>
+              <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+                   alt="User" class="profile-avatar">
               <div class="profile-info">
-                <h4>SK Chair User</h4>
+                <h4>{{ $user->given_name }} {{ $user->middle_name }} {{ $user->last_name }} {{ $user->suffix }}</h4>
                 <div class="profile-badge">
-                  <span class="badge">SK Chairperson</span>
-                  <span class="badge">25 yrs old</span>
+                  <span class="badge">{{ $roleBadge }}</span>
+                  <span class="badge">{{ $age }} yrs old</span>
                 </div>
               </div>
             </div>
             <hr>
             <ul class="profile-menu">
               <li>
-                <a href="#">
+                <a href="{{ route('profilepage') }}">
                   <i class="fas fa-user"></i> Profile
                 </a>
               </li>
               <li><i class="fas fa-cog"></i> Manage Password</li>
               <li>
-                <a href="#">
+                <a href="{{ route('faqspage') }}">
                   <i class="fas fa-question-circle"></i> FAQs
                 </a>
               </li>
               <li><i class="fas fa-star"></i> Send Feedback to Katibayan</li>
               <li class="logout-item">
-                <a href="#" onclick="confirmLogout(event)">
+                <a href="loginpage" onclick="confirmLogout(event)">
                   <i class="fas fa-sign-out-alt"></i> Logout
                 </a>
               </li>
             </ul>
+            
+            <!-- Hidden Logout Form -->
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+              @csrf
+            </form>
           </div>
         </div>
       </div>
@@ -304,24 +311,25 @@
         </ul>
       </div>
 
+      <!-- Youth Population Card - Updated with Dynamic Data -->
       <div class="youth-population card">
         <h3 class="population-title">Youth Population</h3>
         <div class="population-chart">
           <canvas id="populationChart"></canvas>
           <div class="population-center">
-            <span class="population-total" id="populationTotal">650</span>
+            <span class="population-total" id="populationTotal">0</span>
             <p>Youth population in your barangay</p>
           </div>
         </div>
         <div class="population-legend">
           <div class="legend-item">
             <span>Female</span>
-            <span id="femaleCount">320</span>
+            <span id="femaleCount">0</span>
             <span class="dot female"></span>
           </div>
           <div class="legend-item">
             <span>Male</span>
-            <span id="maleCount">330</span>
+            <span id="maleCount">0</span>
             <span class="dot male"></span>
           </div>
         </div>
@@ -444,23 +452,21 @@
         }
       }
 
-      // 3. Age Group Chart
+      // 3. Age Group Chart - Using Dynamic Data
       const ageCtx = document.getElementById('ageChart');
       if (ageCtx) {
         try {
-          // Sample data
-          const ageData = {
-            child_count: 150,
-            core_count: 300,
-            adult_count: 120
-          };
+          const ageGroupData = window.ageGroupData || {};
+          const childCount = ageGroupData.child_count || 0;
+          const coreCount = ageGroupData.core_count || 0;
+          const adultCount = ageGroupData.adult_count || 0;
           
           new Chart(ageCtx, {
             type: 'pie',
             data: {
               labels: ["Child Youth 15-17", "Core Youth 18-24", "Adult Youth 25-30"],
               datasets: [{
-                data: [ageData.child_count, ageData.core_count, ageData.adult_count],
+                data: [childCount, coreCount, adultCount],
                 backgroundColor: ["#FFCA3A", "#3C87C6", "#8AC926"],
                 borderWidth: 2,
                 borderColor: "#fff"
@@ -482,32 +488,38 @@
         }
       }
 
-      // 4. Demographics Chart
+      // 4. Demographics Chart - Using Dynamic Data
       const demoCtx = document.getElementById('demographicsChart');
       if (demoCtx) {
         try {
-          // Sample data
-          const demographicsData = {
-            labels: ['In-School Youth', 'Out-of-School Youth', 'Working Youth', 'Person with disabilities', 'Indigenous'],
-            male_data: [120, 80, 150, 30, 25],
-            female_data: [110, 70, 130, 35, 20]
-          };
+          const demographicsData = window.demographicsData || {};
+          
+          const labels = demographicsData.labels || [
+            'In-School Youth',
+            'Out-of-School Youth', 
+            'Working Youth',
+            'Person with disabilities',
+            'Indigenous'
+          ];
+          
+          const maleData = demographicsData.male_data || [0, 0, 0, 0, 0];
+          const femaleData = demographicsData.female_data || [0, 0, 0, 0, 0];
 
           new Chart(demoCtx, {
             type: 'bar',
             data: {
-              labels: demographicsData.labels,
+              labels: labels,
               datasets: [
                 {
                   label: 'Male',
-                  data: demographicsData.male_data,
+                  data: maleData,
                   backgroundColor: '#3C87C6',
                   barPercentage: 0.6,
                   categoryPercentage: 0.8
                 },
                 {
                   label: 'Female',
-                  data: demographicsData.female_data,
+                  data: femaleData,
                   backgroundColor: '#E96BA8',
                   barPercentage: 0.6,
                   categoryPercentage: 0.8
@@ -544,23 +556,26 @@
         }
       }
 
-      // 5. Population Chart
+      // 5. Population Chart - Using Dynamic Data (Same as SK Dashboard)
       const populationCtx = document.getElementById('populationChart');
       if (populationCtx) {
         try {
-          // Sample data
-          const populationData = {
-            male_count: 330,
-            female_count: 320,
-            total_count: 650
-          };
+          const populationData = window.populationData || {};
+          const maleCount = populationData.male_count || 0;
+          const femaleCount = populationData.female_count || 0;
+          const totalCount = populationData.total_count || 0;
+          
+          // Update the population numbers in the HTML
+          document.getElementById('populationTotal').textContent = totalCount;
+          document.getElementById('maleCount').textContent = maleCount;
+          document.getElementById('femaleCount').textContent = femaleCount;
 
           new Chart(populationCtx, {
             type: 'doughnut',
             data: {
               labels: ['Female', 'Male'],
               datasets: [{
-                data: [populationData.female_count, populationData.male_count],
+                data: [femaleCount, maleCount],
                 backgroundColor: ['#f48fb1', '#114B8C'],
                 borderWidth: 0
               }]
@@ -653,14 +668,7 @@
       if (markAllReadBtn) {
           markAllReadBtn.addEventListener('click', (e) => {
               e.stopPropagation();
-              document.querySelectorAll('.notification-item').forEach(item => {
-                  item.classList.add('read');
-                  item.classList.remove('unread');
-                  const dot = item.querySelector('.notif-dot');
-                  if (dot) dot.remove();
-              });
-              document.getElementById('notificationCount').textContent = '0';
-              document.getElementById('notificationsHeaderCount').textContent = '0';
+              markAllAsRead();
           });
       }
 
@@ -668,17 +676,84 @@
       document.querySelectorAll('.notification-item').forEach(item => {
         item.addEventListener('click', (e) => {
           e.stopPropagation();
+          const notificationId = item.dataset.id;
+          
+          // Mark as read
+          markNotificationAsRead(notificationId);
+          
+          // Remove highlight immediately
           item.classList.add('read');
           item.classList.remove('unread');
           const dot = item.querySelector('.notif-dot');
           if (dot) dot.remove();
           
           // Update count
-          const unreadCount = document.querySelectorAll('.notification-item.unread').length;
-          document.getElementById('notificationCount').textContent = unreadCount;
-          document.getElementById('notificationsHeaderCount').textContent = unreadCount;
+          updateNotificationCount();
         });
       });
+    }
+
+    // Mark notification as read
+    async function markNotificationAsRead(notificationId) {
+      try {
+        const response = await fetch(`/notifications/${notificationId}/read`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': window.csrfToken
+          }
+        });
+        
+        const data = await response.json();
+        return data.success;
+      } catch (error) {
+        console.error('Error marking notification as read:', error);
+        return false;
+      }
+    }
+
+    // Mark all as read
+    async function markAllAsRead() {
+      try {
+        const response = await fetch('{{ route("notifications.read-all") }}', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': window.csrfToken
+          }
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+          // Update UI immediately
+          document.querySelectorAll('.notification-item').forEach(item => {
+            item.classList.add('read');
+            item.classList.remove('unread');
+            const dot = item.querySelector('.notif-dot');
+            if (dot) dot.remove();
+          });
+          
+          await updateNotificationCount();
+        }
+      } catch (error) {
+        console.error('Error marking all as read:', error);
+      }
+    }
+
+    // Update notification count
+    async function updateNotificationCount() {
+      try {
+        const response = await fetch('{{ route("notifications.count") }}');
+        const data = await response.json();
+        
+        const notifCount = document.getElementById('notificationCount');
+        const headerCount = document.getElementById('notificationsHeaderCount');
+        
+        if (notifCount) notifCount.textContent = data.count;
+        if (headerCount) headerCount.textContent = data.count;
+      } catch (error) {
+        console.error('Error updating notification count:', error);
+      }
     }
 
     function initializeTime() {
@@ -725,8 +800,7 @@
     function confirmLogout(event) {
       event.preventDefault();
       if (confirm('Are you sure you want to logout?')) {
-        // Perform logout action
-        alert('Logging out...');
+        document.getElementById('logout-form').submit();
       }
     }
   </script>

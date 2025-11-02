@@ -33,7 +33,7 @@
       <span class="label">Dashboard</span>
     </a>
 
-    <a href="#">
+    <a href="{{ route('sk.analytics') }}">
       <i data-lucide="chart-pie" class="lucide-icon"></i>
       <span class="label">Analytics</span>
     </a>

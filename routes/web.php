@@ -62,9 +62,7 @@ Route::get('/sk-role-view', function () {
     return view('/sk-role-view');
 });
 
-Route::get('/sk-analytics', function () {
-    return view('/sk-analytics');
-});
+
 
 // UPDATED: Certificate page route
 Route::get('/certificatepage', [EvaluationController::class, 'certificatePage'])->name('certificatepage');
@@ -84,11 +82,7 @@ Route::get('/eventpage', [EventController::class, 'userEvents'])->name('eventpag
 Route::get('/faqspage', function () {
     return view('faqspage'); 
 })->name('faqspage');
-
-Route::get('/sk-analytics', function () {
-    return view('sk-analytics');
-})->name('sk.analytics');
-
+Route::get('/sk-analytics', [SKAnalyticsController::class, 'index'])->name('sk.analytics');
 
 // FIXED: Suggestion Box route - use controller instead of direct view
 Route::get('/suggestionbox', [SuggestionController::class, 'index'])->name('suggestionbox');
