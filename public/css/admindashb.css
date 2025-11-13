@@ -568,6 +568,44 @@ h4 {
     color: #1b4f72;
 }
 
+/* ==============================
+    RATING DETAILS STYLES
+============================== */
+.rating-details {
+    text-align: center;
+    margin-top: 10px;
+}
+
+.average-rating {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 5px;
+}
+
+.rating-number {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1b4f72;
+}
+
+.average-rating .stars {
+    display: flex;
+    gap: 2px;
+}
+
+.average-rating .stars i {
+    font-size: 16px;
+    color: #FFD700;
+}
+
+.stat-card-rating p {
+    font-size: 12px;
+    color: #666;
+    margin: 0;
+}
+
 /* Calendar Card Specifics */
 .stat-card-calendar {
     grid-column: span 1;
@@ -695,22 +733,25 @@ h4 {
     
 }
 
-   .rating-stars {
-      display: inline-flex;
-      align-items: center;
-      gap: 3px;
-    }
-    .rating-stars i {
-      color: #FFD700; 
-      font-size: 14px;
-    }
-    .rating-stars .rating-score {
-      margin-left: 6px;
-      font-weight: 600;
-      color: #01214A;
-      font-size: 13px;
-    }
+.rating-stars {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+}
+.rating-stars i {
+    color: #FFD700; 
+    font-size: 14px;
+}
+.rating-stars .rating-score {
+    margin-left: 6px;
+    font-weight: 600;
+    color: #01214A;
+    font-size: 13px;
+}
 
+/* ==============================
+    USER FEEDBACK COMMENTS STYLES
+============================== */
 .user-comments {
     width: 100%;
     max-height: 250px;
@@ -750,55 +791,153 @@ h4 {
     align-items: flex-start;
     background: #ffffff;
     border-radius: 10px;
-    padding: 10px;
-    box-shadow: 4px 4px 12px rgba(189, 189, 189, 0.8);
+    padding: 12px;
+    box-shadow: 2px 2px 8px rgba(189, 189, 189, 0.4);
+    border-left: 4px solid #3C87C4;
     width: 100%;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.comment:hover {
+    transform: translateY(-2px);
+    box-shadow: 4px 4px 12px rgba(189, 189, 189, 0.6);
 }
 
 .comment .user-img {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    margin-right: 10px;
+    margin-right: 12px;
     object-fit: cover;
+    border: 2px solid #e0e0e0;
+    flex-shrink: 0;
 }
 
 .comment-details {
     flex-grow: 1;
+    min-width: 0; /* Prevent overflow */
 }
 
 .comment-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 5px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+    gap: 8px;
 }
 
 .user-id {
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 12px;
+    font-weight: 700;
     color: #114B8C;
+    background: #f0f8ff;
+    padding: 4px 8px;
+    border-radius: 12px;
+    border: 1px solid #3C87C4;
 }
 
-.rating-text {
-    font-size: 13px;
+.rating-stars {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.rating-stars i {
+    font-size: 12px;
+    color: #FFD700;
+}
+
+.rating-stars .rating-score {
+    margin-left: 6px;
     font-weight: 600;
-    color: #114B8C;
+    color: #01214A;
+    font-size: 12px;
+}
+
+.no-rating {
+    font-size: 11px;
+    color: #9ca3af;
+    font-style: italic;
 }
 
 .comment-text {
     font-size: 13px;
-    color: #444;
+    line-height: 1.4;
+    color: #374151;
     margin-bottom: 8px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .comment-footer {
     display: flex;
-    gap: 8px;
+    align-items: center;
+    gap: 12px;
     font-size: 11px;
-    color: #888;
+    color: #9ca3af;
+    flex-wrap: wrap;
 }
-/* FIX: Manage Account Card spacing */
+
+.feedback-type {
+    padding: 3px 8px;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    border: 1px solid;
+}
+
+.feedback-type.suggestion {
+    background: #e0f2fe;
+    color: #0369a1;
+    border-color: #bae6fd;
+}
+
+.feedback-type.bug {
+    background: #fee2e2;
+    color: #dc2626;
+    border-color: #fecaca;
+}
+
+.feedback-type.appreciation {
+    background: #f0fdf4;
+    color: #16a34a;
+    border-color: #bbf7d0;
+}
+
+.feedback-type.others {
+    background: #f3f4f6;
+    color: #6b7280;
+    border-color: #e5e7eb;
+}
+
+/* Empty state styling */
+.user-comments .comment:only-child .comment-text {
+    color: #9ca3af;
+    font-style: italic;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .user-comments .comment-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+    
+    .user-comments .rating-stars {
+        align-self: flex-start;
+    }
+    
+    .comment-footer {
+        gap: 8px;
+    }
+}
+
+/* ==============================
+    MANAGE ACCOUNT CARD STYLES
+============================== */
 .manage-card .header {
     display: flex;
     justify-content: space-between;
@@ -808,6 +947,9 @@ h4 {
 
 .manage-card h4 {
     margin-bottom: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .manage-card .notif-count {
@@ -815,7 +957,17 @@ h4 {
     margin-left: 8px;
     top: auto;
     right: auto;
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    background: #FFB703;
+    color: #fff;
+    font-size: 11px;
+    font-weight: bold;
+    border-radius: 50%;
+    padding: 0;
 }
 
 .manage-card .view-all {
@@ -844,7 +996,13 @@ h4 {
     background: #ffffff;
     border-radius: 8px;
     border-left: 6px solid #FFB703;
-    box-shadow: 4px 4px 12px rgba(189, 189, 189, 0.8);
+    box-shadow: 2px 2px 8px rgba(189, 189, 189, 0.4);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.account:hover {
+    transform: translateY(-2px);
+    box-shadow: 4px 4px 12px rgba(189, 189, 189, 0.6);
 }
 
 .account-info strong {
@@ -867,4 +1025,85 @@ h4 {
     padding: 4px 8px;
     border-radius: 5px;
     white-space: nowrap;
+    background: #fff9e6;
+    border: 1px solid #FFB703;
+}
+
+/* ==============================
+    RESPONSIVE DESIGN
+============================== */
+@media (max-width: 1200px) {
+    .dashboard-widgets {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .stat-card-calendar {
+        grid-column: span 2;
+    }
+    
+    .dashboard-secondary-widgets {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 768px) {
+    .main {
+        margin-left: 0;
+        padding: 5rem 1rem 1rem;
+    }
+    
+    .sidebar {
+        transform: translateX(-100%);
+    }
+    
+    .sidebar.open {
+        transform: translateX(0);
+    }
+    
+    .dashboard-widgets {
+        grid-template-columns: 1fr;
+    }
+    
+    .stat-card-calendar {
+        grid-column: span 1;
+    }
+    
+    .topbar {
+        padding: 0.5rem 1rem;
+    }
+    
+    .topbar-right {
+        gap: 1rem;
+    }
+    
+    .topbar-right .time {
+        font-size: 13px;
+        padding: 0.7rem 0.8rem;
+    }
+    
+    /* Responsive adjustments for rating card */
+    .average-rating {
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .rating-details {
+        margin-top: 5px;
+    }
+}
+
+/* Animation for new comments */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.comment {
+    animation: fadeInUp 0.3s ease-out;
 }

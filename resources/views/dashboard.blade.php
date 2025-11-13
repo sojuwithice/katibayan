@@ -1,7 +1,3 @@
-@php
-    // No need for complex logic here anymore since it's handled in the controller
-@endphp
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -74,6 +70,11 @@
 
       <div class="topbar-right">
         <div class="time">MON 10:00 <span>AM</span></div>
+
+ <!-- Theme Toggle Button - ADDED HERE -->
+        <button class="theme-toggle" id="themeToggle">
+          <i data-lucide="moon"></i>
+        </button>
 
     <!-- Notifications -->
 <div class="notification-wrapper">
@@ -185,7 +186,11 @@
                   <i class="fas fa-question-circle"></i> FAQs
                 </a>
               </li>
-              <li><i class="fas fa-star"></i> Send Feedback to Katibayan</li>
+              <li class="feedback-item">
+                <a href="#" id="feedbackTrigger">
+                  <i class="fas fa-star"></i> Send Feedback to Katibayan
+                </a>
+              </li>
               <li class="logout-item">
                 <a href="loginpage" onclick="confirmLogout(event)">
                   <i class="fas fa-sign-out-alt"></i> Logout
@@ -202,6 +207,7 @@
       </div>
     </header>
 
+    <!-- Feedback Modal -->
     <div id="feedbackModal" class="modal-overlay">
       <div class="modal-content">
         <span class="close-btn" id="closeModal">&times;</span>
@@ -307,34 +313,78 @@
               </p>
             </div>
 
-            <!-- Slide 2 -->
-            <div class="slide event">
-              <div class="date">
-                <span class="month">AUG</span>
-                <span class="day">22</span>
-              </div>
-              <div class="event-info">
-                <p><strong>UPCOMING!</strong> Anti-Rabies Vaccination</p>
-                <small>Please, Don't Forget to Participate</small>
-                <span class="desc">KatiBayan provides a platform for the youth to stay updated on SK events and 
-                  programs while fostering active participation in community development</span>
-              </div>
-              <div class="event-banner" style="background-image: url('images/vaccine.jpg');"></div>
-            </div>
+            <!-- Slide 2: Upcoming Event -->
+            @php
+                $upcomingEvent = $upcomingEvents->first();
+                $upcomingProgram = $upcomingPrograms->first();
+            @endphp
 
-            <!-- Slide 3 -->
+            @if($upcomingEvent)
             <div class="slide event">
               <div class="date">
-                <span class="month">SEP</span>
-                <span class="day">10</span>
+                <span class="month">{{ $upcomingEvent->event_date->format('M') }}</span>
+                <span class="day">{{ $upcomingEvent->event_date->format('d') }}</span>
               </div>
               <div class="event-info">
-                <p><strong>LEADERSHIP TRAINING</strong></p>
-                <small>Boost your skills as a youth leader</small>
-                <span class="desc">Join our 2-day leadership bootcamp</span>
+                <p><strong>UPCOMING EVENT!</strong> {{ $upcomingEvent->title }}</p>
+                <small>Don't forget to participate</small>
+                <span class="desc">{{ $upcomingEvent->description ? Str::limit($upcomingEvent->description, 150) : 'Join us for this exciting event in our community.' }}</span>
               </div>
-              <div class="event-banner" style="background-image: url('images/team.jpg');"></div>
+              @if($upcomingEvent->image)
+              <div class="event-banner" style="background-image: url('{{ asset('storage/' . $upcomingEvent->image) }}');"></div>
+              @else
+              <div class="event-banner" style="background-image: url('{{ asset('images/event-default.jpg') }}');"></div>
+              @endif
             </div>
+            @else
+            <!-- If no upcoming event, show default slide -->
+            <div class="slide event">
+              <div class="date">
+                <span class="month">COMING</span>
+                <span class="day">SOON</span>
+              </div>
+              <div class="event-info">
+                <p><strong>STAY TUNED!</strong> More Events Coming Soon</p>
+                <small>We're preparing exciting activities for you</small>
+                <span class="desc">Check back regularly for new events and programs in your barangay.</span>
+              </div>
+              <div class="event-banner" style="background-image: url('{{ asset('images/event-coming-soon.jpg') }}');"></div>
+            </div>
+            @endif
+
+            <!-- Slide 3: Upcoming Program -->
+            @if($upcomingProgram)
+            <div class="slide event">
+              <div class="date">
+                <span class="month">{{ $upcomingProgram->event_date->format('M') }}</span>
+                <span class="day">{{ $upcomingProgram->event_date->format('d') }}</span>
+              </div>
+              <div class="event-info">
+                <p><strong>UPCOMING PROGRAM!</strong> {{ $upcomingProgram->title }}</p>
+                <small>Register now to secure your spot</small>
+                <span class="desc">{{ $upcomingProgram->description ? Str::limit($upcomingProgram->description, 150) : 'Join this program to learn new skills and connect with the community.' }}</span>
+              </div>
+              @if($upcomingProgram->display_image)
+              <div class="event-banner" style="background-image: url('{{ asset('storage/' . $upcomingProgram->display_image) }}');"></div>
+              @else
+              <div class="event-banner" style="background-image: url('{{ asset('images/program-default.jpg') }}');"></div>
+              @endif
+            </div>
+            @else
+            <!-- If no upcoming program, show default slide -->
+            <div class="slide event">
+              <div class="date">
+                <span class="month">NEW</span>
+                <span class="day">PROG</span>
+              </div>
+              <div class="event-info">
+                <p><strong>PROGRAMS COMING SOON!</strong> Enhance Your Skills</p>
+                <small>We're developing new programs for you</small>
+                <span class="desc">Exciting programs are being prepared to help you grow and develop new skills.</span>
+              </div>
+              <div class="event-banner" style="background-image: url('{{ asset('images/program-coming-soon.jpg') }}');"></div>
+            </div>
+            @endif
           </div>
           <!-- Pagination dots -->
           <div class="dots"></div>
@@ -543,60 +593,44 @@
     </div>
   </div>
 
-  <!-- Evaluation Modal -->
-  <div id="evaluationModal" class="modal" style="display: none;">
-    <div class="modal-content">
-      <span class="close">&times;</span>
-      <div class="modal-header">
-        <h2>Evaluate Activity</h2>
-        <span id="modalActivityName" class="activity-name"></span>
-      </div>
-      <div class="modal-body">
-        <form id="evaluationForm">
-          @csrf
-          <input type="hidden" id="evaluationActivityId" name="activity_id">
-          <input type="hidden" id="evaluationActivityType" name="activity_type">
-          
-          <div class="rating-section">
-            <label>Overall Rating:</label>
-            <div class="star-rating">
-              <span class="star" data-rating="1">★</span>
-              <span class="star" data-rating="2">★</span>
-              <span class="star" data-rating="3">★</span>
-              <span class="star" data-rating="4">★</span>
-              <span class="star" data-rating="5">★</span>
-            </div>
-            <input type="hidden" id="rating" name="rating" required>
-          </div>
-
-          <div class="form-group">
-            <label for="comments">Comments/Suggestions:</label>
-            <textarea id="comments" name="comments" rows="4" placeholder="Share your thoughts about the activity..."></textarea>
-          </div>
-
-          <div class="form-group">
-            <label>Would you recommend this activity to others?</label>
-            <div class="recommendation">
-              <label>
-                <input type="radio" name="recommend" value="yes" required> Yes
-              </label>
-              <label>
-                <input type="radio" name="recommend" value="no" required> No
-              </label>
-            </div>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="submit-evaluation-btn">Submit Evaluation</button>
-        <button class="close-btn">Close</button>
-      </div>
-    </div>
-  </div>
-
   <script>
   // CSRF Token for AJAX requests
   window.csrfToken = '{{ csrf_token() }}';
+
+  // === DARK/LIGHT MODE TOGGLE ===
+const body = document.body;
+const themeToggle = document.getElementById('themeToggle');
+
+// Function to apply theme
+function applyTheme(isDark) {
+  body.classList.toggle('dark-mode', isDark);
+  // Show sun when dark mode, moon when light mode
+  const icon = isDark ? 'sun' : 'moon';
+
+  if (themeToggle) {
+    themeToggle.innerHTML = `<i data-lucide="${icon}"></i>`;
+  }
+
+  // Re-initialize Lucide icons
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+  }
+  
+  localStorage.setItem('theme', isDark ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+}
+
+// Load saved theme
+const savedTheme = localStorage.getItem('theme') === 'dark';
+applyTheme(savedTheme);
+
+// Add event listener to theme toggle
+if (themeToggle) {
+  themeToggle.addEventListener('click', () => {
+    const isDark = !body.classList.contains('dark-mode');
+    applyTheme(isDark);
+  });
+}
 
   /**
    * Updates the time in the topbar.
@@ -658,7 +692,7 @@
    * Initializes topbar dropdowns (notifications, profile)
    * and handles global clicks to close them.
    */
-  function initTopbar(openEvaluationModal) { // Tumatanggap ng function
+  function initTopbar(openEvaluationModal) {
     // --- Time ---
     updateTime();
     setInterval(updateTime, 60000);
@@ -684,15 +718,15 @@
       // Handle evaluation notification clicks for both events and programs
       notifWrapper.querySelectorAll('.notif-link[data-event-id], .notif-link[data-program-id]').forEach(notification => {
         notification.addEventListener('click', function(e) {
-          e.preventDefault(); // Pigilan 'yung default link behavior
+          e.preventDefault();
           const eventId = this.getAttribute('data-event-id');
           const programId = this.getAttribute('data-program-id');
 
           if (openEvaluationModal) {
             if (eventId) {
-              openEvaluationModal(eventId, 'event'); // Specify activity type
+              openEvaluationModal(eventId, 'event');
             } else if (programId) {
-              openEvaluationModal(programId, 'program'); // Specify activity type
+              openEvaluationModal(programId, 'program');
             }
           }
           notifWrapper.classList.remove('active');
@@ -712,27 +746,22 @@
     }
 
     // --- Global Click Listener for Topbar/Sidebar ---
-      document.addEventListener("click", (e) => {
-        const sidebar = document.querySelector('.sidebar');
-        const menuToggle = document.querySelector('.menu-toggle');
-        
-        // (FIX) Only run this sidebar logic on DESKTOP. 
-        // Mobile has its own listener in the other script tag.
-        if (window.innerWidth > 768 && sidebar && !sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
-          sidebar.classList.remove('open');
-          document.querySelector('.profile-item')?.classList.remove('open');
-        }
+    document.addEventListener("click", (e) => {
+      const sidebar = document.querySelector('.sidebar');
+      const menuToggle = document.querySelector('.menu-toggle');
+      
+      if (window.innerWidth > 768 && sidebar && !sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+        sidebar.classList.remove('open');
+        document.querySelector('.profile-item')?.classList.remove('open');
+      }
 
-        // Ito ay para sa profile at notif dropdowns (OK ito)
-        if (profileWrapper && !profileWrapper.contains(e.target)) {
-          profileWrapper.classList.remove('active');
-        }
-        if (notifWrapper && !notifWrapper.contains(e.target)) {
-          notifWrapper.classList.remove('active');
-        }
-      });
-
-
+      if (profileWrapper && !profileWrapper.contains(e.target)) {
+        profileWrapper.classList.remove('active');
+      }
+      if (notifWrapper && !notifWrapper.contains(e.target)) {
+        notifWrapper.classList.remove('active');
+      }
+    });
   }
 
   /**
@@ -751,7 +780,6 @@
 
     const weekdays = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
     const holidays = [
-      // (Assuming 2024 for example, update this as needed)
       "2024-01-01", "2024-04-09", "2024-04-10", "2024-05-01",
       "2024-06-12", "2024-08-26", "2024-11-30", "2024-12-25",
       "2024-12-30", "2024-12-31"
@@ -848,9 +876,8 @@
     });
 
     function updateSlide() {
-      // (FIX) Recalculate width on update, important for resize
       const containerWidth = welcomeSection.getBoundingClientRect().width;
-      if (containerWidth === 0) return; // Avoid error if hidden
+      if (containerWidth === 0) return;
       slideTrack.style.transform = `translateX(-${currentIndex * containerWidth}px)`;
 
       dots.forEach(dot => dot.classList.remove("active"));
@@ -885,24 +912,19 @@
   }
 
   /**
-   * (FIXED STRUCTURE)
    * Initializes the Activity Evaluation Modal.
-   * Returns the function to open the modal.
    */
   function initEvaluationModal() {
     const evalModal = document.getElementById('evaluationModal');
 
-    // (FIX) Define the opener function here
     function openEvaluationModal(activityId, activityType = 'event') {
       if (!evalModal) {
         console.error("Evaluation modal not found in DOM.");
         return;
       }
 
-      // Determine the API endpoint based on activity type
       const apiUrl = activityType === 'event' ? `/events/${activityId}` : `/programs/${activityId}`;
 
-      // Fetch activity details
       fetch(apiUrl)
         .then(response => {
           if (!response.ok) throw new Error('Activity not found or server error');
@@ -920,21 +942,18 @@
         });
     }
 
-    // If modal doesn't exist, return a dummy function to avoid errors
     if (!evalModal) {
       return function() {
         console.warn("Tried to open evaluation modal, but it was not found.");
       };
     }
 
-    // --- Modal exists, proceed with setup ---
     const evalCloseIcon = evalModal.querySelector('.close');
     const evalCloseBtn = evalModal.querySelector('.close-btn');
     const evalSubmitBtn = evalModal.querySelector('.submit-evaluation-btn');
     const evalStars = evalModal.querySelectorAll('.star');
     const evalForm = document.getElementById('evaluationForm');
 
-    // Star rating logic
     evalStars.forEach(star => {
       star.addEventListener('click', function() {
         const rating = this.getAttribute('data-rating');
@@ -946,24 +965,20 @@
       });
     });
 
-    // Close modal function
     const closeModal = () => {
       evalModal.style.display = 'none';
-      // Reset form
       evalForm.reset();
       evalStars.forEach(s => s.classList.remove('active'));
     };
 
     evalCloseIcon?.addEventListener('click', closeModal);
     evalCloseBtn?.addEventListener('click', closeModal);
-    // Close on outside click
     evalModal.addEventListener('click', (e) => {
       if (e.target === evalModal) {
         closeModal();
       }
     });
 
-    // Submit evaluation logic
     evalSubmitBtn?.addEventListener('click', function() {
       const formData = new FormData(evalForm);
       const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
@@ -973,7 +988,6 @@
         return;
       }
 
-      // Determine which field to set based on activity type
       const activityType = formData.get('activity_type');
       if (activityType === 'event') {
         formData.set('event_id', formData.get('activity_id'));
@@ -987,7 +1001,7 @@
             'X-CSRF-TOKEN': csrfToken,
             'Accept': 'application/json'
           },
-          body: formData // Send as FormData
+          body: formData
         })
         .then(response => {
           if (!response.ok) {
@@ -1001,9 +1015,8 @@
           if (data.success) {
             alert('Evaluation submitted successfully!');
             closeModal();
-            location.reload(); // Reload to update progress/notifications
+            location.reload();
           } else {
-            // Handle validation errors or other specific errors
             let errorMsg = data.message || 'Submission failed.';
             if (data.errors) {
               errorMsg += '\n' + Object.values(data.errors).join('\n');
@@ -1017,7 +1030,6 @@
         });
     });
 
-    // (FIX) Return the opener function
     return openEvaluationModal;
   }
 
@@ -1025,8 +1037,9 @@
    * Initializes the "Send Feedback" Modal.
    */
   function initFeedbackModal() {
-    const feedbackTriggerBtn = document.querySelector('.profile-menu li:nth-child(4) a'); // "Send Feedback" item
+    const feedbackTriggerBtn = document.getElementById('feedbackTrigger');
     const feedbackModal = document.getElementById('feedbackModal');
+    
     if (!feedbackTriggerBtn || !feedbackModal) {
       console.warn("Feedback modal or trigger not found.");
       return;
@@ -1035,10 +1048,8 @@
     const feedbackCloseBtn = document.getElementById('closeModal');
     const feedbackStars = document.querySelectorAll('#starRating i');
     const feedbackRatingInput = document.getElementById('ratingInput');
-
     const feedbackForm = document.getElementById('feedbackForm');
     const submitBtn = feedbackForm?.querySelector('.submit-btn');
-
     const successModal = document.getElementById('successModal');
     const closeSuccessBtn = document.getElementById('closeSuccessModal');
 
@@ -1051,18 +1062,11 @@
       const options = customSelect.querySelectorAll('.custom-option');
       const realSelect = document.getElementById('type');
 
-      // Toggle dropdown
-      trigger?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        customSelect.classList.toggle('open');
-      });
-      // Toggle dropdown
       trigger?.addEventListener('click', (e) => {
         e.stopPropagation();
         customSelect.classList.toggle('open');
       });
 
-      // Handle option click
       options?.forEach(option => {
         option.addEventListener('click', () => {
           const value = option.getAttribute('data-value');
@@ -1076,7 +1080,6 @@
         });
       });
 
-      // Close custom select on outside click
       document.addEventListener('click', () => {
         customSelect.classList.remove('open');
       });
@@ -1084,7 +1087,7 @@
 
     // Open modal
     feedbackTriggerBtn.addEventListener('click', (e) => {
-      e.preventDefault(); // Prevent link from navigating
+      e.preventDefault();
       feedbackModal.style.display = 'flex';
     });
 
@@ -1141,13 +1144,12 @@
             },
             body: formData
           })
-          .then(response => response.json()) // Assume it always returns JSON
+          .then(response => response.json())
           .then(data => {
             if (data.success) {
               feedbackModal.style.display = 'none';
               if (successModal) successModal.style.display = 'flex';
             } else {
-              // Handle validation errors or other errors
               let errorMsg = data.message || 'Submission failed.';
               if (data.errors) {
                 errorMsg += '\n' + Object.values(data.errors).join('\n');
@@ -1160,7 +1162,6 @@
             alert(error.message || 'An error occurred. Please try again.');
           })
           .finally(() => {
-            // Reset form in finally block
             if (submitBtn) {
               submitBtn.disabled = false;
               submitBtn.textContent = submitButtonText;
@@ -1173,7 +1174,6 @@
             });
             if (feedbackRatingInput) feedbackRatingInput.value = '';
 
-            // Reset custom select
             const selectedText = document.getElementById('selectedFeedbackType');
             const trigger = customSelect?.querySelector('.custom-select-trigger');
             const realSelect = document.getElementById('type');
@@ -1197,37 +1197,31 @@
       return;
     }
 
-    // Select all notifications with a data-id attribute
     document.querySelectorAll('.notif-link[data-id]').forEach(link => {
       link.addEventListener('click', function(e) {
         e.preventDefault();
         const notifId = this.dataset.id;
         const destinationUrl = this.href;
 
-        // Remove notification visually
         const notifItem = this.closest('li');
         notifItem?.remove();
 
-        // Update notification count
         const countEl = document.querySelector('.notif-count');
         if (countEl) {
           let currentCount = parseInt(countEl.textContent) || 0;
           countEl.textContent = Math.max(0, currentCount - 1);
           if (parseInt(countEl.textContent) === 0) {
             countEl.remove();
-            // Optional: remove red dot on bell icon
             const bellDot = document.querySelector('.notif-dot');
             if (bellDot) bellDot.remove();
           }
         }
 
-        // If no notifications left, show "No new notifications"
         const notifList = document.querySelector('.notif-list');
         if (notifList && notifList.children.length === 0) {
           notifList.innerHTML = `<li class="no-notifications"><p>No new notifications</p></li>`;
         }
 
-        // Send AJAX request to mark as read
         fetch(`/notifications/${notifId}/read`, {
             method: 'POST',
             headers: {
@@ -1255,29 +1249,22 @@
 
   /**
    * Initializes Certificate Claim
-   * (BINAGO) - Inalis na ang modal. 
-   * Kapag cliniclick ang card, mag-mark as read at diretso redirect.
    */
   function initCertificateModal() {
-
     const announcementCards = document.querySelectorAll('.certificate-schedule-announcement');
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     const redirectUrl = '{{ route('certificatepage') }}';
 
     announcementCards.forEach(card => {
       card.addEventListener('click', (event) => {
-        event.preventDefault(); // Para mapigilan ang default behavior
-
-        // Kunin 'yung ID para sa "mark as read"
+        event.preventDefault();
         const annId = card.dataset.announcementId;
 
         if (!annId) {
-          // Kung walang ID, i-redirect na lang
           window.location.href = redirectUrl;
           return;
         }
 
-        // 1. Mark as read (POST request)
         fetch(`/notifications/mark-as-read/${annId}`, {
             method: 'POST',
             headers: {
@@ -1290,10 +1277,8 @@
           })
           .catch(error => {
             console.error('Error marking notification as read:', error);
-            // Kahit mag-error sa pag-mark as read, i-redirect pa rin
           })
           .finally(() => {
-            // 2. Redirect
             window.location.href = redirectUrl;
           });
       });
@@ -1302,16 +1287,13 @@
 
   /**
    * Handles logout confirmation.
-   * This is called directly from the HTML's onclick attribute.
    */
   function confirmLogout(event) {
-    event.preventDefault(); // Prevent the <a> tag's default action
+    event.preventDefault();
     if (confirm('Are you sure you want to logout?')) {
       document.getElementById('logout-form').submit();
     }
   }
-
-
 
   // ==========================================================
   //  APP INITIALIZATION (MAIN)
@@ -1322,42 +1304,36 @@
 
     // Initialize all components
     initSidebar();
-
-    // (FIX) Kunin 'yung function na nireturn ng initEvaluationModal()
     const openEvalModalFn = initEvaluationModal();
-
-    // Ipasa 'yung function sa initTopbar()
     initTopbar(openEvalModalFn);
-
-    initCalendar(); // <-- Ito 'yung para sa calendar
+    initCalendar();
     initWelcomeSlider();
     initFeedbackModal();
     initMarkAsRead();
     initCertificateModal();
-
   });
 </script>
 
 <script>
   const mobileBtn = document.getElementById('mobileMenuBtn');
   const sidebar = document.querySelector('.sidebar');
-  const mainContent = document.querySelector('.main'); // (BAGO)
+  const mainContent = document.querySelector('.main');
 
   mobileBtn?.addEventListener('click', (e) => {
-    e.stopPropagation(); // (BAGO)
+    e.stopPropagation();
     sidebar.classList.toggle('open');
-    document.body.classList.toggle('mobile-sidebar-active'); // (BAGO)
+    document.body.classList.toggle('mobile-sidebar-active');
   });
 
   // Close sidebar when clicking outside (mobile only)
   document.addEventListener('click', (e) => {
     if (window.innerWidth <= 768 &&
-      sidebar.classList.contains('open') && // (BAGO) Check kung open
+      sidebar.classList.contains('open') &&
       !sidebar.contains(e.target) &&
       !mobileBtn.contains(e.target)) {
       
       sidebar.classList.remove('open');
-      document.body.classList.remove('mobile-sidebar-active'); // (BAGO)
+      document.body.classList.remove('mobile-sidebar-active');
     }
   });
 </script>

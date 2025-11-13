@@ -1,3 +1,54 @@
+/* === Global Theme Variables === */
+:root {
+  --bg-color: #e7e7e7;
+  --text-color: #01214A;
+  --card-bg: #fff;
+  --sidebar-bg: #3C87C4;
+  --topbar-bg: #e7e7e7;
+  --primary-color: #3C87C4;
+  --accent-color: #FFB703;
+  --border-color: #fff;
+}
+
+[data-theme="dark"] {
+  --bg-color: #121212;
+  --text-color: #eee;
+  --card-bg: #1e1e1e;
+  --sidebar-bg: #1a1a1a;
+  --topbar-bg: #2a2a2a;
+  --primary-color: #3C87C4;
+  --accent-color: #FFB703;
+  --border-color: #333;
+}
+
+/* === Theme Toggle Button === */
+.theme-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  color: var(--primary-color);
+}
+
+.theme-toggle:hover {
+  background: rgba(60, 135, 196, 0.1);
+  transform: scale(1.1);
+}
+
+.theme-toggle svg,
+.theme-toggle i {
+  width: 24px;
+  height: 24px;
+  stroke-width: 2.4;
+  color: var(--primary-color);
+  transition: color 0.3s ease;
+}
+
 * {
   margin: 0; 
   padding: 0; 
@@ -6,8 +57,9 @@
 }
 
 body {
-  background: #e7e7e7;
-  color: #01214A;
+  background: var(--bg-color);
+  color: var(--text-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .dashboard {
@@ -17,12 +69,12 @@ body {
 
 /* Sidebar */
 .sidebar {
-  background: #3C87C4;
+  background: var(--sidebar-bg);
   color: #fff;
   width: 90px;
   min-height: 400px; 
   border-radius: 25px; 
-  border: .2rem solid #fff;
+  border: .2rem solid var(--border-color);
   padding: 1rem 0;
   display: flex;
   flex-direction: column;
@@ -37,7 +89,7 @@ body {
 
 .sidebar .menu-toggle {
   align-self: center;
-  margin-bottom: 0.rem; 
+  margin-bottom: 0.5rem; 
   background: transparent;
   color: #fff;
   font-weight: bold;
@@ -99,7 +151,7 @@ body {
 .sidebar nav a:hover {
   background: rgba(255, 255, 255, 0.2); 
   border-radius: 8px;
-  color: #FFB703; 
+  color: var(--accent-color); 
   transition: all 0.3s ease;
 }
 
@@ -108,7 +160,6 @@ body {
   padding-left: 1.2rem;   
   transform: translateX(3px);
 }
-
 
 .sidebar nav a.active {
   background: #fff;
@@ -143,21 +194,17 @@ body {
 
 /* hover effect */
 .submenu a:hover {
-  color: #FFB703;
+  color: var(--accent-color);
   background: rgba(255, 255, 255, 0.2);
 }
-
 
 .sidebar.open .nav-item.open .submenu {
   display: flex;
 }
 
-
-
 .sidebar:not(.open) .submenu {
   display: none !important;
 }
-
 
 .sidebar .submenu-arrow {
   display: none;
@@ -165,16 +212,13 @@ body {
   transition: transform 0.3s ease;
 }
 
-
 .sidebar.open .submenu-arrow {
   display: inline-block;
 }
 
-
 .sidebar.open .nav-item.open .submenu-arrow {
   transform: rotate(180deg);
 }
-
 
 .menu-toggle {
   background: #fff;
@@ -196,11 +240,8 @@ body {
   transition: margin-left 0.3s ease;
   display: flex;
   flex-direction: column;
-  
   gap: 0;
 }
-
-
 
 /* Topbar */
 .topbar {
@@ -209,19 +250,16 @@ body {
   left: 0;
   right: 0;
   height: 70px;
-  background: #e7e7e7;
+  background: var(--topbar-bg);
   display: flex;
   align-items: center;
   gap: 1rem;
   padding: 0.5rem 2rem;
   justify-content: space-between;
   z-index: 2000;       
-  
 }         
 
-
 /* Logo */
-/* === Logo Section === */
 .logo {
   display: flex;
   align-items: center;
@@ -242,13 +280,13 @@ body {
 .logo-text .title {
   font-size: 18px;
   font-weight: 700;
-  color: #01214A;
+  color: var(--text-color);
 }
 
 .logo-text .subtitle {
   font-size: 13px;
   font-weight: 500;
-  color: #3C87C4;
+  color: var(--primary-color);
 }
 
 .topbar-right {
@@ -258,34 +296,32 @@ body {
   margin-left: auto;   
 }
 
-
 /* Time Button */
 .topbar-right .time {
   display: inline-flex;          
   align-items: center;
   justify-content: center;
   gap: .2rem;
-  background: #fff;
+  background: var(--card-bg);
   border: none;
   box-shadow: 0 2px 6px rgba(0,0,0,0.20);
   border-radius: 50px;
   padding: .9rem 1rem;         
   font-weight: bold;
   font-size: 15px;
-  color: #3C87C4;
+  color: var(--primary-color);
   white-space: nowrap;           
   max-width: 100%;               
 }
 .topbar-right .time span {
-  color: #FFB703;
+  color: var(--accent-color);
   font-weight: bold;
 }
-
 
 /* Bell + avatar */
 .topbar-right i {
   font-size: 25px;
-  color: #3C87C4;
+  color: var(--primary-color);
 }
 
 .profile-wrapper {
@@ -297,7 +333,7 @@ body {
   width: 45px;
   height: 45px;
   border-radius: 50%;
-  border: 3px solid #3C87C4;
+  border: 3px solid var(--primary-color);
   cursor: pointer;
 }
 
@@ -306,7 +342,7 @@ body {
   top: 60px;
   right: 0;
   width: 280px;
-  background: #fff;
+  background: var(--card-bg);
   border-radius: 12px;
   box-shadow: 0 4px 15px rgba(0,0,0,0.1);
   overflow: hidden;
@@ -318,7 +354,6 @@ body {
   display: block;
 }
 
-
 .profile-header {
   display: flex;
   align-items: center;
@@ -329,29 +364,29 @@ body {
 .profile-dropdown hr {
   border: none;               
   height: 2px;                
-  background-color: #3C87C4;  
+  background-color: var(--primary-color);  
   margin: 0;                  
 }
-
 
 .profile-avatar {
   width: 55px;
   height: 55px;
   border-radius: 50%;
-  border: 3px solid #3C87C4;
+  border: 3px solid var(--primary-color);
 }
 
 .profile-info h4 {
   font-size: 16px;
   margin: 0;
   margin-bottom: .3rem;
+  color: var(--text-color);
 }
 
 .profile-badge {
   display: inline-flex;
   align-items: center;
-  background: #3C87C4;
-  border: 1px solid #3C87C4;
+  background: var(--primary-color);
+  border: 1px solid var(--primary-color);
   border-radius: 25px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
   overflow: hidden;
@@ -365,10 +400,8 @@ body {
 }
 
 .profile-badge span + span {
-  border-left: 1px solid #F9CD55; 
+  border-left: 1px solid var(--accent-color); 
 }
-
-
 
 .profile-menu {
   list-style: none;
@@ -383,15 +416,16 @@ body {
   gap: 10px;
   cursor: pointer;
   transition: background 0.2s;
+  color: var(--text-color);
 }
 
 .profile-menu li i {
-  color: #3C87C4;
+  color: var(--primary-color);
   font-size: 16px;
 }
 
 .profile-menu li:hover {
-  background: #f1f1f1;
+  background: rgba(60, 135, 196, 0.1);
 }
 
 .profile-menu a {
@@ -413,33 +447,33 @@ body {
   justify-content: center;
   align-items: center;
   z-index: 9999;
-  font-family: 'Montserrat', sans-serif; /* Dinagdag para consistent */
+  font-family: 'Montserrat', sans-serif;
 }
 
 /* ===== Modal Box ===== */
 .modal-content {
-  background: #fff;
+  background: var(--card-bg);
   border-radius: 12px;
-  /* InayOS: Pinalaki 'yung padding at 'yung max-width */
   padding: 3rem; 
   width: 90%;
-  max-width: 750px; /* Pinalaki */
+  max-width: 750px;
   box-shadow: 0 5px 25px rgba(0,0,0,0.1);
   position: relative;
   animation: fadeIn 0.3s ease;
+  color: var(--text-color);
 }
 
-/* --- Typography (Base sa pic) --- */
+/* --- Typography --- */
 .modal-content h2 {
   font-size: 2rem;
   font-weight: 700;
-  color: #3C87C4;
+  color: var(--primary-color);
   margin: 0 0 0.5rem 0;
 }
 
 .modal-content p {
   font-size: .95rem;
-  color: #000;
+  color: var(--text-color);
   line-height: 1.5;
   margin-bottom: 1.5rem;
 }
@@ -447,14 +481,13 @@ body {
 .modal-content h3 {
   font-size: 1rem;
   font-weight: 600;
-  color: #3C87C4;
+  color: var(--primary-color);
   margin-top: 2rem;
   margin-bottom: 0.5rem;
 }
 
 .close-btn {
   position: absolute;
-  /* Inayos 'yung pwesto */
   top: 20px; right: 25px;
   font-size: 2rem;
   font-weight: 300;
@@ -462,10 +495,10 @@ body {
   color: #aaa;
 }
 .close-btn:hover {
-  color: #333;
+  color: var(--text-color);
 }
 
-/* --- Option Cards (Base sa pic) --- */
+/* --- Option Cards --- */
 .feedback-options {
   display: flex;
   gap: 1rem;
@@ -475,45 +508,44 @@ body {
 
 .option-card {
   flex: 1;
-  min-width: 200px; /* Para 'di masyadong maliit sa mobile */
-  background: #fff; /* Background galing sa pic */
-  border: 1px solid #FBC93F; /* Border galing sa pic */
+  min-width: 200px;
+  background: var(--card-bg);
+  border: 1px solid var(--accent-color);
   border-radius: 10px;
   padding: 1rem;
-  text-align: left; /* Inayos para 'di centered */
-  display: flex; /* Ginamit 'yung flex */
-  align-items: center; /* Para gumitna 'yung icon at text */
+  text-align: left;
+  display: flex;
+  align-items: center;
   gap: 0.8rem;
   box-shadow: 0 2px 4px rgba(0,0,0,0.03);
 }
 
 .option-card i {
-  color: #FBC93F;
+  color: var(--accent-color);
   font-size: 1.2rem;
-  /* Tinanggal 'yung margin-bottom */
 }
 
 .option-card p {
   font-size: 0.75rem;
-  margin-bottom: 0; /* Tinanggal 'yung margin */
+  margin-bottom: 0;
   line-height: 1.4;
-  color: #555;
+  color: var(--text-color);
 }
 .option-card p strong {
-  color: #333;
+  color: var(--text-color);
 }
 
-/* --- Star Rating (Base sa pic) --- */
+/* --- Star Rating --- */
 .star-rating {
   display: flex;
-  gap: 10px; /* Pinalaki 'yung gap */
-  justify-content: center; /* Naka-align sa left */
+  gap: 10px;
+  justify-content: center;
   margin: 1rem 0;
 }
 
 .star-rating i {
-  font-size: 2.5rem; /* Pinalaki 'yung stars */
-  color: #E0E0E0; /* Mas light na gray 'yung empty */
+  font-size: 2.5rem;
+  color: #E0E0E0;
   cursor: pointer;
   transition: color 0.2s ease, transform 0.1s ease;
 }
@@ -524,7 +556,7 @@ body {
   color: #F3C14B;
 }
 
-/* --- Form Styles (Base sa pic) --- */
+/* --- Form Styles --- */
 form {
   margin-top: 1.5rem;
 }
@@ -535,30 +567,26 @@ label {
   margin-bottom: 0.5rem;
   font-weight: 600;
   font-size: 0.9rem;
-  color: #000;
+  color: var(--text-color);
 }
 
-/* ================================== */
-/* === INAYOS NA CSS PARA SA FORM === */
-/* ================================== */
-
-/* Style para lang sa textarea */
 textarea {
   width: 100%;
   padding: 1rem;
-  border: 1px solid #E0E0E0;
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   margin-top: 0;
   font-size: .9rem;
   font-family: 'Montserrat', sans-serif;
-  background: #fff;
+  background: var(--card-bg);
   box-shadow: inset 0 2px 4px rgba(0,0,0,0.04);
   box-sizing: border-box;
+  color: var(--text-color);
 }
 
 textarea:focus {
   outline: none;
-  border-color: #4A90E2;
+  border-color: var(--primary-color);
 }
 
 .custom-select-wrapper {
@@ -570,28 +598,28 @@ textarea:focus {
 .custom-select-trigger {
   width: 100%;
   padding: 1rem;
-  border: 1px solid #E0E0E0;
+  border: 1px solid var(--border-color);
   border-radius: 12px;
-  background: #fff;
+  background: var(--card-bg);
   box-shadow: inset 0 2px 4px rgba(0,0,0,0.04);
   box-sizing: border-box;
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-size: .9rem;
-  color: #777; 
+  color: var(--text-color);
   transition: all 0.2s ease;
 }
 
 .custom-select-trigger.selected {
-  color: #333;
+  color: var(--text-color);
 }
 
 .custom-arrow {
   position: relative;
   width: 28px;
   height: 28px;
-  background-color: #3C87C4;
+  background-color: var(--primary-color);
   border-radius: 50%;
   transition: transform 0.3s ease;
 }
@@ -619,8 +647,8 @@ textarea:focus {
   top: calc(100% + 8px); 
   left: 0;
   right: 0;
-  background: #fff;
-  border: 1px solid #E0E0E0;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.1);
   z-index: 10;
@@ -637,13 +665,13 @@ textarea:focus {
   align-items: center;
   gap: 0.75rem;
   font-size: .9rem;
-  color: #000;
+  color: var(--text-color);
   border-radius: 8px;
   transition: background-color 0.2s ease;
 }
 
 .custom-option:hover {
-  background-color: #E0E5EB;
+  background-color: rgba(60, 135, 196, 0.1);
 }
 
 .custom-option .dot {
@@ -656,7 +684,6 @@ textarea:focus {
 .custom-option .dot.appreciation { background-color: #F4D03F; }
 .custom-option .dot.others { background-color: #58D68D; }
 
-
 /* Form actions (Button) */
 .form-actions {
   display: flex;
@@ -666,7 +693,7 @@ textarea:focus {
 
 .submit-btn {
   margin-top: 0; 
-  background: #3C87C4; 
+  background: var(--primary-color); 
   color: #fff;
   padding: 0.7rem 1.5rem; 
   border: none;
@@ -686,7 +713,6 @@ textarea:focus {
   to { opacity: 1; transform: scale(1); }
 }
 
-
 .simple-alert-modal .modal-content {
   max-width: 480px; 
   text-align: center;
@@ -697,7 +723,7 @@ textarea:focus {
 .success-icon {
   width: 80px;
   height: 80px;
-  background-color: #4A90E2; 
+  background-color: var(--primary-color); 
   border-radius: 50%;
   margin: 0 auto 1.5rem auto;
   display: flex;
@@ -714,19 +740,19 @@ textarea:focus {
 .simple-alert-modal h2 {
   font-size: 2.2rem;
   font-weight: 700;
-  color: #4A90E2; 
+  color: var(--primary-color); 
   margin-bottom: 0.5rem;
 }
 
 .simple-alert-modal p {
   font-size: 1rem;
-  color: #555;
+  color: var(--text-color);
   line-height: 1.5;
   margin-bottom: 2rem;
 }
 
 .ok-btn {
-  background: #4A90E2;
+  background: var(--primary-color);
   color: #fff;
   padding: 0.8rem 1.5rem;
   border: none;
@@ -742,30 +768,20 @@ textarea:focus {
   background: #3c78c0;
 }
 
-/* Responsive adjustments */
-@media (max-width: 600px) {
-  .modal-content {
-    padding: 2rem 1.5rem;
-  }
-  .feedback-options {
-    flex-direction: column;
-  }
-}
-
-/* === NOTIFICATION STYLES (Only Yellow Dot - No Icons) === */
+/* === NOTIFICATION STYLES === */
 .notification-wrapper {
   position: relative;
   cursor: pointer;
 }
 .notification-wrapper .fa-bell {
   font-size: 22px;
-  color: #3C87C4;
+  color: var(--primary-color);
 }
 .notif-count {
   position: absolute;
   top: -6px;
   right: -6px;
-  background: #FFB703;
+  background: var(--accent-color);
   color: #fff;
   font-size: 12px;
   font-weight: bold;
@@ -777,7 +793,7 @@ textarea:focus {
   top: 40px;
   right: 0;
   width: 350px;
-  background: #fff;
+  background: var(--card-bg);
   border-radius: 12px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.2);
   flex-direction: column;
@@ -791,15 +807,15 @@ textarea:focus {
 .notif-dropdown .notif-header {
   font-size: 16px;
   font-weight: 700;
-  color: #114B8C;
+  color: var(--text-color);
   padding: 1rem;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--border-color);
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 .notif-dropdown .notif-header span {
-  background: #3C87C4;
+  background: var(--primary-color);
   color: #fff;
   font-size: 13px;
   font-weight: 700;
@@ -812,7 +828,6 @@ textarea:focus {
   pointer-events: auto;
 }
 
-
 .notif-list {
   list-style: none;
   padding: 0;
@@ -823,39 +838,36 @@ textarea:focus {
 .notif-list li {
   margin: 0;
   padding: 0;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--border-color);
 }
 .notif-list li:last-child {
   border-bottom: none;
 }
 
-/* Bawat item (link) */
 .notif-link {
   display: flex; 
   align-items: flex-start;
   padding: 12px 16px;
   text-decoration: none;
-  color: #333;
+  color: var(--text-color);
   transition: background-color 0.2s ease;
   cursor: pointer;
 }
 .notif-link:hover {
-  background-color: #f5f5f5;
+  background-color: rgba(60, 135, 196, 0.1);
 }
 
-/* Unread items */
 .notif-link.unread {
-  background-color: #fffbef; 
+  background-color: rgba(255, 251, 239, 0.3); 
 }
 .notif-link.unread .notif-main-content strong {
   font-weight: 700; 
-  color: #114B8C; 
+  color: var(--text-color); 
 }
 .notif-link.unread .notif-message {
-  color: #333; 
+  color: var(--text-color); 
 }
 
-/* Dot container (Nasa labas ng main content) */
 .notif-dot-container {
   width: 16px;
   flex-shrink: 0;
@@ -865,7 +877,7 @@ textarea:focus {
   display: inline-block;
   width: 8px;
   height: 8px;
-  background-color: #FFB703;
+  background-color: var(--accent-color);
   border-radius: 50%;
 }
 .notif-dot-placeholder {
@@ -873,12 +885,10 @@ textarea:focus {
   width: 8px; 
 }
 
-/* Main Content Area (Title, Timestamp, Message) */
 .notif-main-content {
   flex-grow: 1; 
 }
 
-/* Header line (Title + Timestamp) */
 .notif-header-line {
   display: flex; 
   justify-content: space-between; 
@@ -889,35 +899,35 @@ textarea:focus {
 .notif-header-line strong {
   font-size: 14px;
   font-weight: 600; 
-  color: #555; 
+  color: var(--text-color);
   line-height: 1.3;
   padding-right: 10px; 
 }
 
-/* Right Column (Timestamp) */
 .notif-timestamp {
   flex-shrink: 0; 
   font-size: 11px;
-  color: #888;
+  color: var(--text-color);
+  opacity: 0.7;
   white-space: nowrap;
   margin-top: -5px; 
 }
 
-/* Message (nasa ilalim na) */
 .notif-message {
   font-size: 13px;
-  color: #777; 
+  color: var(--text-color);
+  opacity: 0.8;
   margin: 0;
   line-height: 1.4;
   white-space: normal; 
   overflow: visible;
 }
 
-/* "No notifications" message */
 .notif-list li.no-notifications {
   text-align: center;
   padding: 20px;
-  color: #888;
+  color: var(--text-color);
+  opacity: 0.7;
   border-bottom: none;
 }
 .notif-list li.no-notifications p {
@@ -927,7 +937,7 @@ textarea:focus {
 .mark-all-read {
   background: none;
   border: none;
-  color: #3C87C6;
+  color: var(--primary-color);
   font-size: 12px;
   cursor: pointer;
   text-decoration: underline;
@@ -936,10 +946,8 @@ textarea:focus {
 }
 
 .mark-all-read:hover {
-  background: #f0f7ff;
-  color: #2a5f8a;
+  background: rgba(60, 135, 196, 0.1);
 }
-
 
 /* Row layout */
 .row {
@@ -947,7 +955,6 @@ textarea:focus {
   grid-template-columns: 2fr 1fr; 
   gap: 1.5rem;
   align-items: stretch;
-  
 }
 
 /* ===================== */
@@ -960,7 +967,7 @@ textarea:focus {
   width: 100%;
   height: 250px;
   border-radius: 20px;
-  background: #3C87C4;
+  background: var(--primary-color);
   color: #fff;
   box-sizing: border-box;
 }
@@ -1019,10 +1026,8 @@ textarea:focus {
   cursor: pointer;
 }
 .welcome .dots button.active {
-  background: #FFD700;
+  background: var(--accent-color);
 }
-
-
 
 /* ===================== */
 /* EVENT SLIDE STYLES    */
@@ -1035,18 +1040,16 @@ textarea:focus {
   padding: 0;
   border-radius: 12px;
   overflow: hidden;
-  background: #3C87C4; 
+  background: var(--primary-color); 
   color: #fff;
 }
 
-/* Left = date + info (50%) */
 .welcome .slide.event .date,
 .welcome .slide.event .event-info {
   position: relative;
   z-index: 2;
 }
 
-/* Left = date + info (50%) */
 .welcome .slide.event .left {
   flex: 1;
   background: #1E3A8A;
@@ -1061,7 +1064,7 @@ textarea:focus {
 /* Date badge */
 .welcome .slide.event .date {
   background: #fff;
-  color: #3C87C4;
+  color: var(--primary-color);
   width: 60px;
   height: 150px;
   border-radius: 12px;
@@ -1077,8 +1080,6 @@ textarea:focus {
   margin-left: 0.7rem; 
   margin-right: 0.1rem;
 }
-
-
 
 .welcome .slide.event .date .month {
   font-size: 14px;
@@ -1121,22 +1122,15 @@ textarea:focus {
 
 /* Right = image (50%) */
 .welcome .slide.event .event-banner {
-  flex: 1; /* 50% */
+  flex: 1;
   background-size: cover;
   background-position: center;
   border-radius: 0 12px 12px 0;
 }
 
-
-
-
-
-
-
-
 /* Calendar */
 .calendar {
-  background: #fff;
+  background: var(--card-bg);
   border-radius: 20px;
   padding: 1.5rem;
   display: flex;
@@ -1157,14 +1151,14 @@ textarea:focus {
 .calendar header h3 {
   font-size: 22px;
   font-weight: 800;
-  color: #1C3A6D;
+  color: var(--text-color);
 }
 .calendar header button {
-  background: #FFCA3A;
+  background: var(--accent-color);
   border: none;
   font-size: 16px;
   cursor: pointer;
-  color: #1C3A6D;
+  color: var(--text-color);
   width: 32px;
   height: 32px;
   border-radius: 50%;
@@ -1177,7 +1171,7 @@ textarea:focus {
   right: 0;
   top: -10px;
   font-size: 22px;
-  color: #3C87C4;
+  color: var(--primary-color);
 }
 .calendar .day.empty {
   background: transparent;
@@ -1201,7 +1195,7 @@ textarea:focus {
   font-weight: 600;
 }
 .calendar .day.active {
-  background: #FFCA3A;
+  background: var(--accent-color);
 }
 .calendar .day.active .weekday,
 .calendar .day.active .date {
@@ -1213,7 +1207,7 @@ textarea:focus {
   grid-template-columns: repeat(7, 1fr);
   text-align: center;
   font-weight: 700;
-  color: #3C87C4;
+  color: var(--primary-color);
   margin-bottom: 0.5rem;
 }
 .dates-grid {
@@ -1228,10 +1222,10 @@ textarea:focus {
   justify-content: center;
   border-radius: 12px;
   font-weight: 600;
-  background: #f0f0f0;
+  background: var(--bg-color);
 }
 .dates-grid .day.active {
-  background: #FFCA3A;
+  background: var(--accent-color);
   font-weight: 700;
 }
 .dates-grid .day.empty {
@@ -1247,6 +1241,7 @@ textarea:focus {
   font-size: 30px;
   font-weight: 700;
   margin-bottom: 1rem !important;
+  color: var(--text-color);
 }
 .progress-cards {
   display: flex;
@@ -1255,7 +1250,7 @@ textarea:focus {
   margin-bottom: .5rem;
 }
 .progress-cards .card {
-  background: #fff;
+  background: var(--card-bg);
   border-radius: 15px;
   box-shadow: 8px 8px 16px rgba(42, 95, 143, 0.85);
   padding: 1.2rem;
@@ -1286,19 +1281,19 @@ textarea:focus {
   font-weight: 600;
   margin-bottom: .2rem;
   white-space: nowrap; 
+  color: var(--text-color);
 }
 
 .progress-cards .text p {
   font-size: 13px;
-  color: #3C87C4;
+  color: var(--primary-color);
   margin: 0;
   margin-top: 1rem;
   white-space: nowrap; 
 }
 
-
 .progress-cards .icon {
-  background: #3C87C4;
+  background: var(--primary-color);
   border-radius: 50%;
   padding: 0.9rem;
   display: flex;
@@ -1314,7 +1309,6 @@ textarea:focus {
   stroke: #fff; 
 }
 
-
 .progress-footer {
   display: flex;
   align-items: center;
@@ -1325,7 +1319,7 @@ textarea:focus {
 
 .progress-footer .bar {
   flex: 1;
-  background: #e7e7e7;
+  background: var(--bg-color);
   border-radius: 10px;
   height: 8px;
   overflow: hidden;
@@ -1334,14 +1328,14 @@ textarea:focus {
 .progress-footer .bar span {
   display: block;
   height: 100%;
-  background: #FFB703;
+  background: var(--accent-color);
   border-radius: 10px;
 }
 
 .progress-footer small {
   font-size: 13px;
   font-weight: 600;
-  color: #1C6DD0;
+  color: var(--primary-color);
   white-space: nowrap; 
 }
 
@@ -1349,7 +1343,7 @@ textarea:focus {
 .progress-cards a {
   font-size: 13px;
   font-weight: 600;
-  color: #1C6DD0;
+  color: var(--primary-color);
   text-decoration: none;
   text-align: right;
 }
@@ -1357,7 +1351,7 @@ textarea:focus {
   text-decoration: underline;
 }
 .progress-cards .bar {
-  background: #e7e7e7;
+  background: var(--bg-color);
   border-radius: 10px;
   height: 8px;
   margin-top: 0.4rem;
@@ -1366,17 +1360,13 @@ textarea:focus {
 .progress-cards .bar span {
   display: block;
   height: 100%;
-  background: #FFB703;
+  background: var(--accent-color);
   border-radius: 10px;
 }
 
-
-
 /*events*/
-
-
 .events {
-  background: #fff;
+  background: var(--card-bg);
   border-radius: 22px;
   padding: 1.5rem;
   height: 320px; 
@@ -1384,7 +1374,6 @@ textarea:focus {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  
 }
 
 .events:hover {
@@ -1401,11 +1390,10 @@ textarea:focus {
   align-items: center;
   gap: 1.2rem;
   padding: 1.2rem 0;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--border-color);
   font-size: 16px;
   position: relative;
 }
-
 
 .events li::after {
   content: "";
@@ -1414,7 +1402,7 @@ textarea:focus {
   left: 0;
   right: 0;
   height: 1px;
-  background: #eee;
+  background: var(--border-color);
 }
 
 .events li:last-child::after {
@@ -1425,11 +1413,12 @@ textarea:focus {
   font-size: 30px;
   font-weight: 700;
   margin-bottom: 1rem;
+  color: var(--text-color);
 }
 
 /* Date badge */
 .events .date {
-  background: #3C87C4;
+  background: var(--primary-color);
   color: #fff;
   border-radius: 14px;
   padding: 1.8rem 1rem;
@@ -1443,13 +1432,11 @@ textarea:focus {
 }
 
 .events .date.holiday {
-  background-color: #F9CD55 !important; 
+  background-color: var(--accent-color) !important; 
   color: #000 !important;
   border-radius: 14px !important;      
   padding: 1.8rem 1rem !important;     
 }
-
-
 
 .events .date strong {
   font-size: 16px;
@@ -1468,13 +1455,13 @@ textarea:focus {
   margin: 0;
   font-size: 20px;
   font-weight: 700;
-  color: #114B8C;
+  color: var(--text-color);
 }
 
 .event-info small {
   font-size: 14px;
   font-weight: 600;
-  color: #3C87C4;
+  color: var(--primary-color);
 }
 
 /* Scrollbar show on hover */
@@ -1489,9 +1476,8 @@ textarea:focus {
 
 .events:hover::-webkit-scrollbar-thumb,
 .events:active::-webkit-scrollbar-thumb {
-  background: #3C87C4;   
+  background: var(--primary-color);   
 }
-
 
 /* Three dots sa loob ng box */
 .events-top {
@@ -1504,32 +1490,29 @@ textarea:focus {
   border: none;
   font-size: 22px;
   cursor: pointer;
-  color: #114B8C;
+  color: var(--primary-color);
   line-height: 1;
   transform: rotate(0deg); 
   font-weight: bold;
 }
 .events-menu:hover {
-  color: #01214A;
+  color: var(--text-color);
 }
-
-
 
 /* === ANNOUNCEMENTS === */
 .announcements {
-  background: #fff;
-border-radius: 20px;
-padding: 1rem 1.5rem 1.5rem 1.5rem;
-margin-top: 0 !important;
-box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-height: 380px; 
-overflow-y: auto; 
+  background: var(--card-bg);
+  border-radius: 20px;
+  padding: 1rem 1.5rem 1.5rem 1.5rem;
+  margin-top: 0 !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  height: 380px; 
+  overflow-y: auto; 
 }
 
 .announcements:hover {
   overflow-y: auto;    
 }
-
 
 .announcements::-webkit-scrollbar {
   width: 6px;
@@ -1540,9 +1523,8 @@ overflow-y: auto;
 }
 .announcements:hover::-webkit-scrollbar-thumb,
 .announcements:active::-webkit-scrollbar-thumb {
-  background: #3C87C4;
+  background: var(--primary-color);
 }
-
 
 /* Announcements Section Wrapper */
 .announcements-section {
@@ -1555,7 +1537,7 @@ overflow-y: auto;
   font-size: 30px;
   font-weight: 700;
   margin-bottom: 10px; 
-  color: #01214A;
+  color: var(--text-color);
 }
 
 .announcements h3 {
@@ -1568,7 +1550,7 @@ overflow-y: auto;
   justify-content: space-between;
   background: transparent;
   padding: 0.8rem 0; 
-  border-bottom: 1px solid #E5E5E5;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .announcements .card:last-child {
@@ -1587,7 +1569,7 @@ overflow-y: auto;
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: #3C87C4;
+  background: var(--primary-color);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1602,14 +1584,15 @@ overflow-y: auto;
 .announcements strong {
   font-size: 15px;
   font-weight: 700;
-  color: #114B8C;
+  color: var(--text-color);
   display: block;
   margin-bottom: 0.3rem;
 }
 
 .announcements p {
   font-size: 14px;
-  color: #444;
+  color: var(--text-color);
+  opacity: 0.8;
   line-height: 1.4;
 }
 
@@ -1617,20 +1600,19 @@ overflow-y: auto;
   border: none;
   background: none;
   font-size: 20px;
-  color: #114B8C;
+  color: var(--primary-color);
   cursor: pointer;
   padding: 0 0.5rem;
   line-height: 1;
 }
 
 .announcements .options:hover {
-  color: #01214A;
+  color: var(--text-color);
 }
-
 
 /* Suggestion Box */
 .suggestion-box {
-  background: #fff;
+  background: var(--card-bg);
   border-radius: 20px;
   padding: 2.5rem;
   max-width: 500px;
@@ -1646,7 +1628,7 @@ overflow-y: auto;
 .suggestion-box h2 {
   font-size: 38px;
   font-weight: 800;
-  color: #114B8C;
+  color: var(--text-color);
   margin-bottom: 0.3rem;
   text-align: center;
 }
@@ -1654,7 +1636,7 @@ overflow-y: auto;
 .suggestion-box .subtitle {
   font-size: 16px;
   font-weight: 600;
-  color: #114B8C;
+  color: var(--text-color);
   margin-bottom: 1.5rem;
   text-align: center;
 }
@@ -1665,7 +1647,7 @@ overflow-y: auto;
   align-items: center;
   justify-content: center;
   gap: .5rem;
-  background: #3C87C4;
+  background: var(--primary-color);
   color: #fff;
   border: none;
   border-radius: 30px;
@@ -1691,77 +1673,73 @@ overflow-y: auto;
 /* Note (justified) */
 .suggestion-box .note {
   font-size: 14px;
-  color: #000;
+  color: var(--text-color);
   line-height: 1.5;
   text-align: justify;
 }
 
-
 .custom-modal-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.4);
-        display: flex; /* Ito 'yung kailangan ng JS mo */
-        align-items: center;
-        justify-content: center;
-        z-index: 9999;
-        
-        /* By default, nakatago (mula sa inline style mo) */
-    }
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
 
-    .custom-modal-overlay .modal-content {
-        background-color: #ffffff;
-        border-radius: 16px;
-        padding: 30px;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-        width: 100%;
-        max-width: 450px;
-        text-align: left;
-        box-sizing: border-box;
-        
-        /* Para sa text na nasa loob na */
-        font-family: 'Montserrat';
-    }
+.custom-modal-overlay .modal-content {
+  background-color: var(--card-bg);
+  border-radius: 16px;
+  padding: 30px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 450px;
+  text-align: left;
+  box-sizing: border-box;
+  font-family: 'Montserrat';
+  color: var(--text-color);
+}
 
-    .custom-modal-overlay #confirmModalMessage {
-        font-size: 1.1rem;
-        font-weight: 400;
-        color: #374151;
-        margin-top: 8px;
-        margin-bottom: 24px;
-        line-height: 1.5;
-    }
+.custom-modal-overlay #confirmModalMessage {
+  font-size: 1.1rem;
+  font-weight: 400;
+  color: var(--text-color);
+  margin-top: 8px;
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
 
-    .custom-modal-overlay .modal-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 12px;
-    }
+.custom-modal-overlay .modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
 
-    .custom-modal-overlay .cancel-btn,
-    .custom-modal-overlay .confirm-btn {
-        padding: 10px 24px;
-        font-size: 1rem;
-        font-weight: 600;
-        border: none;
-        border-radius: 9999px;
-        cursor: pointer;
-    }
+.custom-modal-overlay .cancel-btn,
+.custom-modal-overlay .confirm-btn {
+  padding: 10px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 9999px;
+  cursor: pointer;
+}
 
-    .custom-modal-overlay #confirmModalCancel.cancel-btn {
-        background-color: #cccccc;
-        color: #374151;
-    }
+.custom-modal-overlay #confirmModalCancel.cancel-btn {
+  background-color: #cccccc;
+  color: var(--text-color);
+}
 
-    .custom-modal-overlay #confirmModalOK.confirm-btn {
-        background-color: #3C87C4;
-        color: #ffffff;
-    }
+.custom-modal-overlay #confirmModalOK.confirm-btn {
+  background-color: var(--primary-color);
+  color: #ffffff;
+}
 
-    /* --- Overlay para sa Mobile Sidebar --- */
+/* --- Overlay para sa Mobile Sidebar --- */
 body.mobile-sidebar-active::before {
   content: '';
   position: fixed;
@@ -1770,15 +1748,49 @@ body.mobile-sidebar-active::before {
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.4);
-  z-index: 9999; /* Mas mababa sa sidebar */
+  z-index: 9999;
   transition: opacity 0.3s ease;
 }
 
 .mobile-hamburger {
   display: none;
 }
-/* Responsive */
 
+/* Dark mode specific adjustments */
+[data-theme="dark"] .sidebar nav a.active {
+  background: #2a2a2a;
+  color: #fff;
+}
+
+[data-theme="dark"] .submenu a.active {
+  background: #2a2a2a;
+  color: #fff;
+}
+
+[data-theme="dark"] .profile-menu li:hover,
+[data-theme="dark"] .notif-link:hover,
+[data-theme="dark"] .custom-option:hover {
+  background: #333;
+}
+
+[data-theme="dark"] .progress-cards .card {
+  box-shadow: 8px 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .events .date.holiday {
+  color: #000 !important;
+}
+
+[data-theme="dark"] .calendar .dates-grid .day {
+  background: #2a2a2a;
+}
+
+[data-theme="dark"] .progress-footer .bar,
+[data-theme="dark"] .progress-cards .bar {
+  background: #2a2a2a;
+}
+
+/* Responsive */
 @media (max-width: 1024px) {
   .row {
     grid-template-columns: 1fr; 
@@ -1800,8 +1812,6 @@ body.mobile-sidebar-active::before {
 }
 
 @media (max-width: 768px) {
-
-  /* --- Grid/Layout Basics --- */
   .row {
     grid-template-columns: 1fr;
     gap: 1rem;
@@ -1811,19 +1821,17 @@ body.mobile-sidebar-active::before {
     flex-direction: column;
   }
 
-  /* --- Hamburger Button (sa Topbar) --- */
   .mobile-hamburger {
     display: inline-flex;
     background: none;
     border: none;
     font-size: 26px;
-    color: #01214A;
+    color: var(--text-color);
     cursor: pointer;
   }
 
-  /* --- 'Yung Sidebar (Full-height Blue) --- */
   .sidebar {
-    background: #3C87C4;
+    background: var(--sidebar-bg);
     color: #fff;
     width: 250px;
     left: -260px;
@@ -1835,7 +1843,6 @@ body.mobile-sidebar-active::before {
     transition: all 0.3s ease;
     border: none;
     box-shadow: 0 5px 35px rgba(0, 33, 74, 0.2);
-    /* (FIX) Nagdagdag ng flex para ma-control 'yung items */
     display: flex;
     flex-direction: column;
   }
@@ -1844,40 +1851,36 @@ body.mobile-sidebar-active::before {
     left: 0;
   }
 
-  /* --- (FIX #1) 'YUNG "MENU" BUTTON (NASA GILID) --- */
   .sidebar .menu-toggle {
-    display: block !important; /* Pinakita na */
+    display: block !important;
     background: none;
     color: #fff;
     border: none;
-    padding: 0.3rem 0.6rem; /* Gaya ng sa desktop */
+    padding: 0.3rem 0.6rem;
     border-radius: 6px;
     cursor: pointer;
     font-weight: 600;
-    margin: 1rem 1rem 0.5rem 1rem; /* Space sa taas at gilid */
-    align-self: flex-start; /* ETO YUNG NAG-A-ALIGN SA GILID */
+    margin: 1rem 1rem 0.5rem 1rem;
+    align-self: flex-start;
     font-size: 1.5rem;
   }
 
-  /* --- (FIX #2) 'YUNG DIVIDER --- */
   .sidebar .divider {
-    display: block !important; /* Pinakita na */
-    width: calc(100% - 2rem); /* Para may space sa gilid */
+    display: block !important;
+    width: calc(100% - 2rem);
     height: 2px;
     background: rgba(255, 255, 255, 0.6);
-    margin: 0.5rem 1rem 1rem 1rem; /* Space sa baba */
-    align-self: center; /* Para gumitna 'yung linya */
+    margin: 0.5rem 1rem 1rem 1rem;
+    align-self: center;
   }
 
-  /* --- (FIX #3) 'YUNG NAV LINKS (Para 'di crowded) --- */
   .sidebar nav {
     width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 1rem; /* Space sa pagitan ng bawat link */
+    gap: 1rem;
   }
 
-  /* --- Main Content Area --- */
   .main {
     margin-left: 0 !important;
     padding-left: 1rem;
@@ -1889,12 +1892,11 @@ body.mobile-sidebar-active::before {
     overflow-x: hidden;
   }
 
-  /* --- Sidebar Links 'Pag Mobile --- */
   .sidebar nav a {
     color: #fff;
     padding-left: 1rem;
     padding-right: 1rem;
-    box-sizing: border-box; /* Para 'di lumagpas 'yung padding */
+    box-sizing: border-box;
   }
 
   .sidebar nav a .label {
@@ -1908,7 +1910,6 @@ body.mobile-sidebar-active::before {
     opacity: 0.8;
   }
 
-  /* --- Active Link (Pill Shape) --- */
   .sidebar nav a.active {
     background: #fff;
     color: #1C6DD0;
@@ -1922,7 +1923,6 @@ body.mobile-sidebar-active::before {
     color: #1C6DD0;
   }
 
-  /* --- Link Hover --- */
   .sidebar nav a:hover {
     background: rgba(255, 255, 255, 0.2);
     color: #fff;
@@ -1933,12 +1933,10 @@ body.mobile-sidebar-active::before {
     color: #1C6DD0;
   }
 
-  /* --- Submenu Links --- */
   .submenu a {
     color: #fff;
   }
 
-  /* === TOPBAR === */
   .topbar {
     position: fixed;
     top: 0;
@@ -1967,12 +1965,10 @@ body.mobile-sidebar-active::before {
     border-radius: 50%;
   }
 
-  /* Itago 'yung logo sa topbar 'pag mobile */
   .logo {
     display: none !important;
   }
 
-  /* === IBA PANG STYLES === */
   .progress-cards {
     flex-direction: row;
   }
@@ -2009,7 +2005,6 @@ body.mobile-sidebar-active::before {
     box-sizing: border-box;
   }
 
-  /* Event Slide adjustments */
   .welcome .slide.event {
     flex-direction: column;
     align-items: center;
@@ -2060,7 +2055,6 @@ body.mobile-sidebar-active::before {
     background-position: center;
   }
 
-  /* Dots */
   .welcome .dots {
     bottom: 10px;
   }
@@ -2084,7 +2078,6 @@ body.mobile-sidebar-active::before {
     font-size: 12px;
   }
 
-  /* Notification Dropdown */
   .notif-dropdown {
     position: fixed;
     top: 60px;
@@ -2115,8 +2108,6 @@ body.mobile-sidebar-active::before {
     }
   }
 }
-    
-
 
 /* Extra small (<= 480px) */
 @media (max-width: 480px) {
@@ -2151,16 +2142,16 @@ body.mobile-sidebar-active::before {
   }
 
   .announcements-section {
-  margin-top: 0px;
-  margin-bottom: 1rem;
+    margin-top: 0px;
+    margin-bottom: 1rem;
+  }
   
-  
-}
-.calendar header i.fas.fa-calendar {
+  .calendar header i.fas.fa-calendar {
     font-size: 20px;
     margin-left: -5px;
+  }
 }
-}
+
 .progress-bar {
   width: var(--progress);
 }

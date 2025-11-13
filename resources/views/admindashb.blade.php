@@ -86,25 +86,36 @@
       </div>
     </div>
 <div class="profile-wrapper">
-      <img src="https://i.pravatar.cc/80" alt="User" class="avatar" id="profileToggle">
+      <img src="{{ $admin->avatar ? asset('storage/' . $admin->avatar) : 'https://i.pravatar.cc/80' }}" alt="Admin" class="avatar" id="profileToggle">
     <div class="profile-dropdown">
     <div class="profile-header">
-      <img src="https://i.pravatar.cc/80" alt="User" class="profile-avatar">
+      <img src="{{ $admin->avatar ? asset('storage/' . $admin->avatar) : 'https://i.pravatar.cc/80' }}" alt="Admin" class="profile-avatar">
     <div class="profile-info">
-      <h4>Admin</h4>
+      <h4>{{ $admin->given_name }} {{ $admin->last_name }}</h4>
+      <div class="profile-badge">
+        <span>Administrator</span>
+        <span>{{ $admin->account_number }}</span>
+      </div>
   </div>
  </div>
       <hr>
         <ul>
          <li><a href="#"><i class="fas fa-user"></i> KatiBayan Profile</a></li>
-         <li><a href="#"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+         <li>
+            <a href="{{ route('admin.logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+            <form id="logout-form" action="{{ route('admin.logout') }}" method="POST" style="display: none;">
+                @csrf
+            </form>
+         </li>
         </ul>
         </div>
       </div>
     </div>
 </header>
 <div class="welcome-card">
-    <h2>Welcome Back, Admin!</h2>
+    <h2>Welcome Back, {{ $admin->given_name }}!</h2>
 </div>
 <section class="dashboard-widgets">
       <div class="stat-card">
@@ -112,7 +123,7 @@
         <p class="subtitle">TOTAL IN ALL BARANGAY</p>
       <div class="population-content">
       <div class="population-total">
-        <span class="circle-number">2,809</span>
+        <span class="circle-number">{{ $totalPopulation }}</span>
         <p>Total in all Barangay</p>
     </div>
     <div class="population-chart-container">
@@ -124,10 +135,26 @@
     <h4>OVERALL SYSTEM RATING</h4>
 <div class="rating-chart-container">
         <canvas id="ratingChart"></canvas>
-        <span class="rating-percent">95%</span>
+        <span class="rating-percent">{{ $ratingStats['rating_percentage'] }}%</span>
     </div>
-        <p>Based on user feedback</p>
+    <div class="rating-details">
+        <div class="average-rating">
+            <span class="rating-number">{{ $ratingStats['average_rating'] }}</span>
+            <div class="stars">
+                @for($i = 1; $i <= 5; $i++)
+                    @if($i <= floor($ratingStats['average_rating']))
+                        <i class="fa-solid fa-star"></i>
+                    @elseif($i - 0.5 <= $ratingStats['average_rating'])
+                        <i class="fa-solid fa-star-half-stroke"></i>
+                    @else
+                        <i class="fa-regular fa-star"></i>
+                    @endif
+                @endfor
+            </div>
+        </div>
+        <p>Based on {{ $ratingStats['total_ratings'] }} user ratings</p>
     </div>
+</div>
 
 <div class="stat-card-calendar">
     <div class="calendar-header">
@@ -151,155 +178,139 @@
     <div class="stat-card bottom-card">
         <div class="feedback-header">
             <h4>USER FEEDBACK COMMENTS</h4>
-            <a href="#" class="view-all">View All</a>
+            <a href="{{ route('users-feedback') }}" class="view-all">View All</a>
         </div>
 
         <div class="user-comments">
-            
+            @forelse($recentFeedbacks as $feedback)
+            <div class="comment">
+                <img src="{{ $feedback->user->avatar ? asset('storage/' . $feedback->user->avatar) : 'https://i.pravatar.cc/40?img=' . $loop->index }}" alt="User" class="user-img">
+                <div class="comment-details">
+                    <div class="comment-header">
+                        <span class="user-id">#{{ $feedback->user->account_number ?? 'N/A' }}</span>
+                        <div class="rating-stars">
+                            @if($feedback->rating)
+                                @for($i = 1; $i <= 5; $i++)
+                                    @if($i <= $feedback->rating)
+                                        <i class="fa-solid fa-star"></i>
+                                    @else
+                                        <i class="fa-regular fa-star"></i>
+                                    @endif
+                                @endfor
+                                <span class="rating-score">{{ $feedback->rating }}/5</span>
+                            @else
+                                <span class="no-rating">No rating</span>
+                            @endif
+                        </div>
+                    </div>
+                    <p class="comment-text">{{ $feedback->message }}</p>
+                    <div class="comment-footer">
+                        <span class="date">{{ $feedback->created_at->format('m/d/Y') }}</span>
+                        <span class="time">{{ $feedback->created_at->format('g:i A') }}</span>
+                        <span class="feedback-type {{ $feedback->type }}">{{ ucfirst($feedback->type) }}</span>
+                    </div>
+                </div>
+            </div>
+            @empty
             <div class="comment">
                 <img src="https://i.pravatar.cc/40?img=1" alt="User" class="user-img">
                 <div class="comment-details">
                     <div class="comment-header">
-                        <span class="user-id">#KK2025296JP</span>
-                        <div class="rating-stars">
-                            <i class="fa-solid fa-star"></i>
-                            <i class="fa-solid fa-star"></i>
-                            <i class="fa-solid fa-star"></i>
-                            <i class="fa-solid fa-star"></i>
-                            <i class="fa-solid fa-star"></i>
-                            <span class="rating-score">5/5</span>
-                        </div>
+                        <span class="user-id">No Feedback</span>
                     </div>
-                    <p class="comment-text">Infairness sa system ha! Taray slay ka jan sa color luv it</p>
+                    <p class="comment-text">No user feedback available yet.</p>
                     <div class="comment-footer">
-                        <span class="date">09/09/2025</span>
-                        <span class="time">6:00 PM</span>
+                        <span class="date">--/--/----</span>
+                        <span class="time">--:-- --</span>
                     </div>
                 </div>
             </div>
-
-            <div class="comment">
-                 <img src="https://i.pravatar.cc/40?img=1" alt="User" class="user-img">
-                <div class="comment-details">
-                    <div class="comment-header">
-                        <span class="user-id">#KK2025296JP</span>
-                        <div class="rating-stars">
-                            <i class="fa-solid fa-star"></i>
-                            <i class="fa-solid fa-star"></i>
-                            <i class="fa-solid fa-star"></i>
-                            <i class="fa-solid fa-star"></i>
-                            <i class="fa-solid fa-star"></i>
-                            <span class="rating-score">5/5</span>
-                        </div>
-                    </div>
-                    <p class="comment-text">Infairness sa system ha! Taray slay ka jan sa color luv it</p>
-                    <div class="comment-footer">
-                        <span class="date">09/09/2025</span>
-                        <span class="time">6:00 PM</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="comment">
-                 <img src="https://i.pravatar.cc/40?img=1" alt="User" class="user-img">
-                <div class="comment-details">
-                    <div class="comment-header">
-                        <span class="user-id">#KK2025296JP</span>
-                        <div class="rating-stars">
-                            <i class="fa-solid fa-star"></i>
-                            <i class="fa-solid fa-star"></i>
-                            <i class="fa-solid fa-star"></i>
-                            <i class="fa-solid fa-star"></i>
-                            <i class="fa-solid fa-star"></i>
-                            <span class="rating-score">5/5</span>
-                        </div>
-                    </div>
-                    <p class="comment-text">Infairness sa system ha! Taray slay ka jan sa color luv it</p>
-                    <div class="comment-footer">
-                        <span class="date">09/09/2025</span>
-                        <span class="time">6:00 PM</span>
-                    </div>
-                </div>
-            </div>
+            @endforelse
         </div>
     </div>
 
-
 <div class="manage-card bottom-card">
 <div class="header">
-    <h4>Manage Account <span class="notif-count">3</span></h4>
-    <a href="#" class="view-all">View All</a>
+    <h4>Manage Account <span class="notif-count">{{ $pendingAccountsCount }}</span></h4>
+    <a href="{{ route('user-management2') }}" class="view-all">View All</a>
 </div>
 
 <div class="account-list">
-  <div class="account">
-  <div class="account-info">
-     <strong>Nina H. Kae</strong>
-     <p>SK | Em's Barrio South, Purok 5</p>
-  </div>
-     <span class="new-user">New User</span>
-   </div>
- <div class="account">
- <div class="account-info">
-     <strong>Nina H. Kae</strong>
-     <p>SK | Em's Barrio South, Purok 5</p>
- </div>
-     <span class="new-user">New User</span>
- </div>
- <div class="account">
- <div class="account-info">
-        <strong>Nina H. Kae</strong>
-        <p>SK | Em's Barrio South, Purok 5</p>
-  </div>
+    @forelse($pendingAccounts as $account)
+    <div class="account">
+        <div class="account-info">
+            <strong>{{ $account->given_name }} {{ $account->last_name }}</strong>
+            <p>{{ $account->role === 'sk' ? 'SK' : 'KK' }} | {{ $account->barangay->name ?? 'Unknown Barangay' }}, {{ $account->purok_zone }}</p>
+        </div>
         <span class="new-user">New User</span>
     </div>
-   </div>
- </div>
+    @empty
+    <div class="account">
+        <div class="account-info">
+            <strong>No pending accounts</strong>
+            <p>All accounts have been processed</p>
+        </div>
+    </div>
+    @endforelse
+</div>
+</div>
 </section>
 </div>
 </div>
     
 <script>
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Dashboard loaded - checking chart data...');
+    
     // ==============================
-    // Sidebar Toggle - FIXED: Remove margin changes
+    // Sidebar Toggle
     // ==============================
-    const toggleBtn = document.querySelector('.menu-toggle');
-    const sidebar = document.querySelector('.sidebar');
+    var toggleBtn = document.querySelector('.menu-toggle');
+    var sidebar = document.querySelector('.sidebar');
 
-    toggleBtn.addEventListener('click', () => {
-        // FIX: Only toggle the sidebar class, don't change margins
-        sidebar.classList.toggle('open');
-        // REMOVED: main.style.marginLeft and topbar.style.marginLeft
-    });
+    if (toggleBtn && sidebar) {
+        toggleBtn.addEventListener('click', function() {
+            sidebar.classList.toggle('open');
+        });
+    }
 
     // ==============================
     // Dropdown Toggles (Profile and Notification)
     // ==============================
-    const profileWrapper = document.querySelector('.profile-wrapper');
-    const profileToggle = document.getElementById('profileToggle');
-    const notifWrapper = document.querySelector('.notification-wrapper');
+    var profileWrapper = document.querySelector('.profile-wrapper');
+    var profileToggle = document.getElementById('profileToggle');
+    var notifWrapper = document.querySelector('.notification-wrapper');
 
     // Profile Toggle
-    profileToggle.addEventListener('click', (e) => {
-        e.stopPropagation();
-        profileWrapper.classList.toggle('active');
-        notifWrapper.classList.remove('active'); // Close other dropdown
-    });
+    if (profileToggle) {
+        profileToggle.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (profileWrapper) {
+                profileWrapper.classList.toggle('active');
+            }
+            if (notifWrapper) {
+                notifWrapper.classList.remove('active');
+            }
+        });
+    }
 
     // Notification Toggle
-    notifWrapper.addEventListener('click', (e) => {
-        e.stopPropagation();
-        notifWrapper.classList.toggle('active');
-        profileWrapper.classList.remove('active'); // Close other dropdown
-    });
+    if (notifWrapper) {
+        notifWrapper.addEventListener('click', function(e) {
+            e.stopPropagation();
+            notifWrapper.classList.toggle('active');
+            if (profileWrapper) {
+                profileWrapper.classList.remove('active');
+            }
+        });
+    }
 
     // Close all dropdowns when clicking elsewhere on the document
-    document.addEventListener('click', (e) => {
-        if (!profileWrapper.contains(e.target)) {
+    document.addEventListener('click', function(e) {
+        if (profileWrapper && !profileWrapper.contains(e.target)) {
             profileWrapper.classList.remove('active');
         }
-        if (!notifWrapper.contains(e.target)) {
+        if (notifWrapper && !notifWrapper.contains(e.target)) {
             notifWrapper.classList.remove('active');
         }
     });
@@ -308,35 +319,73 @@ document.addEventListener('DOMContentLoaded', () => {
     // Time Update
     // ==============================
     function updateTime() {
-        const now = new Date();
-        const timeElement = document.getElementById('current-time');
+        var now = new Date();
+        var timeElement = document.getElementById('current-time');
         if (timeElement) {
-            const options = { weekday: 'short', hour: '2-digit', minute: '2-digit', hour12: true };
-            const parts = now.toLocaleTimeString('en-US', options).toUpperCase().split(' ');
+            var options = { weekday: 'short', hour: '2-digit', minute: '2-digit', hour12: true };
+            var timeString = now.toLocaleTimeString('en-US', options).toUpperCase();
+            var parts = timeString.split(' ');
             
-            const dayTime = parts.slice(0, 2).join(' ').replace(',', '');
-            const amPm = parts[2];
+            var dayTime = parts[0] + ' ' + parts[1];
+            var amPm = parts[2];
             
-            timeElement.innerHTML = `${dayTime} <span>${amPm}</span>`;
+            timeElement.innerHTML = dayTime + ' <span>' + amPm + '</span>';
         }
     }
 
     updateTime();
-    setInterval(updateTime, 60000); // Update every minute
+    setInterval(updateTime, 60000);
 
     // ==============================
     // Chart.js Configuration
     // ==============================
 
-    // Population Chart (Bar)
-    const populationCtx = document.getElementById('populationChart');
+    // Population Chart (Bar) - Dynamic based on actual population data with SK/KK breakdown
+    var populationCtx = document.getElementById('populationChart');
     if (populationCtx) {
-        new Chart(populationCtx.getContext('2d'), {
+        console.log('Creating population chart...');
+        
+        // Get PHP values directly
+        var emsBarrioTotal = <?php echo isset($barangayPopulations['ems_barrio']['total']) ? $barangayPopulations['ems_barrio']['total'] : 0; ?>;
+        var emsBarrioSouthTotal = <?php echo isset($barangayPopulations['ems_barrio_south']['total']) ? $barangayPopulations['ems_barrio_south']['total'] : 0; ?>;
+        var emsBarrioEastTotal = <?php echo isset($barangayPopulations['ems_barrio_east']['total']) ? $barangayPopulations['ems_barrio_east']['total'] : 0; ?>;
+
+        var emsBarrioSK = <?php echo isset($barangayPopulations['ems_barrio']['sk']) ? $barangayPopulations['ems_barrio']['sk'] : 0; ?>;
+        var emsBarrioSouthSK = <?php echo isset($barangayPopulations['ems_barrio_south']['sk']) ? $barangayPopulations['ems_barrio_south']['sk'] : 0; ?>;
+        var emsBarrioEastSK = <?php echo isset($barangayPopulations['ems_barrio_east']['sk']) ? $barangayPopulations['ems_barrio_east']['sk'] : 0; ?>;
+
+        var emsBarrioKK = <?php echo isset($barangayPopulations['ems_barrio']['kk']) ? $barangayPopulations['ems_barrio']['kk'] : 0; ?>;
+        var emsBarrioSouthKK = <?php echo isset($barangayPopulations['ems_barrio_south']['kk']) ? $barangayPopulations['ems_barrio_south']['kk'] : 0; ?>;
+        var emsBarrioEastKK = <?php echo isset($barangayPopulations['ems_barrio_east']['kk']) ? $barangayPopulations['ems_barrio_east']['kk'] : 0; ?>;
+
+        console.log('Chart Data:', {
+            emsBarrioTotal: emsBarrioTotal,
+            emsBarrioSouthTotal: emsBarrioSouthTotal,
+            emsBarrioEastTotal: emsBarrioEastTotal,
+            emsBarrioSK: emsBarrioSK,
+            emsBarrioSouthSK: emsBarrioSouthSK,
+            emsBarrioEastSK: emsBarrioEastSK,
+            emsBarrioKK: emsBarrioKK,
+            emsBarrioSouthKK: emsBarrioSouthKK,
+            emsBarrioEastKK: emsBarrioEastKK
+        });
+
+        var barangayLabels = ['Em\'s Barrio', 'Em\'s Barrio South', 'Em\'s Barrio East'];
+        var barangayTotals = [emsBarrioTotal, emsBarrioSouthTotal, emsBarrioEastTotal];
+        var skCounts = [emsBarrioSK, emsBarrioSouthSK, emsBarrioEastSK];
+        var kkCounts = [emsBarrioKK, emsBarrioSouthKK, emsBarrioEastKK];
+
+        // Find max value for step size calculation
+        var maxValue = Math.max(emsBarrioTotal, emsBarrioSouthTotal, emsBarrioEastTotal);
+        var stepSize = maxValue > 0 ? Math.ceil(maxValue / 5) : 1;
+
+        // Create the chart
+        var populationChart = new Chart(populationCtx, {
             type: 'bar',
             data: {
-                labels: ['Barangay 1', 'Barangay 2', 'Barangay 3'],
+                labels: barangayLabels,
                 datasets: [{
-                    data: [850, 720, 680],
+                    data: barangayTotals,
                     backgroundColor: ['#2E86C1', '#1B4F72', '#3498DB'],
                     borderRadius: 5,
                     borderSkipped: false,
@@ -347,24 +396,54 @@ document.addEventListener('DOMContentLoaded', () => {
                 maintainAspectRatio: false,
                 plugins: {
                     legend: { display: false },
-                    tooltip: { callbacks: { label: (context) => `Population: ${context.parsed.y}` } }
+                    tooltip: { 
+                        callbacks: { 
+                            label: function(context) {
+                                var index = context.dataIndex;
+                                return [
+                                    'SK: ' + skCounts[index],
+                                    'KK: ' + kkCounts[index],
+                                    'Total: ' + context.parsed.y
+                                ];
+                            } 
+                        } 
+                    }
                 },
                 scales: {
-                    y: { beginAtZero: true, grid: { color: 'rgba(0, 0, 0, 0.05)' }, ticks: { stepSize: 200 } },
-                    x: { grid: { display: false } }
+                    y: { 
+                        beginAtZero: true, 
+                        grid: { color: 'rgba(0, 0, 0, 0.05)' }, 
+                        ticks: { 
+                            stepSize: stepSize
+                        } 
+                    },
+                    x: { 
+                        grid: { display: false },
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 45
+                        }
+                    }
                 }
             }
         });
+        
+        console.log('Population chart created successfully');
+    } else {
+        console.error('Population chart canvas not found!');
     }
 
-    // Rating Chart (Doughnut)
-    const ratingCtx = document.getElementById('ratingChart');
+    // Rating Chart (Doughnut) - Dynamic based on actual ratings
+    var ratingCtx = document.getElementById('ratingChart');
     if (ratingCtx) {
-        new Chart(ratingCtx.getContext('2d'), {
+        var ratingPercentage = <?php echo isset($ratingStats['rating_percentage']) ? $ratingStats['rating_percentage'] : 0; ?>;
+        var remainingPercentage = 100 - ratingPercentage;
+        
+        var ratingChart = new Chart(ratingCtx, {
             type: 'doughnut',
             data: {
                 datasets: [{
-                    data: [95, 5],
+                    data: [ratingPercentage, remainingPercentage],
                     backgroundColor: ['#2E86C1', '#E5E7EB'],
                     borderWidth: 0,
                     borderRadius: 10
@@ -384,77 +463,79 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==============================
     // Calendar Functionality
     // ==============================
-    const monthYearDisplay = document.getElementById('monthYear');
-    const calendarBody = document.querySelector('.calendar-table tbody');
-    const prevMonthBtn = document.querySelector('.calendar-header .prev');
-    const nextMonthBtn = document.querySelector('.calendar-header .next');
+    var monthYearDisplay = document.getElementById('monthYear');
+    var calendarBody = document.querySelector('.calendar-table tbody');
+    var prevMonthBtn = document.querySelector('.calendar-header .prev');
+    var nextMonthBtn = document.querySelector('.calendar-header .next');
 
-    let currentDate = new Date(); 
+    if (monthYearDisplay && calendarBody && prevMonthBtn && nextMonthBtn) {
+        var currentDate = new Date(); 
 
-    function renderCalendar() {
-        calendarBody.innerHTML = '';
-        const year = currentDate.getFullYear();
-        const month = currentDate.getMonth();
+        function renderCalendar() {
+            calendarBody.innerHTML = '';
+            var year = currentDate.getFullYear();
+            var month = currentDate.getMonth();
 
-        monthYearDisplay.textContent = currentDate.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+            monthYearDisplay.textContent = currentDate.toLocaleString('en-US', { month: 'long', year: 'numeric' });
 
-        let firstDayIndex = new Date(year, month, 1).getDay();
-        const startDayOffset = (firstDayIndex + 6) % 7; 
+            var firstDayIndex = new Date(year, month, 1).getDay();
+            var startDayOffset = (firstDayIndex + 6) % 7; 
 
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-        const today = new Date();
-        const currentDay = today.getDate();
-        const currentMonth = today.getMonth();
-        const currentYear = today.getFullYear();
-        
-        let date = 1;
-
-        for (let i = 0; i < 6; i++) {
-            const row = document.createElement('tr');
-            let weekHasDay = false;
-
-            for (let j = 0; j < 7; j++) {
-                const cell = document.createElement('td');
-                
-                if (i === 0 && j < startDayOffset) {
-                    cell.classList.add('empty');
-                } else if (date > daysInMonth) {
-                    cell.classList.add('empty');
-                } else {
-                    cell.textContent = date;
-                    weekHasDay = true;
-                    
-                    if (date === currentDay && month === currentMonth && year === currentYear) {
-                        cell.classList.add('today');
-                    }
-                    
-                    if (date === 25 && month === 9 && year === 2025) {
-                         cell.classList.add('active');
-                    }
-                    
-                    date++;
-                }
-                row.appendChild(cell);
-            }
+            var daysInMonth = new Date(year, month + 1, 0).getDate();
+            var today = new Date();
+            var currentDay = today.getDate();
+            var currentMonth = today.getMonth();
+            var currentYear = today.getFullYear();
             
-            if (weekHasDay) {
-                 calendarBody.appendChild(row);
+            var date = 1;
+
+            for (var i = 0; i < 6; i++) {
+                var row = document.createElement('tr');
+                var weekHasDay = false;
+
+                for (var j = 0; j < 7; j++) {
+                    var cell = document.createElement('td');
+                    
+                    if (i === 0 && j < startDayOffset) {
+                        cell.classList.add('empty');
+                    } else if (date > daysInMonth) {
+                        cell.classList.add('empty');
+                    } else {
+                        cell.textContent = date;
+                        weekHasDay = true;
+                        
+                        if (date === currentDay && month === currentMonth && year === currentYear) {
+                            cell.classList.add('today');
+                        }
+                        
+                        if (date === 25 && month === 9 && year === 2025) {
+                            cell.classList.add('active');
+                        }
+                        
+                        date++;
+                    }
+                    row.appendChild(cell);
+                }
+                
+                if (weekHasDay) {
+                    calendarBody.appendChild(row);
+                }
             }
         }
+
+        // Event Listeners for Month Navigation
+        prevMonthBtn.addEventListener('click', function() {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar();
+        });
+
+        nextMonthBtn.addEventListener('click', function() {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar();
+        });
+        
+        renderCalendar();
     }
-
-    // Event Listeners for Month Navigation
-    prevMonthBtn.addEventListener('click', () => {
-        currentDate.setMonth(currentDate.getMonth() - 1);
-        renderCalendar();
-    });
-
-    nextMonthBtn.addEventListener('click', () => {
-        currentDate.setMonth(currentDate.getMonth() + 1);
-        renderCalendar();
-    });
-    
-    renderCalendar();
 });
 </script>
 </body>
