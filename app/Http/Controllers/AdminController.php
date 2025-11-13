@@ -51,6 +51,18 @@ class AdminController extends Controller
             ->take(3)
             ->get();
 
+        // Get recent pending feedbacks for notifications (last 5 pending feedbacks)
+        $recentPendingFeedbacks = SystemFeedback::with(['user' => function($query) {
+                $query->select('id', 'account_number', 'given_name', 'last_name', 'avatar', 'barangay_id')
+                      ->with('barangay:id,name');
+            }])
+            ->where('status', 'pending')
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+
+        $pendingFeedbacksCount = SystemFeedback::where('status', 'pending')->count();
+
         // Calculate overall system rating from user feedback
         $ratingStats = $this->getSystemRatingStats();
 
@@ -60,6 +72,8 @@ class AdminController extends Controller
             'pendingAccounts',
             'pendingAccountsCount',
             'recentFeedbacks',
+            'recentPendingFeedbacks',
+            'pendingFeedbacksCount',
             'admin',
             'ratingStats'
         ));
@@ -325,6 +339,115 @@ class AdminController extends Controller
         return response()->json([
             'barangay_populations' => $barangayPopulations,
             'total_population' => $totalPopulation
+        ]);
+    }
+
+    /**
+     * Get notification count for AJAX requests
+     */
+    public function getNotificationCount()
+    {
+        $pendingCount = SystemFeedback::where('status', 'pending')->count();
+        
+        return response()->json([
+            'count' => $pendingCount
+        ]);
+    }
+
+    /**
+     * Get recent notifications for AJAX requests
+     */
+    public function getRecentNotifications()
+    {
+        $recentPendingFeedbacks = SystemFeedback::with(['user' => function($query) {
+                $query->select('id', 'account_number', 'given_name', 'last_name', 'avatar', 'barangay_id')
+                      ->with('barangay:id,name');
+            }])
+            ->where('status', 'pending')
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+
+        return response()->json([
+            'notifications' => $recentPendingFeedbacks->map(function($feedback) {
+                return [
+                    'id' => $feedback->id,
+                    'user_name' => $feedback->user->given_name . ' ' . $feedback->user->last_name,
+                    'account_number' => $feedback->user->account_number,
+                    'barangay' => $feedback->user->barangay->name ?? 'N/A',
+                    'time_ago' => $feedback->created_at->diffForHumans(),
+                    'created_at' => $feedback->created_at->format('Y-m-d H:i:s')
+                ];
+            }),
+            'count' => $recentPendingFeedbacks->count()
+        ]);
+    }
+
+    /**
+     * Mark feedback as read
+     */
+    public function markFeedbackAsRead($id)
+    {
+        try {
+            $feedback = SystemFeedback::findOrFail($id);
+            
+            // You can add a 'read_at' timestamp if you want to track read status
+            // $feedback->read_at = now();
+            // $feedback->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Notification marked as read'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error marking feedback as read: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to mark notification as read'
+            ], 500);
+        }
+    }
+
+    /**
+     * Mark all notifications as read
+     */
+    public function markAllNotificationsAsRead()
+    {
+        try {
+            // If you have a read_at column, you can update all pending feedbacks
+            // SystemFeedback::where('status', 'pending')->update(['read_at' => now()]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'All notifications marked as read'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error marking all notifications as read: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to mark all notifications as read'
+            ], 500);
+        }
+    }
+
+    /**
+     * Get dashboard statistics for AJAX updates
+     */
+    public function getDashboardStats()
+    {
+        $pendingFeedbacksCount = SystemFeedback::where('status', 'pending')->count();
+        $pendingAccountsCount = User::where('account_status', 'pending')->count();
+        $totalPopulation = User::where('account_status', 'approved')->count();
+        
+        $ratingStats = $this->getSystemRatingStats();
+
+        return response()->json([
+            'pending_feedbacks_count' => $pendingFeedbacksCount,
+            'pending_accounts_count' => $pendingAccountsCount,
+            'total_population' => $totalPopulation,
+            'rating_stats' => $ratingStats
         ]);
     }
 }

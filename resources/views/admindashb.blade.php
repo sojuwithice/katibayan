@@ -52,37 +52,41 @@
       <div class="time" id="current-time"></div>
       <div class="notification-wrapper">
         <i class="fas fa-bell"></i>
-          <span class="notif-count">3</span>
+          <span class="notif-count" id="notificationCount">{{ $pendingFeedbacksCount ?? 0 }}</span>
       <div class="notif-dropdown">
       <div class="notif-header">
-          <strong>Notification</strong> <span>3</span>
+          <strong>Notification</strong> <span id="notificationHeaderCount">{{ $pendingFeedbacksCount ?? 0 }}</span>
       </div>
-          <ul class="notif-list">
-          <li>
-          <div class="notif-icon"></div>
-          <div class="notif-content">
-              <strong>Program Evaluation</strong>
-              <p>We need evaluation for the KK-Assembly Event</p>
-          </div>
-            <span class="notif-dot"></span>
-          </li>
-          <li>
-          <div class="notif-icon"></div>
-          <div class="notif-content">
-             <strong>New Feedback</strong>
-               <p>We need evaluation for the KK-Assembly Event</p>
-          </div>
-                <span class="notif-dot"></span>
-          </li>
-          <li>
-          <div class="notif-icon"></div>
-          <div class="notif-content">
-              <strong>New Feedback</strong>
-                <p>Hello please fix the print button thank you!</p>
-          </div>
-                <span class="notif-dot"></span>
-          </li>
+          <ul class="notif-list" id="notificationList">
+              @forelse($recentPendingFeedbacks as $feedback)
+              <li class="notification-item" data-id="{{ $feedback->id }}">
+                  <div class="notif-icon">
+                      <i class="fas fa-comment-dots"></i>
+                  </div>
+                  <div class="notif-content">
+                      <strong>New Feedback Submitted</strong>
+                      <p>{{ $feedback->user->given_name }} {{ $feedback->user->last_name }} ({{ $feedback->user->account_number }}) - {{ $feedback->user->barangay->name ?? 'N/A' }}</p>
+                      <small class="notification-time">{{ $feedback->created_at->diffForHumans() }}</small>
+                  </div>
+                  <span class="notif-dot"></span>
+              </li>
+              @empty
+              <li class="no-notifications">
+                  <div class="notif-icon">
+                      <i class="fas fa-bell-slash"></i>
+                  </div>
+                  <div class="notif-content">
+                      <strong>No New Notifications</strong>
+                      <p>You're all caught up!</p>
+                  </div>
+              </li>
+              @endforelse
           </ul>
+          @if($recentPendingFeedbacks && $recentPendingFeedbacks->count() > 0)
+          <div class="notif-footer">
+              <a href="{{ route('users-feedback') }}" class="view-all-notifications">View All Feedback</a>
+          </div>
+          @endif
       </div>
     </div>
 <div class="profile-wrapper">
@@ -335,6 +339,75 @@ document.addEventListener('DOMContentLoaded', function() {
 
     updateTime();
     setInterval(updateTime, 60000);
+
+    // ==============================
+    // Notification Management
+    // ==============================
+    function updateNotificationCount(count) {
+        const countElement = document.getElementById('notificationCount');
+        const headerCountElement = document.getElementById('notificationHeaderCount');
+        
+        if (countElement) countElement.textContent = count;
+        if (headerCountElement) headerCountElement.textContent = count;
+        
+        // Show/hide notification badge
+        if (count > 0) {
+            countElement.style.display = 'flex';
+        } else {
+            countElement.style.display = 'none';
+        }
+    }
+
+    // Mark notification as read when clicked
+    document.addEventListener('click', function(e) {
+        const notificationItem = e.target.closest('.notification-item');
+        if (notificationItem) {
+            const feedbackId = notificationItem.getAttribute('data-id');
+            markNotificationAsRead(feedbackId, notificationItem);
+        }
+    });
+
+    function markNotificationAsRead(feedbackId, notificationElement) {
+        // Remove the notification dot
+        const dot = notificationElement.querySelector('.notif-dot');
+        if (dot) {
+            dot.style.display = 'none';
+        }
+        
+        // You can also send an AJAX request to mark as read in the database
+        fetch(`/admin/system-feedbacks/${feedbackId}/mark-read`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Content-Type': 'application/json',
+            }
+        }).then(response => response.json())
+          .then(data => {
+              if (data.success) {
+                  // Update notification count
+                  const currentCount = parseInt(document.getElementById('notificationCount').textContent);
+                  if (currentCount > 0) {
+                      updateNotificationCount(currentCount - 1);
+                  }
+              }
+          })
+          .catch(error => console.error('Error marking notification as read:', error));
+    }
+
+    // Real-time notification updates (using polling)
+    function checkForNewNotifications() {
+        fetch('/admin/notifications/count')
+            .then(response => response.json())
+            .then(data => {
+                if (data.count !== undefined) {
+                    updateNotificationCount(data.count);
+                }
+            })
+            .catch(error => console.error('Error checking notifications:', error));
+    }
+
+    // Check for new notifications every 30 seconds
+    setInterval(checkForNewNotifications, 30000);
 
     // ==============================
     // Chart.js Configuration
