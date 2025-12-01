@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KatiBayan - Service Offers</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/favicon.png') }}">
   <link rel="stylesheet" href="{{ asset('css/serviceoffers.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -158,6 +159,48 @@
       </div>
     </header>
 
+    <main class="content">
+    <section class="assistance-section">
+      <div class="assistance-card">
+        {{-- Walang Edit Button dito dahil display-only ito para sa Youth --}}
+        
+        <h2>Need Assistance?</h2>
+        
+        {{-- Iche-check kung may laman ang variables galing sa controller --}}
+        
+        @if(empty($assistance_description) && empty($assistance_fb_link) && empty($assistance_msgr_link))
+          <p>
+            Contact information has not been set up yet by the SK Officials.
+          </p>
+        @else
+          <p>
+            {{ $assistance_description ?? 'You may contact us on our facebook page or you can directly message the SK Chairman through the link below' }}
+          </p>
+          <div class="assistance-links">
+            
+            @if(!empty($assistance_fb_link))
+            <div class="link-item">
+              <i class="fab fa-facebook"></i>
+              {{-- Clickable link --}}
+              <a href="{{ $assistance_fb_link }}" target="_blank" rel="noopener noreferrer">{{ $assistance_fb_link }}</a>
+            </div>
+            @endif
+            
+            @if(!empty($assistance_msgr_link))
+            <div class="link-item">
+              <i class="fab fa-facebook-messenger"></i>
+              {{-- Clickable link --}}
+              <a href="{{ $assistance_msgr_link }}" target="_blank" rel="noopener noreferrer">{{ $assistance_msgr_link }}</a>
+            </div>
+            @endif
+
+          </div>
+        @endif
+        
+      </div>
+    </section>
+
+    
     <!-- Service Offers Section -->
     <section class="service-offer">
       <div class="service-offer-container">
@@ -189,28 +232,33 @@
 
     <!-- Organizational Chart -->
     <section class="org-chart">
-      <div class="org-chart-container">
+    <div class="org-chart-container">
         <h2>Organizational Chart</h2>
         <p class="section-desc">
-          The organizational chart of the Sangguniang Kabataan of {{ $barangayName }} illustrates the structure of its committees
-          and defines the roles and responsibilities of each official.
+            The organizational chart of the Sangguniang Kabataan of {{ $barangayName }} illustrates the structure of its committees
+            and defines the roles and responsibilities of each official.
         </p>
-      </div>
+    </div>
 
-      <!-- Org chart image outside the container -->
-      <div class="org-image">
-        @if($organizationalChart)
-          <img src="{{ asset('storage/' . $organizationalChart->image_path) }}" alt="Organizational Chart of {{ $barangayName }}">
+    <div class="org-image-wrapper">
+        @if(isset($organizationalCharts) && $organizationalCharts->isNotEmpty())
+            @foreach($organizationalCharts as $chart)
+            <div class="chart-display-item">
+                <img src="{{ asset('storage/' . $chart->image_path) }}" 
+                     alt="Organizational Chart of {{ $barangayName }}" 
+                     class="main-org-chart-img">
+                
+            </div>
+            @endforeach
         @else
-          <div class="no-org-chart">
-            <p>No organizational chart available for {{ $barangayName }} yet.</p>
-          </div>
+            <div class="no-org-chart">
+                <p>No organizational chart available for {{ $barangayName }} yet.</p>
+            </div>
         @endif
-      </div>
-    </section>
-  </div>
+    </div>
+    
+</section>
 
-  <!-- Service Details Modal -->
   <div id="serviceModal" class="modal">
     <div class="modal-content">
       <span id="closeModal" class="close">&times;</span>
@@ -230,7 +278,16 @@
           <p id="modalLocation"></p>
         </div>
 
+        <div id="howToAvailSection" style="display: none;">
+          <h3>How to Avail</h3>
+          <p id="modalHowToAvail"></p>
+        </div>
 
+        <div id="contactInfoSection" style="display: none;">
+          <h3>For Assistance</h3>
+          <p id="modalContactInfo"></p>
+        </div>
+        </div>
     </div>
   </div>
 
@@ -242,6 +299,14 @@
       // === Elements ===
       const menuToggle = document.querySelector('.menu-toggle');
       const sidebar = document.querySelector('.sidebar');
+      
+      // === BAGONG DEFINITION PARA SA MODAL LOGIC ===
+      // Kunin ang modal elements (Kailangan ito para gumana ang modal)
+      const serviceModal = document.getElementById('serviceModal');
+      const closeModal = document.getElementById('closeModal');
+      const servicesContainer = document.getElementById('servicesContainer'); // Kunin ang container ng services
+      // =============================================
+
 
       // Submenus
       const profileItem = document.querySelector('.profile-item');
@@ -351,92 +416,99 @@
       updateTime();
       setInterval(updateTime, 60000);
 
-      // === Service Modal Functionality ===
-      const serviceModal = document.getElementById('serviceModal');
-      const closeModal = document.getElementById('closeModal');
-      const readMoreBtns = document.querySelectorAll('.read-more-btn');
+     // ... (Iba pang code) ...
 
-      // Read More functionality
-      readMoreBtns.forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-          e.preventDefault();
-          const serviceId = e.target.dataset.serviceId;
-          await loadServiceDetails(serviceId);
-        });
-      });
+// Close modal
+closeModal?.addEventListener('click', () => {
+  serviceModal.classList.remove('active'); 
+});
 
-      // Close modal
-      closeModal?.addEventListener('click', () => {
-        serviceModal.style.display = 'none';
-      });
+serviceModal?.addEventListener('click', (e) => {
+  if (e.target === serviceModal) {
+    serviceModal.classList.remove('active'); 
+  }
+});
 
-      serviceModal?.addEventListener('click', (e) => {
-        if (e.target === serviceModal) {
-          serviceModal.style.display = 'none';
+// === FIX: EVENT DELEGATION PARA SA READ MORE BUTTONS ===
+servicesContainer?.addEventListener('click', (e) => {
+    // Tinitingnan kung ang click ay nagmula sa isang element na may class na 'read-more-btn'
+    if (e.target.classList.contains('read-more-btn')) {
+        e.preventDefault(); // Pigilan ang default action ng <a> (na mag-jump sa #)
+        const serviceId = e.target.getAttribute('data-service-id');
+        if (serviceId) {
+            loadServiceDetails(serviceId);
         }
-      });
+    }
+});
+// ========================================================
 
-      // Load service details function
-      async function loadServiceDetails(serviceId) {
+
+// Load service details function
+async function loadServiceDetails(serviceId) {
+  try {
+    // Tinitiyak na tama ang URL (assuming Laravel route is correct)
+    const response = await fetch(`/services/${serviceId}/details`); 
+    const data = await response.json();
+    
+    if (data.success) {
+      const service = data.service;
+      
+      // Populate modal with service data
+      document.getElementById('modalServiceTitle').textContent = service.title;
+      document.getElementById('modalServiceDescription').textContent = service.description;
+      // Gumagamit ng tamang path
+      document.getElementById('modalServiceImage').src = service.image ? 
+        `/storage/${service.image}` : '/images/print.jpeg';
+
+      // Show/hide sections based on available data
+      toggleSection('servicesOfferedSection', service.services_offered);
+      toggleSection('locationSection', service.location);
+      toggleSection('howToAvailSection', service.how_to_avail);
+      toggleSection('contactInfoSection', service.contact_info);
+
+      // Populate services offered list
+      if (service.services_offered) {
+        const servicesList = document.getElementById('modalServicesOffered');
+        servicesList.innerHTML = '';
         try {
-          const response = await fetch(`/services/${serviceId}/details`);
-          const data = await response.json();
-          
-          if (data.success) {
-            const service = data.service;
-            
-            // Populate modal with service data
-            document.getElementById('modalServiceTitle').textContent = service.title;
-            document.getElementById('modalServiceDescription').textContent = service.description;
-            document.getElementById('modalServiceImage').src = service.image ? 
-              `/storage/${service.image}` : '/images/print.jpeg';
-
-            // Show/hide sections based on available data
-            toggleSection('servicesOfferedSection', service.services_offered);
-            toggleSection('locationSection', service.location);
-            toggleSection('howToAvailSection', service.how_to_avail);
-            toggleSection('contactInfoSection', service.contact_info);
-
-            // Populate services offered list
-            if (service.services_offered) {
-              const servicesList = document.getElementById('modalServicesOffered');
-              servicesList.innerHTML = '';
-              try {
-                const servicesArray = JSON.parse(service.services_offered);
-                if (Array.isArray(servicesArray)) {
-                  servicesArray.forEach(serviceItem => {
-                    const li = document.createElement('li');
-                    li.textContent = serviceItem;
-                    servicesList.appendChild(li);
-                  });
-                }
-              } catch (e) {
-                console.error('Error parsing services offered:', e);
-              }
-            }
-
-            // Populate other fields
-            document.getElementById('modalLocation').textContent = service.location || '';
-            document.getElementById('modalHowToAvail').textContent = service.how_to_avail || '';
-            document.getElementById('modalContactInfo').textContent = service.contact_info || '';
-
-            // Show modal
-            serviceModal.style.display = 'flex';
-          } else {
-            alert('Error loading service details');
+          // Tinitiyak na ang JSON parsing ay gumagana nang tama
+          const servicesArray = JSON.parse(service.services_offered);
+          if (Array.isArray(servicesArray)) {
+            servicesArray.forEach(serviceItem => {
+              const li = document.createElement('li');
+              li.textContent = serviceItem;
+              servicesList.appendChild(li);
+            });
           }
-        } catch (error) {
-          console.error('Error loading service details:', error);
-          alert('Error loading service details');
+        } catch (e) {
+          console.error('Error parsing services offered:', e);
         }
       }
 
-      function toggleSection(sectionId, data) {
-        const section = document.getElementById(sectionId);
-        if (section) {
-          section.style.display = data ? 'block' : 'none';
-        }
-      }
+      // Populate other fields
+      document.getElementById('modalLocation').textContent = service.location || '';
+      document.getElementById('modalHowToAvail').textContent = service.how_to_avail || '';
+      document.getElementById('modalContactInfo').textContent = service.contact_info || '';
+
+      // I-apply ang 'active' class para lumabas ang modal
+      serviceModal.classList.add('active'); 
+
+    } else {
+      alert('Error loading service details');
+    }
+  } catch (error) {
+    console.error('Error loading service details:', error);
+    alert('Error loading service details');
+  }
+}
+
+function toggleSection(sectionId, data) {
+  const section = document.getElementById(sectionId);
+  if (section) {
+    // Tinitingnan kung may laman ang data (hindi empty string o null)
+    section.style.display = data ? 'block' : 'none'; 
+  }
+}
 
       // === Logout confirmation ===
       function confirmLogout(event) {
@@ -454,23 +526,23 @@
   <script>
   const mobileBtn = document.getElementById('mobileMenuBtn');
   const sidebar = document.querySelector('.sidebar');
-  const mainContent = document.querySelector('.main'); // (BAGO)
+  const mainContent = document.querySelector('.main'); 
 
   mobileBtn?.addEventListener('click', (e) => {
-    e.stopPropagation(); // (BAGO)
+    e.stopPropagation(); 
     sidebar.classList.toggle('open');
-    document.body.classList.toggle('mobile-sidebar-active'); // (BAGO)
+    document.body.classList.toggle('mobile-sidebar-active'); 
   });
 
   // Close sidebar when clicking outside (mobile only)
   document.addEventListener('click', (e) => {
     if (window.innerWidth <= 768 &&
-      sidebar.classList.contains('open') && // (BAGO) Check kung open
+      sidebar.classList.contains('open') && 
       !sidebar.contains(e.target) &&
       !mobileBtn.contains(e.target)) {
       
       sidebar.classList.remove('open');
-      document.body.classList.remove('mobile-sidebar-active'); // (BAGO)
+      document.body.classList.remove('mobile-sidebar-active'); 
     }
   });
 </script>

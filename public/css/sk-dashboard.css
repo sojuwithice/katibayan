@@ -417,17 +417,15 @@ body {
   width: 100%; 
 }
 
-/* === Notification Styles === */
+/* === NOTIFICATION STYLES (Only Yellow Dot - No Icons) === */
 .notification-wrapper {
   position: relative;
   cursor: pointer;
 }
-
 .notification-wrapper .fa-bell {
   font-size: 22px;
   color: #3C87C4;
 }
-
 .notif-count {
   position: absolute;
   top: -6px;
@@ -439,26 +437,22 @@ body {
   border-radius: 50%;
   padding: 2px 6px;
 }
-
-/* Dropdown */
 .notif-dropdown {
   position: absolute;
   top: 40px;
   right: 0;
-  width: 320px;
+  width: 350px;
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.2);
   flex-direction: column;
   overflow: hidden;
   z-index: 5000;
-
-  opacity: 0;                 
-  transform: translateY(-20px); 
-  pointer-events: none;        
-  transition: all 0.3s ease;  
+  opacity: 0;
+  transform: translateY(-20px);
+  pointer-events: none;
+  transition: all 0.3s ease;
 }
-
 .notif-dropdown .notif-header {
   font-size: 16px;
   font-weight: 700;
@@ -469,7 +463,6 @@ body {
   justify-content: space-between;
   align-items: center;
 }
-
 .notif-dropdown .notif-header span {
   background: #3C87C4;
   color: #fff;
@@ -477,6 +470,123 @@ body {
   font-weight: 700;
   border-radius: 50%;
   padding: 2px 8px;
+}
+.notification-wrapper.active .notif-dropdown {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+
+.notif-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 400px;
+  overflow-y: auto;
+}
+.notif-list li {
+  margin: 0;
+  padding: 0;
+  border-bottom: 1px solid #eee;
+}
+.notif-list li:last-child {
+  border-bottom: none;
+}
+
+/* Bawat item (link) */
+.notif-link {
+  display: flex; 
+  align-items: flex-start;
+  padding: 12px 16px;
+  text-decoration: none;
+  color: #333;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+.notif-link:hover {
+  background-color: #f5f5f5;
+}
+
+/* Unread items */
+.notif-link.unread {
+  background-color: #fffbef; 
+}
+.notif-link.unread .notif-main-content strong {
+  font-weight: 700; 
+  color: #114B8C; 
+}
+.notif-link.unread .notif-message {
+  color: #333; 
+}
+
+/* Dot container (Nasa labas ng main content) */
+.notif-dot-container {
+  width: 16px;
+  flex-shrink: 0;
+  padding-top: 5px; 
+}
+.notif-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background-color: #FFB703;
+  border-radius: 50%;
+}
+.notif-dot-placeholder {
+  display: inline-block;
+  width: 8px; 
+}
+
+/* Main Content Area (Title, Timestamp, Message) */
+.notif-main-content {
+  flex-grow: 1; 
+}
+
+/* Header line (Title + Timestamp) */
+.notif-header-line {
+  display: flex; 
+  justify-content: space-between; 
+  align-items: flex-start; 
+  margin-bottom: 4px; 
+}
+
+.notif-header-line strong {
+  font-size: 14px;
+  font-weight: 600; 
+  color: #555; 
+  line-height: 1.3;
+  padding-right: 10px; 
+}
+
+/* Right Column (Timestamp) */
+.notif-timestamp {
+  flex-shrink: 0; 
+  font-size: 11px;
+  color: #888;
+  white-space: nowrap;
+  margin-top: -5px; 
+}
+
+/* Message (nasa ilalim na) */
+.notif-message {
+  font-size: 13px;
+  color: #777; 
+  margin: 0;
+  line-height: 1.4;
+  white-space: normal; 
+  overflow: visible;
+}
+
+/* "No notifications" message */
+.notif-list li.no-notifications {
+  text-align: center;
+  padding: 20px;
+  color: #888;
+  border-bottom: none;
+}
+.notif-list li.no-notifications p {
+    margin: 0;
 }
 
 .mark-all-read {
@@ -493,102 +603,6 @@ body {
 .mark-all-read:hover {
   background: #f0f7ff;
   color: #2a5f8a;
-}
-
-/* List */
-.notif-list {
-  list-style: none;
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.notification-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.8rem;
-  padding: 1rem;
-  border-bottom: 1px solid #eee;
-  position: relative;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.notification-item:hover {
-  background-color: #f8f9fa;
-}
-
-.notification-item.unread {
-  background-color: #f0f7ff;
-}
-
-.notification-item.read {
-  opacity: 0.7;
-}
-
-.notification-item:last-child {
-  border-bottom: none;
-}
-
-.notif-icon {
-  margin-top: 2px;
-  flex-shrink: 0;
-}
-
-.notif-icon .fas.fa-star {
-  color: #FFCA3A;
-  font-size: 16px;
-}
-
-.notif-icon .fas.fa-star.unread {
-  color: #3C87C6;
-}
-
-.notif-content {
-  flex: 1;
-}
-
-.notif-content strong {
-  font-size: 14px;
-  font-weight: 700;
-  color: #114B8C;
-  display: block;
-  margin-bottom: 4px;
-}
-
-.notif-content p {
-  font-size: 13px;
-  color: #444;
-  margin: 0;
-}
-
-/* Yellow dot */
-.notif-dot {
-  width: 10px;
-  height: 10px;
-  background: #FFB703;
-  border-radius: 50%;
-  position: absolute;
-  right: 15px;
-  top: 20px;
-}
-
-.notif-loading, .no-notifications {
-  padding: 20px;
-  text-align: center;
-  color: #666;
-  font-style: italic;
-}
-
-.no-notifications {
-  color: #999;
-  font-size: 14px;
-}
-
-/* Show dropdown */
-.notification-wrapper.active .notif-dropdown {
-  opacity: 1;                 
-  transform: translateY(0);    
-  pointer-events: auto;       
 }
 
 /*main content*/
@@ -620,7 +634,6 @@ body {
   max-width: 1500px;
 }
 
-/* Engagement Card */
 .engagement-card {
   background: #fff;
   border-radius: 20px;
@@ -629,12 +642,8 @@ body {
   border: 2px solid #3C87C6;
   margin-bottom: 0;
   text-align: center;
-
-  /* grid placement */
   grid-column: 1; /* col1 */
   grid-row: 1;    /* row1 */
-
-  /* dagdag width */
   width: 470px; 
   max-width: 100%;
 }
@@ -654,19 +663,21 @@ body {
   border: 2px solid #3C87C6;
   margin-bottom: .1rem;
   text-align: center;
-
-  /* grid placement */
   grid-column: 1; 
   grid-row: 2;    
+  
+  /* In-add ko 'to para pumantay sa katabi */
+  height: 305px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
-/* Chart canvas */
 .demographics-card canvas {
   flex: 1;
   max-height: 220px;   
 }
 
-/* Legend */
 .demographics-card .legend {
   margin-top: 8px;
   display: flex;
@@ -707,9 +718,6 @@ body {
 }
 
 
-
-
-
 /* === Dashboard Layout === */
 .dashboard-container {
   display: grid;
@@ -717,41 +725,24 @@ body {
   gap: 20px;
 }
 
-/* Left side content (Youth Age + Engagement + Demographics) */
 .left-panel {
   display: grid;
   grid-template-columns: 1fr 1fr; /* dalawang column */
-  grid-template-rows: auto auto; /* dalawang row */
+  grid-template-rows: auto auto auto; /* ETO YUNG FIX: 3 rows */
   gap: 20px;
 }
 
-/* Right side (Calendar + Reminders) */
 .right-panel {
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
-.engagement-card,
-.demographics-card {
-  height: auto;   
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-.announcements-section {
-  grid-column: 1 / 3; 
-  grid-row: 3;
-}
-
-
-
 /* Cards */
 .card, 
 .youth-age-card, 
 .calendar, 
-.reminders {
+.reminders-card { /* Inayos ko 'to */
   background: #fff;
   border-radius: 20px;
   padding: 20px;
@@ -783,10 +774,7 @@ body {
   box-shadow: 0 3px 8px rgba(0,0,0,0.1);
   text-align: center;
   position: relative;
-
-  /* height fixed */
-  height: 305px;
-  max-height: 500%;
+  height: 305px; /* fixed height */
 }
 
 .youth-age-card .card-header {
@@ -813,12 +801,10 @@ body {
   transform: translateY(-50%);
 }
 
-
 .youth-age-card .options-btn:hover {
   background: #f0f0f0;
 }
 
-/* Dropdown menu */
 .youth-age-card .options-dropdown {
   position: absolute;
   top: 38px;           
@@ -854,9 +840,6 @@ body {
   background: #f5f5f5;
 }
 
-
-
-/* Chart */
 #ageChart {
   width: 150px !important;
   height: 150px !important;
@@ -870,12 +853,11 @@ body {
   gap: 10px;
 }
 
-/* Legend container */
 .legend {
   margin-top: 1px;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;   /* align text at dots ng pantay */
+  align-items: flex-start;
   gap: 6px;              
   font-family: 'Montserrat', sans-serif;
   font-size: 0.7rem;    
@@ -883,23 +865,20 @@ body {
   color: #333;
 }
 
-/* Legend item */
 .legend-item {
   display: flex;
-  align-items: center;   /* gitna vertical alignment */
-  gap: 8px;              /* space ng dot at text */
+  align-items: center;
+  gap: 8px;
 }
 
-/* The dot itself */
 .dot {
   display: inline-block;
-  min-width: 5px;   /* fixed width para pantay kahit anong size */
+  min-width: 5px;
   min-height: 5px;
   border-radius: 50%;
-  flex-shrink: 0;    /* para hindi lumiit */
+  flex-shrink: 0;
 }
 
-/* Custom colors per category */
 .dot.child {
   background-color: #FFCA3A; 
 }
@@ -912,10 +891,6 @@ body {
   background-color: #8AC926; 
 }
 
-
-
-
-/* Dropdown visible state */
 .youth-age-card .options-dropdown.show {
   display: block;
   animation: fadeIn 0.15s ease;
@@ -927,8 +902,8 @@ body {
 }
 
 
-/* Youth Engagement in Activities Card */
-.activities-card {
+/* Monthly Events Card */
+.monthly-events-card { /* INAYOS 'YUNG PANGALAN */
   grid-column: 2;      
   grid-row: 1;
   padding: 20px;
@@ -938,407 +913,45 @@ body {
   text-align: center;
   position: relative;
   height: 305px;   
+  
 }
 
-/* Title */
-.activities-card .card-header {
+.monthly-events-card .card-header {
   margin-bottom: 1.5rem; 
 }
 
-.activities-card .card-header h3 {
+.monthly-events-card .card-header h3 {
   font-size: 1.2rem; 
   margin: 0;
   color: #01214A;
 }
 
-/* Chart inside card */
-#activitiesChart {
+#monthlyEventsChart {
   width: 100% !important;
   height: 190px !important; 
 }
 
 
-/* Calendar */
-.calendar {
-  flex: 1;
-}
-
-/* Reminders */
-.reminders-card {
-  background: #fff;
-  border-radius: 20px;
-  padding: 20px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  font-family: 'Segoe UI', sans-serif;
-  color: #01214A;
-  max-width: 500px;
-}
-
-/* Title */
-.reminders-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #3C87C4;
-  margin-bottom: 15px;
-}
-
-/* Section Labels */
-.section-label {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #3C87C4;
-  margin-bottom: 8px;
-}
-
-/* Reminder Item */
-.reminder-item {
-  display: flex;
-  align-items: center;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 3px 6px rgba(0,0,0,0.15);
-  padding: 12px 16px;
-  margin-bottom: 15px;
-  min-height: 60px;
-  position: relative;  /* para sa ::before */
-  overflow: hidden;
-}
-
-/* Full Yellow Stripe */
-.reminder-item::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 12px;
-  background: #FFD34E;
-  border-radius: 12px 0 0 12px;
-}
-
-/* Date */
-.reminder-date {
-  font-weight: 700;
-  color: #3C87C4;
-  margin-right: 15px;
-  padding-left: 10px; 
-  min-width: 110px;
-  z-index: 1; 
-}
-
-/* Text */
-.reminder-text {
-  font-size: 0.95rem;
-  color: #000;
-  flex: 1;
-  z-index: 1;
-}
-
-/* Empty upcoming box */
-.reminder-item.empty {
-  height: 60px;
-  background: #fff;
-}
-
-/* === Youth Population === */
-.youth-population {
-  background: #fff;
-  border-radius: 20px;
-  padding: 2rem;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  margin-top: .5rem;
-  text-align: center;
-  height: 445px;
-}
-
-.population-title {
-  font-size: 24px;
-  font-weight: 700;
-  color: #3C87C4;
-  margin-bottom: 1rem;
-}
-
-/* Chart wrapper */
-.population-chart {
-  position: relative;
-  width: 250px;
-  height: 250px;
-  margin: 0 auto 1.5rem;
-}
-
-.population-chart canvas {
-  width: 100% !important;
-  height: 100% !important;
-}
-
-/* Centered total */
-.population-center {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
-
-.population-center .population-total {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #114B8C;
-  display: block;
-}
-
-.population-center p {
-  font-size: 14px;
-  color: #333;
-  margin: 0;
-}
-
-/* Legend */
-.population-legend {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  align-items: stretch; 
-}
-
-.legend-item {
-  display: flex;
-  justify-content: space-between; 
-  align-items: center;
-  font-size: 15px;
-  color: #000;
-  padding: 0 8px; 
-}
-
-.legend-item span:first-child {
-  flex: 1;
-  text-align: left;
-}
-
-.legend-item span:nth-child(2) {
-  margin: 0 1rem;
-  text-align: center;
-  font-weight: 600;
-}
-
-.legend-item .dot {
-  width: 30px;
-  height: 12px;
-  border-radius: 999px;
-  flex-shrink: 0;
-}
-
-
-.legend-item .dot.female {
-  background: #F6A5CC;
-}
-
-.legend-item .dot.male {
-  background: #114B8C;
-}
-
-
-
-/* === ANNOUNCEMENTS SECTION WRAPPER === */
-.announcements-section {
-  background: #fff;
-  border-radius: 20px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-
-  max-height: 380px;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  transition: all .2s ease;
-  position: relative; 
-}
-
-.announcements-section:hover {
-  overflow-y: auto;
-}
-
-/* Custom scrollbar */
-.announcements-section::-webkit-scrollbar {
-  width: 6px;
-}
-.announcements-section::-webkit-scrollbar-thumb {
-  background: transparent;
-  border-radius: 6px;
-}
-.announcements-section:hover::-webkit-scrollbar-thumb {
-  background: #3C87C4;
-}
-
-/* === HEADER (Title + Global Options) === */
-.announcements-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid #E5E5E5;
-  position: relative; 
-}
-
-.announcements-title {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #01214A;
-  margin: 0;
-}
-
-.header-options {
-  font-size: 22px;
-  color: #114B8C;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px 6px;
-  border-radius: 6px;
-}
-
-.header-options:hover {
-  background: rgba(17,75,140,0.05);
-  color: #01214A;
-}
-
-/* === ANNOUNCEMENTS LIST === */
-.announcements {
-  display: flex;
-  flex-direction: column;
-}
-
-.announcements .card {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  background: none;
-  border-radius: 0;
-  box-shadow: none;
-  padding: 0.75rem 0;
-  border-bottom: 1px solid #E5E5E5;
-  position: relative; 
-}
-
-.announcements .card:last-child {
-  border-bottom: none;
-}
-
-.announcements .card-content {
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-  flex: 1;
-  min-width: 0; 
-}
-
-/* Blue circular icon */
-.announcements .icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: #3C87C4;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.announcements .icon i {
-  color: #fff;
-  font-size: 16px;
-}
-
-.announcements strong {
-  font-size: 15px;
-  font-weight: 700;
-  color: #114B8C;
-  display: block;
-  margin-bottom: 0.3rem;
-}
-
-.announcements p {
-  font-size: 14px;
-  color: #444;
-  line-height: 1.4;
-  word-break: break-word;
-}
-
-/* === OPTIONS BUTTONS === */
-.options,
-.options-btn,
-.header-options {
-  border: none;
-  background: none;
-  font-size: 20px;
-  color: #114B8C;
-  cursor: pointer;
-  padding: 4px 6px;
-  line-height: 1;
-  border-radius: 6px;
-}
-
-.options:hover,
-.options-btn:hover,
-.header-options:hover {
-  background: rgba(17,75,140,0.05);
-  color: #01214A;
-}
-
-/* === DROPDOWN === */
-.options-dropdown {
-  display: none;
-  position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
-  background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-  z-index: 100;
-  min-width: 160px;
-}
-
-.options-dropdown.show {
-  display: block;
-}
-
-.options-dropdown ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.options-dropdown li {
-  padding: .5rem 1rem;
-  cursor: pointer;
-  font-size: 14px;
-  color: #114B8C;
-  border-bottom: 1px solid #eee;
-}
-
-.options-dropdown li:last-child {
-  border-bottom: none;
-}
-
-.options-dropdown li:hover {
-  background: #f6f8fb;
-}
-
-
-/* Calendar */
-.calendar {
+/* Calendar (FIXED HEIGHT) */
+.calendar.card {
+  flex: none; 
   background: #fff;
   border: none;
   border-radius: 20px;
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  
+  /* === ETO 'YUNG MGA FIX === */
+  justify-content: flex-start; /* 1. Ilalagay lahat sa taas */
+  gap: 5rem;                   /* 2. Maglalagay ng space sa gitna nila */
+  
   align-items: center;
-  gap: 1.5rem;
   position: relative;
+  height: 305px; 
+  box-sizing: border-box;
 }
+
 .calendar header {
   display: flex;
   align-items: center;
@@ -1348,7 +961,7 @@ body {
   width: 100%;
 }
 .calendar header h3 {
-  font-size: 22px;
+  font-size: 28px;
   font-weight: 800;
   color: #1C3A6D;
 }
@@ -1432,9 +1045,493 @@ body {
   pointer-events: none;
 }
 
+/* ================================== */
+/* === REMINDERS (FILLS SPACE)    === */
+/* ================================== */
+
+.reminders-card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  font-family: 'Segoe UI', sans-serif;
+  color: #01214A;
+  max-width: 500px;
+  
+  flex: 1; /* ETO YUNG FIX: Kukunin 'yung natitirang space */
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* Para 'di mag-overflow */
+}
+
+.reminders-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #3C87C4;
+  margin-bottom: 15px;
+  flex-shrink: 0;
+}
+
+.reminders-scroll-area {
+  flex: 1; /* Ito 'yung mag-sc-scroll */
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+.reminders-scroll-area::-webkit-scrollbar {
+  width: 5px;
+}
+.reminders-scroll-area::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 5px;
+}
+.reminders-scroll-area::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.section-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #3C87C4;
+  margin-bottom: 8px;
+}
+
+.reminder-item {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+  padding: 12px 16px;
+  margin-bottom: 15px;
+  min-height: 60px;
+  position: relative;
+  overflow: hidden;
+}
+
+.reminder-item::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 12px;
+  background: #FFD34E;
+  border-radius: 12px 0 0 12px;
+}
+
+.reminder-date {
+  font-weight: 700;
+  color: #3C87C4;
+  margin-right: 15px;
+  padding-left: 10px; 
+  min-width: 110px;
+  z-index: 1; 
+}
+
+.reminder-text {
+  font-size: 0.95rem;
+  color: #000;
+  flex: 1;
+  z-index: 1;
+}
+
+.reminder-item.empty {
+  height: 60px;
+  background: #fff;
+}
 
 
+/* ========================
+   SK COMMITTEE
+======================== */
 
+.sk-committee-card {
+  grid-column: 1 / 3; 
+  grid-row: 3;
+  
+  background: #fff;
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+  
+  max-height: 450px; /* Pwede mong i-adjust 'to */
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.sk-committee-card .card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 1rem;
+}
+
+.sk-committee-card .card-header h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #01214A;
+}
+
+.sk-chairperson {
+  margin-bottom: 1rem;
+}
+
+.sk-members-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #888;
+  margin: 0 0 0.5rem 0.5rem;
+  text-transform: uppercase;
+}
+
+.sk-members-list {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+.sk-members-list::-webkit-scrollbar {
+  width: 5px;
+}
+.sk-members-list::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 5px;
+}
+.sk-members-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.sk-member-item {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  
+  /* === ETO 'YUNG MGA PAGBABAGO === */
+  border: none; 
+  border-left: 6px solid #FFD34E; 
+  padding-left: 1.5rem; 
+}
+
+.sk-chairperson .sk-member-item {
+  background: #fdfaf0; 
+}
+
+.sk-member-item .member-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.sk-member-item .member-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.sk-member-item .member-role {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #3C87C4;
+}
+
+.sk-chairperson .member-role {
+  color: #E6A400;
+}
+
+.sk-member-item .member-committee {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: #555;
+  margin-top: 4px;
+}
+
+.sk-member-item .member-committee .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #888;
+}
+
+/* === OPTIONS BUTTONS === */
+.options,
+.options-btn,
+.header-options {
+  border: none;
+  background: none;
+  font-size: 20px;
+  color: #114B8C;
+  cursor: pointer;
+  padding: 4px 6px;
+  line-height: 1;
+  border-radius: 6px;
+}
+
+.options:hover,
+.options-btn:hover,
+.header-options:hover {
+  background: rgba(17,75,140,0.05);
+  color: #01214A;
+}
+
+/* === DROPDOWN === */
+.options-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  z-index: 100;
+  min-width: 160px;
+}
+
+.options-dropdown.show {
+  display: block;
+}
+
+.options-dropdown ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.options-dropdown li {
+  cursor: pointer;
+  font-size: 14px;
+  color: #3C87C4;
+  border-bottom: 1px solid #eee;
+}
+
+.options-dropdown li a {
+  text-decoration: none;
+  color: inherit;
+  display: block; 
+  padding: .5rem 1rem; 
+}
+
+.options-dropdown li:last-child {
+  border-bottom: none;
+}
+
+.options-dropdown li:hover {
+  background: #f6f8fb;
+}
+
+/* ======================================= */
+/* === SK REQUEST LIST (GAYA-GAYA)     === */
+/* ======================================= */
+
+/* Ito 'yung overlay (yung dark background) */
+.request-list-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.6); /* Mas dark ng konti */
+  display: none; 
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+/* Ito 'yung puting box */
+.request-list-modal-content {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 5px 25px rgba(0,0,0,0.2);
+  position: relative;
+  animation: fadeIn 0.3s ease;
+  
+  max-width: 800px;
+  width: 90%; 
+  padding: 40px 0; /* PINALITAN: 40px top/bottom, 0 left/right */
+  box-sizing: border-box;
+  
+  display: flex;
+  flex-direction: column;
+  max-height: 80vh; 
+}
+
+/* Header (Title at Badge) */
+.request-list-header {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 0 40px; /* Padding sa gilid */
+  
+  /* === ETO 'YUNG MGA DINAGDAG === */
+  padding-bottom: 1.5rem; 
+  margin-bottom: 1.5rem; 
+  border-bottom: 1px solid #e5e5e5; 
+}
+
+.request-list-header h2 {
+  font-size: 1.75rem; 
+  font-weight: 700;
+  color: #3C87C4; 
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+/* Badge (Ginawang bilog) */
+.request-list-header h2 .badge {
+  background: #3C87C4;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  
+  /* Ginawang bilog */
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  margin-left: 12px;
+  
+  /* Para gumitna 'yung numero */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+/* Scrollable body */
+.request-list-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0; 
+}
+
+/* Custom Scrollbar (Gaya sa "top" / SK Committee) */
+.request-list-body::-webkit-scrollbar {
+  width: 6px;
+}
+.request-list-body::-webkit-scrollbar-thumb {
+  background: transparent; /* Tago by default */
+  border-radius: 6px;
+}
+.request-list-body:hover::-webkit-scrollbar-thumb {
+  background: #ccc; /* Lalabas 'pag nag-hover sa listahan */
+}
+.request-list-body::-webkit-scrollbar-track {
+  background: transparent; /* Tago rin 'yung track */
+}
+
+/* Bawat item sa listahan */
+.request-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  
+  /* === ETO 'YUNG MGA PAGBABAGO === */
+  padding: 1.5rem 40px; 
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.request-item:first-child {
+  padding-top: 0.5rem; 
+}
+.request-item:last-child {
+  border-bottom: none;
+}
+
+.request-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-right: 1rem;
+}
+
+.request-timestamp {
+  font-size: 0.85rem;
+  color: #999;
+  font-style: italic; 
+}
+
+.request-text {
+  font-size: 1.1rem; 
+  color: #333;
+  margin: 0;
+}
+.request-text strong {
+  color: #000;
+}
+
+.request-actions {
+  display: flex;
+  gap: 0.75rem; /* Mas malaki gap */
+  flex-shrink: 0;
+}
+
+/* === BAGONG BUTTON STYLES (Gaya sa screenshot) === */
+
+.request-actions .btn {
+  background-color: #fff;
+  border: 2px solid; /* Border lang 'yung may kulay */
+  padding: 6px 22px; /* In-adjust 'yung padding */
+  border-radius: 20px; /* Mas rounded */
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-accept {
+  border-color: #34A853; /* Green */
+  color: #34A853;
+}
+.btn-accept:hover {
+  background-color: #34A853;
+  color: #fff;
+}
+
+.btn-reject {
+  border-color: #D9534F; /* Red */
+  color: #D9534F;
+}
+.btn-reject:hover {
+  background-color: #D9534F;
+  color: #fff;
+}
+
+/* ================================== */
+/* === REQUEST STATUS BADGE STYLES === */
+/* ================================== */
+
+/* Base style para sa "Accepted" / "Rejected" na text */
+.status-badge {
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 8px 20px;
+  border-radius: 16px;
+  border: 2px solid transparent;
+  
+  /* Para pumantay sa pwesto ng buttons dati */
+  display: inline-block;
+}
+
+/* Kulay 'pag "Accepted" (Gaya ng sa Accept button mo) */
+.status-badge.approved {
+  background-color: #F1FBF4;
+  color: #34A853;
+  border-color: #A9DAB9;
+}
+
+/* Kulay 'pag "Rejected" (Gaya ng sa Reject button mo) */
+.status-badge.rejected {
+  background-color: #FFF6F6;
+  color: #D9534F;
+  border-color: #F8C8C6;
+}
 
 
 

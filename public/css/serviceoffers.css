@@ -621,6 +621,13 @@ body {
   transition: color 0.3s ease;
 }
 
+.section-header h2 {
+  color: #3C87C4;
+  font-weight: 700;
+  font-size: 1.6rem;
+  margin-bottom: 0.5rem;
+}
+
 .service-card:hover h3 {
   color: #3C87C4;
 }
@@ -647,20 +654,93 @@ body {
   display: none;
 }
 
-.org-image {
-  margin-top: 1.5rem;
+
+/* --- ORGANIZATIONAL CHART STYLES --- */
+
+/* Wrapper for the main image to control its width */
+.org-image-wrapper {
+  max-width: 1280px; 
+  margin: 0 auto;    
+  padding: 0 2rem;   
+  margin-bottom: 2rem;
 }
 
-.org-image img {
-  display: block;
+/* Style for the main organizational chart image */
+.org-image-wrapper .main-org-chart-img {
   width: 100%;
-  height: auto;
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  height: auto; 
+  display: block;
+  border-radius: 10px;
+  margin-bottom: .5rem;
 }
 
-/* === Modal Styling === */
-.service-modal {
+.no-org-chart {
+    text-align: center;
+    padding: 2rem;
+    background: #f4f4f4;
+    border-radius: 8px;
+    margin: 0 2rem 2rem 2rem;
+}
+
+
+.org-gallery-container {
+    width: 100%;
+    max-width: 1280px; 
+    margin: 0 auto; 
+    padding: 0 2rem; 
+    padding-top: 10px;
+}
+
+.org-gallery-container p {
+    font-size: 16px; 
+    font-weight: 700; 
+    margin-bottom: 10px;
+    color: #01214A;
+}
+
+.org-gallery {
+    display: flex;
+    overflow-x: auto; 
+    gap: 15px; /* Dinagdagan ang gap */
+    padding-bottom: 10px; 
+    -webkit-overflow-scrolling: touch; 
+    scroll-snap-type: x mandatory;
+    padding: 5px 0; /* Padding para hindi dikit sa gilid */
+}
+
+.gallery-item {
+    flex: 0 0 150px; /* Ginawang mas malaki */
+    height: 100px; /* Ginawang mas maliit na thumbnail */
+    cursor: pointer; /* Dagdag cursor para sa interactive feel */
+    border: 2px solid transparent;
+    transition: border-color 0.2s ease;
+}
+
+.gallery-item:hover {
+    border-color: #3C87C4; /* Highlight kapag naka-hover */
+}
+
+.gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    border-radius: 6px;
+    
+}
+
+/* Para hindi makita ang scrollbar sa Webkit (Chrome/Safari) */
+.org-gallery::-webkit-scrollbar {
+    height: 8px;
+}
+
+.org-gallery::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+}
+
+/* === Modal Structure (Base OK) === */
+.modal { 
   display: none; 
   position: fixed;
   z-index: 9999;
@@ -675,89 +755,101 @@ body {
   padding: 1rem;
 }
 
-.service-modal-content {
+.modal.active { 
+    display: flex;
+}
+
+.modal-content { 
   background: #fff;
   width: 90%;
-  max-width: 750px;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  max-width: 650px; 
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2); 
   overflow-y: auto;
   max-height: 90vh;
   position: relative;
-  animation: fadeIn 0.3s ease;
 }
 
-.close-modal {
+.close { 
   position: absolute;
-  top: 15px;
-  right: 18px;
-  font-size: 28px;
-  font-weight: bold;
-  color: #fff;
+  top: 10px;
+  right: 15px;
+  font-size: 26px;
+  color: #01214A; 
   cursor: pointer;
   transition: 0.2s;
+  z-index: 10000;
 }
 
-.close-modal:hover {
-  color: #000;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding-top: 1.5rem;
-}
-
-.modal-header img.modal-poster {
-  width: 60%;                
-  max-width: 300px;          
-  height: auto;              
-  border-radius: 10px;       
-  box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+.close:hover {
+  color: #3C87C4;
 }
 
 
 .modal-body {
-  padding: 1.8rem;
+  padding: 1.5rem 2rem; 
   font-family: "Montserrat", sans-serif;
 }
 
+/* Image/Poster */
+.modal-poster {
+  display: block;
+  margin: 0 auto 20px auto; 
+  max-width: 200px; 
+  border-radius: 6px;
+}
+
+/* Service Title (H2) */
 .modal-body h2 {
   font-weight: 700;
   font-size: 1.5rem;
-  margin-bottom: 0.8rem;
-  color: #2b3a55;
+  margin-bottom: 1rem;
+  color: #01214A;
+  text-align: center; 
 }
 
-.modal-body p {
+/* Description / Intro Text (p.intro) */
+.modal-body p.intro {
   color: #444;
   line-height: 1.6;
-  margin-bottom: 1.2rem;
+  margin-bottom: 1.5rem; 
+  text-align: justify;
 }
 
-.modal-section h3 {
-  font-weight: 600;
+/* Section Headings (H3) */
+.modal-body h3 {
+  font-weight: 600; 
   font-size: 1.1rem;
-  color: #2b3a55;
-  margin-bottom: 0.3rem;
+  color: #3C87C4; 
+  margin-top: 1.5rem; 
+  margin-bottom: 0.5rem;
+  padding-bottom: 3px;
 }
 
-.modal-body p, 
+/* Paragraphs in Sections */
+.modal-body p:not(.intro) {
+    line-height: 1.5;
+    color: #000;
+    margin-top: 0.3rem;
+    margin-bottom: 1rem;
+    text-align: justify;
+}
+
+/* List Style (Services Offered) */
 .modal-body ul {
-  margin: 5px 0 15px;
-  line-height: 1.6;
-  color: #000;
+    list-style: none; 
+    padding-left: 0;
+    margin-top: 5px;
+    margin-bottom: 1rem;
 }
 
-/* Printer image bottom full width */
-.modal-body img {
-  grid-column: 1 / -1;   /* span full width ng grid */
-  justify-self: center;  /* i-center horizontally */
-  margin: 20px 0 0;
-  max-width: 220px;
-  border: 3px solid #2f7ddb;
+.modal-body ul li {
+    position: relative;
+    padding-left: 5px; 
+    margin-bottom: 5px;
+    line-height: 1.5;
 }
+
 
 
 /* --- Overlay para sa Mobile Sidebar --- */
@@ -777,6 +869,75 @@ body.mobile-sidebar-active::before {
   display: none;
 }
 
+
+.assistance-section {
+      margin-bottom: 2rem; 
+    }
+    .assistance-card {
+      background: #ffffff;
+      border-radius: 16px; 
+      padding: 24px 30px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07);
+      border: 1px solid #e9ecef;
+      position: relative; /* <-- ITO AY BAGO: Kailangan para sa positioning ng edit icon */
+    }
+
+    /* --- BAGO: STYLES PARA SA EDIT ICON --- */
+    .edit-assistance-btn {
+      position: absolute;
+      top: 24px;
+      right: 30px;
+      font-size: 1rem;
+      color: #adb5bd; /* A subtle gray */
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .edit-assistance-btn:hover {
+      color: #335b8f; /* Same as the title color on hover */
+    }
+    /* --- END: BAGO: STYLES PARA SA EDIT ICON --- */
+
+    .assistance-card h2 {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #3C87C4; 
+      margin: 0 0 10px 0;
+      margin-right: 30px; /* <-- BAGO: Nagbigay space para sa edit icon */
+    }
+    .assistance-card > p { 
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.95rem;
+      color: #495057;
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+    .assistance-links {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .link-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .link-item i {
+      font-size: 1.75rem; 
+      color: #3C87C4; 
+      width: 30px; 
+      text-align: center;
+    }
+    .link-item a {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 1rem;
+      color: #3C87C4;
+      text-decoration: none;
+      word-break: break-all; 
+    }
+    .link-item a:hover {
+      text-decoration: underline;
+    }
 
 
 

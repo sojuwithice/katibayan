@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KatiBayan - Register</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/favicon.png') }}">
   <link rel="stylesheet" href="{{ asset('css/register.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <!-- Icons -->
@@ -317,16 +318,26 @@
 
     <!-- STEP 2 -->
     <section class="step-content" data-step="2">
-      <h2>III. Verification Document</h2>
-      <div class="select-wrapper short-select">
-    <input type="text" name="role" placeholder="Select your role (SK, KK, etc)" readonly required>
+  <h2>III. Verification Document</h2>
+<!-- Info Reminder for SK Officials -->
+  <div class="info-note">
+    <i data-lucide="info" class="info-icon"></i>
+    <span>
+      If you are <strong>not the SK Chairperson</strong> (e.g., SK Kagawad, Secretary, Treasurer), please select <strong>KK</strong>.
+    </span>
+  </div>
+  <div class="select-wrapper short-select">
+    <input type="text" name="role" placeholder="Select your role (SK Chair, KK)" readonly required>
     <ul class="dropdown-options">
-      <li data-value="sk">SK</li>
+      <li data-value="sk">SK Chairperson</li>
       <li data-value="kk">KK</li>
     </ul>
     <span class="arrow"><i data-lucide="chevron-down" class="lucide-icon"></i></span>
     <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
   </div>
+
+  
+
 
       <!-- SK Specific Fields -->
       <div id="skFields" style="display: none;">
@@ -488,11 +499,9 @@
 
     <!-- Form Actions -->
     <div class="form-actions">
-      <button type="button" class="back-btn">Back</button>
-      <button type="button" class="next-btn">Next</button>
-      
-      <!-- REMOVED: reCAPTCHA container from here -->
-    </div>
+    <button type="button" class="back-btn">Back</button>
+    <button type="button" class="next-btn">Next</button>
+</div>
   </form>
 </section>
 
@@ -652,7 +661,11 @@ document.addEventListener("DOMContentLoaded", function() {
         dropdown?.querySelectorAll("li").forEach(option => {
             option.addEventListener("click", () => {
                 // Use data-value if present, else use text
-                input.value = option.getAttribute("data-value") || option.textContent;
+                // Set visible label
+                input.value = option.textContent;
+
+                // Save internal value (sk) for logic
+                input.dataset.value = option.getAttribute("data-value");
 
                 // Close dropdown
                 wrapper.classList.remove("open");
@@ -667,7 +680,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     const skFields = document.getElementById("skFields");
                     const kkFields = document.getElementById("kkFields");
 
-                    if (input.value.toLowerCase() === "sk") {
+                    if (input.dataset.value === "sk") {
                         skFields.style.display = "block";
                         kkFields.style.display = "none";
                     } else if (input.value.toLowerCase() === "kk") {
@@ -692,180 +705,187 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 
-    // ---- MULTI-STEP FORM WITH REAL-TIME VALIDATION ----
-    let currentStep = 1;
-    const steps = document.querySelectorAll(".step-content");
-    const progressSteps = document.querySelectorAll(".step");
-    const backBtn = document.querySelector(".back-btn");
-    const nextBtn = document.querySelector(".next-btn");
-    const form = document.getElementById("multiStepForm");
-    const currentStepInput = document.getElementById("currentStep");
-    const stepErrors = document.getElementById("stepErrors");
-    const stepErrorsList = document.getElementById("stepErrorsList");
+    // ---- MULTI-STEP FORM WITH REAL-TIME VALIDATION & SCROLL-TO-ERROR ----
+let currentStep = 1;
+const steps = document.querySelectorAll(".step-content");
+const progressSteps = document.querySelectorAll(".step");
+const backBtn = document.querySelector(".back-btn");
+const nextBtn = document.querySelector(".next-btn");
+const form = document.getElementById("multiStepForm");
+const currentStepInput = document.getElementById("currentStep");
+const stepErrors = document.getElementById("stepErrors");
+const stepErrorsList = document.getElementById("stepErrorsList");
 
-    // Function to validate current step
-    function validateCurrentStep() {
-        const currentStepElement = document.querySelector(`.step-content[data-step="${currentStep}"]`);
-        const requiredFields = currentStepElement.querySelectorAll('[required]');
-        const errors = [];
-        
-        // Clear previous errors
-        stepErrors.style.display = 'none';
-        stepErrorsList.innerHTML = '';
-        document.querySelectorAll('.field-error').forEach(error => error.style.display = 'none');
-        
-        // Check each required field
-        requiredFields.forEach(field => {
-            let isValid = true;
-            
-            if (field.type === 'checkbox') {
-                isValid = field.checked;
-            } else if (field.type === 'file') {
-                // Special handling for file inputs - only validate if they are visible and for the selected role
-                const roleInput = document.querySelector('input[name="role"]');
-                const selectedRole = roleInput ? roleInput.value.toLowerCase() : '';
-                
-                if (field.id === 'oath_certificate' && selectedRole !== 'sk') {
-                    return; // Skip SK file validation if role is not SK
-                }
-                if (field.id === 'barangay_indigency' && selectedRole !== 'kk') {
-                    return; // Skip KK file validation if role is not KK
-                }
-                
-                isValid = field.files.length > 0;
-            } else {
-                isValid = field.value.trim() !== '';
-                
-                // Special validation for location dropdowns
-                if (field.id === 'regionInput' || field.id === 'provinceInput' || 
-                    field.id === 'cityInput' || field.id === 'barangayInput') {
-                    const hiddenIdField = document.getElementById(field.id.replace('Input', 'Id'));
-                    isValid = hiddenIdField && hiddenIdField.value !== '';
-                }
-            }
-            
-            if (!isValid) {
-                let fieldName = field.placeholder || field.name;
-                // Make file field names more user-friendly
-                if (field.type === 'file') {
-                    if (field.id === 'oath_certificate') {
-                        fieldName = 'Oath Taking Certificate';
-                    } else if (field.id === 'barangay_indigency') {
-                        fieldName = 'Barangay Indigency';
-                    }
-                }
-                errors.push(fieldName);
-                
-                // Show individual field error
-                const fieldWrapper = field.closest('.input-wrapper, .select-wrapper, .checkbox-group, .file-section');
-                if (fieldWrapper) {
-                    const errorSpan = fieldWrapper.querySelector('.field-error');
-                    if (errorSpan) errorSpan.style.display = 'block';
-                }
-            }
-        });
-        
-        return errors;
-    }
+// Function to fill Step 3 (Review)
+function fillStep3() {
+    const reviewContainer = document.getElementById('reviewStep');
+    if (!reviewContainer) return;
 
-    function showStep(step) {
-        steps.forEach((s, i) => s.classList.toggle("active", i === step - 1));
-        progressSteps.forEach((p, i) => {
-            p.classList.toggle("active", i < step);
-            p.classList.toggle("completed", i < step - 1);
-        });
+    reviewContainer.innerHTML = ''; // Clear previous content
 
-        if (step === steps.length) {
-            nextBtn.innerText = "Submit";
-            nextBtn.type = "button";
-            
-            // Fill review data
-            fillStep3();
-            
-            nextBtn.onclick = () => {
-                const errors = validateCurrentStep();
-                if (errors.length === 0) {
-                    // Submit form directly - this will go to preview route
-                    // which then redirects to captcha page
-                    form.submit();
-                } else {
-                    stepErrors.style.display = 'block';
-                    errors.forEach(error => {
-                        const li = document.createElement('li');
-                        li.textContent = error;
-                        li.style.color = '#d00';
-                        stepErrorsList.appendChild(li);
-                    });
-                }
-            };
+    const inputs = form.querySelectorAll('input, select, textarea');
+    inputs.forEach(input => {
+        if (input.type === 'hidden' || input.closest('.step-content')?.dataset.step == currentStep) return;
+
+        let value = input.value;
+        if (input.type === 'file') {
+            value = input.files.length > 0 ? input.files[0].name : 'Not uploaded';
+        } else if (input.type === 'checkbox') {
+            value = input.checked ? 'Yes' : 'No';
+        }
+
+        if (input.name || input.id) {
+            const label = input.closest('.input-wrapper')?.querySelector('label')?.innerText || input.name || input.id;
+            const row = document.createElement('div');
+            row.className = 'review-row';
+            row.innerHTML = `<strong>${label}:</strong> ${value}`;
+            reviewContainer.appendChild(row);
+        }
+    });
+}
+
+// Validate current step
+function validateCurrentStep() {
+    const currentStepElement = document.querySelector(`.step-content[data-step="${currentStep}"]`);
+    const requiredFields = currentStepElement.querySelectorAll('[required]');
+    const errors = [];
+
+    // Clear previous errors visuals
+    stepErrors.style.display = 'none';
+    stepErrorsList.innerHTML = '';
+    document.querySelectorAll('.field-error').forEach(error => error.style.display = 'none');
+    document.querySelectorAll('.input-error').forEach(input => input.classList.remove('input-error'));
+
+    requiredFields.forEach(field => {
+        let isValid = true;
+
+        if (field.type === 'checkbox') {
+            isValid = field.checked;
+        } else if (field.type === 'file') {
+            const roleInput = document.querySelector('input[name="role"]:checked') || document.querySelector('input[name="role"]');
+            const selectedRole = roleInput ? roleInput.value.toLowerCase() : '';
+            if (field.id === 'oath_certificate' && selectedRole !== 'sk') return;
+            if (field.id === 'barangay_indigency' && selectedRole !== 'kk') return;
+            isValid = field.files.length > 0;
         } else {
-            nextBtn.innerText = "Next";
-            nextBtn.type = "button";
-            nextBtn.onclick = () => {
-                const errors = validateCurrentStep();
-                if (errors.length > 0) {
-                    stepErrors.style.display = 'block';
-                    errors.forEach(error => {
-                        const li = document.createElement('li');
-                        li.textContent = error;
-                        li.style.color = '#d00';
-                        stepErrorsList.appendChild(li);
-                    });
-                    return;
-                }
-                
-                // Clear errors if validation passes
-                stepErrors.style.display = 'none';
-                stepErrorsList.innerHTML = '';
-                
-                if (currentStep === 2) fillStep3();
-                if (currentStep < steps.length) {
-                    currentStep++;
-                    showStep(currentStep);
-                    currentStepInput.value = currentStep;
-                }
-            };
+            isValid = field.value.trim() !== '';
+            if (['regionInput','provinceInput','cityInput','barangayInput'].includes(field.id)) {
+                const hiddenIdField = document.getElementById(field.id.replace('Input','Id'));
+                isValid = hiddenIdField && hiddenIdField.value !== '';
+            }
+        }
+
+        if (!isValid) {
+            let fieldName = field.placeholder || field.name;
+            if (field.id === 'oath_certificate') fieldName = 'Oath Taking Certificate';
+            if (field.id === 'barangay_indigency') fieldName = 'Barangay Indigency';
+
+            // IMPORTANT: Push the actual ELEMENT, not just the name
+            errors.push({
+                element: field, 
+                message: fieldName
+            });
+
+            field.classList.add('input-error');
+            const fieldWrapper = field.closest('.input-wrapper, .select-wrapper, .checkbox-group, .file-section');
+            if (fieldWrapper) {
+                const errorSpan = fieldWrapper.querySelector('.field-error');
+                if (errorSpan) errorSpan.style.display = 'block';
+            }
+        }
+    });
+
+    return errors;
+}
+
+// Show a specific step
+function showStep(step) {
+    steps.forEach((s,i) => s.classList.toggle('active', i === step-1));
+    progressSteps.forEach((p,i) => {
+        p.classList.toggle('active', i < step);
+        p.classList.toggle('completed', i < step-1);
+    });
+
+    currentStep = step;
+    if(currentStepInput) currentStepInput.value = currentStep;
+    if (currentStep === steps.length) fillStep3();
+}
+
+// Handle Next/Submit
+// Handle Next/Submit
+nextBtn?.addEventListener('click', (e) => {
+    e.preventDefault(); // PINAKA-IMPORTANTE: Pinipigilan ang reload
+
+    const errors = validateCurrentStep();
+
+    if (errors.length === 0) {
+        // --- VALID ---
+        if (currentStep < steps.length) {
+            currentStep++;
+            showStep(currentStep);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+            // --- SUBMIT (Final Step Only) ---
+            document.querySelectorAll(".select-wrapper input[readonly]").forEach(input => {
+                if (input.dataset.value) input.value = input.dataset.value;
+            });
+            localStorage.clear();
+            form.submit(); // Dito lang dapat mag-submit
+        }
+    } else {
+        // --- INVALID (Error Handling) ---
+        
+        // 1. Hanapin ang error element
+        // Note: validateCurrentStep returns { element: field, message: ... }
+        const firstErrorField = errors[0].element; 
+
+        if (firstErrorField) {
+            // Check kung nasa tamang step tayo
+            const stepContainer = firstErrorField.closest(".step-content");
+            const stepNumber = parseInt(stepContainer.dataset.step);
+            
+            if (stepNumber !== currentStep) {
+                showStep(stepNumber);
+            }
+
+            // 2. SCROLL PAPUNTA SA ERROR (Smooth)
+            firstErrorField.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center', 
+                inline: 'nearest'
+            });
+
+            // 3. Focus input
+            setTimeout(() => {
+                firstErrorField.focus();
+            }, 500);
         }
     }
+});
 
-    backBtn?.addEventListener("click", () => {
-        if (currentStep > 1) {
-            currentStep--;
-            showStep(currentStep);
-            currentStepInput.value = currentStep;
-            
-            // Clear errors when going back
-            stepErrors.style.display = 'none';
-            stepErrorsList.innerHTML = '';
-            document.querySelectorAll('.field-error').forEach(error => error.style.display = 'none');
+// Handle Back
+backBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (currentStep > 1) {
+        currentStep--;
+        showStep(currentStep);
+    }
+});
+
+// Real-time input validation cleanup
+document.querySelectorAll('input, select, textarea').forEach(input => {
+    input.addEventListener('input', () => {
+        if (input.value.trim() !== '') {
+            input.classList.remove('input-error');
+            const wrapper = input.closest('.input-wrapper, .select-wrapper, .checkbox-group, .file-section');
+            const err = wrapper?.querySelector('.field-error');
+            if (err) err.style.display = 'none';
         }
     });
+});
 
-    // Add real-time validation for input fields
-    document.querySelectorAll('input[required]').forEach(input => {
-        input.addEventListener('input', function() {
-            if (this.value.trim() !== '') {
-                const fieldWrapper = this.closest('.input-wrapper, .select-wrapper, .checkbox-group');
-                if (fieldWrapper) {
-                    const errorSpan = fieldWrapper.querySelector('.field-error');
-                    if (errorSpan) errorSpan.style.display = 'none';
-                }
-            }
-        });
-        
-        // For dropdowns, clear error when value is selected
-        if (input.readOnly && input.placeholder && input.placeholder.includes('Select')) {
-            input.addEventListener('click', function() {
-                const fieldWrapper = this.closest('.select-wrapper');
-                if (fieldWrapper) {
-                    const errorSpan = fieldWrapper.querySelector('.field-error');
-                    if (errorSpan) errorSpan.style.display = 'none';
-                }
-            });
-        }
-    });
-
-    showStep(currentStep);
+// Initialize first step
+showStep(currentStep);
 
     // ---- FILE UPLOAD LABEL UPDATE ----
     function setupFileUpload(inputId, fileTextId) {
@@ -1466,6 +1486,22 @@ document.addEventListener("DOMContentLoaded", function() {
   } else {
     console.error("Error: Hindi makita ang #contactInput or #openMethodBtn");
   }
+
+  // Save input values to localStorage
+document.querySelectorAll("input, select, textarea").forEach(el => {
+    el.addEventListener("input", () => {
+        localStorage.setItem(el.name, el.value);
+    });
+});
+
+// Load saved values when page loads
+document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll("input, select, textarea").forEach(el => {
+        if (localStorage.getItem(el.name)) {
+            el.value = localStorage.getItem(el.name);
+        }
+    });
+});
 
 });
 });

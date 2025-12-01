@@ -851,89 +851,95 @@ body {
   color: #175187;
 }
 
-/* === Scrollable File List === */
+/* === Scrollable File List Container === */
 .file-list-container {
   max-height: 255px; 
   overflow-y: auto; 
-  padding-right: 6px; 
+  padding-right: 5px; 
   scrollbar-width: thin;
   scrollbar-color: #3C87C4 #f0f4f8;
 }
 
-.file-list-container::-webkit-scrollbar {
-  width: 6px;
-}
+/* Custom Scrollbar Styling */
+.file-list-container::-webkit-scrollbar { width: 6px; }
+.file-list-container::-webkit-scrollbar-track { background: #f0f4f8; border-radius: 10px; }
+.file-list-container::-webkit-scrollbar-thumb { background: #3C87C4; border-radius: 10px; }
 
-.file-list-container::-webkit-scrollbar-track {
-  background: #f0f4f8;
-  border-radius: 10px;
-}
-
-.file-list-container::-webkit-scrollbar-thumb {
-  background: #3C87C4;
-  border-radius: 10px;
-}
-
+/* List Wrapper */
 .file-list {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.5rem; 
   margin-top: 1rem;
 }
 
+/* === HEADER FIX === */
 .file-header {
   background: #3C87C4;
   color: #fff;
   font-weight: 600;
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr;
+  grid-template-columns: 3fr 1.5fr 1fr; 
+  align-items: center;
   padding: 0.8rem 1.2rem;
+  padding-right: calc(1.2rem + 6px); 
   font-size: 0.95rem;
   position: sticky;
   top: 0;
   z-index: 5;
+  border-radius: 8px 8px 0 0;
 }
 
-/* File Rows */
+/* === ROW FIX === */
 .file-row {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr;
+  grid-template-columns: 3fr 1.5fr 1fr; 
+  align-items: center;
   background: #fff;
   border: 1px solid #e3e8f0;
   border-radius: 10px;
-  padding: 1.2rem;
+  padding: 0.8rem 1.2rem; 
   box-shadow: 0 2px 5px rgba(0,0,0,0.06);
   transition: all 0.2s ease;
-  margin-bottom: 1rem;
   cursor: pointer;
-  transition: background 0.2s ease;
-  margin-top: 1rem;
-  align-items: center;
+  margin: 0; 
+  margin-bottom: .5rem;
 }
 
 .file-row:hover {
   background: #f9fbff;
   transform: translateY(-2px);
   box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  border-color: #3C87C4;
 }
 
+
+/* 1. Name: Left Aligned */
 .file-name {
   font-weight: 600;
   color: #2b3a55;
   display: flex;
   align-items: center;
   gap: 10px;
-}
-
-.file-name i {
-  width: 20px;
-  color: #64748b;
-}
-
-.file-size, .file-type, .file-date {
   text-align: left;
-  color: #555;
-  font-size: 0.9rem;
+}
+.file-name i { width: 20px; color: #64748b; }
+
+
+.file-header span:nth-child(2) { text-align: center; }
+.file-owner { 
+  text-align: center; 
+  color: #555; 
+  font-size: 0.9rem; 
+}
+
+
+.file-header span:nth-child(3) { text-align: right; }
+.file-size { 
+  text-align: right; 
+  color: #555; 
+  font-size: 0.9rem; 
+  font-weight: 600;
 }
 
 /* Empty state */
@@ -942,16 +948,48 @@ body {
   padding: 60px 20px;
   color: #64748b;
 }
+.empty-state i { font-size: 48px; margin-bottom: 20px; color: #cbd5e1; }
+.empty-state p { margin-bottom: 20px; }
 
-.empty-state i {
-  font-size: 48px;
-  margin-bottom: 20px;
-  color: #cbd5e1;
-}
 
-.empty-state p {
-  margin-bottom: 20px;
-}
+
+    /* PREVIEW MODAL STYLES */
+    #filePreviewModal .modal-box {
+        width: 600px;
+        max-width: 95%;
+        max-height: 90vh;
+        overflow-y: auto;
+        transition: width 0.3s ease;
+        padding: 20px;
+    }
+
+    #previewContent {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: #f1f5f9;
+        border-radius: 8px;
+        padding: 10px;
+        min-height: 200px;
+    }
+
+    /* Image Preview */
+    #previewContent img {
+        max-width: 100%;
+        max-height: 60vh;
+        object-fit: contain;
+        border-radius: 4px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    /* PDF Preview */
+    #previewContent iframe {
+        width: 100%;
+        height: 70vh;
+        border: none;
+        border-radius: 4px;
+    }
 
 /* === Add Folder Modal === */
 .modal-overlay {
@@ -1079,7 +1117,8 @@ body {
   box-shadow: 0 5px 15px rgba(0,0,0,0.1);
   display: none;
   z-index: 2000;
-  width: 150px;
+  width: 220px; 
+  
   animation: fadeIn 0.15s ease;
 }
 
@@ -1096,7 +1135,7 @@ body {
   transition: 0.15s ease;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px; 
 }
 
 .context-menu li:hover {
@@ -1105,7 +1144,7 @@ body {
 }
 
 .context-menu li i {
-  width: 16px;
+  width: 20px; 
   text-align: center;
   color: #64748b;
 }

@@ -37,6 +37,12 @@ use App\Http\Controllers\ProgramController;
 use App\Http\Controllers\ServiceOffersController;
 use App\Http\Controllers\YouthProgramRegistrationController;
 use App\Http\Controllers\YouthAssistanceController;
+use App\Http\Controllers\SKController;
+use App\Http\Controllers\SkRoleRequestController;
+use App\Models\User;
+use App\Models\Event;   
+use App\Models\Program;
+use App\Http\Controllers\ReportController;
 
 Route::get('/', function () {
     return view('landingpage');
@@ -474,3 +480,128 @@ Route::post('/notifications/read-all', [NotificationController::class, 'markAllA
 // ========== DAILY ATTENDANCE ROUTES ==========
 Route::post('/programs/update-daily-attendance', [YouthProgramRegistrationController::class, 'updateDailyAttendance'])
     ->name('programs.update-daily-attendance');
+
+
+
+
+Route::post('/assistance/update', [SKController::class, 'updateAssistanceInfo'])->name('sk.assistance.update');
+Route::post('/sk/assistance/save', [SKDashboardController::class, 'saveAssistanceInfo'])
+    ->name('sk.save.assistance');
+
+
+
+Route::middleware(['auth'])->group(function () {
+
+
+    // PART 1: Request Access
+    Route::post('/sk/request-access', [SkRoleRequestController::class, 'store'])
+           ->name('sk.request.access');
+
+    // PART 2: SK Chair Requests
+    Route::get('/sk/requests', [SkRoleRequestController::class, 'index'])
+           ->name('sk.requests.index');
+           
+    Route::post('/sk/requests/{id}/approve', [SkRoleRequestController::class, 'approve'])
+           ->name('sk.requests.approve');
+           
+    Route::post('/sk/requests/{id}/reject', [SkRoleRequestController::class, 'reject'])
+           ->name('sk.requests.reject');
+
+    Route::post('/sk/set-role', [SkRoleRequestController::class, 'setRole'])
+       ->name('sk.set.role');
+
+    Route::get('/sk/role-dashboard', function () {
+        $currentUser = Auth::user(); 
+
+        // 1. Chairperson Logic (Existing)
+        $chairperson = App\Models\User::where('barangay_id', $currentUser->barangay_id)
+                           ->where('role', 'sk')
+                           ->first();
+
+        // 2. Members Logic (Existing)
+        $members = App\Models\User::where('barangay_id', $currentUser->barangay_id)
+                       ->whereNotNull('sk_role') 
+                       ->where('sk_role', '!=', '') 
+                       ->where('id', '!=', $chairperson ? $chairperson->id : 0) 
+                       ->orderBy('sk_role', 'asc') 
+                       ->get();
+
+        // === 3. NEW: GET ACCOMPLISHED PROJECTS (Grouped by Year) ===
+        
+        // A. Kunin ang PAST EVENTS (Filtered by Barangay)
+        $pastEvents = App\Models\Event::where('barangay_id', $currentUser->barangay_id)
+                        ->where('created_at', '<', now()) // Gamit ang created_at (sure ball column)
+                        ->orderBy('created_at', 'desc') 
+                        ->get()
+                        ->map(function ($item) {
+                            return (object)[
+                                'title' => $item->title,
+                                'type'  => 'Event', 
+                                'date'  => $item->created_at 
+                            ];
+                        });
+
+        // B. Kunin ang PAST PROGRAMS (Kung meron)
+        $pastPrograms = collect([]); 
+        if (class_exists('App\Models\Program')) {
+             $pastPrograms = App\Models\Program::where('barangay_id', $currentUser->barangay_id)
+                        ->where('created_at', '<', now()) 
+                        ->orderBy('created_at', 'desc')
+                        ->get()
+                        ->map(function ($item) {
+                            return (object)[
+                                'title' => $item->title,
+                                'type'  => 'Program',
+                                'date'  => $item->created_at
+                            ];
+                        });
+        }
+
+        // C. Pagsamahin, I-sort, at I-GROUP BY YEAR
+        $completedProjects = $pastEvents->concat($pastPrograms)
+            ->sortByDesc('date')
+            ->groupBy(function($item) {
+                // Kukunin ang Year mula sa date (e.g. "2025")
+                return \Carbon\Carbon::parse($item->date)->format('Y');
+            });
+
+        return view('sk-role-view', compact('currentUser', 'chairperson', 'members', 'completedProjects')); 
+    })->name('sk.role.view');
+
+    Route::post('/sk/update-committees', [SkRoleRequestController::class, 'updateCommittees'])
+        ->name('sk.committees.update');
+
+});
+
+Route::get('/notifications/unread-count', [NotificationController::class, 'getUnreadCount'])->name('notifications.unread_count');
+Route::get('/sk/committee', [SKController::class, 'showSKCommittee'])->name('sk.committee.view');
+
+// Magdagdag ng route para sa fetch
+Route::get('/sk/officials-list', [SKDashboardController::class, 'getSkOfficials'])->name('sk.officials.list');
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/reports', [ReportController::class, 'index'])->name('reports');
+    Route::post('/reports/folder', [ReportController::class, 'storeFolder'])->name('reports.folder.store');
+    Route::post('/reports/upload', [ReportController::class, 'uploadFile'])->name('reports.upload');
+    Route::delete('/reports/{type}/{id}', [ReportController::class, 'destroy'])->name('reports.delete');
+    Route::get('/reports/download/{id}', [ReportController::class, 'download'])->name('reports.download');
+});
+
+// Idagdag ito sa loob ng iyong auth middleware group, kasama ng ibang reports routes
+Route::get('/reports/view/{id}', [App\Http\Controllers\ReportController::class, 'viewFile'])->name('reports.view');
+Route::post('/reports/backup/{id}', [App\Http\Controllers\ReportController::class, 'createBackup'])->name('reports.backup');
+Route::post('/reports/archive/{id}', [App\Http\Controllers\ReportController::class, 'archiveFile'])->name('reports.archive');
+Route::post('/reports/rename/{type}/{id}', [App\Http\Controllers\ReportController::class, 'renameItem'])->name('reports.rename');
+Route::post('/submit-report', [ReportController::class, 'submitReport'])->name('reports.submit');
+
+Route::post('/sk/assistance-info', [ServiceOffersController::class, 'updateAssistanceInfo'])->name('sk.assistance.update');
+
+// web.php (I-verify at i-apply ang dalawang ito)
+
+// 1. DELETE Route (Gagamit ng POST + _method: DELETE)
+Route::post('/sk/organizational-chart/{id}/delete', [ServiceOffersController::class, 'deleteOrganizationalChart']) // ADDED '/delete' suffix
+    ->name('sk.organizational-chart.delete');
+    
+// 2. UPDATE Route (Gagamit ng POST + _method: PUT)
+Route::post('/sk/organizational-chart/{id}/update', [ServiceOffersController::class, 'updateOrganizationalChart']) // ADDED '/update' suffix
+    ->name('sk.organizational-chart.update');

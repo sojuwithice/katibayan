@@ -649,6 +649,26 @@ body[data-theme="dark"] {
   pointer-events: auto;
 }
 
+.info-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: #e8f1ff;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin: 12px 0 20px 0;
+  border-left: 4px solid #3C87C4;
+  font-size: 14px;
+  color: #0a2a4f;
+  line-height: 1.4;
+}
+
+.info-note .info-icon {
+  width: 18px;
+  height: 18px;
+  color: #3C87C4;
+  margin-top: 2px;
+}
 
 
 
@@ -857,9 +877,11 @@ select {
   background: #f9fbff;
 }
 
+/* --- DITO ANG FIX --- */
 .select-wrapper .arrow {
   position: absolute;
-  top: 50%;
+  /* CHANGE: Pinalitan ang 'top: 50%' ng fixed pixel para di bumaba pag may error */
+  top: 22px; 
   right: 15px;
   transform: translateY(-50%) rotate(0deg);
   width: 28px;
@@ -874,6 +896,7 @@ select {
   pointer-events: none;
   transition: transform 0.3s ease, background 0.3s ease;
 }
+/* -------------------- */
 
 .select-wrapper.open .arrow {
   transform: translateY(-50%) rotate(180deg);
@@ -885,7 +908,6 @@ select {
   min-width: 270px;  
   max-width: 400px;  
 }
-
 
 /* dropdown options */
 .dropdown-options {
@@ -935,7 +957,6 @@ select {
   background: #2a5e8f;
 }
 
-
 .dropdown-options {
   scrollbar-width: thin;
   scrollbar-color: #3C87C4 #f1f5f9;
@@ -972,15 +993,40 @@ select {
   stroke: #0C4B92;
 }
 
+/* 1. Gawing invisible pero CLICKABLE ang buong input area para lumabas ang calendar */
 input[type="date"]::-webkit-calendar-picker-indicator {
-  opacity: 0;
-  pointer-events: all; 
-  position: absolute;  
-  right: 15px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 18px;
-  height: 18px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0; 
+    cursor: pointer;
+}
+
+input[type="date"]:invalid::-webkit-datetime-edit {
+    color: transparent;
+}
+
+input[type="date"]:invalid::before {
+    content: attr(placeholder);
+    color: #888;
+    position: absolute;
+    left: 12px; 
+    pointer-events: none;
+    font-family: 'Montserrat';
+    font-size: 0.95rem;
+}
+
+input[type="date"]:focus::before,
+input[type="date"]:valid::before {
+    display: none;
+}
+
+
+input[type="date"]:focus::-webkit-datetime-edit,
+input[type="date"]:valid::-webkit-datetime-edit {
+    color: inherit;
 }
 
 

@@ -3,7 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <script>
+        
+        window.csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    </script>
   <title>KatiBayan - SK Dashboard</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/favicon.png') }}">
   <link rel="stylesheet" href="{{ asset('css/sk-dashboard.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -33,7 +39,7 @@
       <span class="label">Dashboard</span>
     </a>
 
-    <a href="#">
+    <a href="{{ route('sk.analytics') }}">
       <i data-lucide="chart-pie" class="lucide-icon"></i>
       <span class="label">Analytics</span>
     </a>
@@ -101,35 +107,68 @@
         <div class="time">MON 10:00 <span>AM</span></div>
 
         <div class="notification-wrapper">
-  <i class="fas fa-bell"></i>
-  <span class="notif-count">{{ $notifications->count() }}</span>
+    <i class="fas fa-bell"></i>
+    @php
+        $skNotificationCount = $notifications->where('recipient_role', 'sk')->count();
+    @endphp
 
-  <div class="notif-dropdown">
-    <div class="notif-header">
-      <strong>Notification</strong>
-      <span>{{ $notifications->count() }}</span>
+    @if($skNotificationCount > 0)
+        <span class="notif-count">{{ $skNotificationCount }}</span>
+    @endif
+
+    <div class="notif-dropdown">
+        <div class="notif-header">
+            <strong>Notification</strong>
+            @if($skNotificationCount > 0)
+                <span>{{ $skNotificationCount }}</span>
+            @endif
+        </div>
+
+        <ul class="notif-list">
+            @foreach($notifications->where('recipient_role', 'sk') as $notif)
+                @php
+                    // Define default link (palitan kung may specific route)
+                    $link = '#';
+                    if ($notif->type === 'sk_request_approved') {
+                        $link = route('profile.show'); // halimbawa route
+                    }
+
+                    $title = $notif->title ?? 'Notification';
+                    $message = $notif->message ?? 'You have a new notification.';
+                @endphp
+
+                <li>
+                    <a href="{{ $link }}" class="notif-link {{ $notif->is_read ? '' : 'unread' }}" data-id="{{ $notif->id }}">
+                        <div class="notif-dot-container">
+                            @if(!$notif->is_read)
+                                <span class="notif-dot"></span>
+                            @else
+                                <span class="notif-dot-placeholder"></span>
+                            @endif
+                        </div>
+
+                        <div class="notif-main-content">
+                            <div class="notif-header-line">
+                                <strong>{{ $title }}</strong>
+                                <span class="notif-timestamp">
+                                    {{ $notif->created_at->format('m/d/Y g:i A') }}
+                                </span>
+                            </div>
+                            <p class="notif-message">{{ $message }}</p>
+                        </div>
+                    </a>
+                </li>
+            @endforeach
+
+            @if($notifications->where('recipient_role', 'sk')->isEmpty())
+                <li class="no-notifications">
+                    <p>No new notifications</p>
+                </li>
+            @endif
+        </ul>
     </div>
-
-    <ul class="notif-list">
-      @forelse($notifications as $notif)
-        <li>
-          <div class="notif-icon"></div>
-          <div class="notif-content">
-            <strong>{{ $notif->title ?? 'No Title' }}</strong>
-            <p>{{ $notif->message ?? 'No message available' }}</p>
-          </div>
-          <span class="notif-dot"></span>
-        </li>
-      @empty
-        <li>
-          <div class="notif-content">
-            <p>No notifications available</p>
-          </div>
-        </li>
-      @endforelse
-    </ul>
-  </div>
 </div>
+
 
 
         <!-- Profile Avatar -->
@@ -257,110 +296,116 @@
       </div>
     </div>
 
-    <!-- Announcements -->
-<div class="announcements-section">
-  <div class="announcements-header">
-    <h3 class="announcements-title">Announcements</h3>
-    <button class="options-btn header-options">⋯</button>
-
-    <!-- Dropdown for header -->
+    <div class="card sk-committee-card">
+  <div class="card-header">
+    <h3>SK COMMITTEE</h3>
+    <button class="options-btn">⋯</button>
     <div class="options-dropdown">
       <ul>
-        <li>All</li>
-        <li>Events</li>
-        <li>Programs</li>
-        <li>System Update</li>
+        <li><a href="#" id="openRequestListBtn">See Request List</a></li>
+        <li><a href="#">Manage Roles</a></li>
       </ul>
     </div>
   </div>
 
-  <div class="announcements">
-    <div class="card">
-      <div class="card-content">
-        <div class="icon"><i class="fas fa-info"></i></div>
-        <div class="text">
-          <strong>Important Announcement: No Office Today</strong>
-          <p>The office is closed today. We sincerely apologize for any inconvenience.</p>
-        </div>
-      </div>
-      <button class="options-btn">⋯</button>
-      <!-- Dropdown for this card -->
-      <div class="options-dropdown">
-        <ul>
-          <li>Edit</li>
-          <li>Delete</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-content">
-        <div class="icon"><i class="fas fa-print"></i></div>
-        <div class="text">
-          <strong>Notice: No Printing Service Today</strong>
-          <p>Please be informed that printing services are closed today.</p>
-        </div>
-      </div>
-      <button class="options-btn">⋯</button>
-      <div class="options-dropdown">
-        <ul>
-          <li>Edit</li>
-          <li>Delete</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-content">
-        <div class="icon"><i class="fas fa-print"></i></div>
-        <div class="text">
-          <strong>Notice: No Printing Service Today</strong>
-          <p>Please be informed that printing services are closed today.</p>
-        </div>
-      </div>
-      <button class="options-btn">⋯</button>
-      <div class="options-dropdown">
-        <ul>
-          <li>Edit</li>
-          <li>Delete</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-content">
-        <div class="icon"><i class="fas fa-print"></i></div>
-        <div class="text">
-          <strong>Notice: No Printing Service Today</strong>
-          <p>Please be informed that printing services are closed today.</p>
-        </div>
-      </div>
-      <button class="options-btn">⋯</button>
-      <div class="options-dropdown">
-        <ul>
-          <li>Edit</li>
-          <li>Delete</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-content">
-        <div class="icon"><i class="fas fa-print"></i></div>
-        <div class="text">
-          <strong>Notice: No Printing Service Today</strong>
-          <p>Please be informed that printing services are closed today.</p>
-        </div>
-      </div>
-      <button class="options-btn">⋯</button>
-      <div class="options-dropdown">
-        <ul>
-          <li>Edit</li>
-          <li>Delete</li>
-        </ul>
+  <div class="sk-chairperson">
+    <div class="sk-member-item">
+      <div class="member-info">
+        @if($skChairperson)
+            <span class="member-name">
+                {{-- Format: MARI JOY S. NOVORA --}}
+                {{ strtoupper($skChairperson->given_name) }} 
+                {{ $skChairperson->middle_name ? strtoupper(substr($skChairperson->middle_name, 0, 1)) . '.' : '' }} 
+                {{ strtoupper($skChairperson->last_name) }}
+            </span>
+            <span class="member-role">SK CHAIRPERSON</span>
+        @else
+            <span class="member-name" style="color:#999;">(VACANT)</span>
+            <span class="member-role">SK CHAIRPERSON</span>
+        @endif
       </div>
     </div>
   </div>
+
+  <h4 class="sk-members-title">MEMBERS</h4>
+
+  <div class="sk-members-list">
+    
+    @foreach($skMembers as $member)
+    <div class="sk-member-item">
+      <div class="member-info">
+        
+        <span class="member-name">
+            {{ strtoupper($member->given_name) }} 
+            {{ $member->middle_name ? strtoupper(substr($member->middle_name, 0, 1)) . '.' : '' }} 
+            {{ strtoupper($member->last_name) }}
+        </span>
+
+        <span class="member-role">
+            {{ strtoupper(str_replace('_', ' ', $member->sk_role)) }}
+        </span>
+
+        {{-- Checheck kung may laman ang committee column, tapos i-e-explode by comma --}}
+        @if(!empty($member->committees))
+            @foreach(explode(',', $member->committees) as $committee)
+                <span class="member-committee">
+                  <span class="dot"></span> {{ strtoupper(trim($committee)) }}
+                </span>
+            @endforeach
+        @endif
+
+      </div>
+    </div>
+    @endforeach
+
+  </div>
+</div>
+
+<div id="requestListModal" class="request-list-overlay">
+  
+  <div class="request-list-modal-content">
+    
+    <div class="request-list-header">
+      <h2>Request List <span class="badge">3</span></h2>
+      </div>
+    
+    <div class="request-list-body">
+      
+      <div class="request-item">
+        <div class="request-info">
+          <span class="request-timestamp">Just now 10/10/2025</span>
+          <p class="request-text"><strong>MARI JOY S. NOVORA</strong> is asking request to access SK role</p>
+        </div>
+        <div class="request-actions">
+          <button class="btn btn-accept">Accept</button>
+          <button class="btn btn-reject">Reject</button>
+        </div>
+      </div>
+
+      <div class="request-item">
+        <div class="request-info">
+          <span class="request-timestamp">Just now 10/10/2025</span>
+          <p class="request-text"><strong>MARI JOY S. NOVORA</strong> is asking request to access SK role</p>
+        </div>
+        <div class="request-actions">
+          <button class="btn btn-accept">Accept</button>
+          <button class="btn btn-reject">Reject</button>
+        </div>
+      </div>
+
+      <div class="request-item">
+        <div class="request-info">
+          <span class="request-timestamp">Just now 10/10/2025</span>
+          <p class="request-text"><strong>MARI JOY S. NOVORA</strong> is asking request to access SK role</p>
+        </div>
+        <div class="request-actions">
+          <button class="btn btn-accept">Accept</button>
+          <button class="btn btn-reject">Reject</button>
+        </div>
+      </div>
+      
+    </div> 
+  </div> 
 </div>
 
 
@@ -376,9 +421,6 @@
         <button class="prev"><i class="fas fa-chevron-left"></i></button>
         <h3></h3>
         <button class="next"><i class="fas fa-chevron-right"></i></button>
-        <a href="{{ route('sk-eventpage') }}" title="View full month">
-          <i class="fas fa-calendar calendar-toggle"></i>
-        </a>
       </header>
       <div class="days"></div>
     </div>
@@ -387,49 +429,25 @@
 <div class="reminders-card">
   <h3 class="reminders-title">Reminders</h3>
 
-  <!-- Today Section -->
-  <div class="reminders-section">
-    <h4 class="section-label">Today</h4>
-    <div id="todayReminders">
-      <!-- Today's events will be loaded here dynamically -->
-      <div class="no-reminders">No events for today</div>
+  <div class="reminders-scroll-area">
+    
+    <div class="reminders-section">
+      <h4 class="section-label">Today</h4>
+      <div id="todayReminders">
+        <div class="no-reminders">No events for today</div>
+      </div>
     </div>
-  </div>
 
-  <!-- Upcoming Section -->
-  <div class="reminders-section">
-    <h4 class="section-label">Upcoming</h4>
-    <div id="upcomingReminders">
-      <!-- Upcoming events will be loaded here dynamically -->
-      <div class="no-reminders">No upcoming events</div>
+    <div class="reminders-section">
+      <h4 class="section-label">Upcoming</h4>
+      <div id="upcomingReminders">
+        <div class="no-reminders">No upcoming events</div>
+      </div>
     </div>
-  </div>
-</div>
 
-<!-- Youth Population -->
-<div class="youth-population card">
-  <h3 class="population-title">Youth Population</h3>
-  <div class="population-chart">
-    <canvas id="populationChart"></canvas>
-    <div class="population-center">
-      <span class="population-total" id="populationTotal">0</span>
-      <p>Youth population in your barangay</p>
-    </div>
-  </div>
+  </div> </div>
 
-  <div class="population-legend">
-    <div class="legend-item">
-      <span>Female</span>
-      <span id="femaleCount">0</span>
-      <span class="dot female"></span>
-    </div>
-    <div class="legend-item">
-      <span>Male</span>
-      <span id="maleCount">0</span>
-      <span class="dot male"></span>
-    </div>
-  </div>
-</div>
+
 
   </div>
 </div>
@@ -1164,6 +1182,175 @@ document.addEventListener("DOMContentLoaded", function() {
   document.addEventListener('click', () => {
     document.querySelectorAll('.options-dropdown.show').forEach(d => d.classList.remove('show'));
   });
+
+// --- Request List Modal Logic (FIXED) ---
+  
+  const openRequestListBtn = document.getElementById('openRequestListBtn');
+  const requestListModal = document.getElementById('requestListModal');
+  const skCommitteeDropdown = document.querySelector('.sk-committee-card .options-dropdown');
+  
+  // === ETO 'YUNG FIX ===
+  // Gagamitin natin 'yung global variable na ginagamit mo sa buong script
+  const csrfToken = window.csrfToken; 
+
+  // Naglagay ako ng "if (requestListModal)" para sigurado
+  if (requestListModal) {
+    
+    const requestListBody = requestListModal.querySelector('.request-list-body');
+    const requestListBadge = requestListModal.querySelector('.request-list-header .badge');
+
+    /**
+     * Function para buksan ang modal AT kumuha ng data
+     */
+    async function openAndPopulateRequestList() {
+      // Nilipat ko 'yung safety check dito
+      if (!requestListModal || !requestListBody) {
+        console.error('Request List Modal elements not found.');
+        return; 
+      }
+
+      requestListModal.style.display = 'flex';
+      requestListBody.innerHTML = '<p>Loading requests...</p>'; // Loading state
+
+      try {
+        const response = await fetch("{{ route('sk.requests.index') }}");
+        const requests = await response.json();
+
+        requestListBody.innerHTML = ''; // Clear loading message
+        
+        // Safety check para sa badge
+        if(requestListBadge) {
+          requestListBadge.textContent = requests.length;
+        }
+
+        if (requests.length === 0) {
+          requestListBody.innerHTML = '<p style="padding: 0 40px;">No pending requests.</p>';
+          return;
+        }
+
+       requests.forEach(req => {
+        
+        let userName = 'Unknown User';
+        if (req.user) {
+          userName = `${req.user.given_name} ${req.user.last_name}`;
+        }
+
+        const itemHTML = `
+          <div class="request-item" data-id="${req.id}">
+            <div class="request-info">
+              <span class="request-timestamp">${new Date(req.created_at).toLocaleString()}</span>
+              <p class="request-text"><strong>${userName}</strong> is asking request to access SK role</p>
+            </div>
+            <div class="request-actions">
+              <button class="btn btn-accept" data-action="approve">Accept</button>
+              <button class="btn btn-reject" data-action="reject">Reject</button>
+            </div>
+          </div>
+        `;
+        requestListBody.insertAdjacentHTML('beforeend', itemHTML);
+      });
+
+      } catch (error) {
+        console.error('Error fetching requests:', error);
+        requestListBody.innerHTML = '<p style="padding: 0 40px;">Could not load requests. Please try again.</p>';
+      }
+    }
+
+    /**
+     * Event listener para sa "See Request List"
+     */
+    if (openRequestListBtn) {
+      openRequestListBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        openAndPopulateRequestList(); 
+        
+        if (skCommitteeDropdown && skCommitteeDropdown.classList.contains('show')) {
+          skCommitteeDropdown.classList.remove('show');
+        }
+      });
+    }
+
+    // Event delegation for Accept/Reject buttons
+if (requestListBody) {
+  requestListBody.addEventListener('click', async function(e) {
+    const button = e.target;
+    const action = button.dataset.action;
+
+    if (!action) return;
+
+    const csrfToken = window.csrfToken;
+
+    if (!csrfToken) {
+      console.error('CSRF token missing!');
+      alert('CSRF token is missing. Refresh the page.');
+      return;
+    }
+
+    const requestItem = button.closest('.request-item');
+    const requestId = requestItem.dataset.id;
+    const url = `/sk/requests/${requestId}/${action}`;
+
+    // Disable buttons during request
+    requestItem.querySelectorAll('.btn').forEach(btn => btn.disabled = true);
+    button.textContent = 'Processing...';
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': csrfToken,
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ _token: csrfToken })
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (response.ok) {
+        const actionContainer = requestItem.querySelector('.request-actions');
+        actionContainer.innerHTML = action === 'approve'
+          ? '<span class="status-badge approved">Accepted</span>'
+          : '<span class="status-badge rejected">Rejected</span>';
+
+        // Update badge count
+        if (requestListBadge) {
+          const currentCount = parseInt(requestListBadge.textContent);
+          requestListBadge.textContent = Math.max(0, currentCount - 1);
+        }
+      } else {
+        console.error(data);
+        alert(data.message || 'Failed to process request.');
+
+        requestItem.querySelectorAll('.btn').forEach(btn => btn.disabled = false);
+        button.textContent = action === 'approve' ? 'Accept' : 'Reject';
+      }
+
+    } catch (error) {
+      console.error('Error processing request:', error);
+      alert('An error occurred.');
+
+      requestItem.querySelectorAll('.btn').forEach(btn => btn.disabled = false);
+      button.textContent = action === 'approve' ? 'Accept' : 'Reject';
+    }
+  });
+}
+
+    /**
+     * Event listener para sa pag-close ng modal
+     */
+    requestListModal.addEventListener('click', function(e) {
+      if (e.target === requestListModal) {
+        requestListModal.style.display = 'none';
+      }
+    });
+
+  } else {
+    console.warn('Request List Modal (id="requestListModal") not found.'); 
+  }
+  
+  
+  // --- DITO NAGTATAPOS 'YUNG REQUEST LIST CODE ---
 });
 </script>
 </body>

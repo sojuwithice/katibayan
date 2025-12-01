@@ -3,11 +3,30 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>KatiBayan - SK Analytics</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/favicon.png') }}">
    <link rel="stylesheet" href="{{ asset('css/sk-view.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <style>
+      /* Ensure modal works even if external CSS fails to load immediately */
+      .modal-overlay {
+          display: none; /* Hidden by default */
+          position: fixed;
+          top: 0; left: 0; width: 100%; height: 100%;
+          background: rgba(0,0,0,0.5);
+          z-index: 9999;
+          justify-content: center;
+          align-items: center;
+      }
+      .modal-overlay.active {
+          display: flex; /* Show when active */
+      }
+  </style>
+</head>
 <body>
 <main class="dashboard-container">
 
@@ -18,7 +37,6 @@
                 <span><span class="blue">K</span>ati<span class="blue">B</span>ayan.</span>
                 <small>Katipunan ng Kabataan Web Portal</small>
             </div>
-        </div>
         </div>
 
         <div class="topbar-right">
@@ -67,55 +85,126 @@
                     </div>
                 </div>
 
-                <div class="profile-wrapper">
-                    <img src="images/KatiBayan-Logo_B.png" alt="User" class="avatar" id="profileToggle"> <div class="profile-dropdown">
-                        <div class="profile-header">
-                            <img src="https://via.placeholder.com/55" alt="User" class="profile-avatar"> <div class="profile-info">
-                                <h4>Marijoy S. Novora</h4>
-                                <div class="profile-badge">
-                                    <span class="badge">SK Kagawad</span>
-                                    <span class="badge">19 yrs old</span>
-                                    
-                                </div>
-                                <span class="badge-2">Kagawad</span>
-                            </div>
+                @if(Auth::check())
+    @php
+        $user = Auth::user();
+        
+        // 1. Calculate Age
+        $age = $user->date_of_birth ? \Carbon\Carbon::parse($user->date_of_birth)->age : 'N/A';
+
+        // 2. Fix "KK-Member" Logic
+        $rawRole = strtolower($user->role);
+        if ($rawRole === 'kk' || $rawRole === 'resident') {
+            $roleBadge = 'KK-Member'; // Specific fix requested
+        } else {
+            $roleBadge = ucfirst($rawRole);
+        }
+
+        // 3. SK Role Logic (Yellow Badge)
+        $skTitle = '';
+        if (!empty($user->sk_role)) {
+            $skTitle = $user->sk_role; 
+        } elseif ($user->role === 'sk_chairperson') {
+            $skTitle = 'Chairperson';
+        }
+    @endphp
+
+    <div class="profile-wrapper">
+        <img src="{{ $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+             alt="User" class="avatar" id="profileToggle"> 
+
+        <div class="profile-dropdown">
+            <div class="profile-header">
+                <img src="{{ $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+                     alt="User" class="profile-avatar"> 
+
+                <div class="profile-info">
+                    <h4>{{ $user->given_name }} {{ $user->middle_name }} {{ $user->last_name }} {{ $user->suffix }}</h4>
+                    
+                    <div class="badges-wrapper">
+                        
+                        <div class="profile-badge">
+                            <span class="badge">{{ $roleBadge }}</span>
+                            <span class="badge">{{ $age }} yrs old</span>
                         </div>
-                        <hr>
-                        <ul class="profile-menu">
-                             <li>
-                                 <button class="back-to-profile" id="btn-back-profile">Back to Profile</button>
-                            </li>
-                            <li class="logout-item">
-                                <a href="#">
-                                    <i class="fas fa-sign-out-alt"></i> Logout
-                                </a>
-                            </li>
-                        </ul>
+
+                        @if($skTitle)
+                            <span class="badge-2">{{ $skTitle }}</span>
+                        @endif
+
                     </div>
                 </div>
+            </div>
+            <hr>
+            <ul class="profile-menu">
+                <li class="no-hover-bg">
+                    <a href="{{ route('dashboard.index') }}" class="back-to-profile" id="btn-back-profile">
+                        Back to Profile
+                    </a>
+                </li>
+                <li class="logout-item">
+                    <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </li>
+            </ul>
+
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                @csrf
+            </form>
+        </div>
+    </div>
+@endif
             </div>
         </div>
     </header>
 
     <section class="welcome-section">
-        <div class="welcome-text">
-            <h1>Marijoy S. Novora</h1>
-            <p>19 years old <span class="tag tag-kagawad">SK Kagawad</span></p>
-        </div>
-         <button class="btn btn-secondary" id="setCommitteeBtn">Edit your committee</button>
-        </section>
+        @php
+            // 1. Get User Data
+            $fullName = $user->given_name . ' ' . $user->middle_name . ' ' . $user->last_name . ' ' . $user->suffix;
+            $age = $user->date_of_birth ? \Carbon\Carbon::parse($user->date_of_birth)->age : 'N/A';
+            
+            // 2. Get SK Role
+            $skRole = $user->sk_role ?? 'Member';
+            $roleClass = strtolower($skRole);
 
-        <!-- Committee Selection Modal -->
+            // 3. GET COMMITTEES (Decode JSON from DB)
+            // Siguraduhing naka-array ito. Kung null, empty array.
+            $savedCommittees = !empty($user->committees) ? json_decode($user->committees, true) : [];
+            $hasCommittees = !empty($savedCommittees);
+            
+            // 4. Button Text (Style is same for both)
+            $buttonText = $hasCommittees ? 'Edit your committee' : 'Set your committee';
+        @endphp
+
+        <script>
+            window.userCommittees = @json($savedCommittees);
+        </script>
+
+        <div class="welcome-text">
+            <h1>{{ $fullName }}</h1>
+            <p>
+                {{ $age }} years old 
+                <span class="tag tag-{{ $roleClass }}">SK {{ $skRole }}</span>
+            </p>
+        </div>
+        
+        <button class="btn btn-secondary" id="setCommitteeBtn">
+            {{ $buttonText }}
+        </button>
+    </section>
+
         <div class="modal-overlay" id="committeeModal">
             <div class="committee-modal">
                 <div class="modal-header">
-                    <h2>Edit Your Committee</h2>
+                    <h2>Select Your Committee</h2>
                     <button class="close-modal" id="closeModal">&times;</button>
                 </div>
                 <div class="modal-content">
                     <div class="modal-section">
                         <p style="color: #252525ff; margin-bottom: 1rem; font-size: 0.9rem;">
-                          Select your respective committee.
+                          Please select your respective committee to proceed.
                         </p>
                         <div class="committee-options">
                             <div class="committee-option" data-committee="health">
@@ -176,438 +265,542 @@
     </section>
 
     <div class="dashboard-grid">
-        <div class="grid-col-1">
-            <div class="card sk-committee">
-                <h2>SK COMMITTEE</h2>
-                <ul>
-                    <li class="committee-item">
-                        <span class="name">MARIJOY S. NOVORA</span>
+    <div class="grid-col-1">
+        <div class="card sk-committee">
+            <h2>SK COMMITTEE</h2>
+            <ul>
+                
+                <li class="committee-item">
+                    @if($chairperson)
+                        <span class="name">
+                            {{ strtoupper($chairperson->given_name . ' ' . $chairperson->last_name) }}
+                        </span>
                         <div class="role-group">
                             <span class="role-tag role-chairperson">SK CHAIRPERSON</span>
                         </div>
-                    </li>
-                    <li class="members-header">MEMBERS</li>
-                    <li class="committee-item">
-                        <span class="name">JUAN DELA CRUZ</span>
+                    @else
+                        <span class="name" style="color: #999; font-style: italic;">(VACANT)</span>
                         <div class="role-group">
-                            <span class="role-tag role-treasurer">SK TREASURER</span>
+                            <span class="role-tag role-chairperson">SK CHAIRPERSON</span>
                         </div>
-                    </li>
+                    @endif
+                </li>
+
+                <li class="members-header">MEMBERS</li>
+
+                @forelse($members as $member)
+                    @php
+                        // Format Name
+                        $fullName = strtoupper($member->given_name . ' ' . $member->last_name);
+                        
+                        // Format Role Class (e.g. role-treasurer, role-kagawad)
+                        $roleClass = 'role-' . strtolower($member->sk_role);
+                        
+                        // Check Committees (Decode JSON)
+                        $commList = !empty($member->committees) ? json_decode($member->committees, true) : [];
+                    @endphp
+
                     <li class="committee-item">
-                        <span class="name">MARIA SANTOS</span>
+                        <span class="name">{{ $fullName }}</span>
+                        
                         <div class="role-group">
-                            <span class="role-tag role-secretary">SK SECRETARY</span>
+                            <span class="role-tag {{ $roleClass }}">
+                                SK {{ strtoupper($member->sk_role) }}
+                            </span>
+
+                            @if(!empty($commList))
+                                @foreach($commList as $comm)
+                                    <span class="committee-role" style="display: block; font-size: 10px; color: #666; margin-top: 4px; font-weight: 600;">
+                                        COMMITTEE ON {{ strtoupper($comm) }}
+                                    </span>
+                                @endforeach
+                            @endif
                         </div>
                     </li>
 
-                    <li class="committee-item">
-                        <span class="name">PETER GARCIA</span>
-                        <div class="role-group">
-                            <span class="role-tag role-kagawad">SK KAGAWAD</span>
-                            <span class="committee-role">COMMITTEE ON HEALTH</span>
-                            <span class="committee-role">COMMITTEE ON ACTIVE CITIZENSHIP</span>
-                        </div>
+                @empty
+                    <li class="committee-item" style="justify-content: center; padding: 20px;">
+                        <span class="name" style="color: #999; font-style: italic; font-weight: normal; font-size: 13px;">
+                            No registered SK members yet.
+                        </span>
                     </li>
-                    <li class="committee-item">
-                        <span class="name">ANNA REYES</span>
-                        <div class="role-group">
-                            <span class="role-tag role-kagawad">SK KAGAWAD</span>
-                            <span class="committee-role">COMMITTEE ON SOCIAL INCLUSION</span>
-                        </div>
-                    </li>
-                     <li class="committee-item">
-                        <span class="name">MARK LIM</span>
-                        <div class="role-group">
-                            <span class="role-tag role-kagawad">SK KAGAWAD</span>
-                            <span class="committee-role">COMMITTEE ON EDUCATION</span>
-                         </div>
-                    </li>
-                     <li class="committee-item">
-                        <span class="name">ISABELA DAVID</span>
-                         <div class="role-group">
-                            <span class="role-tag role-kagawad">SK KAGAWAD</span>
-                             <span class="committee-role">COMMITTEE ON ENVIRONMENT</span>
-                        </div>
-                    </li>
-                    <li class="committee-item">
-                         <span class="name">CARLO FERNANDEZ</span>
-                        <div class="role-group">
-                            <span class="role-tag role-kagawad">SK KAGAWAD</span>
-                            <span class="committee-role">COMMITTEE ON SPORTS DEV</span>
-                        </div>
-                    </li>
-                    <li class="committee-item">
-                        <span class="name">SOFIA ANGELES</span>
-                        <div class="role-group">
-                            <span class="role-tag role-kagawad">SK KAGAWAD</span>
-                             <span class="committee-role">COMMITTEE ON CULTURE & ARTS</span>
-                        </div>
-                    </li>
-                </ul>
-            </div>
+                @endforelse
+
+            </ul>
         </div>
+    </div>
+
 
         <div class="grid-col-2">
-            <div class="card send-report">
-                <h2>SEND REPORT TO YOUR SK CHAIR</h2>
-                <form>
-                    <div class="form-group">
-                        <label for="report-type">Report Type</label>
-                        <select id="report-type" name="report-type">
-                            <option value="">Select type of report</option>
-                            <option value="accomplishment">Accomplishment Report</option>
-                            <option value="financial">Propose Project</option>
-                        </select>
-                    </div>
-                    <div class="form-group file-upload">
-                        <label for="file-attach">Attach files</label>
-                        <div class="file-input-wrapper">
-                            <button type="button" class="file-input-btn">
-                                <i class="fas fa-cloud-upload-alt"></i> Choose Files or Drag & Drop
-                            </button>
-                            <input type="file" id="file-attach" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xls,.xlsx">
-                        </div>
-                        <div class="file-size-warning">Max file size: 10MB per file</div>
-                        <div class="file-list" id="fileList">
-                            <div class="file-empty-state">No files selected</div>
-                        </div>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Submit Report</button>
-                </form>
+    <div class="card send-report">
+        <h2>SEND REPORT TO YOUR SK CHAIR</h2>
+        
+        <form id="sendReportForm">
+            <div class="form-group">
+                <label for="report-type">Report Type</label>
+                <select id="report-type" name="report_type" required> <option value="">Select type of report</option>
+                    <option value="accomplishment">Accomplishment Report</option>
+                    <option value="financial">Propose Project</option>
+                </select>
             </div>
-        </div>
+
+            <div class="form-group file-upload">
+                <label for="file-attach">Attach files</label>
+                <div class="file-input-wrapper">
+                    <button type="button" class="file-input-btn" id="browseBtn">
+                        <i class="fas fa-cloud-upload-alt"></i> Choose Files or Drag & Drop
+                    </button>
+                    <input type="file" id="file-attach" name="files[]" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xls,.xlsx" style="display:none;">
+                </div>
+                
+                <div class="file-size-warning">Max file size: 10MB per file</div>
+                
+                <div class="file-list" id="uploadFileList">
+                    <div class="file-empty-state">No files selected</div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary" id="submitBtn">Submit Report</button>
+        </form>
+    </div>
+</div>
     </div>
 
-    <!-- Full Width Propose Project Section -->
     <div class="card propose-project-full">
-        <h2>Propose Project</h2>
-        <ul>
-            <li>
-                <div class="project-info">
-                    <span class="project-name">Community Pantry Drive</span>
-                    <span class="project-status">Active Citizenship</span>
-                </div>
-                <span class="project-date">Nov 15, 2025</span>
-            </li>
-             <li>
-                <div class="project-info">
-                    <span class="project-name">Free Medical Check-up</span>
-                     <span class="project-status">Health</span>
-                 </div>
-                 <span class="project-date">Nov 20, 2025</span>
-            </li>
-            <li>
-                <div class="project-info">
-                     <span class="project-name">Basketball League Finals</span>
-                    <span class="project-status">Sports</span>
-                </div>
-                <span class="project-date">Nov 28, 2025</span>
-            </li>
-            <li>
-                <div class="project-info">
-                    <span class="project-name">Scholarship Application Opening</span>
-                    <span class="project-status">Education</span>
-                </div>
-                <span class="project-date">Dec 01, 2025</span>
-            </li>
-             <li>
-                <div class="project-info">
-                     <span class="project-name">Barangay Christmas Decor Contest</span>
-                    <span class="project-status">Culture & Arts</span>
-                </div>
-                 <span class="project-date">Dec 10, 2025</span>
-             </li>
-             <li>
-                <div class="project-info">
-                     <span class="project-name">Coastal Clean-up Drive</span>
-                     <span class="project-status">Environment</span>
-                 </div>
-                 <span class="project-date">Dec 18, 2025</span>
-             </li>
-        </ul>
+    <div class="card-header-flex">
+        <h2>Accomplished Projects</h2>
+        
+        <div class="year-filter-wrapper">
+            <select id="projectYearFilter" class="year-select">
+                @php
+                    $currentYear = \Carbon\Carbon::now()->year;
+                    // Kunin lahat ng years na may record
+                    $availableYears = $completedProjects->keys(); 
+                @endphp
+
+                @if(!$availableYears->contains($currentYear))
+                    <option value="{{ $currentYear }}" selected>{{ $currentYear }}</option>
+                @endif
+
+                @foreach($availableYears as $year)
+                    <option value="{{ $year }}" {{ $year == $currentYear ? 'selected' : '' }}>
+                        {{ $year }}
+                    </option>
+                @endforeach
+                
+                <option value="all">All Years</option>
+            </select>
+        </div>
     </div>
+    
+    <div class="projects-list-container">
+        @forelse($completedProjects as $year => $projects)
+            
+            <div class="year-group-container" 
+                 id="year-group-{{ $year }}" 
+                 style="{{ $year == $currentYear ? 'display: block;' : 'display: none;' }}">
+                
+                <div class="year-header-small">
+                    <span>Records for {{ $year }}</span>
+                </div>
+
+                <ul class="project-year-group">
+                    @foreach($projects as $project)
+                        <li>
+                            <div class="project-info">
+                                <span class="project-name">{{ $project->title }}</span>
+                                <span class="project-status">
+                                    {{ $project->type }}
+                                </span>
+                            </div>
+                            <span class="project-date">
+                                {{ \Carbon\Carbon::parse($project->date)->format('M d') }}
+                            </span>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+
+        @empty
+            <div style="padding: 20px; text-align: center;">
+                <span style="color: #999; font-style: italic;">
+                    No accomplished projects yet.
+                </span>
+            </div>
+        @endforelse
+        
+        <div id="no-data-message" style="display: none; padding: 20px; text-align: center;">
+            <span style="color: #999; font-style: italic;">No records found for this year.</span>
+        </div>
+    </div>
+</div>
 
 </main>
 
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        // === Profile dropdown toggle ===
-        const profileToggle = document.getElementById('profileToggle');
-        const profileWrapper = document.querySelector('.profile-wrapper');
-        const profileDropdown = document.querySelector('.profile-dropdown');
+document.addEventListener('DOMContentLoaded', () => {
+    
+    // =========================================================
+    // 1. GLOBAL UI (Profile, Notifications, Dropdowns)
+    // =========================================================
+    const profileToggle = document.getElementById('profileToggle');
+    const profileWrapper = document.querySelector('.profile-wrapper');
+    const profileDropdown = document.querySelector('.profile-dropdown');
+    const notifBell = document.querySelector('.notification-wrapper .fa-bell');
+    const notifWrapper = document.querySelector('.notification-wrapper');
+    const notifDropdown = document.querySelector('.notif-dropdown');
 
-        // === Notifications dropdown toggle ===
-        const notifBell = document.querySelector('.notification-wrapper .fa-bell');
-        const notifWrapper = document.querySelector('.notification-wrapper');
-        const notifDropdown = document.querySelector('.notif-dropdown');
+    // Toggle Profile
+    profileToggle?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        profileWrapper.classList.toggle('active');
+        notifWrapper?.classList.remove('active');
+    });
+    profileDropdown?.addEventListener('click', e => e.stopPropagation());
 
-        // Profile dropdown toggle
-        profileToggle?.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevent click from closing immediately
-            profileWrapper.classList.toggle('active');
-            // Close notification dropdown if open
-            notifWrapper?.classList.remove('active');
+    // Toggle Notifications
+    notifBell?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        notifWrapper.classList.toggle('active');
+        profileWrapper?.classList.remove('active');
+    });
+    notifDropdown?.addEventListener('click', e => e.stopPropagation());
+
+    // Close Dropdowns on Outside Click
+    window.addEventListener('click', (e) => {
+        if (!profileWrapper?.contains(e.target)) profileWrapper?.classList.remove('active');
+        if (!notifWrapper?.contains(e.target)) notifWrapper?.classList.remove('active');
+    });
+
+
+    // =========================================================
+    // 2. TIME WIDGET UPDATE
+    // =========================================================
+    const timeEl = document.getElementById("currentTime");
+    function updateTime() {
+        if (!timeEl) return;
+        const now = new Date();
+        const shortWeekdays = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+        const weekday = shortWeekdays[now.getDay()];
+        let hours = now.getHours();
+        const minutes = now.getMinutes().toString().padStart(2, '0');
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12;
+        timeEl.textContent = `${weekday} ${hours}:${minutes} ${ampm}`;
+    }
+    updateTime();
+    setInterval(updateTime, 60000);
+
+
+    // =========================================================
+    // 2. SEND REPORT & FILE UPLOAD LOGIC (FIXED IDs)
+    // =========================================================
+    
+    // MGA TAMANG IDs BASE SA HTML MO:
+    const fileInput = document.getElementById('file-attach');
+    const fileListContainer = document.getElementById('uploadFileList'); 
+    const browseBtn = document.getElementById('browseBtn'); 
+    const sendReportForm = document.getElementById('sendReportForm'); 
+    const submitBtn = document.getElementById('submitBtn');
+    
+    let currentFiles = [];
+
+    // 1. TRIGGER CLICK (Pag-click ng button, bubukas ang file folder)
+    if (browseBtn && fileInput) {
+        browseBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            fileInput.click();
         });
-        // Prevent clicks inside dropdown from closing it
-        profileDropdown?.addEventListener('click', e => e.stopPropagation());
+    }
 
-        // Notifications dropdown toggle
-        notifBell?.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevent click from closing immediately
-            notifWrapper.classList.toggle('active');
-             // Close profile dropdown if open
-            profileWrapper?.classList.remove('active');
-        });
-         // Prevent clicks inside dropdown from closing it
-        notifDropdown?.addEventListener('click', e => e.stopPropagation());
-
-        // === Time auto-update ===
-        const timeEl = document.getElementById("currentTime");
-        function updateTime() {
-            if (!timeEl) return;
-            const now = new Date();
-
-            const shortWeekdays = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
-            const weekday = shortWeekdays[now.getDay()];
-
-            let hours = now.getHours();
-            const minutes = now.getMinutes().toString().padStart(2, '0');
-            const ampm = hours >= 12 ? 'PM' : 'AM';
-            hours = hours % 12;
-            hours = hours ? hours : 12; // Handle midnight (0) as 12
-            const timeString = `${hours}:${minutes} ${ampm}`;
-
-            // Format: MON 10:00 AM
-            timeEl.textContent = `${weekday} ${timeString}`;
-        }
-        updateTime(); // Run once on load
-        setInterval(updateTime, 60000); // Update every minute
-
-        // === File Upload Management ===
-        const fileInput = document.getElementById('file-attach');
-        const fileListContainer = document.getElementById('fileList'); // Renamed for clarity
-        let currentFiles = []; // Use a different variable name
-
-        fileInput?.addEventListener('change', (e) => {
+    // 2. FILE SELECTION (Pag may napili na)
+    if (fileInput) {
+        fileInput.addEventListener('change', (e) => {
             const newFiles = Array.from(e.target.files);
-            // Append new files, avoiding duplicates based on name and size (basic check)
-             newFiles.forEach(newFile => {
-                if (!currentFiles.some(existingFile => existingFile.name === newFile.name && existingFile.size === newFile.size)) {
+            
+            newFiles.forEach(newFile => {
+                // Check kung duplicate para hindi maulit
+                if (!currentFiles.some(existing => existing.name === newFile.name)) {
                     currentFiles.push(newFile);
                 }
-             });
+            });
+
             updateFileListUI(fileListContainer, currentFiles);
+            fileInput.value = ''; // Reset para pwede pumili ulit
+        });
+    }
+
+    // HELPER: Update UI List (Ito ang magpapakita sa screen)
+    function updateFileListUI(container, filesToShow) {
+        if (!container) return;
+        container.innerHTML = '';
+        
+        if (filesToShow.length === 0) {
+            container.innerHTML = '<div class="file-empty-state">No files selected</div>';
+            return;
+        }
+
+        filesToShow.forEach((file, index) => {
+            const fileItem = document.createElement('div');
+            fileItem.className = 'file-item';
+            fileItem.style.cssText = "display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 8px; margin-bottom: 5px; border: 1px solid #e2e8f0; border-radius: 5px;";
+            
+            // Format size logic
+            let size = (file.size / 1024).toFixed(1) + ' KB';
+            if(file.size > 1024 * 1024) size = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
+
+            fileItem.innerHTML = `
+                <div style="display:flex; align-items:center; gap:8px; overflow:hidden;">
+                    <i class="fas fa-file" style="color:#64748b;"></i>
+                    <span class="file-name" title="${file.name}" style="font-size:0.9rem;">${file.name}</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span style="font-size:0.8rem; color:#888;">${size}</span>
+                    <span class="file-remove" data-index="${index}" style="cursor:pointer; color:#ef4444;"><i class="fas fa-times"></i></span>
+                </div>
+            `;
+            container.appendChild(fileItem);
         });
 
-        function updateFileListUI(container, filesToShow) {
-            if (!container) return;
-            container.innerHTML = ''; // Clear previous list
-
-            if (filesToShow.length === 0) {
-                container.innerHTML = '<div class="file-empty-state">No files selected</div>';
-                return;
-            }
-
-            filesToShow.forEach((file, index) => {
-                const fileItem = document.createElement('div');
-                fileItem.className = 'file-item';
-
-                // Format file size
-                let fileSize = '';
-                if (file.size < 1024) fileSize = file.size + ' bytes';
-                else if (file.size < 1048576) fileSize = (file.size / 1024).toFixed(1) + ' KB';
-                else fileSize = (file.size / 1048576).toFixed(1) + ' MB';
-
-                fileItem.innerHTML = `
-                    <span class="file-name" title="${file.name}">${file.name}</span>
-                    <span class="file-size">${fileSize}</span>
-                    <span class="file-remove" data-index="${index}" title="Remove file">
-                        <i class="fas fa-times"></i>
-                    </span>
-                `;
-                container.appendChild(fileItem);
+        // Add remove functionality
+        container.querySelectorAll('.file-remove').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const idx = parseInt(e.currentTarget.dataset.index);
+                currentFiles.splice(idx, 1); // Remove from array
+                updateFileListUI(container, currentFiles); // Re-render
             });
+        });
+    }
 
-            // Add remove functionality AFTER creating the elements
-            attachRemoveListeners(container, filesToShow);
-        }
+    // 3. SUBMIT FORM (AJAX)
+    if (sendReportForm) {
+        sendReportForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
 
-        function attachRemoveListeners(container, filesArray) {
-             container.querySelectorAll('.file-remove').forEach(removeBtn => {
-                // Remove previous listener to avoid duplicates if re-rendering
-                removeBtn.replaceWith(removeBtn.cloneNode(true));
-            });
-
-            // Attach new listeners
-            container.querySelectorAll('.file-remove').forEach(removeBtn => {
-                removeBtn.addEventListener('click', (e) => {
-                    const indexToRemove = parseInt(e.target.closest('.file-remove').dataset.index);
-                     if (!isNaN(indexToRemove) && indexToRemove >= 0 && indexToRemove < filesArray.length) {
-                        filesArray.splice(indexToRemove, 1); // Remove from the array
-                        updateFileListUI(container, filesArray); // Update the UI
-                    }
-                });
-            });
-        }
-
-        // === Form Submissions ===
-        const reportForm = document.querySelector('.send-report form');
-        const reportSuccessMsg = document.getElementById('reportSuccess'); // Renamed for clarity
-
-        reportForm?.addEventListener('submit', (e) => {
-            e.preventDefault(); // Stop default form submission
             const reportType = document.getElementById('report-type').value;
-
-            // Basic validation
+            
             if (!reportType) {
-                 alert('Please select a report type.');
-                 return;
-             }
-             if (currentFiles.length === 0) {
-                 alert('Please attach at least one file.');
+                alert('Please select a report type.');
+                return;
+            }
+            if (currentFiles.length === 0) {
+                alert('Please attach at least one file.');
                 return;
             }
 
-            // Simulate submission (replace with actual AJAX/fetch later)
-            console.log('Simulating report submission:');
-            console.log('Report Type:', reportType);
-            console.log('Files:', currentFiles.map(f => f.name)); // Log file names
-             showSuccess(); // Show success message (simulation)
-        });
-
-        function showSuccess() {
-             reportSuccessMsg.style.display = 'block';
-
-            // Reset form fields
-            reportForm.reset(); // Resets select dropdown
-            currentFiles = []; // Clear the file array
-            updateFileListUI(fileListContainer, currentFiles); // Clear the file list UI
-
-            // Hide the success message after 5 seconds
-            setTimeout(() => {
-                reportSuccessMsg.style.display = 'none';
-            }, 5000);
-        }
-
-        // === Close dropdowns when clicking outside ===
-        window.addEventListener('click', (e) => {
-             // Close profile dropdown if click is outside
-            if (!profileWrapper?.contains(e.target)) {
-                 profileWrapper?.classList.remove('active');
-             }
-             // Close notification dropdown if click is outside
-             if (!notifWrapper?.contains(e.target)) {
-                notifWrapper?.classList.remove('active');
-            }
-        });
-
-        // === Committee Modal Elements ===
-        const setCommitteeBtn = document.getElementById('setCommitteeBtn');
-        const committeeModal = document.getElementById('committeeModal');
-        const closeModal = document.getElementById('closeModal');
-        const cancelSelection = document.getElementById('cancelSelection');
-        const saveCommittees = document.getElementById('saveCommittees');
-        const committeeOptions = document.querySelectorAll('.committee-option');
-        const selectedCommittees = document.getElementById('selectedCommittees');
-
-        // === Committee Modal Functions ===
-        setCommitteeBtn?.addEventListener('click', () => {
-            committeeModal.classList.add('active');
-        });
-
-        closeModal?.addEventListener('click', () => {
-            committeeModal.classList.remove('active');
-        });
-
-        cancelSelection?.addEventListener('click', () => {
-            committeeModal.classList.remove('active');
-            resetSelections();
-        });
-
-        // Close modal when clicking outside
-        committeeModal?.addEventListener('click', (e) => {
-            if (e.target === committeeModal) {
-                committeeModal.classList.remove('active');
-                resetSelections();
-            }
-        });
-
-        // Committee selection functionality with checkboxes
-        committeeOptions.forEach(option => {
-            const checkbox = option.querySelector('input[type="checkbox"]');
+            // Prepare Data
+            const formData = new FormData();
+            formData.append('report_type', reportType);
             
-            option.addEventListener('click', (e) => {
-                if (e.target !== checkbox) {
-                    checkbox.checked = !checkbox.checked;
-                }
-                
-                if (checkbox.checked) {
-                    option.classList.add('selected');
-                } else {
-                    option.classList.remove('selected');
-                }
-                
-                updateSelectedCommittees();
+            // Append files manu-mano
+            currentFiles.forEach(file => {
+                formData.append('files[]', file);
             });
 
-            checkbox.addEventListener('change', () => {
-                if (checkbox.checked) {
-                    option.classList.add('selected');
-                } else {
-                    option.classList.remove('selected');
-                }
-                updateSelectedCommittees();
-            });
-        });
+            // UI Loading
+            const origText = submitBtn.innerText;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+            submitBtn.disabled = true;
 
-        function updateSelectedCommittees() {
-            const selected = Array.from(committeeOptions)
-                .filter(option => option.querySelector('input').checked)
-                .map(option => {
-                    const label = option.querySelector('label').textContent;
-                    return `<div class="selected-committee">${label}</div>`;
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+            try {
+                const response = await fetch('/submit-report', { 
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': csrfToken },
+                    body: formData
                 });
 
-            if (selected.length > 0) {
-                selectedCommittees.innerHTML = selected.join('');
-            } else {
-                selectedCommittees.innerHTML = '<p style="color: #999; margin: 0; font-style: italic;">No committees selected yet</p>';
-            }
-        }
+                const data = await response.json();
 
-        function resetSelections() {
-            committeeOptions.forEach(option => {
-                const checkbox = option.querySelector('input[type="checkbox"]');
-                checkbox.checked = false;
-                option.classList.remove('selected');
+                if (data.success) {
+                    alert(data.message);
+                    sendReportForm.reset();
+                    currentFiles = [];
+                    updateFileListUI(fileListContainer, currentFiles);
+                } else {
+                    alert('Failed: ' + (data.message || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error(error);
+                alert('An error occurred. Check console.');
+            } finally {
+                submitBtn.innerText = origText; // Balik sa original text (Submit Report)
+                submitBtn.disabled = false;
+            }
+        });
+    }
+
+
+    // =========================================================
+    // 4. COMMITTEE SELECTION LOGIC
+    // =========================================================
+    const setCommitteeBtn = document.getElementById('setCommitteeBtn');
+    const committeeModal = document.getElementById('committeeModal');
+    const closeModal = document.getElementById('closeModal');
+    const cancelSelection = document.getElementById('cancelSelection');
+    const saveCommittees = document.getElementById('saveCommittees');
+    const committeeOptions = document.querySelectorAll('.committee-option');
+    const selectedCommittees = document.getElementById('selectedCommittees');
+
+    function loadSavedCommittees() {
+        committeeOptions.forEach(opt => {
+            const cb = opt.querySelector('input');
+            cb.checked = false;
+            opt.classList.remove('selected');
+        });
+
+        const saved = window.userCommittees || [];
+        if (saved.length > 0) {
+            saved.forEach(value => {
+                const targetCb = document.querySelector(`input[value="${value}"]`);
+                if (targetCb) {
+                    targetCb.checked = true;
+                    targetCb.closest('.committee-option').classList.add('selected');
+                }
             });
-            updateSelectedCommittees();
         }
+        updateSelectedCommitteesUI();
+    }
 
-        // Save committees
-        saveCommittees?.addEventListener('click', () => {
-            const selected = Array.from(committeeOptions)
-                .filter(option => option.querySelector('input').checked)
-                .map(option => option.querySelector('label').textContent);
+    // Initialize
+    loadSavedCommittees(); 
+    if (!window.userCommittees || window.userCommittees.length === 0) {
+        if (committeeModal) committeeModal.classList.add('active');
+    }
 
-            if (selected.length === 0) {
-                alert('Please select at least one committee.');
-                return;
-            }
+    setCommitteeBtn?.addEventListener('click', () => {
+        loadSavedCommittees();
+        committeeModal.classList.add('active');
+    });
 
-            // Here you would typically send the data to your backend
-            console.log('Selected committees:', selected);
-            
-            // Show success message
-            alert('Committees saved successfully!');
-            
-            // Close modal
+    closeModal?.addEventListener('click', () => committeeModal.classList.remove('active'));
+    cancelSelection?.addEventListener('click', () => {
+        committeeModal.classList.remove('active');
+        loadSavedCommittees();
+    });
+
+    committeeModal?.addEventListener('click', (e) => {
+        if (e.target === committeeModal) {
             committeeModal.classList.remove('active');
-            
-            // You can update the UI here to reflect the selected committees
-            // For example, update the user's committee display
+            loadSavedCommittees();
+        }
+    });
+
+    // Checkbox Interactions
+    committeeOptions.forEach(option => {
+        const checkbox = option.querySelector('input[type="checkbox"]');
+        
+        option.addEventListener('click', (e) => {
+            if (e.target !== checkbox) {
+                checkbox.checked = !checkbox.checked;
+            }
+            option.classList.toggle('selected', checkbox.checked);
+            updateSelectedCommitteesUI();
+        });
+
+        checkbox.addEventListener('change', () => {
+            option.classList.toggle('selected', checkbox.checked);
+            updateSelectedCommitteesUI();
         });
     });
+
+    function updateSelectedCommitteesUI() {
+        const selected = Array.from(committeeOptions)
+            .filter(option => option.querySelector('input').checked)
+            .map(option => `<div class="selected-committee">${option.querySelector('label').textContent}</div>`);
+
+        if (selectedCommittees) {
+            selectedCommittees.innerHTML = selected.length > 0 
+                ? selected.join('') 
+                : '<p style="color: #999; margin: 0; font-style: italic;">No committees selected yet</p>';
+        }
+    }
+
+    // Save Committees Logic
+    saveCommittees?.addEventListener('click', async () => {
+        const selected = Array.from(committeeOptions)
+            .filter(option => option.querySelector('input').checked)
+            .map(option => option.querySelector('input').value);
+
+        if (selected.length === 0) {
+            alert('Please select at least one committee.');
+            return;
+        }
+
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        const originalText = saveCommittees.textContent;
+        saveCommittees.textContent = 'Saving...';
+        saveCommittees.disabled = true;
+
+        try {
+            const response = await fetch('/sk/update-committees', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ committees: selected })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                alert('Committees saved successfully!');
+                committeeModal.classList.remove('active');
+                window.location.reload(); 
+            } else {
+                alert('Failed to save: ' + (data.message || 'Unknown error'));
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Something went wrong.');
+        } finally {
+            saveCommittees.textContent = originalText;
+            saveCommittees.disabled = false;
+        }
+    });
+
+
+    // =========================================================
+    // 5. YEAR FILTER LOGIC
+    // =========================================================
+    const yearFilter = document.getElementById('projectYearFilter');
+    const yearGroups = document.querySelectorAll('.year-group-container');
+    const noDataMsg = document.getElementById('no-data-message');
+
+    if (yearFilter) {
+        yearFilter.addEventListener('change', function() {
+            const selectedYear = this.value;
+            let hasVisibleData = false;
+
+            yearGroups.forEach(group => {
+                if (selectedYear === 'all') {
+                    group.style.display = 'block';
+                    hasVisibleData = true;
+                } else {
+                    if (group.id === `year-group-${selectedYear}`) {
+                        group.style.display = 'block';
+                        hasVisibleData = true;
+                    } else {
+                        group.style.display = 'none';
+                    }
+                }
+            });
+
+            if (noDataMsg) {
+                noDataMsg.style.display = hasVisibleData ? 'none' : 'block';
+            }
+        });
+        
+        // Initial Trigger
+        const event = new Event('change');
+        yearFilter.dispatchEvent(event);
+    }
+
+});
 </script>
 </body>
 </html>

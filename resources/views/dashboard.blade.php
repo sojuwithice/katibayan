@@ -8,6 +8,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
+<script>
+    // Make CSRF token globally available
+    window.csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+</script>
+
   <title>KatiBayan - Dashboard</title>
   <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
@@ -75,8 +80,7 @@
       <div class="topbar-right">
         <div class="time">MON 10:00 <span>AM</span></div>
 
-    <!-- Notifications -->
-<div class="notification-wrapper">
+    <div class="notification-wrapper">
     <i class="fas fa-bell"></i>
     @if($notificationCount > 0)
         <span class="notif-count">{{ $notificationCount }}</span>
@@ -91,16 +95,34 @@
         
         <ul class="notif-list">
 
+            {{-- === SIMULA NG HYBRID FIX === --}}
             @foreach ($generalNotifications as $notif)
                 @php
                     $link = '#'; // Default
-                    if ($notif->type == 'certificate_schedule') {
+                    $onclickAction = ''; // Default na walang click action
+                    
+                    // --- Para sa Links ---
+                    if ($notif->type == 'certificate_schedule') { // <--- Para sa Dati
                         $link = route('certificatepage'); 
+                    } 
+                    // FIX: Check kung SK Request Approved (galing sa Controller mo)
+                    elseif ($notif->type == 'sk_request_approved' || $notif->type == 'App\Notifications\SkRequestAccepted') { 
+                        $link = '#'; 
+                        // Dito tinatawag ang Javascript function para sa Modal
+                        $onclickAction = 'openSetRoleModal(); return false;';
                     }
+
+                    // --- Para sa Title at Message (Ang Hybrid Fix) ---
+                    $title = $notif->data['title'] ?? $notif->title ?? 'Notification';
+                    $message = $notif->data['message'] ?? $notif->message ?? 'You have a new notification.';
                 @endphp
                 
                 <li>
-                    <a href="{{ $link }}" class="notif-link {{ $notif->is_read == 0 ? 'unread' : '' }}" data-id="{{ $notif->id }}">
+                    {{-- FIX: Dinagdag ang onclick attribute dito --}}
+                    <a href="{{ $link }}" 
+                       class="notif-link {{ $notif->is_read == 0 ? 'unread' : '' }}" 
+                       data-id="{{ $notif->id }}"
+                       @if($onclickAction) onclick="{{ $onclickAction }}" @endif>
                         
                         <div class="notif-dot-container">
                             @if ($notif->is_read == 0)
@@ -112,17 +134,21 @@
 
                         <div class="notif-main-content">
                             <div class="notif-header-line">
-                                <strong>{{ $notif->title }}</strong>
+                                {{-- Gagamitin na natin 'yung $title at $message variables --}}
+                                <strong>{{ $title }}</strong>
                                 <span class="notif-timestamp">
                                     {{ $notif->created_at->format('m/d/Y g:i A') }}
                                 </span>
                             </div>
-                            <p class="notif-message">{{ $notif->message }}</p>
+                            <p class="notif-message">{{ $message }}</p>
                         </div>
                     </a>
                 </li>
             @endforeach
+            {{-- === TAPOS NG HYBRID FIX === --}}
 
+
+            {{-- HINDI GINALAW ANG CODE SA BABA NITO --}}
             @foreach($unevaluatedActivities as $activity)
                 <li>
                     <a href="{{ route('evaluation.show', $activity['id']) }}" class="notif-link unread" 
@@ -156,51 +182,179 @@
     </div>
 </div>
 
-        <!-- Profile Avatar -->
         <div class="profile-wrapper">
-          <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
-               alt="User" class="avatar" id="profileToggle">
-          <div class="profile-dropdown">
-            <div class="profile-header">
-              <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
-                   alt="User" class="profile-avatar">
-              <div class="profile-info">
-                <h4>{{ $user->given_name }} {{ $user->middle_name }} {{ $user->last_name }} {{ $user->suffix }}</h4>
-                <div class="profile-badge">
-                  <span class="badge">{{ $roleBadge }}</span>
-                  <span class="badge">{{ $age }} yrs old</span>
-                </div>
-              </div>
-            </div>
-            <hr>
-            <ul class="profile-menu">
-              <li>
-                <a href="{{ route('profilepage') }}">
-                  <i class="fas fa-user"></i> Profile
-                </a>
-              </li>
-              <li><i class="fas fa-cog"></i> Manage Password</li>
-              <li>
-                <a href="{{ route('faqspage') }}">
-                  <i class="fas fa-question-circle"></i> FAQs
-                </a>
-              </li>
-              <li><i class="fas fa-star"></i> Send Feedback to Katibayan</li>
-              <li class="logout-item">
-                <a href="loginpage" onclick="confirmLogout(event)">
-                  <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
-              </li>
-            </ul>
+  <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+       alt="User" class="avatar" id="profileToggle">
+  
+  <div class="profile-dropdown">
+    <div class="profile-header">
+      <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+           alt="User" class="profile-avatar">
+           
+      <div class="profile-info">
+        <h4>{{ $user->given_name }} {{ $user->middle_name }} {{ $user->last_name }} {{ $user->suffix }}</h4>
+        
+        <div class="badges-wrapper">
             
-            <!-- Hidden Logout Form -->
-            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-              @csrf
-            </form>
-          </div>
+            <div class="profile-badge">
+              <span class="badge">{{ $roleBadge }}</span>
+              <span class="badge">{{ $age }} yrs old</span>
+            </div>
+
+            @php
+                $skTitle = '';
+                // Kung may laman ang sk_role, kunin nang buo (walang dagdag na text)
+                if (!empty(Auth::user()->sk_role)) {
+                    $skTitle = Auth::user()->sk_role; 
+                } 
+                // Fallback para sa Chairperson kung wala sa sk_role column
+                elseif (Auth::user()->role === 'sk_chairperson') {
+                    $skTitle = 'SK Chairperson';
+                }
+            @endphp
+
+            @if($skTitle)
+                <div class="profile-badge sk-badge-yellow">
+                    <span>{{ $skTitle }}</span>
+                </div>
+            @endif
+
         </div>
       </div>
+    </div>
+    <hr>
+
+    <div class="profile-button-container">
+    @php
+        // LOGIC: Check kung may laman ang 'sk_role' column.
+        $isSkOfficial = !empty(Auth::user()->sk_role) || Auth::user()->role === 'sk_chairperson';
+    @endphp
+
+    @if($isSkOfficial)
+        <a href="{{ route('sk.role.view') }}" class="profile-sk-button">
+            Switch to SK Role
+        </a>
+    @else
+        <a href="#" class="profile-sk-button" id="accessSKRoleBtn" data-url="{{ route('sk.request.access') }}">
+            Access SK role
+        </a>
+    @endif
+  </div>
+
+    <ul class="profile-menu">
+      <li>
+        <a href="{{ route('profilepage') }}">
+          <i class="fas fa-user"></i> Profile
+        </a>
+      </li>
+      
+      <li>
+        <a href="{{ route('faqspage') }}">
+          <i class="fas fa-question-circle"></i> FAQs
+        </a>
+      </li>
+
+      <li>
+        <a href="#" id="openFeedbackBtn">
+          <i class="fas fa-star"></i> Send Feedback to Katibayan
+        </a>
+      </li>
+      
+      <li class="logout-item">
+        <a href="loginpage" onclick="confirmLogout(event)">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </a>
+      </li>
+    </ul>
+    
+    <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+      @csrf
+    </form>
+  </div>
+</div>
     </header>
+
+
+<div id="skAccessModal" class="modal-overlay" style="display: none;">
+  
+  <div class="sk-modal-box"> 
+    
+    <div class="modal-step active" data-step="1">
+      <h2>Do you want to request access?</h2>
+      <p>This will send a request to your SK Chairperson for permission to access your SK role. Would you like to proceed?</p>
+      
+      <div class="modal-actions" style="justify-content: flex-end;">
+        <button type="button" class="btn btn-cancel" data-action="close">Cancel</button>
+        <button type="button" class="btn btn-confirm" data-action="confirm-request">Yes</button>
+      </div>
+    </div>
+
+    <div class="modal-step" data-step="2">
+      <div class="spinner"></div>
+      <p>Please wait while we send your request to the SK Chairperson. This will just take a moment.</p>
+    </div>
+
+    <div class="modal-step" data-step="3">
+      <div class="modal-icon-wrapper success">
+        <i class="fas fa-check"></i>
+      </div>
+      <h2>Request Sent</h2>
+      <p>Thank you. Your request has been submitted. You will be notified once it is reviewed and approved.</p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-confirm" data-action="close">OK</button>
+      </div>
+    </div>
+
+    <div class="modal-step" data-step="4">
+      <div class="modal-icon-wrapper error">
+        <i class="fas fa-exclamation-triangle"></i> 
+      </div>
+      <h2>Something went wrong</h2>
+      <p>Please check your network and try again.</p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-confirm" data-action="try-again">Try again</button>
+      </div>
+    </div>
+
+  </div> 
+</div> 
+
+<div id="setRoleModal" class="modal-overlay" style="display: none;">
+  <div class="set-role-modal-content">
+    
+    <h2>Choose your role as SK</h2>
+    
+    <form id="setRoleForm">
+      <div class="role-options-list">
+        
+        <label class="role-option">
+          <input type="radio" name="sk_role" value="Kagawad" checked>
+          <span class="radio-circle"></span>
+          <span class="role-name">Kagawad</span>
+        </label>
+        
+        <label class="role-option">
+          <input type="radio" name="sk_role" value="Secretary">
+          <span class="radio-circle"></span>
+          <span class="role-name">Secretary</span>
+        </label>
+        
+        <label class="role-option">
+          <input type="radio" name="sk_role" value="Treasurer">
+          <span class="radio-circle"></span>
+          <span class="role-name">Treasurer</span>
+        </label>
+
+      </div>
+      
+      <div class="modal-actions">
+        <button type="submit" class="btn btn-confirm">Set Role</button>
+      </div>
+    </form>
+  </div>
+</div>
+  
+
 
     <div id="feedbackModal" class="modal-overlay">
       <div class="modal-content">
@@ -286,7 +440,7 @@
         </div>
         <h2>Submitted</h2>
         <p>Thank you for your feedback! Your thoughts help us improve.</p>
-        <button id="closeSuccessModal" class="ok-btn">Ok</button>
+        <button id="closeSuccessModal" class="ok-btn">OK</button>
       </div>
     </div>
 
@@ -1025,7 +1179,7 @@
    * Initializes the "Send Feedback" Modal.
    */
   function initFeedbackModal() {
-    const feedbackTriggerBtn = document.querySelector('.profile-menu li:nth-child(4) a'); // "Send Feedback" item
+    const feedbackTriggerBtn = document.getElementById('openFeedbackBtn'); // "Send Feedback" item
     const feedbackModal = document.getElementById('feedbackModal');
     if (!feedbackTriggerBtn || !feedbackModal) {
       console.warn("Feedback modal or trigger not found.");
@@ -1051,11 +1205,6 @@
       const options = customSelect.querySelectorAll('.custom-option');
       const realSelect = document.getElementById('type');
 
-      // Toggle dropdown
-      trigger?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        customSelect.classList.toggle('open');
-      });
       // Toggle dropdown
       trigger?.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -1360,6 +1509,179 @@
       document.body.classList.remove('mobile-sidebar-active'); // (BAGO)
     }
   });
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+    // ==========================================
+    // 1. ACCESS SK ROLE MODAL (REQUEST LOGIC)
+    // ==========================================
+    const skModal = document.getElementById('skAccessModal');
+    const openModalBtn = document.getElementById('accessSKRoleBtn');
+
+    // Helper: Show specific step
+    function showModalStep(stepNumber) {
+        if (!skModal) return;
+        skModal.querySelectorAll('.modal-step').forEach(step => {
+            step.classList.remove('active');
+            step.style.display = 'none'; // Fallback
+        });
+        const activeStep = skModal.querySelector(`.modal-step[data-step="${stepNumber}"]`);
+        if (activeStep) {
+            activeStep.classList.add('active');
+            activeStep.style.display = 'block'; // Fallback
+        }
+    }
+
+    // Helper: Close SK Modal
+    function closeSkModal() {
+        if (skModal) skModal.style.display = 'none';
+    }
+
+    // Submit Request Logic
+    async function handleSubmitRequest() {
+        console.log("Sending request to backend...");
+        showModalStep(2); // Loading
+
+        const btn = document.getElementById('accessSKRoleBtn');
+        const skAccessUrl = btn?.dataset.url || '/sk/request-access'; // Fallback URL
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+        if (!csrfToken) {
+            console.error('CSRF Token is missing!');
+            showModalStep(4);
+            return;
+        }
+
+        try {
+            const response = await fetch(skAccessUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ _token: csrfToken })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                showModalStep(3); // Success
+            } else {
+                console.error(data.message);
+                const errText = skModal.querySelector('.modal-step[data-step="4"] p');
+                if(errText) errText.textContent = data.message || 'Failed to submit request.';
+                showModalStep(4);
+            }
+        } catch (error) {
+            console.error('Fetch error:', error);
+            showModalStep(4);
+        }
+    }
+
+    // Event Listeners: Open Request Modal
+    if (openModalBtn) {
+        openModalBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            showModalStep(1);
+            skModal.style.display = 'flex';
+        });
+    }
+
+    // Event Listeners: Modal Buttons
+    if (skModal) {
+        skModal.addEventListener('click', function(e) {
+            const action = e.target.dataset.action;
+            if (!action) return;
+
+            switch (action) {
+                case 'close':
+                    closeSkModal();
+                    break;
+                case 'confirm-request':
+                    handleSubmitRequest();
+                    break;
+                case 'try-again':
+                    handleSubmitRequest();
+                    break;
+            }
+        });
+    }
+
+
+    // ==========================================
+    // 2. SET ROLE MODAL LOGIC (New Addition)
+    // ==========================================
+    const setRoleModal = document.getElementById('setRoleModal');
+    const setRoleForm = document.getElementById('setRoleForm');
+
+    // Make this GLOBAL so the notification onClick can call it
+    window.openSetRoleModal = function() {
+        if (setRoleModal) {
+            setRoleModal.style.display = 'flex';
+            console.log('Opening Set Role Modal...');
+        } else {
+            console.error('Error: Cannot find modal with id "setRoleModal"');
+        }
+    };
+
+    // Close Set Role Modal on outside click
+    window.addEventListener('click', function(e) {
+        if (e.target === setRoleModal) {
+            setRoleModal.style.display = 'none';
+        }
+    });
+
+    // Handle Form Submit (Set Role)
+    if (setRoleForm) {
+        setRoleForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const btn = setRoleForm.querySelector('button[type="submit"]');
+            const originalText = btn.textContent;
+            
+            // UI Feedback
+            btn.textContent = "Saving...";
+            btn.disabled = true;
+
+            const formData = new FormData(setRoleForm);
+            const selectedRole = formData.get('sk_role');
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+            try {
+                // FIXED URL: Matches your web.php route '/sk/set-role'
+                const response = await fetch('/sk/set-role', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ role: selectedRole })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert('Role set successfully! Redirecting...');
+                    window.location.reload(); // Reloads page to update Button to "Enter SK Dashboard"
+                } else {
+                    alert(data.message || 'Failed to set role.');
+                    btn.textContent = originalText;
+                    btn.disabled = false;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Something went wrong. Please try again.');
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        });
+    }
+
+});
 </script>
 </body>
 </html>
