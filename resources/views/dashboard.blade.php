@@ -757,6 +757,39 @@
   // CSRF Token for AJAX requests
   window.csrfToken = '{{ csrf_token() }}';
 
+  // ===================================================
+  // ✅ DINAGDAG: THEME TOGGLE HELPER FUNCTION
+  // ===================================================
+  /**
+   * Applies the dark or light theme based on the boolean parameter.
+   */
+  function applyTheme(isDark) {
+    const body = document.body;
+    const themeToggle = document.getElementById('themeToggle');
+    
+    body.classList.toggle('dark-mode', isDark);
+    
+    // Piliin kung 'sun' o 'moon' icon ang ipapakita (Lucide icons)
+    const icon = isDark ? 'sun' : 'moon';
+
+    if (themeToggle) {
+      // Palitan ang icon sa loob ng button
+      themeToggle.innerHTML = `<i data-lucide="${icon}"></i>`;
+    }
+
+    // Re-initialize Lucide icons para mag-update ang icon
+    // Tiyakin na defined ang 'lucide' bago tawagin
+    if (typeof lucide !== 'undefined') {
+      lucide.createIcons();
+    }
+    
+    // Save theme to localStorage and update HTML attribute (data-theme)
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  }
+  // ===================================================
+
+  
   /**
    * Updates the time in the topbar.
    */
@@ -877,7 +910,7 @@
         
         // (FIX) Only run this sidebar logic on DESKTOP. 
         // Mobile has its own listener in the other script tag.
-        if (window.innerWidth > 768 && sidebar && !sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+        if (window.innerWidth > 768 && sidebar && menuToggle && !sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
           sidebar.classList.remove('open');
           document.querySelector('.profile-item')?.classList.remove('open');
         }
@@ -1473,6 +1506,27 @@
   document.addEventListener("DOMContentLoaded", () => {
     // Initialize Lucide icons first
     lucide.createIcons();
+
+    // ===================================================
+    // ✅ DINAGDAG: THEME TOGGLE INITIALIZATION
+    // ===================================================
+    const body = document.body;
+    const themeToggle = document.getElementById('themeToggle');
+    
+    // 1. Load saved theme and apply it immediately
+    const savedTheme = localStorage.getItem('theme') === 'dark';
+    applyTheme(savedTheme); 
+
+    // 2. Add event listener to theme toggle
+    if (themeToggle) {
+      themeToggle.addEventListener('click', () => {
+        // Tiyakin na ang theme check ay base sa body class
+        const isDark = !body.classList.contains('dark-mode'); 
+        applyTheme(isDark);
+      });
+    }
+    // ===================================================
+
 
     // Initialize all components
     initSidebar();

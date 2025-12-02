@@ -544,7 +544,7 @@ body {
   flex: 1;
   min-width: 200px;
   background: var(--card-bg);
-  border: 1px solid var(--accent-color);
+  border: 1px solid #3C87C4;
   border-radius: 10px;
   padding: 1rem;
   text-align: left;
@@ -607,7 +607,7 @@ label {
 textarea {
   width: 100%;
   padding: 1rem;
-  border: 1px solid var(--border-color);
+  border: 1px solid #3C87C4;
   border-radius: 12px;
   margin-top: 0;
   font-size: .9rem;
@@ -616,6 +616,7 @@ textarea {
   box-shadow: inset 0 2px 4px rgba(0,0,0,0.04);
   box-sizing: border-box;
   color: var(--text-color);
+  
 }
 
 textarea:focus {
@@ -632,7 +633,7 @@ textarea:focus {
 .custom-select-trigger {
   width: 100%;
   padding: 1rem;
-  border: 1px solid var(--border-color);
+  border: 1px solid #3C87C4;
   border-radius: 12px;
   background: var(--card-bg);
   box-shadow: inset 0 2px 4px rgba(0,0,0,0.04);
@@ -682,7 +683,7 @@ textarea:focus {
   left: 0;
   right: 0;
   background: var(--card-bg);
-  border: 1px solid var(--border-color);
+  border: 1px solid #3C87C4;
   border-radius: 12px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.1);
   z-index: 10;
