@@ -12,7 +12,7 @@
     // Make CSRF token globally available
     window.csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 </script>
-
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/favicon.png') }}">
   <title>KatiBayan - Dashboard</title>
   <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
@@ -427,7 +427,7 @@
             </select>
           </div>
           <label for="message">Your message</label>
-          <textarea id="message" name="message" rows="5" required></textarea>
+          <textarea id="message" name="message" rows="5"></textarea>
 
           <input type="hidden" name="rating" id="ratingInput">
           

@@ -17,11 +17,10 @@ class SystemFeedbackController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'type' => 'required|in:suggestion,bug,appreciation,others',
-            'message' => 'required|string|min:10|max:1000',
+            'message' => 'required|string|max:1000', 
             'rating' => 'nullable|integer|min:1|max:5',
         ], [
             'message.required' => 'Please enter your feedback message.',
-            'message.min' => 'Feedback message must be at least 10 characters.',
             'message.max' => 'Feedback message must not exceed 1000 characters.',
             'type.required' => 'Please select a feedback type.',
             'rating.min' => 'Rating must be between 1 and 5 stars.',

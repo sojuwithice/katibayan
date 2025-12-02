@@ -199,13 +199,16 @@
                   <i class="fas fa-user"></i> Profile
                 </a>
               </li>
-              <li><i class="fas fa-cog"></i> Manage Password</li>
               <li>
                 <a href="{{ route('faqspage') }}">
                   <i class="fas fa-question-circle"></i> FAQs
                 </a>
               </li>
-              <li><i class="fas fa-star"></i> Send Feedback to Katibayan</li>
+              <li>
+                <a href="#" id="openFeedbackBtn">
+                  <i class="fas fa-star"></i> Send Feedback to Katibayan
+                </a>
+              </li>
               <li class="logout-item">
                 <a href="loginpage" onclick="confirmLogout(event)">
                   <i class="fas fa-sign-out-alt"></i> Logout
@@ -221,6 +224,95 @@
         </div>
       </div>
     </header>
+
+    <div id="feedbackModal" class="modal-overlay">
+      <div class="modal-content">
+        <span class="close-btn" id="closeModal">&times;</span>
+
+        <h2>Send us feedback</h2>
+        <p>Help us improve by sharing your thoughts, suggestions, and experiences with our service.</p>
+
+        <div class="feedback-options">
+          <div class="option-card">
+            <i class="fas fa-star"></i>
+            <p><strong>Star Rating</strong><br>Rate your experience with 1–5 stars</p>
+          </div>
+          <div class="option-card">
+            <i class="fas fa-comment"></i> 
+            <p><strong>Comment Section</strong><br>Share your thoughts</p>
+          </div>
+          <div class="option-card">
+            <i class="fas fa-bolt"></i>
+            <p><strong>Quick Submission</strong><br>Simple and intuitive feedback process</p>
+          </div>
+        </div>
+
+        <h3>Enjoying it? Rate us!</h3>
+        <div class="star-rating" id="starRating">
+          <i class="far fa-star" data-value="1"></i>
+          <i class="far fa-star" data-value="2"></i>
+          <i class="far fa-star" data-value="3"></i>
+          <i class="far fa-star" data-value="4"></i>
+          <i class="far fa-star" data-value="5"></i>
+        </div>
+
+        <form id="feedbackForm" action="{{ route('feedback.submit') }}" method="POST">
+          @csrf
+          
+          <label for="type">Feedback Type</label>
+          
+          <div class="custom-select-wrapper" id="customSelect">
+            <div class="custom-select-trigger">
+              <span id="selectedFeedbackType">Select feedback type</span>
+              <div class="custom-arrow"></div>
+            </div>
+            
+            <div class="custom-options-list">
+              <div class="custom-option" data-value="suggestion">
+                <span class="dot suggestion"></span> Suggestion
+              </div>
+              <div class="custom-option" data-value="bug">
+                <span class="dot bug"></span> Bug or Issue
+              </div>
+              <div class="custom-option" data-value="appreciation">
+                <span class="dot appreciation"></span> Appreciation
+              </div>
+              <div class="custom-option" data-value="others">
+                <span class="dot others"></span> Others
+              </div>
+            </div>
+            
+            <select id="type" name="type" required style="display: none;">
+              <option value="" disabled selected>Select feedback type</option>
+              <option value="suggestion">Suggestion</option>
+              <option value="bug">Bug or Issue</option>
+              <option value="appreciation">Appreciation</option>
+              <option value="others">Others</option>
+            </select>
+          </div>
+          <label for="message">Your message</label>
+          <textarea id="message" name="message" rows="5" required></textarea>
+
+          <input type="hidden" name="rating" id="ratingInput">
+          
+          <div class="form-actions">
+            <button type="submit" class="submit-btn">Submit</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="successModal" class="modal-overlay simple-alert-modal">
+      <div class="modal-content">
+        <div class="success-icon">
+          <i class="fas fa-check"></i>
+        </div>
+        <h2>Submitted</h2>
+        <p>Thank you for your feedback! Your thoughts help us improve.</p>
+        <button id="closeSuccessModal" class="ok-btn">OK</button>
+      </div>
+    </div>
+
 
     <!-- main content -->
     <div class="welcome-card">
@@ -1388,7 +1480,172 @@ if (requestListBody) {
   }
   
   
-  // --- DITO NAGTATAPOS 'YUNG REQUEST LIST CODE ---
+ /**
+   * Initializes the "Send Feedback" Modal.
+   */
+
+ initFeedbackModal();
+ 
+  function initFeedbackModal() {
+    const feedbackTriggerBtn = document.getElementById('openFeedbackBtn'); // "Send Feedback" item
+    const feedbackModal = document.getElementById('feedbackModal');
+    if (!feedbackTriggerBtn || !feedbackModal) {
+      console.warn("Feedback modal or trigger not found.");
+      return;
+    }
+
+    const feedbackCloseBtn = document.getElementById('closeModal');
+    const feedbackStars = document.querySelectorAll('#starRating i');
+    const feedbackRatingInput = document.getElementById('ratingInput');
+
+    const feedbackForm = document.getElementById('feedbackForm');
+    const submitBtn = feedbackForm?.querySelector('.submit-btn');
+
+    const successModal = document.getElementById('successModal');
+    const closeSuccessBtn = document.getElementById('closeSuccessModal');
+
+    // Custom Select Box Logic
+    const customSelect = document.getElementById('customSelect');
+    if (customSelect) {
+      const trigger = customSelect.querySelector('.custom-select-trigger');
+      const selectedText = document.getElementById('selectedFeedbackType');
+      const optionsList = customSelect.querySelector('.custom-options-list');
+      const options = customSelect.querySelectorAll('.custom-option');
+      const realSelect = document.getElementById('type');
+
+      // Toggle dropdown
+      trigger?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        customSelect.classList.toggle('open');
+      });
+
+      // Handle option click
+      options?.forEach(option => {
+        option.addEventListener('click', () => {
+          const value = option.getAttribute('data-value');
+          const text = option.textContent.trim();
+
+          if (selectedText) selectedText.textContent = text;
+          if (realSelect) realSelect.value = value;
+          trigger?.classList.add('selected');
+
+          customSelect.classList.remove('open');
+        });
+      });
+
+      // Close custom select on outside click
+      document.addEventListener('click', () => {
+        customSelect.classList.remove('open');
+      });
+    }
+
+    // Open modal
+    feedbackTriggerBtn.addEventListener('click', (e) => {
+      e.preventDefault(); // Prevent link from navigating
+      feedbackModal.style.display = 'flex';
+    });
+
+    // Close modal
+    feedbackCloseBtn?.addEventListener('click', () => {
+      feedbackModal.style.display = 'none';
+    });
+
+    // Close when clicking outside
+    window.addEventListener('click', (e) => {
+      if (e.target === feedbackModal) {
+        feedbackModal.style.display = 'none';
+      }
+      if (e.target === successModal) {
+        successModal.style.display = 'none';
+      }
+    });
+
+    // Star rating system
+    feedbackStars.forEach(star => {
+      star.addEventListener('click', () => {
+        const rating = star.getAttribute('data-value');
+        if (feedbackRatingInput) feedbackRatingInput.value = rating;
+
+        feedbackStars.forEach(s => {
+          s.classList.remove('fas');
+          s.classList.add('far');
+        });
+        for (let i = 0; i < rating; i++) {
+          feedbackStars[i].classList.remove('far');
+          feedbackStars[i].classList.add('fas');
+        }
+      });
+    });
+
+    // AJAX Form Submission
+    if (feedbackForm) {
+      feedbackForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(feedbackForm);
+        const submitButtonText = submitBtn.textContent;
+
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'Submitting...';
+        }
+
+        fetch(feedbackForm.action, {
+            method: 'POST',
+            headers: {
+              'X-CSRF-TOKEN': formData.get('_token'),
+              'Accept': 'application/json'
+            },
+            body: formData
+          })
+          .then(response => response.json()) // Assume it always returns JSON
+          .then(data => {
+            if (data.success) {
+              feedbackModal.style.display = 'none';
+              if (successModal) successModal.style.display = 'flex';
+            } else {
+              // Handle validation errors or other errors
+              let errorMsg = data.message || 'Submission failed.';
+              if (data.errors) {
+                errorMsg += '\n' + Object.values(data.errors).join('\n');
+              }
+              throw new Error(errorMsg);
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            alert(error.message || 'An error occurred. Please try again.');
+          })
+          .finally(() => {
+            // Reset form in finally block
+            if (submitBtn) {
+              submitBtn.disabled = false;
+              submitBtn.textContent = submitButtonText;
+            }
+
+            feedbackForm.reset();
+            feedbackStars.forEach(s => {
+              s.classList.remove('fas');
+              s.classList.add('far');
+            });
+            if (feedbackRatingInput) feedbackRatingInput.value = '';
+
+            // Reset custom select
+            const selectedText = document.getElementById('selectedFeedbackType');
+            const trigger = customSelect?.querySelector('.custom-select-trigger');
+            const realSelect = document.getElementById('type');
+            if (selectedText) selectedText.textContent = 'Select feedback type';
+            trigger?.classList.remove('selected');
+            if (realSelect) realSelect.value = '';
+          });
+      });
+    }
+
+    // Close success modal
+    closeSuccessBtn?.addEventListener('click', () => {
+      if (successModal) successModal.style.display = 'none';
+    });
+  }
 });
 </script>
 </body>
