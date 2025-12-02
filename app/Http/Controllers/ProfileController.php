@@ -14,6 +14,8 @@ use App\Models\Notification;
 use App\Models\Event;
 use App\Models\Attendance;
 use App\Models\Evaluation;
+use App\Models\Program;
+use App\Models\ProgramRegistration;
 
 class ProfileController extends Controller
 {
@@ -51,17 +53,42 @@ class ProfileController extends Controller
         // Use the loaded collection to count unread for efficiency
         $unreadNotificationCount = $generalNotifications->where('is_read', 0)->count();
 
-        // --- Evaluation Progress & Count ---
+        // --- EVALUATION PROGRESS - UPDATED TO INCLUDE BOTH EVENTS AND PROGRAMS ---
+        
+        // Count attended events
         $attendedEventsCount = Attendance::where('user_id', $user->id)
             ->whereNotNull('attended_at')
             ->whereHas('event', fn($q) => $q->where('barangay_id', $user->barangay_id))
             ->count();
-            
+
+        // Count registered programs
+        $registeredProgramsCount = ProgramRegistration::where('user_id', $user->id)
+            ->whereHas('program', fn($q) => $q->where('barangay_id', $user->barangay_id))
+            ->count();
+
+        // Total activities (events + programs)
+        $totalActivities = $attendedEventsCount + $registeredProgramsCount;
+
+        // Count evaluated events
         $evaluatedEventsCount = Evaluation::where('user_id', $user->id)
+            ->whereNotNull('event_id')
             ->whereHas('event', fn($q) => $q->where('barangay_id', $user->barangay_id))
             ->count();
 
-        // Get unevaluated event details for the notification list
+        // Count evaluated programs
+        $evaluatedProgramsCount = Evaluation::where('user_id', $user->id)
+            ->whereNotNull('program_id')
+            ->whereHas('program', fn($q) => $q->where('barangay_id', $user->barangay_id))
+            ->count();
+
+        // Total evaluated activities
+        $evaluatedActivities = $evaluatedEventsCount + $evaluatedProgramsCount;
+
+        // Calculate activities that need evaluation
+        $activitiesToEvaluate = $totalActivities - $evaluatedActivities;
+        $activitiesToEvaluate = max(0, $activitiesToEvaluate);
+
+        // Get unevaluated events for notifications
         $unevaluatedEvents = Event::where('barangay_id', $user->barangay_id)
             ->where('is_launched', true)
             ->whereHas('attendances', function($query) use ($user) {
@@ -70,11 +97,59 @@ class ProfileController extends Controller
             ->whereDoesntHave('evaluations', function($query) use ($user) {
                 $query->where('user_id', $user->id);
             })
+            ->with(['attendances' => function($query) use ($user) {
+                $query->where('user_id', $user->id);
+            }])
             ->orderBy('event_date', 'desc')
             ->get();
 
+        // Get unevaluated programs for notifications
+        $unevaluatedPrograms = Program::where('barangay_id', $user->barangay_id)
+            ->whereHas('programRegistrations', function($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })
+            ->whereDoesntHave('evaluations', function($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })
+            ->with(['programRegistrations' => function($query) use ($user) {
+                $query->where('user_id', $user->id);
+            }])
+            ->orderBy('event_date', 'desc')
+            ->get();
+
+        // Prepare unevaluated activities for display (same as dashboard)
+        $unevaluatedActivities = collect();
+        
+        foreach ($unevaluatedEvents as $event) {
+            $unevaluatedActivities->push([
+                'id' => $event->id,
+                'type' => 'event',
+                'title' => $event->title,
+                'attendance' => $event->attendances->first(),
+                'created_at' => $event->attendances->first()->created_at ?? $event->created_at
+            ]);
+        }
+        
+        foreach ($unevaluatedPrograms as $program) {
+            $unevaluatedActivities->push([
+                'id' => $program->id,
+                'type' => 'program',
+                'title' => $program->title,
+                'registration' => $program->programRegistrations->first(),
+                'created_at' => $program->programRegistrations->first()->created_at ?? $program->created_at
+            ]);
+        }
+
         // --- Total Notification Count for Badge ---
-        $totalNotificationCount = $unreadNotificationCount + $unevaluatedEvents->count();
+        $totalNotificationCount = $unreadNotificationCount + $unevaluatedActivities->count();
+
+        // --- Attendance Percentage (Events Only - Keep existing logic) ---
+        $totalPastEvents = Event::where('is_launched', true)
+            ->where('event_date', '<=', Carbon::today())
+            ->where('barangay_id', $user->barangay_id)
+            ->count();
+
+        $attendancePercentage = $totalPastEvents > 0 ? round(($attendedEventsCount / $totalPastEvents) * 100) : 0;
         
         return view('profilepage', compact(
             'user', 
@@ -82,8 +157,14 @@ class ProfileController extends Controller
             'roleBadge', 
             'defaultPassword',
             'generalNotifications',
-            'unevaluatedEvents',
-            'totalNotificationCount'
+            'unevaluatedActivities',
+            'totalNotificationCount',
+            'attendedEventsCount',
+            'totalPastEvents',
+            'attendancePercentage',
+            'totalActivities',
+            'evaluatedActivities',
+            'activitiesToEvaluate'
         ));
     }
 

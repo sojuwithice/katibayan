@@ -69,8 +69,8 @@ Route::get('/sk-role-view', function () {
     return view('/sk-role-view');
 });
 
-// UPDATED: Certificate page route
-Route::get('/certificatepage', [EvaluationController::class, 'certificatePage'])->name('certificatepage');
+// FIXED: Certificate page route - use CertificateController instead of EvaluationController
+Route::get('/certificatepage', [CertificateController::class, 'index'])->name('certificatepage');
 
 // ========== EVENT ROUTES ==========
 Route::get('/events', [EventController::class, 'index'])->name('sk-eventpage');

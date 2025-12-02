@@ -69,6 +69,10 @@
       <div class="topbar-right">
         <div class="time" id="currentTime">Loading...</div>
 
+        <button class="theme-toggle" id="themeToggle">
+          <i data-lucide="moon"></i>
+        </button>
+
         <!-- Notifications -->
         <div class="notification-wrapper">
           <i class="fas fa-bell"></i>
@@ -116,9 +120,10 @@
                 </li>
               @endforeach
 
-              @foreach($unevaluatedEvents as $event)
+              @foreach($unevaluatedActivities as $activity)
                 <li>
-                  <a href="{{ route('evaluation.show', $event->id) }}" class="notif-link unread" data-event-id="{{ $event->id }}">
+                  <a href="{{ route('evaluation.show', $activity['id']) }}" class="notif-link unread" 
+                     data-{{ $activity['type'] }}-id="{{ $activity['id'] }}">
                     
                     <div class="notif-dot-container">
                       <span class="notif-dot"></span>
@@ -126,20 +131,18 @@
                     
                     <div class="notif-main-content">
                       <div class="notif-header-line">
-                        <strong>Program Evaluation Required</strong>
-                        @if($event->attendances->first())
-                          <span class="notif-timestamp">
-                            {{ $event->attendances->first()->created_at->format('m/d/Y g:i A') }}
-                          </span>
-                        @endif
+                        <strong>{{ ucfirst($activity['type']) }} Evaluation Required</strong>
+                        <span class="notif-timestamp">
+                          {{ $activity['created_at']->format('m/d/Y g:i A') }}
+                        </span>
                       </div>
-                      <p class="notif-message">Please evaluate "{{ $event->title }}"</p>
+                      <p class="notif-message">Please evaluate "{{ $activity['title'] }}"</p>
                     </div>
                   </a>
                 </li>
               @endforeach
 
-              @if($generalNotifications->isEmpty() && $unevaluatedEvents->isEmpty())
+              @if($generalNotifications->isEmpty() && $unevaluatedActivities->isEmpty())
                 <li class="no-notifications">
                   <p>No new notifications</p>
                 </li>
@@ -260,18 +263,29 @@
           <div class="progress-eval-row">
             <div class="progress-card">
                 <h3>Progress</h3>
-                <div class="progress-circle">75%</div>
+                <div class="progress-circle" style="--progress: {{ $attendancePercentage }}%">
+                  <span>{{ $attendancePercentage }}%</span>
+                </div>
                 <p>Still a long journey ahead!<p>
             </div>
             <div class="evaluation-card">
-              <h3>Evaluated Programs</h3>
+              <h3>Evaluated Activities</h3>
               <div class="progress-wrapper">
-                <span class="progress-number">3</span>
+                <span class="progress-number">{{ $evaluatedActivities }}</span>
                 <div class="progress-bar">
-                  <div class="progress-fill" style="width: 60%;"></div>
+                  @php
+                    $evaluationPercentage = $totalActivities > 0 ? ($evaluatedActivities / $totalActivities * 100) : 0;
+                  @endphp
+                  <div class="progress-fill" style="width: {{ $evaluationPercentage }}%;"></div>
                 </div>
               </div>
-              <p>You have 3 events/programs to evaluate</p>
+              <p>
+                @if($activitiesToEvaluate > 0)
+                  You have {{ $activitiesToEvaluate }} {{ $activitiesToEvaluate == 1 ? 'activity' : 'activities' }} to evaluate.
+                @else
+                  All evaluations completed!
+                @endif
+              </p>
             </div>
           </div>
 
@@ -548,6 +562,41 @@
   </div>
 
   <script>
+
+    // === DARK/LIGHT MODE TOGGLE ===
+      const body = document.body;
+      const themeToggle = document.getElementById('themeToggle');
+
+      // Function to apply theme
+      function applyTheme(isDark) {
+        body.classList.toggle('dark-mode', isDark);
+        // Show sun when dark mode, moon when light mode
+        const icon = isDark ? 'sun' : 'moon';
+
+        if (themeToggle) {
+          themeToggle.innerHTML = `<i data-lucide="${icon}"></i>`;
+        }
+
+        // Re-initialize Lucide icons
+        if (typeof lucide !== 'undefined') {
+          lucide.createIcons();
+        }
+        
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+      }
+
+      // Load saved theme
+      const savedTheme = localStorage.getItem('theme') === 'dark';
+      applyTheme(savedTheme);
+
+      // Add event listener to theme toggle
+      if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+          const isDark = !body.classList.contains('dark-mode');
+          applyTheme(isDark);
+        });
+      }
     // Avatar Manager Class
     class AvatarManager {
       constructor() {

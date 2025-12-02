@@ -2,19 +2,141 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request; 
-use App\Models\Event;        
-use App\Models\Program; // <-- 1. IDINAGDAG ITO
-use App\Models\CertificateRequest; 
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Event;
+use App\Models\Program;
+use App\Models\CertificateRequest;
 use App\Models\Notification;
-use App\Models\CertificateSchedule; 
-use App\Models\Announcement;        
-use Carbon\Carbon;                  
-use Illuminate\Support\Facades\Log; 
-use Illuminate\Support\Facades\DB; // <-- 2. IDINAGDAG ITO
+use App\Models\CertificateSchedule;
+use App\Models\Announcement;
+use App\Models\Attendance;
+use App\Models\Evaluation;
+use App\Models\ProgramRegistration;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class CertificateController extends Controller
 {
+    /**
+     * Display the certificate page with all necessary data
+     */
+    public function index()
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        // Get user info for profile
+        $age = $user->date_of_birth ? Carbon::parse($user->date_of_birth)->age : 'N/A';
+        $roleBadge = $user->role ? strtoupper($user->role) . '-Member' : 'Member';
+
+        // --- Notifications for Dropdown (Same as Dashboard) ---
+        $generalNotifications = Notification::where('user_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
+        
+        $unreadNotificationCount = $generalNotifications->where('is_read', 0)->count();
+
+        // --- Evaluation Progress (Same as Dashboard) ---
+        
+        // Count attended events
+        $attendedEventsCount = Attendance::where('user_id', $user->id)
+            ->whereNotNull('attended_at')
+            ->whereHas('event', fn($q) => $q->where('barangay_id', $user->barangay_id))
+            ->count();
+
+        // Count registered programs
+        $registeredProgramsCount = ProgramRegistration::where('user_id', $user->id)
+            ->whereHas('program', fn($q) => $q->where('barangay_id', $user->barangay_id))
+            ->count();
+
+        // Total activities (events + programs)
+        $totalActivities = $attendedEventsCount + $registeredProgramsCount;
+
+        // Count evaluated events
+        $evaluatedEventsCount = Evaluation::where('user_id', $user->id)
+            ->whereNotNull('event_id')
+            ->whereHas('event', fn($q) => $q->where('barangay_id', $user->barangay_id))
+            ->count();
+
+        // Count evaluated programs
+        $evaluatedProgramsCount = Evaluation::where('user_id', $user->id)
+            ->whereNotNull('program_id')
+            ->whereHas('program', fn($q) => $q->where('barangay_id', $user->barangay_id))
+            ->count();
+
+        // Total evaluated activities
+        $evaluatedActivities = $evaluatedEventsCount + $evaluatedProgramsCount;
+
+        // Get unevaluated events for notifications
+        $unevaluatedEvents = Event::where('barangay_id', $user->barangay_id)
+            ->where('is_launched', true)
+            ->whereHas('attendances', function($query) use ($user) {
+                $query->where('user_id', $user->id)->whereNotNull('attended_at');
+            })
+            ->whereDoesntHave('evaluations', function($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })
+            ->with(['attendances' => function($query) use ($user) {
+                $query->where('user_id', $user->id);
+            }])
+            ->orderBy('event_date', 'desc')
+            ->get();
+
+        // Get unevaluated programs for notifications
+        $unevaluatedPrograms = Program::where('barangay_id', $user->barangay_id)
+            ->whereHas('programRegistrations', function($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })
+            ->whereDoesntHave('evaluations', function($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })
+            ->with(['programRegistrations' => function($query) use ($user) {
+                $query->where('user_id', $user->id);
+            }])
+            ->orderBy('event_date', 'desc')
+            ->get();
+
+        // Prepare unevaluated activities for display
+        $unevaluatedActivities = collect();
+        
+        foreach ($unevaluatedEvents as $event) {
+            $unevaluatedActivities->push([
+                'id' => $event->id,
+                'type' => 'event',
+                'title' => $event->title,
+                'attendance' => $event->attendances->first(),
+                'created_at' => $event->attendances->first()->created_at ?? $event->created_at
+            ]);
+        }
+        
+        foreach ($unevaluatedPrograms as $program) {
+            $unevaluatedActivities->push([
+                'id' => $program->id,
+                'type' => 'program',
+                'title' => $program->title,
+                'registration' => $program->programRegistrations->first(),
+                'created_at' => $program->programRegistrations->first()->created_at ?? $program->created_at
+            ]);
+        }
+
+        // --- Total Notification Count for Badge ---
+        $totalNotificationCount = $unreadNotificationCount + $unevaluatedActivities->count();
+
+        return view('certificatepage', [
+            'user' => $user,
+            'age' => $age,
+            'roleBadge' => $roleBadge,
+            'generalNotifications' => $generalNotifications,
+            'unevaluatedActivities' => $unevaluatedActivities,
+            'notificationCount' => $totalNotificationCount,
+        ]);
+    }
+
     /**
      * (INAYOS PARA TUMANGGAP NG event_id O program_id)
      */
