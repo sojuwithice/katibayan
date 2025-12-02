@@ -751,9 +751,10 @@ body {
   position: absolute;
   top: 0;           
   bottom: 0;        
-  left: 180px;
+  left: 13%;  /* Use percentage instead of fixed pixels */
   width: 2px;
   background: #FFB703;
+  transform: translateX(-50%); /* Center the line properly */
 }
 
 .committee-tabs {
@@ -1017,13 +1018,13 @@ body {
 }
 
 .events-list-section .section-header h3 {
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 100;
 }
 
 .events-list-section .section-header a{
   color: #3C87C4;
-  font-size: 1.2rem;
+  font-size: 0.95rem;
   font-weight: 700;
   text-decoration: none;
   white-space: nowrap;
@@ -2208,7 +2209,7 @@ body.mobile-sidebar-active::before {
     border-radius: 50%;
   }
 
-  /* Itago 'yung logo sa topbar 'pag mobile */
+
   .logo {
     display: none !important;
   }
@@ -2244,80 +2245,107 @@ body.mobile-sidebar-active::before {
     }
   }
 
-   .events-section {
-    display: flex;
-    flex-direction: row;   
-    align-items: flex-start;
-    gap: 0.8rem;           
-    padding: 1rem;
+ .events-section {
+    flex-direction: column !important;
+    gap: 1.5rem !important;
+    padding: 1.5rem !important;
   }
 
+  /* Remove the vertical divider line on mobile */
   .events-section::before {
-    left: 50%;   
-    width: 1px;  
+    display: none !important;
   }
 
-  .events-left,
-  .events-right {
-    flex: 1;
-    padding: 0 .6rem;
+  /* Events Left (Description) - Move to TOP */
+  .events-left {
+    order: 1 !important;
+    padding: 0 !important;
+    text-align: center !important;
+    width: 100% !important;
   }
 
   .events-left h2 {
-    font-size: 1.5rem !important;  
-    margin-top: 1.5rem;
-    margin-bottom: -.5rem;
+    font-size: 1.8rem !important;
+    margin-bottom: 0.5rem !important;
+    padding-bottom: 0 !important;
+    text-align: justify !important;
+    white-space: nowrap;
+    justify-content: center;
   }
 
   .events-left p {
-    font-size: 0.55rem !important;
-    line-height: 1.2;
+    font-size: 0.9rem !important;
+    line-height: 1.4 !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    text-align: justify !important;
+    text-justify: inter-word !important;
+    hyphens: auto !important;
+  }
+
+  /* Events Right (Picture/Card) - Move to BOTTOM */
+  .events-right {
+    order: 2 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    text-align: center !important;
+  }
+
+  .events-right h3 {
+    font-size: 1.3rem !important;
+    justify-content: center !important;
+    margin-bottom: 1rem !important;
+    text-align: center !important;
+  }
+
+  /* Adjust agenda card for mobile */
+  .agenda-card {
+    max-width: 100% !important;
+    margin: 0 auto !important;
   }
 
   .agenda-banner img {
-    height: 140px; /* liit image */
+    height: 180px !important;
+    object-fit: cover !important;
   }
 
   .agenda-date {
-    width: 60px;
-    height: 95px;
-    top: 10px;
-    left: 8px;
+    top: 15px !important;
+    left: 15px !important;
+    width: 70px !important;
+    height: 100px !important;
+    text-align: center !important;
   }
+
+  .agenda-date .month {
+    font-size: 0.9rem !important;
+  }
+
   .agenda-date .day {
-    font-size: 2rem;
+    font-size: 2.5rem !important;
+  }
+
+  .agenda-date .year {
+    font-size: 0.9rem !important;
   }
 
   .agenda-actions {
-    flex-direction: row;   /* retain row, hindi column */
-    justify-content: space-between;
-    gap: 1rem;
-    padding: .5rem;
+    gap: 2rem !important;
+    padding: 0.8rem !important;
+    text-align: center !important;
   }
 
   .details-btn {
-    font-size: 10px;
-    gap: 4px;
-    white-space: nowrap;
+    font-size: 0.9rem !important;
+    text-align: center !important;
   }
 
-  .icon-circle {
-    width: 15px;
-    height: 15px;
+  .attend-btn {
+    padding: 0.5rem 1.5rem !important;
+    font-size: 0.9rem !important;
+    text-align: center !important;
   }
-
-  .agenda-date {
-    width: 50px;
-    height: 80px;
-  }
-  
-  .agenda-date .day { font-size: 1.5rem; }
-
-   .attend-btn {
-    font-size: 7px !important;   
-    padding: 0.3rem 0.8rem !important; 
-    white-space: nowrap;
-  }
+}
 
   .upcoming-section h2 {
     font-size: 1.4rem;   
@@ -2325,7 +2353,7 @@ body.mobile-sidebar-active::before {
   }
 
   .committee-bar {
-    flex-direction: row;   /* stay in one row */
+    flex-direction: row;  
     align-items: center;
     justify-content: space-between;
     padding: .6rem 1rem;   
@@ -2334,26 +2362,21 @@ body.mobile-sidebar-active::before {
 
   .committee-bar h3 {
     font-size: 1rem;
-    margin: 0;
-    padding-right: .8rem;
   }
 
-  .committee-bar::after {
-    left: 25%;             
-    width: 1.5px;
+  .committee-bar::after {           
+    width: 1px;
   }
 
   .committee-tabs {
     flex-direction: row; 
-    flex-wrap: nowrap;     
-    gap: .3rem;            
-    margin-left: 1rem;
+    flex-wrap: nowrap;             
     overflow-x: auto;      
   }
 
   .committee-tabs button {
     font-size: 1rem;       
-    padding: .4rem .6rem;
+    padding: .4rem 1.9rem;
     white-space: nowrap;   
   }
 
@@ -2422,16 +2445,20 @@ body.mobile-sidebar-active::before {
     padding: 4px 6px;
     font-size: 0.7rem;
   }
-}
 
 @media (max-width: 480px) {
-  .events-section::before {
-    left: 42%; 
-  }
+
+
 
   .events-left h2 {
-    font-size: 1.3rem;
+    font-size: 1.6rem !important;
+    margin-bottom: 0.5rem !important;
+    padding-bottom: 0 !important;
+    text-align: justify !important;
+    white-space: nowrap;
+    justify-content: center;
   }
+
   .events-left p {
     font-size: 0.75rem;
   }
@@ -2458,7 +2485,7 @@ body.mobile-sidebar-active::before {
   }
 
   .committee-bar::after {
-    left: 28%;  
+    left: 33%;  
   }
 
   .committee-tabs button {

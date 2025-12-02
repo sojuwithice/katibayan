@@ -80,6 +80,11 @@
       <div class="topbar-right">
         <div class="time">MON 10:00 <span>AM</span></div>
 
+         <!-- Theme Toggle Button - ADDED HERE -->
+        <button class="theme-toggle" id="themeToggle">
+          <i data-lucide="moon"></i>
+        </button>
+        
     <div class="notification-wrapper">
     <i class="fas fa-bell"></i>
     @if($notificationCount > 0)

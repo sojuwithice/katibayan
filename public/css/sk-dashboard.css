@@ -5,9 +5,33 @@
   font-family: 'Montserrat', sans-serif;
 }
 
+/* === Global Theme Variables === */
+:root {
+  --bg-color: #e7e7e7;
+  --text-color: #01214A;
+  --card-bg: #fff;
+  --sidebar-bg: #3C87C4;
+  --topbar-bg: #e7e7e7;
+  --primary-color: #3C87C4;
+  --accent-color: #FFB703;
+  --border-color: #fff;
+}
+
+[data-theme="dark"] {
+  --bg-color: #121212;
+  --text-color: #eee;
+  --card-bg: #1e1e1e;
+  --sidebar-bg: #1a1a1a;
+  --topbar-bg: #2a2a2a;
+  --primary-color: #3C87C4;
+  --accent-color: #FFB703;
+  --border-color: #333;
+}
+
 body {
-  background: #e7e7e7;
-  color: #01214A;
+  background: var(--bg-color);
+  color: var(--text-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .dashboard {
@@ -256,13 +280,13 @@ body {
 .logo-text .title {
   font-size: 18px;
   font-weight: 700;
-  color: #01214A;
+  color: var(--text-color);
 }
 
 .logo-text .subtitle {
   font-size: 13px;
   font-weight: 500;
-  color: #3C87C4;
+  color: var(--primary-color);
 }
 
 .topbar-right {
@@ -272,6 +296,32 @@ body {
   margin-left: auto;   
 }
 
+.theme-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  color: var(--primary-color);
+}
+
+.theme-toggle:hover {
+  background: rgba(60, 135, 196, 0.1);
+  transform: scale(1.1);
+}
+
+.theme-toggle svg,
+.theme-toggle i {
+  width: 24px;
+  height: 24px;
+  stroke-width: 2.4;
+  color: var(--primary-color);
+  transition: color 0.3s ease;
+}
 
 /* Time Button */
 .topbar-right .time {
@@ -299,7 +349,7 @@ body {
 /* Bell + avatar */
 .topbar-right i {
   font-size: 25px;
-  color: #3C87C4;
+  color: var(--primary-color);
 }
 
 .profile-wrapper {
@@ -311,7 +361,7 @@ body {
   width: 45px;
   height: 45px;
   border-radius: 50%;
-  border: 3px solid #3C87C4;
+  border: 3px solid var(--primary-color);
   cursor: pointer;
 }
 
@@ -343,7 +393,7 @@ body {
 .profile-dropdown hr {
   border: none;               
   height: 2px;                
-  background-color: #3C87C4;  
+  background-color: var(--primary-color);   
   margin: 0;                  
 }
 
@@ -352,7 +402,7 @@ body {
   width: 55px;
   height: 55px;
   border-radius: 50%;
-  border: 3px solid #3C87C4;
+  border: 3px solid var(--primary-color);
 }
 
 .profile-info h4 {
@@ -364,8 +414,8 @@ body {
 .profile-badge {
   display: inline-flex;
   align-items: center;
-  background: #3C87C4;
-  border: 1px solid #3C87C4;
+  background: var(--primary-color);
+  border: 1px solid var(--primary-color);
   border-radius: 25px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
   overflow: hidden;
@@ -379,7 +429,7 @@ body {
 }
 
 .profile-badge span + span {
-  border-left: 1px solid #F9CD55; 
+  border-left: 1px solid var(--accent-color); 
 }
 
 
@@ -400,7 +450,7 @@ body {
 }
 
 .profile-menu li i {
-  color: #3C87C4;
+  color: var(--primary-color);
   font-size: 16px;
 }
 
@@ -424,13 +474,13 @@ body {
 }
 .notification-wrapper .fa-bell {
   font-size: 22px;
-  color: #3C87C4;
+  color: var(--primary-color);
 }
 .notif-count {
   position: absolute;
   top: -6px;
   right: -6px;
-  background: #FFB703;
+  background: var(--accent-color);
   color: #fff;
   font-size: 12px;
   font-weight: bold;
@@ -464,7 +514,7 @@ body {
   align-items: center;
 }
 .notif-dropdown .notif-header span {
-  background: #3C87C4;
+  background: var(--primary-color);
   color: #fff;
   font-size: 13px;
   font-weight: 700;
@@ -530,7 +580,7 @@ body {
   display: inline-block;
   width: 8px;
   height: 8px;
-  background-color: #FFB703;
+  background: var(--accent-color);
   border-radius: 50%;
 }
 .notif-dot-placeholder {
@@ -592,7 +642,7 @@ body {
 .mark-all-read {
   background: none;
   border: none;
-  color: #3C87C6;
+  color: var(--primary-color);
   font-size: 12px;
   cursor: pointer;
   text-decoration: underline;
@@ -608,19 +658,19 @@ body {
 /*main content*/
 
 .welcome-card {
-  background: #fff;
+  background: var(--card-bg);
   border-radius: 20px;
   padding: 26px 30px;
   margin: 20px auto;
   box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-  border-bottom: 4px solid #3C87C6;
+  border-bottom: 4px solid var(--primary-color);
   width: 100%;          
   max-width: 1500px;    
 }
 
 .welcome-card h2 {
   margin: 0;
-  color: #3C87C4; 
+  color: var(--primary-color); 
   font-weight: 600;
   font-size: 1.8rem;
 }
@@ -634,16 +684,17 @@ body {
   max-width: 1500px;
 }
 
+/* Engagement Card */
 .engagement-card {
-  background: #fff;
+  background: var(--card-bg);
   border-radius: 20px;
   padding: 20px;
   box-shadow: 0 6px 12px rgba(0,0,0,0.1);
-  border: 2px solid #3C87C6;
+  border: 2px solid var(--primary-color);
   margin-bottom: 0;
   text-align: center;
-  grid-column: 1; /* col1 */
-  grid-row: 1;    /* row1 */
+  grid-column: 1;
+  grid-row: 1;
   width: 470px; 
   max-width: 100%;
 }
@@ -656,11 +707,11 @@ body {
 
 /* Demographics Card */
 .demographics-card {
-  background: #fff;
+  background: var(--card-bg);
   border-radius: 20px;
   padding: 16px; 
   box-shadow: 0 6px 12px rgba(0,0,0,0.1);
-  border: 2px solid #3C87C6;
+  border: 2px solid var(--primary-color);
   margin-bottom: .1rem;
   text-align: center;
   grid-column: 1; 
@@ -687,7 +738,7 @@ body {
   gap: 14px;             
   font-size: 12px;       
   font-weight: 600;
-  color: #01214A;
+  color: var(--text-color);
 }
 
 .demographics-card h3 {
@@ -710,7 +761,7 @@ body {
 }
 
 .demographics-card .dot.male {
-  background: #3C87C6; 
+  background: var(--primary-color);  
 }
 
 .demographics-card .dot.female {
@@ -743,7 +794,7 @@ body {
 .youth-age-card, 
 .calendar, 
 .reminders-card { /* Inayos ko 'to */
-  background: #fff;
+  background: var(--card-bg);
   border-radius: 20px;
   padding: 20px;
   box-shadow: 0 6px 12px rgba(0,0,0,0.1);
@@ -769,7 +820,7 @@ body {
   grid-column: 2;
   grid-row: 2;
   padding: 20px;
-  background: #fff;
+  background: var(--card-bg);
   border-radius: 15px;
   box-shadow: 0 3px 8px rgba(0,0,0,0.1);
   text-align: center;
@@ -789,7 +840,7 @@ body {
 .youth-age-card .card-header h3 {
   font-size: 1.2rem;
   margin: 0;
-  color: #01214A;
+  color: var(--text-color);
   text-align: center;
   flex: 1;                       
 }
@@ -862,7 +913,7 @@ body {
   font-family: 'Montserrat', sans-serif;
   font-size: 0.7rem;    
   line-height: 1.4;      
-  color: #333;
+  color: var(--text-color);
 }
 
 .legend-item {
@@ -880,11 +931,11 @@ body {
 }
 
 .dot.child {
-  background-color: #FFCA3A; 
+  background-color: var(--accent-color); 
 }
 
 .dot.core {
-  background-color: #3C87C6; 
+  background-color: var(--primary-color); 
 }
 
 .dot.adult {
@@ -907,7 +958,7 @@ body {
   grid-column: 2;      
   grid-row: 1;
   padding: 20px;
-  background: #fff;
+  background: var(--card-bg);
   border-radius: 15px;
   box-shadow: 0 3px 8px rgba(0,0,0,0.1);
   text-align: center;
@@ -923,7 +974,7 @@ body {
 .monthly-events-card .card-header h3 {
   font-size: 1.2rem; 
   margin: 0;
-  color: #01214A;
+  color: var(--text-color);
 }
 
 #monthlyEventsChart {
@@ -983,7 +1034,7 @@ body {
   right: 0;
   top: -10px;
   font-size: 22px;
-  color: #3C87C4;
+  color: var(--primary-color);
 }
 .calendar .day.empty {
   background: transparent;
@@ -1007,7 +1058,7 @@ body {
   font-weight: 600;
 }
 .calendar .day.active {
-  background: #FFCA3A;
+  background: var(--accent-color);
 }
 .calendar .day.active .weekday,
 .calendar .day.active .date {
@@ -1050,12 +1101,12 @@ body {
 /* ================================== */
 
 .reminders-card {
-  background: #fff;
+  background: var(--card-bg);
   border-radius: 20px;
   padding: 20px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
   font-family: 'Segoe UI', sans-serif;
-  color: #01214A;
+  color: var(--text-color);
   max-width: 500px;
   
   flex: 1; /* ETO YUNG FIX: Kukunin 'yung natitirang space */
@@ -1067,7 +1118,7 @@ body {
 .reminders-title {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #3C87C4;
+  color: var(--primary-color);
   margin-bottom: 15px;
   flex-shrink: 0;
 }
@@ -1092,14 +1143,14 @@ body {
 .section-label {
   font-size: 1rem;
   font-weight: 600;
-  color: #3C87C4;
+  color: var(--primary-color);
   margin-bottom: 8px;
 }
 
 .reminder-item {
   display: flex;
   align-items: center;
-  background: #fff;
+  background: var(--card-bg);
   border-radius: 12px;
   box-shadow: 0 3px 6px rgba(0,0,0,0.15);
   padding: 12px 16px;
@@ -1116,13 +1167,13 @@ body {
   top: 0;
   bottom: 0;
   width: 12px;
-  background: #FFD34E;
+  background: var(--accent-color);
   border-radius: 12px 0 0 12px;
 }
 
 .reminder-date {
   font-weight: 700;
-  color: #3C87C4;
+  color: var(--primary-color);
   margin-right: 15px;
   padding-left: 10px; 
   min-width: 110px;
@@ -1131,14 +1182,14 @@ body {
 
 .reminder-text {
   font-size: 0.95rem;
-  color: #000;
+  color: var(--text-color);
   flex: 1;
   z-index: 1;
 }
 
 .reminder-item.empty {
   height: 60px;
-  background: #fff;
+  background: var(--card-bg);
 }
 
 
@@ -1279,7 +1330,7 @@ body {
 .options-btn:hover,
 .header-options:hover {
   background: rgba(17,75,140,0.05);
-  color: #01214A;
+  color: var(--text-color);
 }
 
 /* === DROPDOWN === */
@@ -1386,7 +1437,7 @@ body {
 
 /* Badge (Ginawang bilog) */
 .request-list-header h2 .badge {
-  background: #3C87C4;
+  background: var(--accent-color);
   color: #fff;
   font-size: 0.9rem;
   font-weight: 700;
@@ -1532,7 +1583,129 @@ body {
   color: #D9534F;
   border-color: #F8C8C6;
 }
+/* === Dark Mode Specific Styles === */
+body.dark-mode {
+  background: var(--bg-color);
+  color: var(--text-color);
+}
 
+body.dark-mode .topbar {
+  background: var(--topbar-bg);
+}
+
+body.dark-mode .logo-text .title {
+  color: var(--text-color);
+}
+
+body.dark-mode .logo-text .subtitle {
+  color: var(--primary-color);
+}
+
+body.dark-mode .theme-toggle {
+  color: var(--text-color);
+}
+
+body.dark-mode .theme-toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .topbar-right .time {
+  background: #2a2a2a;
+  color: var(--text-color);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+body.dark-mode .topbar-right i,
+body.dark-mode .notification-wrapper .fa-bell {
+  color: var(--text-color);
+}
+
+body.dark-mode .profile-dropdown,
+body.dark-mode .notif-dropdown {
+  background: #2a2a2a;
+  color: var(--text-color);
+}
+
+body.dark-mode .profile-dropdown hr {
+  background-color: var(--primary-color);
+}
+
+body.dark-mode .profile-menu li:hover {
+  background: #333;
+}
+
+body.dark-mode .notif-dropdown .notif-header {
+  color: var(--text-color);
+  border-bottom-color: #444;
+}
+
+body.dark-mode .notification-item {
+  border-bottom-color: #444;
+}
+
+body.dark-mode .notification-item:hover {
+  background-color: #333;
+}
+
+body.dark-mode .notification-item.unread {
+  background-color: #1e2a3a;
+}
+
+body.dark-mode .notif-content strong {
+  color: var(--text-color);
+}
+
+body.dark-mode .notif-content p {
+  color: #ccc;
+}
+
+body.dark-mode .welcome-card,
+body.dark-mode .engagement-card,
+body.dark-mode .demographics-card,
+body.dark-mode .youth-age-card,
+body.dark-mode .activities-card,
+body.dark-mode .reminders-card,
+body.dark-mode .youth-population,
+body.dark-mode .calendar,
+body.dark-mode .announcements-section {
+  background: var(--card-bg);
+  color: var(--text-color);
+}
+
+body.dark-mode .announcements .card {
+  border-bottom-color: #444;
+}
+
+body.dark-mode .announcements-header {
+  border-bottom-color: #444;
+}
+
+body.dark-mode .options-dropdown {
+  background: #2a2a2a;
+  border-color: #444;
+}
+
+body.dark-mode .options-dropdown li {
+  color: var(--text-color);
+  border-bottom-color: #444;
+}
+
+body.dark-mode .options-dropdown li:hover {
+  background: #333;
+}
+
+body.dark-mode .dates-grid .day {
+  background: #2a2a2a;
+  color: var(--text-color);
+}
+
+body.dark-mode .calendar header h3 {
+  color: var(--text-color);
+}
+
+body.dark-mode .weekdays-row {
+  color: var(--primary-color);
+}
 
 
 

@@ -18,65 +18,63 @@
 <body>
   
   <!-- Sidebar -->
-  <!-- Sidebar -->
   <aside class="sidebar">
-  <button class="menu-toggle">Menu</button>
-  <div class="divider"></div>
-  <nav class="nav">
-    <a href="{{ route('sk.dashboard') }}">
-      <i data-lucide="layout-dashboard"></i>
-      <span class="label">Dashboard</span>
-    </a>
-
-    <a href="#">
-      <i data-lucide="chart-pie"></i>
-      <span class="label">Analytics</span>
-    </a>
-
-    <a href="{{ route('youth-profilepage') }}" class="active">
-      <i data-lucide="users"></i>
-      <span class="label">Youth Profile</span>
-    </a>
-
-    <div class="nav-item">
-      <a href="#" class="nav-link">
-        <i data-lucide="calendar"></i>
-        <span class="label">Events and Programs</span>
-        <i data-lucide="chevron-down" class="submenu-arrow"></i>
+    <button class="menu-toggle">Menu</button>
+    <div class="divider"></div>
+    <nav class="nav">
+      <a href="{{ route('sk.dashboard') }}">
+        <i data-lucide="layout-dashboard" class="lucide-icon"></i>
+        <span class="label">Dashboard</span>
       </a>
-      <div class="submenu">
-        <a href="{{ route('sk-eventpage') }}">Events List</a>
-        <a href="{{ route('youth-program-registration') }}">Youth Registration</a>
+
+      <a href="#">
+        <i data-lucide="chart-pie" class="lucide-icon"></i>
+        <span class="label">Analytics</span>
+      </a>
+
+      <a href="{{ route('youth-profilepage') }}" class="active">
+        <i data-lucide="users" class="lucide-icon"></i>
+        <span class="label">Youth Profile</span>
+      </a>
+
+      <div class="nav-item">
+        <a href="#" class="nav-link">
+          <i data-lucide="calendar" class="lucide-icon"></i>
+          <span class="label">Events and Programs</span>
+          <i data-lucide="chevron-down" class="submenu-arrow lucide-icon"></i>
+        </a>
+        <div class="submenu">
+          <a href="{{ route('sk-eventpage') }}">Events List</a>
+          <a href="{{ route('youth-program-registration') }}">Youth Registration</a>
+        </div>
       </div>
-    </div>
 
-    <a href="{{ route('sk-evaluation-feedback') }}">
-      <i data-lucide="message-square-quote"></i>
-      <span class="label">Feedbacks</span>
-    </a>
+      <a href="{{ route('sk-evaluation-feedback') }}">
+        <i data-lucide="message-square-quote" class="lucide-icon"></i>
+        <span class="label">Feedbacks</span>
+      </a>
 
-    <a href="{{ route('sk-polls') }}">
-      <i data-lucide="vote"></i>
-      <span class="label">Polls</span>
-    </a>
+      <a href="{{ route('sk-polls') }}">
+        <i data-lucide="vote" class="lucide-icon"></i>
+        <span class="label">Polls</span>
+      </a>
 
-    <a href="{{ route('youth-suggestion') }}">
-      <i data-lucide="lightbulb"></i>
-      <span class="label">Suggestion Box</span>
-    </a>
-    
-    <a href="{{ route('reports') }}">
-      <i data-lucide="file-chart-column"></i>
-      <span class="label">Reports</span>
-    </a>
+      <a href="{{ route('youth-suggestion') }}">
+        <i data-lucide="lightbulb" class="lucide-icon"></i>
+        <span class="label">Suggestion Box</span>
+      </a>
+      
+      <a href="{{ route('reports') }}">
+        <i data-lucide="file-chart-column" class="lucide-icon"></i>
+        <span class="label">Reports</span>
+      </a>
 
-    <a href="{{ route('sk-services-offer') }}">
-      <i data-lucide="hand-heart"></i>
-      <span class="label">Service Offer</span>
-    </a>
-
-  </nav>
-</aside>
+      <a href="{{ route('sk-services-offer') }}">
+        <i data-lucide="hand-heart" class="lucide-icon"></i>
+        <span class="label">Service Offer</span>
+      </a>
+    </nav>
+  </aside>
 
   <!-- Main -->
   <div class="main">
@@ -93,6 +91,11 @@
 
       <div class="topbar-right">
         <div class="time">MON 10:00 <span>AM</span></div>
+
+        <!-- Theme Toggle Button -->
+        <button class="theme-toggle" id="themeToggle">
+          <i data-lucide="moon"></i>
+        </button>
 
         <!-- Notifications -->
         <div class="notification-wrapper">
@@ -191,7 +194,6 @@
             <h3>Request for Certificates</h3>
             <div class="bottom-row">
               <p>Youth are requesting for certificate <span class="count">{{ $certificateRequestsCount ?? 0 }}</span></p>
-
               <span class="arrow">
                 <i class="fa-solid fa-chevron-right"></i>
               </span>
@@ -224,7 +226,6 @@
             </div>
           </div>
         </a>
-        </button>
       </div>
 
       <!-- Instructions -->
@@ -394,108 +395,72 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-  // === Lucide icons + sidebar toggle ===
-  lucide.createIcons();
-  
-  const menuToggle = document.querySelector('.menu-toggle');
-  const sidebar = document.querySelector('.sidebar');
+      // === DARK/LIGHT MODE TOGGLE ===
+      const body = document.body;
+      const themeToggle = document.getElementById('themeToggle');
 
-  if (menuToggle && sidebar) {
-    menuToggle.addEventListener('click', (e) => {
-      e.stopPropagation();
-      sidebar.classList.toggle('open');
-    });
-  }
+      // Function to apply theme
+      function applyTheme(isDark) {
+        body.classList.toggle('dark-mode', isDark);
+        // Show sun when dark mode, moon when light mode
+        const icon = isDark ? 'sun' : 'moon';
 
-  // === Submenus ===
-  const submenuTriggers = document.querySelectorAll('.nav-item > .nav-link');
-
-  submenuTriggers.forEach(trigger => {
-    trigger.addEventListener('click', (e) => {
-      e.preventDefault(); 
-      
-      const parentItem = trigger.closest('.nav-item');
-      const wasOpen = parentItem.classList.contains('open');
-
-      document.querySelectorAll('.nav-item').forEach(item => {
-        item.classList.remove('open');
-      });
-
-      if (!wasOpen) {
-        parentItem.classList.add('open');
-      }
-    });
-  });
-
-      // === Calendar ===
-      const weekdays = ["MON","TUE","WED","THU","FRI","SAT","SUN"];
-      const daysContainer = document.querySelector(".calendar .days");
-      const header = document.querySelector(".calendar header h3");
-      let today = new Date();
-      let currentView = new Date();
-
-      const holidays = [
-        "2025-01-01","2025-04-09","2025-04-17","2025-04-18",
-        "2025-05-01","2025-06-06","2025-06-12","2025-08-25",
-        "2025-11-30","2025-12-25","2025-12-30"
-      ];
-
-      function renderCalendar(baseDate) {
-        if (!daysContainer || !header) return;
-        daysContainer.innerHTML = "";
-
-        const startOfWeek = new Date(baseDate);
-        startOfWeek.setDate(baseDate.getDate() - (baseDate.getDay() === 0 ? 6 : baseDate.getDay() - 1));
-
-        const middleDay = new Date(startOfWeek);
-        middleDay.setDate(startOfWeek.getDate() + 3);
-        header.textContent = middleDay.toLocaleDateString("en-US", { month: "long", year: "numeric" });
-
-        for (let i = 0; i < 7; i++) {
-          const thisDay = new Date(startOfWeek);
-          thisDay.setDate(startOfWeek.getDate() + i);
-
-          const dayEl = document.createElement("div");
-          dayEl.classList.add("day");
-
-          const weekdayEl = document.createElement("span");
-          weekdayEl.classList.add("weekday");
-          weekdayEl.textContent = weekdays[i];
-
-          const dateEl = document.createElement("span");
-          dateEl.classList.add("date");
-          dateEl.textContent = thisDay.getDate();
-
-          const month = (thisDay.getMonth() + 1).toString().padStart(2,'0');
-          const day = thisDay.getDate().toString().padStart(2,'0');
-          const dateStr = `${thisDay.getFullYear()}-${month}-${day}`;
-
-          if (holidays.includes(dateStr)) dateEl.classList.add('holiday');
-          if (
-            thisDay.getDate() === today.getDate() &&
-            thisDay.getMonth() === today.getMonth() &&
-            thisDay.getFullYear() === today.getFullYear()
-          ) {
-            dayEl.classList.add("active");
-          }
-
-          dayEl.appendChild(weekdayEl);
-          dayEl.appendChild(dateEl);
-          daysContainer.appendChild(dayEl);
+        if (themeToggle) {
+          themeToggle.innerHTML = `<i data-lucide="${icon}"></i>`;
         }
+
+        // Re-initialize Lucide icons
+        if (typeof lucide !== 'undefined') {
+          lucide.createIcons();
+        }
+        
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
       }
 
-      renderCalendar(currentView);
+      // Load saved theme
+      const savedTheme = localStorage.getItem('theme') === 'dark';
+      applyTheme(savedTheme);
 
-      const prevBtn = document.querySelector(".calendar .prev");
-      const nextBtn = document.querySelector(".calendar .next");
-      if (prevBtn) prevBtn.addEventListener("click", () => {
-        currentView.setDate(currentView.getDate() - 7);
-        renderCalendar(currentView);
-      });
-      if (nextBtn) nextBtn.addEventListener("click", () => {
-        currentView.setDate(currentView.getDate() + 7);
-        renderCalendar(currentView);
+      // Add event listener to theme toggle
+      if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+          const isDark = !body.classList.contains('dark-mode');
+          applyTheme(isDark);
+        });
+      }
+
+      // === Lucide icons + sidebar toggle ===
+      lucide.createIcons();
+      
+      const menuToggle = document.querySelector('.menu-toggle');
+      const sidebar = document.querySelector('.sidebar');
+
+      if (menuToggle && sidebar) {
+        menuToggle.addEventListener('click', (e) => {
+          e.stopPropagation();
+          sidebar.classList.toggle('open');
+        });
+      }
+
+      // === Submenus ===
+      const submenuTriggers = document.querySelectorAll('.nav-item > .nav-link');
+
+      submenuTriggers.forEach(trigger => {
+        trigger.addEventListener('click', (e) => {
+          e.preventDefault(); 
+          
+          const parentItem = trigger.closest('.nav-item');
+          const wasOpen = parentItem.classList.contains('open');
+
+          document.querySelectorAll('.nav-item').forEach(item => {
+            item.classList.remove('open');
+          });
+
+          if (!wasOpen) {
+            parentItem.classList.add('open');
+          }
+        });
       });
 
       // === Time auto-update ===
@@ -548,32 +513,12 @@
       document.addEventListener("click", (e) => {
         if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
           sidebar.classList.remove('open');
-          profileItem?.classList.remove('open');
         }
         if (profileWrapper && !profileWrapper.contains(e.target)) profileWrapper.classList.remove('active');
         if (notifWrapper && !notifWrapper.contains(e.target)) notifWrapper.classList.remove('active');
 
         // Close options dropdown when clicking outside
         document.querySelectorAll('.options-dropdown').forEach(drop => drop.classList.remove('show'));
-      });
-
-      // === Highlight Holidays in Events ===
-      document.querySelectorAll('.events li').forEach(eventItem => {
-        const dateEl = eventItem.querySelector('.date span');
-        const monthEl = eventItem.querySelector('.date strong');
-        if (!dateEl || !monthEl) return;
-
-        const monthMap = {
-          JAN: "01", FEB: "02", MAR: "03", APR: "04", MAY: "05", JUN: "06",
-          JUL: "07", AUG: "08", SEP: "09", OCT: "10", NOV: "11", DEC: "12"
-        };
-        const monthNum = monthMap[monthEl.textContent.trim().toUpperCase()];
-        const day = dateEl.textContent.trim().padStart(2,'0');
-        const dateStr = `2025-${monthNum}-${day}`;
-
-        if (holidays.includes(dateStr)) {
-          eventItem.querySelector('.date').classList.add('holiday');
-        }
       });
 
       // === SEARCH ===
@@ -872,7 +817,7 @@
       }
 
       const mainRequestLink = document.querySelector('a.btn[href*="certificate-request"]'); 
-      const mainRequestKey = 'viewedMainCertificateRequestsCount'; // Pinalitan ang key name
+      const mainRequestKey = 'viewedMainCertificateRequestsCount';
       
       if (mainRequestLink) {
         const countBadge = mainRequestLink.querySelector('span.count');
@@ -891,48 +836,6 @@
           });
         }
       }
-      
-      const eventListKey = 'viewedCertificateEventsMap'; 
-      
-      function getViewedEventsMap() {
-        const viewed = localStorage.getItem(eventListKey);
-        return viewed ? JSON.parse(viewed) : {}; 
-      }
-
-      const viewedEventsMap = getViewedEventsMap();
-      document.querySelectorAll('.event-card').forEach(card => {
-        const eventId = card.dataset.eventId; 
-        const badge = card.querySelector('.circle-badge');
-        
-        if (eventId && badge) {
-          const currentCount = parseInt(badge.textContent) || 0;
-          const storedCount = viewedEventsMap[eventId] || 0;
-          
-          if (currentCount <= storedCount) {
-            badge.style.display = 'none';
-          }
-        }
-      });
-
-      const cardsContainer = document.querySelector('.cards-container');
-      cardsContainer?.addEventListener('click', (e) => {
-        const arrowBtn = e.target.closest('.arrow-btn');
-        if (!arrowBtn) return; 
-
-        const card = arrowBtn.closest('.event-card');
-        const eventId = card?.dataset.eventId; 
-        const badge = card?.querySelector('.circle-badge');
-        
-        if (eventId && badge) {
-
-          const currentCount = parseInt(badge.textContent) || 0;
-
-          let viewedMap = getViewedEventsMap();
-          viewedMap[eventId] = currentCount;
-          
-          localStorage.setItem(eventListKey, JSON.stringify(viewedMap));
-        }
-      });
     });
   </script>
 </body>

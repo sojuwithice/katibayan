@@ -190,6 +190,10 @@ class DashboardController extends Controller
             'generalNotifications' => $generalNotifications,
             'displayItems' => $displayItems,
             'announcements' => $announcements,
+
+            // ADD THESE MISSING VARIABLES FOR THE SLIDES
+            'upcomingEvents' => $upcomingEvents,
+            'upcomingPrograms' => $upcomingPrograms,
         ]);
     }
 

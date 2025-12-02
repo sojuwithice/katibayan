@@ -37,6 +37,7 @@ use App\Http\Controllers\ProgramController;
 use App\Http\Controllers\ServiceOffersController;
 use App\Http\Controllers\YouthProgramRegistrationController;
 use App\Http\Controllers\YouthAssistanceController;
+use App\Http\Controllers\SystemFeedbackController;
 use App\Http\Controllers\SKController;
 use App\Http\Controllers\SkRoleRequestController;
 use App\Models\User;
@@ -68,13 +69,8 @@ Route::get('/sk-role-view', function () {
     return view('/sk-role-view');
 });
 
-Route::get('/sk-analytics', function () {
-    return view('/sk-analytics');
-});
-
 // UPDATED: Certificate page route
 Route::get('/certificatepage', [EvaluationController::class, 'certificatePage'])->name('certificatepage');
-
 
 // ========== EVENT ROUTES ==========
 Route::get('/events', [EventController::class, 'index'])->name('sk-eventpage');
@@ -90,11 +86,7 @@ Route::get('/eventpage', [EventController::class, 'userEvents'])->name('eventpag
 Route::get('/faqspage', function () {
     return view('faqspage'); 
 })->name('faqspage');
-
-Route::get('/sk-analytics', function () {
-    return view('sk-analytics');
-})->name('sk.analytics');
-
+Route::get('/sk-analytics', [SKAnalyticsController::class, 'index'])->name('sk.analytics');
 
 // FIXED: Suggestion Box route - use controller instead of direct view
 Route::get('/suggestionbox', [SuggestionController::class, 'index'])->name('suggestionbox');
@@ -127,8 +119,6 @@ Route::post('/evaluation/request-print', [EvaluationController::class, 'requestP
 // INILAGAY SA BABA: Ihuli ang mga may wildcard
 Route::get('/evaluation/check/{eventId}', [EvaluationController::class, 'checkEvaluation']);
 Route::get('/evaluation/{id}', [EvaluationController::class, 'show'])->name('evaluation.show');
-
-
 
 // FIXED: SK Dashboard route - use controller instead of direct view
 Route::get('/sk-dashboard', [SKDashboardController::class, 'index'])->name('sk.dashboard');
@@ -210,18 +200,12 @@ Route::get('/view-youth-profile', function () {
     return view('view-youth-profile');
 })->name('view-youth-profile');
 
-
-
-
 // ========== REGISTRATION ROUTES ==========
 // FIXED: Add the missing registration routes
 Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
 Route::post('/register/preview', [RegisterController::class, 'preview'])->name('register.preview'); // ADD THIS LINE
 Route::get('/register/captcha', [RegisterController::class, 'showCaptcha'])->name('register.captcha'); // ADD THIS LINE
 Route::post('/register/complete', [RegisterController::class, 'complete'])->name('register.complete'); // ADD THIS LINE
-
-
-
 
 // CONTROLLER ROUTES
 
@@ -246,6 +230,11 @@ Route::get('/admindashb', [AdminController::class, 'dashboard'])
     ->name('admindashb')
     ->middleware('auth:admin');
 
+// ✅ FIXED: Admin analytics route with correct method
+Route::get('/admin/analytics', [AdminController::class, 'analytics'])
+    ->name('admin-analytics')
+    ->middleware('auth:admin');
+
 Route::get('/user-management', [AdminController::class, 'userManagement']) 
     ->name('user-management')
     ->middleware('auth:admin'); 
@@ -259,18 +248,12 @@ Route::get('/admin/login', [AdminLoginController::class, 'showLoginForm'])->name
 Route::post('/admin/login', [AdminLoginController::class, 'login'])->name('admin.login.post');
 Route::post('/admin/logout', [AdminLoginController::class, 'logout'])->name('admin.logout');
 
-// ADD THE MISSING ADMIN ROUTES:
-Route::get('/admin/analytics', function () {
-    return view('admin-analytics'); // You'll need to create this view
-})->name('admin-analytics')->middleware('auth:admin');
-
 Route::get('/admin/user-management', [AdminController::class, 'userManagement'])
     ->name('user-management2')
     ->middleware('auth:admin');
 
-Route::get('/users-feedback', function () {
-    return view('users-feedback');
-})->name('users-feedback')->middleware('auth:admin');
+// UPDATED: Users Feedback route - use controller instead of direct view
+Route::get('/users-feedback', [SystemFeedbackController::class, 'index'])->name('users-feedback')->middleware('auth:admin');
 
 Route::get('/admin/settings', function () {
     return view('admin-settings'); // You'll need to create this view
@@ -379,6 +362,9 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/services/{id}', [ServiceOffersController::class, 'deleteService'])->name('services.delete');
     Route::get('/services/{id}/details', [ServiceOffersController::class, 'getServiceDetails'])->name('services.details');
     Route::post('/organizational-chart', [ServiceOffersController::class, 'storeOrganizationalChart'])->name('organizational-chart.store');
+
+    // ========== SYSTEM FEEDBACK ROUTES (PROTECTED) ==========
+    Route::post('/feedback/submit', [SystemFeedbackController::class, 'store'])->name('feedback.submit'); // UPDATED
 });
 
 // ========== SERVICE OFFERS ROUTES ==========
@@ -418,8 +404,6 @@ Route::controller(ForgotPasswordController::class)
         Route::post('/verify-otp', 'verifyOtp')->name('verify-otp');
         Route::post('/reset', 'resetPassword')->name('reset');
 });
-
-Route::post('/feedback/submit', [FeedbackController::class, 'store'])->name('feedback.submit');
 
 // ✅ Certificate Request Routes
 Route::get('/certificate-request', [CertificateRequestController::class, 'index'])->name('certificate-request');
@@ -605,3 +589,10 @@ Route::post('/sk/organizational-chart/{id}/delete', [ServiceOffersController::cl
 // 2. UPDATE Route (Gagamit ng POST + _method: PUT)
 Route::post('/sk/organizational-chart/{id}/update', [ServiceOffersController::class, 'updateOrganizationalChart']) // ADDED '/update' suffix
     ->name('sk.organizational-chart.update');
+
+    // ========== ADMIN SYSTEM FEEDBACK ROUTES ==========
+Route::middleware(['auth:admin'])->group(function () {
+    Route::get('/admin/system-feedbacks', [SystemFeedbackController::class, 'index'])->name('admin.system-feedbacks.index');
+    Route::put('/admin/system-feedbacks/{systemFeedback}/status', [SystemFeedbackController::class, 'updateStatus'])->name('admin.system-feedbacks.updateStatus');
+    Route::get('/admin/system-feedbacks/stats', [SystemFeedbackController::class, 'getStats'])->name('admin.system-feedbacks.stats');
+});

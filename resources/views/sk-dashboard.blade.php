@@ -106,6 +106,11 @@
       <div class="topbar-right">
         <div class="time">MON 10:00 <span>AM</span></div>
 
+        <!-- Theme Toggle Button - ADDED HERE -->
+        <button class="theme-toggle" id="themeToggle">
+          <i data-lucide="moon"></i>
+        </button>
+
         <div class="notification-wrapper">
     <i class="fas fa-bell"></i>
     @php
@@ -453,6 +458,41 @@
 </div>
 
 <script>
+// === DARK/LIGHT MODE TOGGLE ===
+const body = document.body;
+const themeToggle = document.getElementById('themeToggle');
+
+// Function to apply theme
+function applyTheme(isDark) {
+  body.classList.toggle('dark-mode', isDark);
+  // Show sun when dark mode, moon when light mode
+  const icon = isDark ? 'sun' : 'moon';
+
+  if (themeToggle) {
+    themeToggle.innerHTML = `<i data-lucide="${icon}"></i>`;
+  }
+
+  // Re-initialize Lucide icons
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+  }
+  
+  localStorage.setItem('theme', isDark ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+}
+
+// Load saved theme
+const savedTheme = localStorage.getItem('theme') === 'dark';
+applyTheme(savedTheme);
+
+// Add event listener to theme toggle
+if (themeToggle) {
+  themeToggle.addEventListener('click', () => {
+    const isDark = !body.classList.contains('dark-mode');
+    applyTheme(isDark);
+  });
+}
+
 // Lucide Icons Initialization with Error Handling
 function initializeLucideIcons() {
     if (typeof lucide === 'undefined') {
@@ -505,8 +545,6 @@ function replaceLucideIcons() {
         }
     });
 }
-
-
 
 document.addEventListener("DOMContentLoaded", function() {
   // Initialize Lucide icons first

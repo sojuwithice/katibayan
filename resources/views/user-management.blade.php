@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KatiBayan - User Management</title>
+  <title>KatiBayan - SK User Management</title>
   <link rel="stylesheet" href="{{ asset('css/user-management2.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -60,6 +60,16 @@
         color: #6c757d;
         font-style: italic;
         padding: 20px;
+    }
+    
+    .role-badge {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        background-color: #3C87C4;
+        color: white;
     }
   </style>
 </head>
@@ -157,7 +167,8 @@
         </header>
 
         <div class="welcome-card">
-            <h2>User Management</h2>
+            <h2>SK Officials Management</h2>
+            <p>Manage SK officials accounts and permissions</p>
         </div>
 
         {{-- Flash Messages --}}
@@ -173,8 +184,8 @@
 
         <section class="content-section">
             <div class="content-card">
-                <h4>Manage Account</h4>
-                <p class="subtitle">Manage system users and permissions.</p>
+                <h4>Manage SK Officials</h4>
+                <p class="subtitle">Review and approve SK officials registration requests.</p>
 
                 <div class="table-container">
                     <table class="user-table">
@@ -184,16 +195,27 @@
                                 <th>Email</th>
                                 <th>Contact</th>
                                 <th>Address</th>
-                                <th>Role</th>
+                                <th>Position</th>
                                 <th>Status</th>
-                                <th>Uploaded File</th>
+                                <th>Oath Certificate</th>
+                                <th>Registration Date</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
+                            @php
+                                // Filter only SK users and sort by creation date (newest first)
+                                $skUsers = $skUsers->where('role', 'sk')->sortByDesc('created_at');
+                            @endphp
+                            
                             @forelse ($skUsers as $user)
                                 <tr>
-                                    <td>{{ $user->given_name }} {{ $user->last_name }}</td>
+                                    <td>
+                                        <strong>{{ $user->given_name }} {{ $user->last_name }}</strong>
+                                        @if($user->middle_name)
+                                            <br><small>{{ $user->middle_name }}</small>
+                                        @endif
+                                    </td>
                                     <td>{{ $user->email }}</td>
                                     <td>{{ $user->contact_no }}</td>
                                     <td class="address-cell">
@@ -222,12 +244,9 @@
                                         @endphp
                                     </td>
                                     <td>
-                                        @if($user->role === 'sk')
-                                            SK Official
-                                        @elseif($user->role === 'kk')
-                                            KK Member
-                                        @else
-                                            {{ strtoupper($user->role ?? 'N/A') }}
+                                        <span class="role-badge">SK Official</span>
+                                        @if(optional($user->skOfficial)->position)
+                                            <br><small>{{ $user->skOfficial->position }}</small>
                                         @endif
                                     </td>
                                     <td>
@@ -247,14 +266,10 @@
                                             $fileName = null;
                                             $fileType = null;
                                             
-                                            if($user->role === 'sk' && optional($user->skOfficial)->oath_certificate_path) {
+                                            if(optional($user->skOfficial)->oath_certificate_path) {
                                                 $filePath = asset('storage/' . $user->skOfficial->oath_certificate_path);
                                                 $fileName = 'Oath Certificate';
                                                 $fileType = pathinfo($user->skOfficial->oath_certificate_path, PATHINFO_EXTENSION);
-                                            } elseif($user->role === 'kk' && optional($user->kkMember)->barangay_indigency_path) {
-                                                $filePath = asset('storage/' . $user->kkMember->barangay_indigency_path);
-                                                $fileName = 'Barangay Indigency';
-                                                $fileType = pathinfo($user->kkMember->barangay_indigency_path, PATHINFO_EXTENSION);
                                             }
                                         @endphp
                                         
@@ -272,20 +287,25 @@
                                             <span class="no-file">No file uploaded</span>
                                         @endif
                                     </td>
+                                    <td>
+                                        {{ $user->created_at->format('M d, Y') }}
+                                        <br>
+                                        <small>{{ $user->created_at->format('h:i A') }}</small>
+                                    </td>
                                     <td class="actions">
                                         @if($user->account_status === 'pending')
                                             {{-- Approve Button --}}
                                             <form method="POST" action="{{ route('admin.users.approve', $user->id) }}" style="display:inline;">
                                                 @csrf
                                                 @method('PATCH')
-                                                <button type="submit" class="accept" onclick="return confirm('Are you sure you want to approve this user?')">Accept</button>
+                                                <button type="submit" class="accept" onclick="return confirm('Are you sure you want to approve this SK official?')">Accept</button>
                                             </form>
 
                                             {{-- Reject Button --}}
                                             <form method="POST" action="{{ route('admin.users.reject', $user->id) }}" style="display:inline;">
                                                 @csrf
                                                 @method('PATCH')
-                                                <button type="submit" class="reject" onclick="return confirm('Are you sure you want to reject this user?')">Reject</button>
+                                                <button type="submit" class="reject" onclick="return confirm('Are you sure you want to reject this SK official?')">Reject</button>
                                             </form>
                                         @else
                                             <span class="no-action">
@@ -302,7 +322,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8" class="no-data">No accounts to review</td>
+                                    <td colspan="9" class="no-data">No SK officials to review</td>
                                 </tr>
                             @endforelse
                         </tbody>

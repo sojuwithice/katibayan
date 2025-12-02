@@ -178,7 +178,7 @@
           <p><strong>Date:</strong> <span id="eventDate"></span></p>
           <p><strong>Time:</strong> <span id="eventTime"></span></p>
         </div>
-        <button class="ok-btn">OK</button>
+        <button class="ok-btn" id="successOkBtn">OK</button>
       </div>
     </div>
 
@@ -291,6 +291,7 @@
       const errorModal = document.getElementById("errorModal");
       const quitModal = document.getElementById("quitModal");
       const okBtns = document.querySelectorAll(".ok-btn");
+      const successOkBtn = document.getElementById("successOkBtn");
       const qrCloseBtn = document.querySelector(".qr-close");
       const cancelBtn = quitModal?.querySelector(".cancel-btn");
       const quitBtn = quitModal?.querySelector(".quit-btn");
@@ -318,7 +319,14 @@
 
       // Modal event listeners
       okBtns.forEach(btn => {
-        btn.addEventListener("click", closeAllModals);
+        if (btn !== successOkBtn) {
+          btn.addEventListener("click", closeAllModals);
+        }
+      });
+
+      // Special handler for success OK button - redirect to event page
+      successOkBtn?.addEventListener("click", () => {
+        window.location.href = "{{ route('eventpage') }}";
       });
 
       qrCloseBtn?.addEventListener("click", () => {
@@ -393,34 +401,32 @@
 
       // === Attendance Function ===
       async function markAttendance(passcode) {
-  try {
-    const response = await fetch('/attendance/mark', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-      },
-      body: JSON.stringify({ passcode })
-    });
+        try {
+          const response = await fetch('/attendance/mark', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({ passcode })
+          });
 
-    const data = await response.json();
+          const data = await response.json();
 
-    if (data.success) {
-      showSuccessModal({
-        title: data.event?.title || '',
-        date: data.event?.date || '',
-        time: data.event?.time || ''
-      });
-    } else {
-      showErrorModal(data.error || data.message || 'Failed to mark attendance.');
-    }
-  } catch (err) {
-    console.error('Fetch error:', err);
-    showErrorModal('Network error. Please try again.');
-  }
-}
-
-
+          if (data.success) {
+            showSuccessModal({
+              title: data.event?.title || '',
+              date: data.event?.date || '',
+              time: data.event?.time || ''
+            });
+          } else {
+            showErrorModal(data.error || data.message || 'Failed to mark attendance.');
+          }
+        } catch (err) {
+          console.error('Fetch error:', err);
+          showErrorModal('Network error. Please try again.');
+        }
+      }
 
       // === Load Attendance Records ===
       async function loadAttendanceRecords() {
