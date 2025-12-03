@@ -11,10 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('notifications', function (Blueprint $table) {
-            // DAPAT GAWIN MONG NULLABLE ANG 'data' COLUMN
-            $table->text('data')->nullable()->change(); 
-        });
+        // Check if the column exists first
+        if (!Schema::hasColumn('notifications', 'data')) {
+            Schema::table('notifications', function (Blueprint $table) {
+                // ADD the 'data' column (not change it)
+                $table->text('data')->nullable();
+            });
+        } else {
+            // If column exists, then make it nullable
+            Schema::table('notifications', function (Blueprint $table) {
+                $table->text('data')->nullable()->change();
+            });
+        }
     }
 
     /**
@@ -23,8 +31,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('notifications', function (Blueprint $table) {
-            // Kung gusto mo ring i-reverse ang pagbabago, dapat mo ring i-undo.
-            // Ngunit kung ang column ay in-add sa ibang migration, baka hindi mo na ito kailangan.
+            // Remove the 'data' column if it was added in this migration
+            $table->dropColumn('data');
         });
     }
 };
