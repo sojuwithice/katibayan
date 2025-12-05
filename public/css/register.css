@@ -749,6 +749,42 @@ p{
   margin-bottom: 1rem;
 }
 
+.google-login-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #fff;
+  border: 2px solid #0C4B92;   /* mas kapalan */
+  border-radius: 20px;
+  padding: 15px 10px;           /* liit na width */
+  cursor: pointer;
+  font-family: 'Roboto', sans-serif;
+  font-size: 15px;
+  color: #0C4B92;
+  transition: all 0.2s ease;
+  max-width: 270px;            /* fixed compact width */
+}
+
+.google-login-btn:hover:not(:disabled) {
+  background-color: #e6f0ff;
+  box-shadow: 0 2px 4px rgba(12,75,146,0.2);
+}
+
+.google-login-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #f0f0f0;
+  border-color: #aaa;
+}
+
+.google-icon {
+  font-size: 16px;
+  margin-right: 6px;
+  color: #0C4B92;
+}
+
+
+
 
 /* Checkbox group */
 .checkbox-group {

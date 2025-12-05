@@ -14,6 +14,8 @@
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 
   <meta name="google-signin-client_id" content="559838334805-eijtdl99nj2m05ohpcasmg6p8v5v2a5e.apps.googleusercontent.com">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
 
   <style>
     /* Remove asterisk from middle name and suffix fields */
@@ -339,44 +341,33 @@
   
 
 
-      <!-- SK Specific Fields -->
       <div id="skFields" style="display: none;">
     <div class="file-section">
       <p>Upload Oath Taking Certificate</p>
-      <div class="upload-box">
-        <div class="upload-row">
-          <label for="oath_certificate" class="upload-label">Choose Files</label>
-          <span id="fileText1" class="file-text">Accepted: PDF, PNG, JPG (up to 2 files), max 5 MB</span>
-        </div>
-
-        <input type="file" id="oath_certificate" name="oath_certificate[]" accept="application/pdf, image/png, image/jpeg" hidden multiple>
-
-        <div class="image-preview-container" id="skPreviewContainer"></div>
       </div>
-
-      <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
-    </div>
   </div>
 
 
-      <!-- KK Specific Fields -->
       <div id="kkFields" style="display: none;">
     <div class="file-section">
       <p>Upload Barangay Indigency or Valid ID with Full Address</p>
-      <div class="upload-box">
-        <div class="upload-row">
-          <label for="barangay_indigency" class="upload-label">Choose Files</label>
-          <span id="fileText3" class="file-text">Accepted: PDF, PNG, JPG (up to 2 files), max 5 MB</span>
-        </div>
-
-        <input type="file" id="barangay_indigency" name="barangay_indigency[]" accept="application/pdf, image/png, image/jpeg" hidden multiple>
-
-        <div class="image-preview-container" id="kkPreviewContainer"></div>
       </div>
-
-      <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
-    </div>
   </div>
+
+<div class="file-section">
+    <p>Upload Government/School ID for Auto-Fill Verification</p>
+    <div class="upload-box">
+        <div class="upload-row">
+            <label for="id_for_ocr" class="upload-label">Choose Files</label>
+            <span id="fileTextOCR" class="file-text">Accepted: PDF, PNG, JPG (1 file only), max 5 MB</span>
+        </div>
+        <input type="file" id="id_for_ocr" name="id_for_ocr" accept="application/pdf, image/png, image/jpeg" hidden>
+
+        <div class="image-preview-container" id="ocrPreviewContainer"></div>
+    </div>
+    <span id="ocrLoadingStatus" style="color: blue; font-size: 12px; margin-top: 5px; display: none;">Processing image for OCR...</span>
+    
+    </div>
 
       
 
@@ -384,18 +375,16 @@
 <p>Confirmation of your account details.</p>
 
 <div class="form-grid">
-  <div class="input-with-btn">
-    <input
-      type="text"
-      id="contactInput"
-      placeholder="Click here to choose your Google account"
-      readonly
-      style="cursor: pointer;"
-    />
+  <button id="googleBtn" class="google-login-btn">
+      <i class="fab fa-google google-icon"></i>
+      <span>Continue with Google</span>
+  </button>
 
-    <button type="button" id="openMethodBtn" class="verify-btn">Verify</button>
-  </div>
+  <!-- Hidden input to store email -->
+  <input type="hidden" id="contactInput" name="verified_email" />
 </div>
+
+
 
 
 
@@ -547,6 +536,99 @@
 </footer>
 
 <script>
+// --- START: NEW OCR FUNCTIONS ---
+
+// Function to put OCR data into form fields
+function matchOcrDataToForm(data) {
+    let fieldsUpdated = 0;
+    
+    // I-adjust ang fieldsMap na ito batay sa eksaktong JSON keys na ibinabalik ng inyong Laravel OCR controller.
+    const fieldsMap = {
+        'lastName': 'step1_lastname',
+        'firstName': 'step1_givenname',
+        'birthdate': 'step1_dob', // Dapat YYYY-MM-DD format
+        'email': 'step1_email',
+        // ADD MORE FIELDS HERE
+    };
+
+    for (const dataKey in fieldsMap) {
+        const inputId = fieldsMap[dataKey];
+        const inputElement = document.getElementById(inputId) || document.querySelector(`[name="${inputId}"]`);
+        
+        if (inputElement && data[dataKey]) {
+            inputElement.value = data[dataKey];
+            inputElement.dispatchEvent(new Event('input'));
+            fieldsUpdated++;
+        }
+    }
+
+    if (fieldsUpdated > 0) {
+        alert(`Successfully populated ${fieldsUpdated} fields using OCR data! Please review the details.`);
+    } else {
+        alert('OCR data found, but no fields were automatically populated. Please ensure the ID details are clear.');
+    }
+}
+
+// Function to handle OCR processing on the server
+function processFileForOCR(file) {
+    const loadingMessage = document.getElementById('ocrLoadingStatus');
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content; 
+
+    if (!csrfToken) {
+        console.error("CSRF token not found. Add <meta name=\"csrf-token\" content=\"{{ csrf_token() }}\"> to your <head>.");
+        if (loadingMessage) loadingMessage.textContent = 'Configuration Error.';
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('id_file', file); 
+    formData.append('_token', csrfToken); 
+
+    if (loadingMessage) {
+        loadingMessage.textContent = 'Processing image for OCR... This may take a moment.';
+        loadingMessage.style.display = 'block';
+    }
+
+    fetch('/api/process-ocr', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(errorData => {
+                 throw new Error(errorData.message || 'Server error during OCR processing.');
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (loadingMessage) loadingMessage.style.display = 'none';
+
+        if (data.success) {
+            console.log('OCR Result:', data.extracted_data);
+            matchOcrDataToForm(data.extracted_data);
+        } else {
+            console.error('OCR failed on server:', data.message);
+            alert('OCR Processing Failed: ' + (data.message || 'Unknown server error.'));
+        }
+    })
+    .catch(error => {
+        console.error('Fetch error during OCR:', error);
+        if (loadingMessage) {
+            loadingMessage.textContent = 'OCR Error: ' + error.message;
+            setTimeout(() => loadingMessage.style.display = 'none', 7000);
+        }
+    });
+}
+
+function isImageOrPdf(file) {
+    const acceptedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
+    return acceptedTypes.includes(file.type);
+}
+
+// --- END: NEW OCR FUNCTIONS ---
+
+
 // Lucide Icons Initialization with Error Handling
 function initializeLucideIcons() {
     if (typeof lucide === 'undefined') {
@@ -660,12 +742,12 @@ document.addEventListener("DOMContentLoaded", function() {
 
         dropdown?.querySelectorAll("li").forEach(option => {
             option.addEventListener("click", () => {
-                // Use data-value if present, else use text
                 // Set visible label
                 input.value = option.textContent;
 
-                // Save internal value (sk) for logic
-                input.dataset.value = option.getAttribute("data-value");
+                // Save internal value (sk/kk) for logic and persistence
+                input.dataset.value = option.getAttribute('data-value');
+                localStorage.setItem(input.name || input.id, input.dataset.value);
 
                 // Close dropdown
                 wrapper.classList.remove("open");
@@ -679,11 +761,12 @@ document.addEventListener("DOMContentLoaded", function() {
                 if (input.name === "role") {
                     const skFields = document.getElementById("skFields");
                     const kkFields = document.getElementById("kkFields");
+                    const roleValue = input.dataset.value ? input.dataset.value.toLowerCase() : '';
 
-                    if (input.dataset.value === "sk") {
+                    if (roleValue === "sk") {
                         skFields.style.display = "block";
                         kkFields.style.display = "none";
-                    } else if (input.value.toLowerCase() === "kk") {
+                    } else if (roleValue === "kk") {
                         skFields.style.display = "none";
                         kkFields.style.display = "block";
                     } else {
@@ -716,35 +799,7 @@ const currentStepInput = document.getElementById("currentStep");
 const stepErrors = document.getElementById("stepErrors");
 const stepErrorsList = document.getElementById("stepErrorsList");
 
-// Function to fill Step 3 (Review)
-function fillStep3() {
-    const reviewContainer = document.getElementById('reviewStep');
-    if (!reviewContainer) return;
-
-    reviewContainer.innerHTML = ''; // Clear previous content
-
-    const inputs = form.querySelectorAll('input, select, textarea');
-    inputs.forEach(input => {
-        if (input.type === 'hidden' || input.closest('.step-content')?.dataset.step == currentStep) return;
-
-        let value = input.value;
-        if (input.type === 'file') {
-            value = input.files.length > 0 ? input.files[0].name : 'Not uploaded';
-        } else if (input.type === 'checkbox') {
-            value = input.checked ? 'Yes' : 'No';
-        }
-
-        if (input.name || input.id) {
-            const label = input.closest('.input-wrapper')?.querySelector('label')?.innerText || input.name || input.id;
-            const row = document.createElement('div');
-            row.className = 'review-row';
-            row.innerHTML = `<strong>${label}:</strong> ${value}`;
-            reviewContainer.appendChild(row);
-        }
-    });
-}
-
-// Validate current step
+// Validate current step (FIXED LOGIC FOR ROLE-BASED FILE VALIDATION)
 function validateCurrentStep() {
     const currentStepElement = document.querySelector(`.step-content[data-step="${currentStep}"]`);
     const requiredFields = currentStepElement.querySelectorAll('[required]');
@@ -762,13 +817,28 @@ function validateCurrentStep() {
         if (field.type === 'checkbox') {
             isValid = field.checked;
         } else if (field.type === 'file') {
-            const roleInput = document.querySelector('input[name="role"]:checked') || document.querySelector('input[name="role"]');
-            const selectedRole = roleInput ? roleInput.value.toLowerCase() : '';
+            
+            // --- FIXED: Tiyakin na tama ang 'role' value ang makuha ---
+            const roleInput = document.querySelector('input[name="role"]'); 
+            let selectedRole = '';
+            
+            if (roleInput) {
+                // Kukunin ang internal data-value ('sk' o 'kk') para sa tamang logic
+                selectedRole = roleInput.dataset.value || roleInput.value;
+                selectedRole = selectedRole.toLowerCase();
+            }
+            
+            // ** Conditional Validation Logic **
+            // 1. Huwag mag-validate kung hindi 'sk' ang role at ang field ay oath_certificate
             if (field.id === 'oath_certificate' && selectedRole !== 'sk') return;
+            // 2. Huwag mag-validate kung hindi 'kk' ang role at ang field ay barangay_indigency
             if (field.id === 'barangay_indigency' && selectedRole !== 'kk') return;
+            
+            // Pagdating dito, ibig sabihin ang file ay required for the selected role.
             isValid = field.files.length > 0;
         } else {
             isValid = field.value.trim() !== '';
+            // Validation for custom location dropdowns
             if (['regionInput','provinceInput','cityInput','barangayInput'].includes(field.id)) {
                 const hiddenIdField = document.getElementById(field.id.replace('Input','Id'));
                 isValid = hiddenIdField && hiddenIdField.value !== '';
@@ -780,7 +850,6 @@ function validateCurrentStep() {
             if (field.id === 'oath_certificate') fieldName = 'Oath Taking Certificate';
             if (field.id === 'barangay_indigency') fieldName = 'Barangay Indigency';
 
-            // IMPORTANT: Push the actual ELEMENT, not just the name
             errors.push({
                 element: field, 
                 message: fieldName
@@ -812,9 +881,8 @@ function showStep(step) {
 }
 
 // Handle Next/Submit
-// Handle Next/Submit
 nextBtn?.addEventListener('click', (e) => {
-    e.preventDefault(); // PINAKA-IMPORTANTE: Pinipigilan ang reload
+    e.preventDefault(); 
 
     const errors = validateCurrentStep();
 
@@ -826,21 +894,19 @@ nextBtn?.addEventListener('click', (e) => {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         } else {
             // --- SUBMIT (Final Step Only) ---
-            document.querySelectorAll(".select-wrapper input[readonly]").forEach(input => {
+            // Ensure internal role value is submitted instead of the full text
+            document.querySelectorAll("input[name='role']").forEach(input => {
                 if (input.dataset.value) input.value = input.dataset.value;
             });
             localStorage.clear();
-            form.submit(); // Dito lang dapat mag-submit
+            form.submit(); // Submit the form
         }
     } else {
         // --- INVALID (Error Handling) ---
         
-        // 1. Hanapin ang error element
-        // Note: validateCurrentStep returns { element: field, message: ... }
         const firstErrorField = errors[0].element; 
 
         if (firstErrorField) {
-            // Check kung nasa tamang step tayo
             const stepContainer = firstErrorField.closest(".step-content");
             const stepNumber = parseInt(stepContainer.dataset.step);
             
@@ -848,14 +914,14 @@ nextBtn?.addEventListener('click', (e) => {
                 showStep(stepNumber);
             }
 
-            // 2. SCROLL PAPUNTA SA ERROR (Smooth)
+            // SCROLL PAPUNTA SA ERROR
             firstErrorField.scrollIntoView({ 
                 behavior: 'smooth', 
                 block: 'center', 
                 inline: 'nearest'
             });
 
-            // 3. Focus input
+            // Focus input
             setTimeout(() => {
                 firstErrorField.focus();
             }, 500);
@@ -887,18 +953,46 @@ document.querySelectorAll('input, select, textarea').forEach(input => {
 // Initialize first step
 showStep(currentStep);
 
-    // ---- FILE UPLOAD LABEL UPDATE ----
+    // ---- FILE UPLOAD LABEL UPDATE & OCR INTEGRATION (FIXED) ----
     function setupFileUpload(inputId, fileTextId) {
         const input = document.getElementById(inputId);
         const text = document.getElementById(fileTextId);
+        
         if (input && text) {
+            // Determine the default text based on the input field
+            let defaultText = "Accepted: PDF, max 5 MB";
+            if (inputId === 'oath_certificate' || inputId === 'barangay_indigency') {
+                defaultText = "Accepted: PDF, PNG, JPG (up to 2 files), max 5 MB";
+            } else if (inputId === 'id_for_ocr') {
+                defaultText = "Accepted: PDF, PNG, JPG (1 file only), max 5 MB";
+            }
+            
             input.addEventListener("change", () => {
-                text.textContent = input.files.length > 0
-                    ? input.files[0].name
-                    : "Accepted: PDF, max 5 MB";
+                const files = input.files;
+                
+                // FIXED: Update file text to show multiple file count if needed
+                if (files.length > 0) {
+                     text.textContent = files.length === 1 
+                        ? files[0].name 
+                        : `${files.length} files selected`;
+                } else {
+                    text.textContent = defaultText;
+                }
+                
+                // OCR Logic Injection Point (Only for the ID field)
+                if (inputId === 'id_for_ocr' && files.length > 0) {
+                    const file = files[0];
+                    if (isImageOrPdf(file)) {
+                        processFileForOCR(file);
+                    } else {
+                        alert("Invalid file type for ID verification. Please use an image or PDF.");
+                        input.value = ''; // Clear selection
+                        text.textContent = defaultText; // Reset text
+                    }
+                }
                 
                 // Clear file error when file is selected
-                if (input.files.length > 0) {
+                if (files.length > 0) {
                     const fieldWrapper = input.closest('.file-section');
                     if (fieldWrapper) {
                         const errorSpan = fieldWrapper.querySelector('.field-error');
@@ -910,6 +1004,40 @@ showStep(currentStep);
     }
     setupFileUpload("oath_certificate", "fileText1");
     setupFileUpload("barangay_indigency", "fileText3");
+    setupFileUpload("id_for_ocr", "fileTextOCR"); // Setup file handler for ID verification
+
+    // ** File Preview Functionality **
+    function initFileUploadPreview(inputId, previewContainerId) {
+        const input = document.getElementById(inputId);
+        const previewContainer = document.getElementById(previewContainerId);
+
+        if (input && previewContainer) {
+            input.addEventListener('change', () => {
+                previewContainer.innerHTML = ''; // Clear previous previews
+
+                const maxFiles = (inputId === 'oath_certificate' || inputId === 'barangay_indigency') ? 2 : 1;
+                const files = Array.from(input.files).slice(0, maxFiles); 
+
+                files.forEach(file => {
+                    if (file.type.startsWith('image/')) {
+                        const img = document.createElement('img');
+                        img.src = URL.createObjectURL(file);
+                        img.classList.add('img-preview');
+                        previewContainer.appendChild(img);
+                    } else if (file.type === 'application/pdf') {
+                        const pdfDiv = document.createElement('div');
+                        pdfDiv.classList.add('pdf-preview');
+                        pdfDiv.innerHTML = `<span>PDF</span><br><small>${file.name}</small>`;
+                        previewContainer.appendChild(pdfDiv);
+                    }
+                });
+            });
+        }
+    }
+
+    initFileUploadPreview('oath_certificate', 'skPreviewContainer');
+    initFileUploadPreview('barangay_indigency', 'kkPreviewContainer');
+    initFileUploadPreview('id_for_ocr', 'ocrPreviewContainer'); // Initialize OCR Preview
 
     // ---- LOCATION DROPDOWNS WITH ID STORAGE ----
     const regionInput = document.getElementById("regionInput");
@@ -923,22 +1051,23 @@ showStep(currentStep);
     const cityIdInput = document.getElementById("cityId");
     const barangayIdInput = document.getElementById("barangayId");
 
-    const regionDropdown = regionInput.nextElementSibling;
-    const provinceDropdown = provinceInput.nextElementSibling;
-    const cityDropdown = cityInput.nextElementSibling;
-    const barangayDropdown = barangayInput.nextElementSibling;
+    const regionDropdown = regionInput?.nextElementSibling;
+    const provinceDropdown = provinceInput?.nextElementSibling;
+    const cityDropdown = cityInput?.nextElementSibling;
+    const barangayDropdown = barangayInput?.nextElementSibling;
 
     function closeAllDropdowns() {
-        [regionDropdown, provinceDropdown, cityDropdown, barangayDropdown].forEach(dd => dd.style.display = "none");
+        [regionDropdown, provinceDropdown, cityDropdown, barangayDropdown].forEach(dd => dd && (dd.style.display = "none"));
     }
 
     function openDropdown(input, dropdown) {
         closeAllDropdowns();
-        dropdown.style.display = "block";
+        if (dropdown) dropdown.style.display = "block";
     }
 
     // Show dropdown on input click
     [regionInput, provinceInput, cityInput, barangayInput].forEach((input, i) => {
+        if (!input) return;
         input.addEventListener("click", e => {
             e.stopPropagation();
             const dropdown = input.nextElementSibling;
@@ -948,6 +1077,7 @@ showStep(currentStep);
 
     // Event delegation for dropdown items with ID storage
     function setupDropdownSelection(parentDropdown, input, hiddenInput, fetchNext = null) {
+        if (!parentDropdown) return;
         parentDropdown.addEventListener("click", e => {
             if (e.target.tagName === "LI") {
                 input.value = e.target.textContent;
@@ -975,29 +1105,31 @@ showStep(currentStep);
     // Region → Province
     setupDropdownSelection(regionDropdown, regionInput, regionIdInput, regionId => {
         provinceInput.value = "";
-        provinceInput.disabled = false;
-        provinceDropdown.innerHTML = "";
-        provinceIdInput.value = "";
+        if (provinceInput) provinceInput.disabled = false;
+        if (provinceDropdown) provinceDropdown.innerHTML = "";
+        if (provinceIdInput) provinceIdInput.value = "";
         
         cityInput.value = "";
-        cityInput.disabled = true;
-        cityDropdown.innerHTML = "";
-        cityIdInput.value = "";
+        if (cityInput) cityInput.disabled = true;
+        if (cityDropdown) cityDropdown.innerHTML = "";
+        if (cityIdInput) cityIdInput.value = "";
         
         barangayInput.value = "";
-        barangayInput.disabled = true;
-        barangayDropdown.innerHTML = "";
-        barangayIdInput.value = "";
+        if (barangayInput) barangayInput.disabled = true;
+        if (barangayDropdown) barangayDropdown.innerHTML = "";
+        if (barangayIdInput) barangayIdInput.value = "";
 
         fetch(`/get-provinces/${regionId}`)
             .then(res => res.json())
             .then(provinces => {
-                provinces.forEach(p => {
-                    const li = document.createElement("li");
-                    li.textContent = p.name;
-                    li.dataset.id = p.id;
-                    provinceDropdown.appendChild(li);
-                });
+                if (provinceDropdown) {
+                    provinces.forEach(p => {
+                        const li = document.createElement("li");
+                        li.textContent = p.name;
+                        li.dataset.id = p.id;
+                        provinceDropdown.appendChild(li);
+                    });
+                }
             })
             .catch(error => console.error('Error fetching provinces:', error));
     });
@@ -1005,24 +1137,26 @@ showStep(currentStep);
     // Province → City
     setupDropdownSelection(provinceDropdown, provinceInput, provinceIdInput, provinceId => {
         cityInput.value = "";
-        cityInput.disabled = false;
-        cityDropdown.innerHTML = "";
-        cityIdInput.value = "";
+        if (cityInput) cityInput.disabled = false;
+        if (cityDropdown) cityDropdown.innerHTML = "";
+        if (cityIdInput) cityIdInput.value = "";
         
         barangayInput.value = "";
-        barangayInput.disabled = true;
-        barangayDropdown.innerHTML = "";
-        barangayIdInput.value = "";
+        if (barangayInput) barangayInput.disabled = true;
+        if (barangayDropdown) barangayDropdown.innerHTML = "";
+        if (barangayIdInput) barangayIdInput.value = "";
 
         fetch(`/get-cities/${provinceId}`)
             .then(res => res.json())
             .then(cities => {
-                cities.forEach(c => {
-                    const li = document.createElement("li");
-                    li.textContent = c.name;
-                    li.dataset.id = c.id;
-                    cityDropdown.appendChild(li);
-                });
+                if (cityDropdown) {
+                    cities.forEach(c => {
+                        const li = document.createElement("li");
+                        li.textContent = c.name;
+                        li.dataset.id = c.id;
+                        cityDropdown.appendChild(li);
+                    });
+                }
             })
             .catch(error => console.error('Error fetching cities:', error));
     });
@@ -1030,19 +1164,21 @@ showStep(currentStep);
     // City → Barangay
     setupDropdownSelection(cityDropdown, cityInput, cityIdInput, cityId => {
         barangayInput.value = "";
-        barangayInput.disabled = false;
-        barangayDropdown.innerHTML = "";
-        barangayIdInput.value = "";
+        if (barangayInput) barangayInput.disabled = false;
+        if (barangayDropdown) barangayDropdown.innerHTML = "";
+        if (barangayIdInput) barangayIdInput.value = "";
 
         fetch(`/get-barangays/${cityId}`)
             .then(res => res.json())
             .then(barangays => {
-                barangays.forEach(b => {
-                    const li = document.createElement("li");
-                    li.textContent = b.name;
-                    li.dataset.id = b.id;
-                    barangayDropdown.appendChild(li);
-                });
+                if (barangayDropdown) {
+                    barangays.forEach(b => {
+                        const li = document.createElement("li");
+                        li.textContent = b.name;
+                        li.dataset.id = b.id;
+                        barangayDropdown.appendChild(li);
+                    });
+                }
             })
             .catch(error => console.error('Error fetching barangays:', error));
     });
@@ -1055,283 +1191,234 @@ showStep(currentStep);
 
     // ---- STEP 3 REVIEW ----
     function fillStep3() {
-        // Personal Information
-        document.getElementById("review_lastname").textContent =
-            document.getElementById("step1_lastname")?.value || "";
-        document.getElementById("review_givenname").textContent =
-            document.getElementById("step1_givenname")?.value || "";
-        document.getElementById("review_middlename").textContent =
-            document.getElementById("step1_middlename")?.value || "";
-        document.getElementById("review_suffix").textContent =
-            document.getElementById("step1_suffix")?.value || "";
-        
-        // Location Information
-        document.getElementById("review_region").textContent =
-            document.getElementById("regionInput")?.value || "";
-        document.getElementById("review_province").textContent =
-            document.getElementById("provinceInput")?.value || "";
-        document.getElementById("review_city").textContent =
-            document.getElementById("cityInput")?.value || "";
-        document.getElementById("review_barangay").textContent =
-            document.getElementById("barangayInput")?.value || "";
-        document.getElementById("review_zip").textContent =
-            document.getElementById("step1_zip")?.value || "";
-        document.getElementById("review_purok").textContent =
-            document.getElementById("step1_purok")?.value || "";
-        
-        // Personal Details
-        document.getElementById("review_dob").textContent =
-            document.getElementById("step1_dob")?.value || "";
-        document.getElementById("review_sex").textContent =
-            document.getElementById("step1_sex")?.value || "";
-        document.getElementById("review_email").textContent =
-            document.getElementById("step1_email")?.value || "";
-        document.getElementById("review_contact").textContent =
-            document.querySelector("input[name='contact_no']")?.value || "";
+        // ... (Review function content remains the same, ensuring all data is pulled for review)
+        document.getElementById("review_lastname").textContent = document.getElementById("step1_lastname")?.value || "";
+        document.getElementById("review_givenname").textContent = document.getElementById("step1_givenname")?.value || "";
+        document.getElementById("review_middlename").textContent = document.getElementById("step1_middlename")?.value || "";
+        document.getElementById("review_suffix").textContent = document.getElementById("step1_suffix")?.value || "";
+        document.getElementById("review_region").textContent = document.getElementById("regionInput")?.value || "";
+        document.getElementById("review_province").textContent = document.getElementById("provinceInput")?.value || "";
+        document.getElementById("review_city").textContent = document.getElementById("cityInput")?.value || "";
+        document.getElementById("review_barangay").textContent = document.getElementById("barangayInput")?.value || "";
+        document.getElementById("review_zip").textContent = document.getElementById("step1_zip")?.value || "";
+        document.getElementById("review_purok").textContent = document.getElementById("step1_purok")?.value || "";
+        document.getElementById("review_dob").textContent = document.getElementById("step1_dob")?.value || "";
+        document.getElementById("review_sex").textContent = document.getElementById("step1_sex")?.value || "";
+        document.getElementById("review_email").textContent = document.getElementById("step1_email")?.value || "";
+        document.getElementById("review_contact").textContent = document.querySelector("input[name='contact_no']")?.value || "";
+        document.getElementById("review_civil").textContent = document.getElementById("step1_civil")?.value || "";
+        document.getElementById("review_education").textContent = document.querySelector("input[name='education']")?.value || "";
+        document.getElementById("review_work").textContent = document.querySelector("input[name='work_status']")?.value || "";
+        document.getElementById("review_youth").textContent = document.querySelector("input[name='youth_classification']")?.value || "";
+        document.getElementById("review_sk").textContent = document.querySelector("input[name='sk_voter']")?.value || "";
+        document.getElementById("review_role").textContent = document.querySelector("input[name='role']")?.value || "";
 
-        // Demographics
-        document.getElementById("review_civil").textContent =
-            document.getElementById("step1_civil")?.value || "";
-        document.getElementById("review_education").textContent =
-            document.querySelector("input[name='education']")?.value || "";
-        document.getElementById("review_work").textContent =
-            document.querySelector("input[name='work_status']")?.value || "";
-        document.getElementById("review_youth").textContent =
-            document.querySelector("input[name='youth_classification']")?.value || "";
-        document.getElementById("review_sk").textContent =
-            document.querySelector("input[name='sk_voter']")?.value || "";
-
-        // Role and Documents
-        document.getElementById("review_role").textContent =
-            document.querySelector("input[name='role']")?.value || "";
-
-        const oathCert = document.getElementById("oath_certificate")?.files[0]?.name;
-        const barangayInd = document.getElementById("barangay_indigency")?.files[0]?.name;
+        const oathCertFiles = document.getElementById("oath_certificate")?.files;
+        const barangayIndFiles = document.getElementById("barangay_indigency")?.files;
+        const idForOcrFile = document.getElementById("id_for_ocr")?.files[0]?.name; 
         
         let filesText = "";
-        if (oathCert) filesText += `Oath Certificate: ${oathCert} `;
-        if (barangayInd) filesText += `Barangay Indigency: ${barangayInd}`;
+        if (oathCertFiles && oathCertFiles.length > 0) filesText += `Oath Certificate: ${oathCertFiles.length} file(s). `;
+        if (barangayIndFiles && barangayIndFiles.length > 0) filesText += `Barangay Indigency: ${barangayIndFiles.length} file(s). `;
+        if (idForOcrFile) filesText += `Verification ID: ${idForOcrFile}`;
         
         document.getElementById("review_files").textContent =
-            filesText || "No files uploaded";
+            filesText.trim() || "No files uploaded";
     }
 
-    // OTP functionality
-    const contactInput = document.getElementById("contactInput");
-    const verifyBtn = document.getElementById("openMethodBtn");
-    
+const googleBtn = document.getElementById("googleBtn");
+const contactInput = document.getElementById("contactInput");
 
-    // --- Disable Verify button initially ---
-verifyBtn.disabled = true;
-verifyBtn.style.opacity = "0.6";
-verifyBtn.style.cursor = "not-allowed";
+const codeModal = document.getElementById("codeModal");
+const codeMessage = document.getElementById("codeMessage");
+const codeBoxes = document.querySelectorAll(".code-box");
+const codeVerifyBtn = document.getElementById("codeVerifyBtn");
+const resendLink = document.getElementById("resendLink");
+const successModal = document.getElementById("successModal");
+const successOkBtn = document.getElementById("successOkBtn");
 
+const clientId = document.querySelector('meta[name="google-signin-client_id"]')?.getAttribute("content");
+let resendTimer = 30;
+let resendInterval;
 
-    const codeModal = document.getElementById("codeModal");
-    const codeMessage = document.getElementById("codeMessage");
-    const codeBoxes = document.querySelectorAll(".code-box");
-    const codeVerifyBtn = document.getElementById("codeVerifyBtn");
-    const resendLink = document.getElementById("resendLink");
+// --- Initialize Google OAuth ---
+if (typeof google !== 'undefined' && google.accounts && google.accounts.oauth2) {
 
-    const successModal = document.getElementById("successModal");
-    const successOkBtn = document.getElementById("successOkBtn");
+    const tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: clientId,
+        scope: "email profile openid",
+        callback: async (response) => {
+            if (response.access_token) {
+                googleBtn.disabled = true;
+                googleBtn.innerHTML = '<i class="fab fa-google google-icon"></i> Signing in...';
 
-    const clientId = document.querySelector('meta[name="google-signin-client_id"]')?.getAttribute("content");
-    let resendTimer = 30;
-    let resendInterval;
+                try {
+                    const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+                        headers: { Authorization: `Bearer ${response.access_token}` },
+                    });
 
-    // Initialize Google OAuth
-    if (typeof google !== 'undefined' && google.accounts && google.accounts.oauth2) {
-        const tokenClient = google.accounts.oauth2.initTokenClient({
-            client_id: clientId,
-            scope: "email profile openid",
-            callback: async (response) => {
-                if (response.access_token) {
-                    try {
-                        const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-                            headers: { Authorization: `Bearer ${response.access_token}` },
-                        });
-                        const userInfo = await res.json();
-                        contactInput.value = userInfo.email;
-                        // --- Enable Verify button after selecting Google account ---
-verifyBtn.disabled = false;
-verifyBtn.style.opacity = "1";
-verifyBtn.style.cursor = "pointer";
+                    const userInfo = await res.json();
+                    const email = userInfo.email;
 
-                    } catch (error) {
-                        console.error("Error fetching user info:", error);
+                    if (contactInput) {
+                        contactInput.value = email;
+                        localStorage.setItem(contactInput.name || contactInput.id, email);
                     }
+
+                    // ✅ AUTO-SEND OTP
+                    autoSendOTP(email);
+
+                } catch (error) {
+                    console.error("Error fetching Google info:", error);
+                    googleBtn.disabled = false;
+                    googleBtn.innerHTML = '<i class="fab fa-google google-icon"></i> Continue with Google';
                 }
             }
-        });
-
-        // Google Account Selection (click input to choose account)
-contactInput.addEventListener("click", () => {
-    // Only open if verify button is still disabled (hasn’t chosen yet)
-    if (verifyBtn.disabled) {
-        tokenClient.requestAccessToken();
-    }
-});
-
-
-
-        // Send OTP Button
-        verifyBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    if (verifyBtn.disabled) return; // stop if disabled
-
-
-            const email = contactInput.value.trim();
-            
-            if (!email) {
-                // If no email, open Google Picker instead of error
-                // Make sure not verified before opening
-                if (!verifyBtn.disabled) {
-                    tokenClient.requestAccessToken();
-                }
-                return; // Stop here, don't continue fetch
-            }
-
-            // If there's email, proceed to send OTP
-            fetch("/send-otp", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": "{{ csrf_token() }}",
-                },
-                body: JSON.stringify({ email }),
-            })
-            .then((res) => res.json())
-            .then((data) => {
-                if (data.success) {
-                    codeModal.style.display = "flex";
-                    showMessage(`We sent a code to ${email}`);
-                    clearCodeBoxes();
-                    codeBoxes[0].focus();
-                    startResendTimer();
-                } else {
-                    showMessage(data.error || "Failed to send OTP.");
-                }
-            })
-            .catch((err) => console.error("Error sending OTP:", err));
-        });
-
-        // Resend OTP Link
-        resendLink.addEventListener("click", (e) => {
-            e.preventDefault();
-            if (resendLink.disabled) return;
-
-            const email = contactInput.value.trim();
-            if (!email) return showMessage("Please select your Google account first.");
-
-            fetch("/send-otp", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": "{{ csrf_token() }}",
-                },
-                body: JSON.stringify({ email }),
-            })
-            .then((res) => res.json())
-            .then((data) => {
-                if (data.success) {
-                    showMessage(`A new code has been sent to ${email}`);
-                    clearCodeBoxes();
-                    codeBoxes[0].focus();
-                    startResendTimer();
-                } else {
-                    showMessage(data.error || "Failed to resend OTP.");
-                }
-            })
-            .catch((err) => console.error("Error resending OTP:", err));
-        });
-
-        // Verify OTP Button
-        codeVerifyBtn.addEventListener("click", async (e) => {
-            e.preventDefault();
-            const code = Array.from(codeBoxes).map((box) => box.value).join("");
-            const email = contactInput.value.trim();
-
-            if (code.length !== 6) return showMessage("Please enter the 6-digit code.");
-
-            try {
-                const res = await fetch("/verify-otp", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRF-TOKEN": "{{ csrf_token() }}",
-                    },
-                    body: JSON.stringify({ email, code: code.split("") }),
-                });
-
-                const data = await res.json();
-                if (data.verified === true) {
-                    codeModal.style.display = "none";
-                    setTimeout(() => {
-                        successModal.style.display = "flex";
-                    }, 150);
-
-                    verifyBtn.textContent = "Verified";
-                    verifyBtn.disabled = true;
-                    verifyBtn.classList.add("verified");
-                } else {
-                    showMessage(data.error || "Invalid or expired code.");
-                }
-            } catch (err) {
-                console.error("Error verifying OTP:", err);
-            }
-        });
-
-        // Success Modal OK Button
-        successOkBtn.addEventListener("click", () => {
-            successModal.style.display = "none";
-        });
-
-        // OTP Input Box Logic
-        codeBoxes.forEach((box, index) => {
-            box.addEventListener("input", (e) => {
-                if (e.target.value && index < codeBoxes.length - 1) {
-                    codeBoxes[index + 1].focus();
-                }
-            });
-            box.addEventListener("keydown", (e) => {
-                if (e.key === "Backspace" && !e.target.value && index > 0) {
-                    codeBoxes[index - 1].focus();
-                }
-            });
-        });
-
-        function clearCodeBoxes() {
-            codeBoxes.forEach((box) => (box.value = ""));
         }
+    });
 
-        function startResendTimer() {
-            resendLink.disabled = true;
-            let timeLeft = resendTimer;
-            resendLink.textContent = `Resend (${timeLeft}s)`;
+    // --- Click on button → request Google account ---
+    googleBtn.addEventListener("click", () => {
+        tokenClient.requestAccessToken();
+    });
 
-            clearInterval(resendInterval);
-            resendInterval = setInterval(() => {
-                timeLeft--;
-                resendLink.textContent = `Resend (${timeLeft}s)`;
-                if (timeLeft <= 0) {
-                    clearInterval(resendInterval);
+    // ============================
+    // AUTO-SEND OTP
+    // ============================
+    function autoSendOTP(email) {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+
+        fetch("/send-otp", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": csrfToken },
+            body: JSON.stringify({ email }),
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                if (codeModal) codeModal.style.display = "flex";
+                showMessage(`We sent a code to ${email}`);
+                clearCodeBoxes();
+                codeBoxes[0]?.focus();
+                startResendTimer();
+            } else {
+                showMessage(data.error || "Failed to send OTP.");
+            }
+        })
+        .catch(err => console.error("Error sending OTP:", err));
+    }
+
+    // ============================
+    // RESEND OTP
+    // ============================
+    resendLink?.addEventListener("click", e => {
+        e.preventDefault();
+        if (resendLink.disabled) return;
+
+        const email = contactInput.value.trim();
+        if (!email) return showMessage("Please select your Google account first.");
+
+        autoSendOTP(email);
+    });
+
+    // ============================
+    // VERIFY OTP
+    // ============================
+    codeVerifyBtn?.addEventListener("click", async e => {
+        e.preventDefault();
+        const code = Array.from(codeBoxes).map(b => b.value).join("");
+        const email = contactInput.value.trim();
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+
+        if (code.length !== 6) return showMessage("Enter the 6-digit code.");
+
+        try {
+            const res = await fetch("/verify-otp", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": csrfToken },
+                body: JSON.stringify({ email, code: code.split("") }),
+            });
+
+            const data = await res.json();
+
+            if (data.verified) {
+                // Hide OTP modal
+                if (codeModal) codeModal.style.display = "none";
+
+                // ✅ Permanently disable Google button & update text
+                if (googleBtn) {
+                    googleBtn.disabled = true;
+                    googleBtn.innerHTML = '<i class="fab fa-google google-icon"></i> Verified';
+                }
+
+                // Show success modal
+                if (successModal) successModal.style.display = "flex";
+
+            } else {
+                showMessage(data.error || "Invalid or expired code.");
+            }
+
+        } catch (err) {
+            console.error("Error verifying OTP:", err);
+        }
+    });
+
+    // ============================
+    // SUCCESS MODAL OK BUTTON
+    // ============================
+    successOkBtn?.addEventListener("click", () => {
+        if (successModal) successModal.style.display = "none";
+        // Google button remains disabled permanently
+    });
+
+    // ============================
+    // OTP BOX NAVIGATION
+    // ============================
+    codeBoxes.forEach((box, i) => {
+        box.addEventListener("input", () => {
+            if (box.value && i < codeBoxes.length - 1) codeBoxes[i + 1].focus();
+        });
+        box.addEventListener("keydown", e => {
+            if (e.key === "Backspace" && !box.value && i > 0) codeBoxes[i - 1].focus();
+        });
+    });
+
+    function clearCodeBoxes() { codeBoxes.forEach(b => b.value = ""); }
+
+    function startResendTimer() {
+        if (resendLink) resendLink.disabled = true;
+        let timeLeft = resendTimer;
+        if (resendLink) resendLink.textContent = `Resend (${timeLeft}s)`;
+
+        clearInterval(resendInterval);
+        resendInterval = setInterval(() => {
+            timeLeft--;
+            if (resendLink) resendLink.textContent = `Resend (${timeLeft}s)`;
+            if (timeLeft <= 0) {
+                clearInterval(resendInterval);
+                if (resendLink) {
                     resendLink.disabled = false;
                     resendLink.textContent = "Resend";
                 }
-            }, 1000);
-        }
-
-        function showMessage(msg) {
-            const originalMessage = codeMessage.innerText;
-            codeMessage.innerText = msg;
-            setTimeout(() => {
-                codeMessage.innerText = originalMessage;
-            }, 5000);
-        }
-    } else {
-        console.error('Google OAuth library not loaded');
+            }
+        }, 1000);
     }
+
+    function showMessage(msg) {
+        if (codeMessage) {
+            const original = codeMessage.innerText;
+            codeMessage.innerText = msg;
+            setTimeout(() => codeMessage.innerText = original, 5000);
+        }
+    }
+
+} else {
+    console.error("Google OAuth library not loaded");
+}
+
+
+
+
 
     // ---- SAVE STEP & INPUTS ON RELOAD ----
 
@@ -1340,11 +1427,10 @@ const registrationFailed = window.location.search.includes("failed=1") || {{ $er
 
 if (registrationFailed) {
     console.warn("Registration failed. Resetting progress to Step 1.");
-    // Clear all saved data to ensure it always starts at Step 1
     localStorage.clear();
     currentStep = 1;
     showStep(currentStep);
-    currentStepInput.value = currentStep;
+    if(currentStepInput) currentStepInput.value = currentStep;
 } else {
     // 🔹 Restore saved step if no registration failure
     const savedStep = localStorage.getItem("currentStep");
@@ -1356,7 +1442,7 @@ if (registrationFailed) {
     }
 
     showStep(currentStep);
-    currentStepInput.value = currentStep;
+    if(currentStepInput) currentStepInput.value = currentStep;
 }
 
 // ---- SAVE STEP CHANGES ----
@@ -1373,10 +1459,10 @@ backBtn?.addEventListener("click", () => {
 });
 
 // ---- SAVE INPUT VALUES ----
-const formInputs = form.querySelectorAll("input[type='text'], input[type='email'], input[type='date'], input[type='number'], input[type='hidden'], input[type='checkbox']");
+const formInputsToSave = form.querySelectorAll("input[type='text'], input[type='email'], input[type='date'], input[type='number'], input[type='hidden'], input[type='checkbox']");
 
 // Restore saved input values
-formInputs.forEach(input => {
+formInputsToSave.forEach(input => {
     const savedValue = localStorage.getItem(input.name || input.id);
     if (savedValue !== null) {
         if (input.type === "checkbox") {
@@ -1388,7 +1474,7 @@ formInputs.forEach(input => {
 });
 
 // Save input values on change
-formInputs.forEach(input => {
+formInputsToSave.forEach(input => {
     input.addEventListener("input", () => {
         if (input.type === "checkbox") {
             localStorage.setItem(input.name || input.id, input.checked);
@@ -1399,22 +1485,30 @@ formInputs.forEach(input => {
 });
 
 // ---- RESTORE ROLE-BASED FIELD DISPLAY ----
-const roleInput = document.querySelector('input[name="role"]');
-if (roleInput) {
-    const roleValue = localStorage.getItem(roleInput.name || roleInput.id);
+const roleSelectInput = document.querySelector('input[name="role"]');
+if (roleSelectInput) {
+    const roleValue = localStorage.getItem(roleSelectInput.name || roleSelectInput.id);
     const skFields = document.getElementById("skFields");
     const kkFields = document.getElementById("kkFields");
 
     if (roleValue) {
-        if (roleValue.toLowerCase() === "sk") {
-            skFields.style.display = "block";
-            kkFields.style.display = "none";
-        } else if (roleValue.toLowerCase() === "kk") {
-            skFields.style.display = "none";
-            kkFields.style.display = "block";
+        // Restore display value from saved internal value
+        const option = document.querySelector(`.dropdown-options li[data-value="${roleValue}"]`);
+        if (option) {
+            roleSelectInput.value = option.textContent;
+            roleSelectInput.dataset.value = roleValue; // Restore dataset value for validation
+        }
+
+        const lowerCaseRole = roleValue.toLowerCase();
+        if (lowerCaseRole === "sk") {
+            if (skFields) skFields.style.display = "block";
+            if (kkFields) kkFields.style.display = "none";
+        } else if (lowerCaseRole === "kk") {
+            if (skFields) skFields.style.display = "none";
+            if (kkFields) kkFields.style.display = "block";
         } else {
-            skFields.style.display = "none";
-            kkFields.style.display = "none";
+            if (skFields) skFields.style.display = "none";
+            if (kkFields) kkFields.style.display = "none";
         }
     }
 }
@@ -1428,82 +1522,6 @@ if (roleInput) {
     input?.addEventListener("input", () => localStorage.setItem(id, input.value));
 });
 
-
-
-function initFileUploadPreview(inputId, previewContainerId) {
-  const input = document.getElementById(inputId);
-  const previewContainer = document.getElementById(previewContainerId);
-
-  input.addEventListener('change', () => {
-    previewContainer.innerHTML = ''; // Clear previous previews
-
-    const files = Array.from(input.files).slice(0, 2); // max 2 files
-
-    files.forEach(file => {
-      if (file.type.startsWith('image/')) {
-        const img = document.createElement('img');
-        img.src = URL.createObjectURL(file);
-        img.classList.add('img-preview');
-        previewContainer.appendChild(img);
-      } else if (file.type === 'application/pdf') {
-        const pdfDiv = document.createElement('div');
-        pdfDiv.classList.add('pdf-preview');
-        pdfDiv.innerHTML = `<span>PDF</span><br><small>${file.name}</small>`;
-        previewContainer.appendChild(pdfDiv);
-      }
-    });
-  });
-}
-
-// Initialize SK and KK previews
-initFileUploadPreview('oath_certificate', 'skPreviewContainer');
-initFileUploadPreview('barangay_indigency', 'kkPreviewContainer');
-
-    
-
-    // Hintayin na ma-load ang buong HTML
-document.addEventListener("DOMContentLoaded", function() {
-
-  // Dito mo ilagay lahat ng code mo
-  
-  const contactInput = document.querySelector("#contactInput");
-  const verifyButton = document.querySelector("#openMethodBtn");
-
-  if (contactInput && verifyButton) {
-    
-    console.log("Elements found!"); // Check mo sa console kung lumabas 'to
-    
-    verifyButton.addEventListener("click", function() {
-      alert("Verify button clicked!");
-      // Ilagay ang verify logic mo dito
-    });
-
-    contactInput.addEventListener("click", function() {
-      alert("Input clicked!");
-      // Ilagay ang logic mo para sa input dito
-    });
-
-  } else {
-    console.error("Error: Hindi makita ang #contactInput or #openMethodBtn");
-  }
-
-  // Save input values to localStorage
-document.querySelectorAll("input, select, textarea").forEach(el => {
-    el.addEventListener("input", () => {
-        localStorage.setItem(el.name, el.value);
-    });
-});
-
-// Load saved values when page loads
-document.addEventListener("DOMContentLoaded", () => {
-    document.querySelectorAll("input, select, textarea").forEach(el => {
-        if (localStorage.getItem(el.name)) {
-            el.value = localStorage.getItem(el.name);
-        }
-    });
-});
-
-});
 });
 </script>
 </body>
