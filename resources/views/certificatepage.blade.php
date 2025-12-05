@@ -56,8 +56,8 @@
     <!-- Topbar -->
     <header class="topbar">
       <button id="mobileMenuBtn" class="mobile-hamburger">
-  <i data-lucide="menu"></i>
-</button>
+        <i data-lucide="menu"></i>
+      </button>
       <div class="logo">
         <img src="{{ asset('images/logo.png') }}" alt="Logo">
         <div class="logo-text">
@@ -69,20 +69,85 @@
       <div class="topbar-right">
         <div class="time">MON 10:00 <span>AM</span></div>
 
-        <!-- Notifications -->
+        
+        <button class="theme-toggle" id="themeToggle">
+          <i data-lucide="moon"></i>
+        </button>
+
+        <!-- Notifications - UPDATED TO MATCH DASHBOARD -->
         <div class="notification-wrapper">
           <i class="fas fa-bell"></i>
-          <span class="notif-count" id="notificationCount">0</span>
+          @if($notificationCount > 0)
+            <span class="notif-count">{{ $notificationCount }}</span>
+          @endif
           <div class="notif-dropdown">
             <div class="notif-header">
-              <strong>Notification</strong> <span id="dropdownNotifCount">0</span>
+              <strong>Notification</strong>
+              @if($notificationCount > 0)
+                <span>{{ $notificationCount }}</span>
+              @endif
             </div>
-            <ul class="notif-list" id="notificationList">
-              <li>
-                <div class="notif-content">
+            
+            <ul class="notif-list">
+              @foreach ($generalNotifications as $notif)
+                @php
+                  $link = '#'; // Default
+                  if ($notif->type == 'certificate_schedule') {
+                    $link = route('certificatepage'); 
+                  }
+                @endphp
+                
+                <li>
+                  <a href="{{ $link }}" class="notif-link {{ $notif->is_read == 0 ? 'unread' : '' }}" data-id="{{ $notif->id }}">
+                    
+                    <div class="notif-dot-container">
+                      @if ($notif->is_read == 0)
+                        <span class="notif-dot"></span>
+                      @else
+                        <span class="notif-dot-placeholder"></span>
+                      @endif
+                    </div>
+
+                    <div class="notif-main-content">
+                      <div class="notif-header-line">
+                        <strong>{{ $notif->title }}</strong>
+                        <span class="notif-timestamp">
+                          {{ $notif->created_at->format('m/d/Y g:i A') }}
+                        </span>
+                      </div>
+                      <p class="notif-message">{{ $notif->message }}</p>
+                    </div>
+                  </a>
+                </li>
+              @endforeach
+
+              @foreach($unevaluatedActivities as $activity)
+                <li>
+                  <a href="{{ route('evaluation.show', $activity['id']) }}" class="notif-link unread" 
+                     data-{{ $activity['type'] }}-id="{{ $activity['id'] }}">
+                    
+                    <div class="notif-dot-container">
+                      <span class="notif-dot"></span>
+                    </div>
+                    
+                    <div class="notif-main-content">
+                      <div class="notif-header-line">
+                        <strong>{{ ucfirst($activity['type']) }} Evaluation Required</strong>
+                        <span class="notif-timestamp">
+                          {{ $activity['created_at']->format('m/d/Y g:i A') }}
+                        </span>
+                      </div>
+                      <p class="notif-message">Please evaluate "{{ $activity['title'] }}"</p>
+                    </div>
+                  </a>
+                </li>
+              @endforeach
+
+              @if($generalNotifications->isEmpty() && $unevaluatedActivities->isEmpty())
+                <li class="no-notifications">
                   <p>No new notifications</p>
-                </div>
-              </li>
+                </li>
+              @endif
             </ul>
           </div>
         </div>
@@ -174,6 +239,41 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
+      // === DARK/LIGHT MODE TOGGLE ===
+      const body = document.body;
+      const themeToggle = document.getElementById('themeToggle');
+
+      // Function to apply theme
+      function applyTheme(isDark) {
+        body.classList.toggle('dark-mode', isDark);
+        // Show sun when dark mode, moon when light mode
+        const icon = isDark ? 'sun' : 'moon';
+
+        if (themeToggle) {
+          themeToggle.innerHTML = `<i data-lucide="${icon}"></i>`;
+        }
+
+        // Re-initialize Lucide icons
+        if (typeof lucide !== 'undefined') {
+          lucide.createIcons();
+        }
+        
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+      }
+
+      // Load saved theme
+      const savedTheme = localStorage.getItem('theme') === 'dark';
+      applyTheme(savedTheme);
+
+      // Add event listener to theme toggle
+      if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+          const isDark = !body.classList.contains('dark-mode');
+          applyTheme(isDark);
+        });
+      }
+      
       // === Lucide icons ===
       if (window.lucide) {
         lucide.createIcons();
@@ -271,20 +371,70 @@
       updateTime();
       setInterval(updateTime, 60000);
 
-      
+      // === Notification Mark as Read ===
+      function initMarkAsRead() {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        if (!csrfToken) {
+          console.error('CSRF token not found.');
+          return;
+        }
+
+        document.querySelectorAll('.notif-link[data-id]').forEach(link => {
+          link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const notifId = this.dataset.id;
+            const destinationUrl = this.href;
+
+            const notifItem = this.closest('li');
+            notifItem?.remove();
+
+            const countEl = document.querySelector('.notif-count');
+            if (countEl) {
+              let currentCount = parseInt(countEl.textContent) || 0;
+              countEl.textContent = Math.max(0, currentCount - 1);
+              if (parseInt(countEl.textContent) === 0) {
+                countEl.remove();
+              }
+            }
+
+            const notifList = document.querySelector('.notif-list');
+            if (notifList && notifList.children.length === 0) {
+              notifList.innerHTML = `<li class="no-notifications"><p>No new notifications</p></li>`;
+            }
+
+            fetch(`/notifications/${notifId}/read`, {
+                method: 'POST',
+                headers: {
+                  'X-CSRF-TOKEN': csrfToken,
+                  'Accept': 'application/json',
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  id: notifId
+                })
+              })
+              .then(res => res.json())
+              .then(data => {
+                if (!data.success) console.error('Error marking notification as read:', data.message);
+              })
+              .catch(err => console.error('Fetch error:', err))
+              .finally(() => {
+                if (destinationUrl && destinationUrl !== '#') {
+                  window.location.href = destinationUrl;
+                }
+              });
+          });
+        });
+      }
+
       // === (HELPER FUNCTION) Para sa status button ===
-      // (INAYOS NATIN 'TO PARA GAMITIN 'YUNG 'can_request_again' LOGIC)
-      // === (HELPER FUNCTION) Para sa status button ===
-      // (FIXED: In-update para sa event_id at program_id)
       function getCertificateAction(cert) {
         const status = cert.request_status;
         
-        // --- ITO YUNG BAGO ---
         // Alamin kung event_id o program_id ang gagamitin
         const isEvent = !!cert.event_id; // true kung may event_id
         const activityId = isEvent ? cert.event_id : cert.program_id;
         const idType = isEvent ? 'data-event-id' : 'data-program-id';
-        // --- END NG BAGO ---
 
         // Rule 1: Kung claimed na, tapos na.
         if (status === 'claimed') {
@@ -314,7 +464,6 @@
         }
       }
 
-
       // === Load Certificates ===
       async function loadCertificates() {
         try {
@@ -337,7 +486,7 @@
         }
       }
 
-      // === (FIX #1) 'displayCertificates' para gamitin ang 'getCertificateAction' ===
+      // === Display Certificates ===
       function displayCertificates(certificates) {
         const container = document.getElementById('certificatesContainer');
         const emptyState = document.getElementById('emptyState');
@@ -361,7 +510,6 @@
               <div class="cert-grid">
           `;
 
-          
           html += certs.map(cert => `
             <div class="cert-card" data-event-id="${cert.event_id}">
               <div class="cert-img">
@@ -390,15 +538,14 @@
 
         container.innerHTML = html;
 
-        // (BINAGO) In-update natin 'yung listener
+        // Add event listener for print requests
         container.addEventListener('click', e => {
-          // Titingnan niya kung 'print-btn' at HINDI disabled 'yung na-click
+          // Check if 'print-btn' was clicked and it's not disabled
           if (e.target.classList.contains('print-btn') && !e.target.disabled) {
             handlePrintRequest(e);
           }
         });
       }
-
 
       // === Group Certificates by Month ===
       function groupCertificatesByMonth(certificates) {
@@ -428,14 +575,12 @@
         certCountText.textContent = 'You have a total of 0 certificates.';
       }
 
-      // === (FIX #2) 'handlePrintRequest' para mag-update ng button ===
-      // === (FIX #2) 'handlePrintRequest' para mag-update ng button ===
-      // (FIXED: In-update para magpadala ng event_id O program_id)
+      // === Handle Print Request ===
       async function handlePrintRequest(e) {
         const printButton = e.target;
         const originalText = printButton.textContent;
         
-        // --- ITO YUNG BAGONG LOGIC ---
+        // Get the activity ID (event or program)
         const eventId = printButton.getAttribute('data-event-id');
         const programId = printButton.getAttribute('data-program-id');
         
@@ -448,20 +593,19 @@
             alert('Error: Activity ID not found.');
             return;
         }
-        // --- END NG BAGONG LOGIC ---
 
         printButton.disabled = true;
         printButton.textContent = 'Submitting...';
 
         try {
-          // Ang URL ay '/certificate-request' na, base sa routes mo
+          // Send request to certificate-request endpoint
           const response = await fetch('/certificate-request', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
             },
-            body: JSON.stringify(payload) // Ipapadala na 'yung payload
+            body: JSON.stringify(payload)
           });
 
           const data = await response.json();
@@ -498,6 +642,7 @@
       // === Initialize Page ===
       function initializePage() {
         loadCertificates();
+        initMarkAsRead(); // Initialize notification mark as read
       }
 
       // Start the page
@@ -509,25 +654,33 @@
   <script>
   const mobileBtn = document.getElementById('mobileMenuBtn');
   const sidebar = document.querySelector('.sidebar');
-  const mainContent = document.querySelector('.main'); // (BAGO)
+  const mainContent = document.querySelector('.main');
 
   mobileBtn?.addEventListener('click', (e) => {
-    e.stopPropagation(); // (BAGO)
+    e.stopPropagation();
     sidebar.classList.toggle('open');
-    document.body.classList.toggle('mobile-sidebar-active'); // (BAGO)
+    document.body.classList.toggle('mobile-sidebar-active');
   });
 
   // Close sidebar when clicking outside (mobile only)
   document.addEventListener('click', (e) => {
     if (window.innerWidth <= 768 &&
-      sidebar.classList.contains('open') && // (BAGO) Check kung open
+      sidebar.classList.contains('open') &&
       !sidebar.contains(e.target) &&
       !mobileBtn.contains(e.target)) {
       
       sidebar.classList.remove('open');
-      document.body.classList.remove('mobile-sidebar-active'); // (BAGO)
+      document.body.classList.remove('mobile-sidebar-active');
     }
   });
+
+  // Logout confirmation
+  function confirmLogout(event) {
+    event.preventDefault();
+    if (confirm('Are you sure you want to logout?')) {
+      document.getElementById('logout-form').submit();
+    }
+  }
 </script>
 </body>
 </html>

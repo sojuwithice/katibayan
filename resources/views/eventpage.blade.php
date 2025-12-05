@@ -1577,7 +1577,7 @@
       // Make closeProgramModal available globally
       window.closeProgramModal = closeProgramModal;
     });
-  </script>
+  </script
 
   <script>
   const mobileBtn = document.getElementById('mobileMenuBtn');
