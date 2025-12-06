@@ -1,17 +1,13 @@
-@php
-    // No need for complex logic here anymore since it's handled in the controller
-@endphp
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-<script>
+  <script>
     // Make CSRF token globally available
     window.csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-</script>
+  </script>
   <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/favicon.png') }}">
   <title>KatiBayan - Dashboard</title>
   <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
@@ -66,8 +62,8 @@
     <!-- Topbar -->
     <header class="topbar">
       <button id="mobileMenuBtn" class="mobile-hamburger">
-  <i data-lucide="menu"></i>
-</button>
+        <i data-lucide="menu"></i>
+      </button>
 
       <div class="logo">
         <img src="{{ asset('images/logo.png') }}" alt="Logo">
@@ -80,287 +76,256 @@
       <div class="topbar-right">
         <div class="time">MON 10:00 <span>AM</span></div>
 
-         <!-- Theme Toggle Button - ADDED HERE -->
+        <!-- Theme Toggle Button -->
         <button class="theme-toggle" id="themeToggle">
           <i data-lucide="moon"></i>
         </button>
         
-    <div class="notification-wrapper">
-    <i class="fas fa-bell"></i>
-    @if($notificationCount > 0)
-        <span class="notif-count">{{ $notificationCount }}</span>
-    @endif
-    <div class="notif-dropdown">
-        <div class="notif-header">
-            <strong>Notification</strong>
-            @if($notificationCount > 0)
+        <!-- Notification Wrapper - UPDATED -->
+        <div class="notification-wrapper">
+          <i class="fas fa-bell"></i>
+          @if($notificationCount > 0)
+            <span class="notif-count">{{ $notificationCount }}</span>
+          @endif
+          <div class="notif-dropdown">
+            <div class="notif-header">
+              <strong>Notification</strong>
+              @if($notificationCount > 0)
                 <span>{{ $notificationCount }}</span>
-            @endif
-        </div>
-        
-        <ul class="notif-list">
-
-            {{-- === SIMULA NG HYBRID FIX === --}}
-            @foreach ($generalNotifications as $notif)
+              @endif
+            </div>
+            
+            <ul class="notif-list">
+              @foreach ($generalNotifications as $notif)
                 @php
-                    $link = '#'; // Default
-                    $onclickAction = ''; // Default na walang click action
-                    
-                    // --- Para sa Links ---
-                    if ($notif->type == 'certificate_schedule') { // <--- Para sa Dati
-                        $link = route('certificatepage'); 
-                    } 
-                    // FIX: Check kung SK Request Approved (galing sa Controller mo)
-                    elseif ($notif->type == 'sk_request_approved' || $notif->type == 'App\Notifications\SkRequestAccepted') { 
-                        $link = '#'; 
-                        // Dito tinatawag ang Javascript function para sa Modal
-                        $onclickAction = 'openSetRoleModal(); return false;';
-                    }
+                  $link = '#';
+                  $onclickAction = '';
+                  
+                  if ($notif['type'] == 'certificate_schedule') {
+                    $link = route('certificatepage'); 
+                  } 
+                  elseif ($notif['type'] == 'sk_request_approved' || $notif['type'] == 'App\Notifications\SkRequestAccepted') { 
+                    $link = '#'; 
+                    $onclickAction = 'openSetRoleModal(); return false;';
+                  }
+                  elseif ($notif['notification_type'] == 'evaluation_required') {
+                    $link = route('evaluation.show', $notif['activity_id']);
+                  }
 
-                    // --- Para sa Title at Message (Ang Hybrid Fix) ---
-                    $title = $notif->data['title'] ?? $notif->title ?? 'Notification';
-                    $message = $notif->data['message'] ?? $notif->message ?? 'You have a new notification.';
+                  $title = $notif['title'] ?? 'Notification';
+                  $message = $notif['message'] ?? 'You have a new notification.';
+                  $isRead = $notif['is_read'] ?? 0;
                 @endphp
                 
                 <li>
-                    {{-- FIX: Dinagdag ang onclick attribute dito --}}
-                    <a href="{{ $link }}" 
-                       class="notif-link {{ $notif->is_read == 0 ? 'unread' : '' }}" 
-                       data-id="{{ $notif->id }}"
-                       @if($onclickAction) onclick="{{ $onclickAction }}" @endif>
-                        
-                        <div class="notif-dot-container">
-                            @if ($notif->is_read == 0)
-                                <span class="notif-dot"></span>
-                            @else
-                                <span class="notif-dot-placeholder"></span>
-                            @endif
-                        </div>
+                  <a href="{{ $link }}" 
+                     class="notif-link {{ $isRead == 0 ? 'unread' : '' }}" 
+                     @if(isset($notif['id']) && !str_starts_with($notif['id'], 'eval_'))
+                         data-id="{{ $notif['id'] }}"
+                     @endif
+                     @if(isset($notif['activity_id']))
+                         data-{{ $notif['activity_type'] }}-id="{{ $notif['activity_id'] }}"
+                     @endif
+                     @if($onclickAction) onclick="{{ $onclickAction }}" @endif>
+                    
+                    <div class="notif-dot-container">
+                      @if ($isRead == 0)
+                        <span class="notif-dot"></span>
+                      @else
+                        <span class="notif-dot-placeholder"></span>
+                      @endif
+                    </div>
 
-                        <div class="notif-main-content">
-                            <div class="notif-header-line">
-                                {{-- Gagamitin na natin 'yung $title at $message variables --}}
-                                <strong>{{ $title }}</strong>
-                                <span class="notif-timestamp">
-                                    {{ $notif->created_at->format('m/d/Y g:i A') }}
-                                </span>
-                            </div>
-                            <p class="notif-message">{{ $message }}</p>
-                        </div>
-                    </a>
+                    <div class="notif-main-content">
+                      <div class="notif-header-line">
+                        <strong>{{ $title }}</strong>
+                        <span class="notif-timestamp">
+                          @if($notif['created_at'] instanceof \Carbon\Carbon)
+                            {{ $notif['created_at']->format('m/d/Y g:i A') }}
+                          @else
+                            {{ \Carbon\Carbon::parse($notif['created_at'])->format('m/d/Y g:i A') }}
+                          @endif
+                        </span>
+                      </div>
+                      <p class="notif-message">{{ $message }}</p>
+                    </div>
+                  </a>
                 </li>
-            @endforeach
-            {{-- === TAPOS NG HYBRID FIX === --}}
+              @endforeach
 
-
-            {{-- HINDI GINALAW ANG CODE SA BABA NITO --}}
-            @foreach($unevaluatedActivities as $activity)
-                <li>
-                    <a href="{{ route('evaluation.show', $activity['id']) }}" class="notif-link unread" 
-                       data-{{ $activity['type'] }}-id="{{ $activity['id'] }}">
-                        
-                        <div class="notif-dot-container">
-                            <span class="notif-dot"></span>
-                        </div>
-                        
-                        <div class="notif-main-content">
-                            <div class="notif-header-line">
-                                <strong>{{ ucfirst($activity['type']) }} Evaluation Required</strong>
-                                <span class="notif-timestamp">
-                                    {{ $activity['created_at']->format('m/d/Y g:i A') }}
-                                </span>
-                            </div>
-                            <p class="notif-message">Please evaluate "{{ $activity['title'] }}"</p>
-                        </div>
-                    </a>
-                </li>
-            @endforeach
-
-            @if($generalNotifications->isEmpty() && $unevaluatedActivities->isEmpty())
+              @if($generalNotifications->isEmpty())
                 <li class="no-notifications">
-                    <p>No new notifications</p>
+                  <p>No new notifications</p>
                 </li>
-            @endif
-
-        </ul>
-        
-    </div>
-</div>
+              @endif
+            </ul>
+          </div>
+        </div>
 
         <div class="profile-wrapper">
-  <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
-       alt="User" class="avatar" id="profileToggle">
-  
-  <div class="profile-dropdown">
-    <div class="profile-header">
-      <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
-           alt="User" class="profile-avatar">
-           
-      <div class="profile-info">
-        <h4>{{ $user->given_name }} {{ $user->middle_name }} {{ $user->last_name }} {{ $user->suffix }}</h4>
-        
-        <div class="badges-wrapper">
-            
-            <div class="profile-badge">
-              <span class="badge">{{ $roleBadge }}</span>
-              <span class="badge">{{ $age }} yrs old</span>
+          <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+               alt="User" class="avatar" id="profileToggle">
+          
+          <div class="profile-dropdown">
+            <div class="profile-header">
+              <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+                   alt="User" class="profile-avatar">
+                   
+              <div class="profile-info">
+                <h4>{{ $user->given_name }} {{ $user->middle_name }} {{ $user->last_name }} {{ $user->suffix }}</h4>
+                
+                <div class="badges-wrapper">
+                  <div class="profile-badge">
+                    <span class="badge">{{ $roleBadge }}</span>
+                    <span class="badge">{{ $age }} yrs old</span>
+                  </div>
+
+                  @php
+                    $skTitle = '';
+                    if (!empty(Auth::user()->sk_role)) {
+                      $skTitle = Auth::user()->sk_role; 
+                    } 
+                    elseif (Auth::user()->role === 'sk_chairperson') {
+                      $skTitle = 'SK Chairperson';
+                    }
+                  @endphp
+
+                  @if($skTitle)
+                    <div class="profile-badge sk-badge-yellow">
+                      <span>{{ $skTitle }}</span>
+                    </div>
+                  @endif
+                </div>
+              </div>
+            </div>
+            <hr>
+
+            <div class="profile-button-container">
+              @php
+                $isSkOfficial = !empty(Auth::user()->sk_role) || Auth::user()->role === 'sk_chairperson';
+              @endphp
+
+              @if($isSkOfficial)
+                <a href="{{ route('sk.role.view') }}" class="profile-sk-button">
+                  Switch to SK Role
+                </a>
+              @else
+                <a href="#" class="profile-sk-button" id="accessSKRoleBtn" data-url="{{ route('sk.request.access') }}">
+                  Access SK role
+                </a>
+              @endif
             </div>
 
-            @php
-                $skTitle = '';
-                // Kung may laman ang sk_role, kunin nang buo (walang dagdag na text)
-                if (!empty(Auth::user()->sk_role)) {
-                    $skTitle = Auth::user()->sk_role; 
-                } 
-                // Fallback para sa Chairperson kung wala sa sk_role column
-                elseif (Auth::user()->role === 'sk_chairperson') {
-                    $skTitle = 'SK Chairperson';
-                }
-            @endphp
+            <ul class="profile-menu">
+              <li>
+                <a href="{{ route('profilepage') }}">
+                  <i class="fas fa-user"></i> Profile
+                </a>
+              </li>
+              
+              <li>
+                <a href="{{ route('faqs') }}">
+                  <i class="fas fa-question-circle"></i> FAQs
+                </a>
+              </li>
 
-            @if($skTitle)
-                <div class="profile-badge sk-badge-yellow">
-                    <span>{{ $skTitle }}</span>
-                </div>
-            @endif
-
+              <li>
+                <a href="#" id="openFeedbackBtn">
+                  <i class="fas fa-star"></i> Send Feedback to Katibayan
+                </a>
+              </li>
+              
+              <li class="logout-item">
+                <a href="loginpage" onclick="confirmLogout(event)">
+                  <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+              </li>
+            </ul>
+            
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+              @csrf
+            </form>
+          </div>
         </div>
       </div>
-    </div>
-    <hr>
-
-    <div class="profile-button-container">
-    @php
-        // LOGIC: Check kung may laman ang 'sk_role' column.
-        $isSkOfficial = !empty(Auth::user()->sk_role) || Auth::user()->role === 'sk_chairperson';
-    @endphp
-
-    @if($isSkOfficial)
-        <a href="{{ route('sk.role.view') }}" class="profile-sk-button">
-            Switch to SK Role
-        </a>
-    @else
-        <a href="#" class="profile-sk-button" id="accessSKRoleBtn" data-url="{{ route('sk.request.access') }}">
-            Access SK role
-        </a>
-    @endif
-  </div>
-
-    <ul class="profile-menu">
-      <li>
-        <a href="{{ route('profilepage') }}">
-          <i class="fas fa-user"></i> Profile
-        </a>
-      </li>
-      
-      <li>
-        <a href="{{ route('faqspage') }}">
-          <i class="fas fa-question-circle"></i> FAQs
-        </a>
-      </li>
-
-      <li>
-        <a href="#" id="openFeedbackBtn">
-          <i class="fas fa-star"></i> Send Feedback to Katibayan
-        </a>
-      </li>
-      
-      <li class="logout-item">
-        <a href="loginpage" onclick="confirmLogout(event)">
-          <i class="fas fa-sign-out-alt"></i> Logout
-        </a>
-      </li>
-    </ul>
-    
-    <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-      @csrf
-    </form>
-  </div>
-</div>
     </header>
 
+    <!-- SK Access Modal -->
+    <div id="skAccessModal" class="modal-overlay" style="display: none;">
+      <div class="sk-modal-box"> 
+        <div class="modal-step active" data-step="1">
+          <h2>Do you want to request access?</h2>
+          <p>This will send a request to your SK Chairperson for permission to access your SK role. Would you like to proceed?</p>
+          
+          <div class="modal-actions" style="justify-content: flex-end;">
+            <button type="button" class="btn btn-cancel" data-action="close">Cancel</button>
+            <button type="button" class="btn btn-confirm" data-action="confirm-request">Yes</button>
+          </div>
+        </div>
 
-<div id="skAccessModal" class="modal-overlay" style="display: none;">
-  
-  <div class="sk-modal-box"> 
-    
-    <div class="modal-step active" data-step="1">
-      <h2>Do you want to request access?</h2>
-      <p>This will send a request to your SK Chairperson for permission to access your SK role. Would you like to proceed?</p>
-      
-      <div class="modal-actions" style="justify-content: flex-end;">
-        <button type="button" class="btn btn-cancel" data-action="close">Cancel</button>
-        <button type="button" class="btn btn-confirm" data-action="confirm-request">Yes</button>
-      </div>
-    </div>
+        <div class="modal-step" data-step="2">
+          <div class="spinner"></div>
+          <p>Please wait while we send your request to the SK Chairperson. This will just take a moment.</p>
+        </div>
 
-    <div class="modal-step" data-step="2">
-      <div class="spinner"></div>
-      <p>Please wait while we send your request to the SK Chairperson. This will just take a moment.</p>
-    </div>
+        <div class="modal-step" data-step="3">
+          <div class="modal-icon-wrapper success">
+            <i class="fas fa-check"></i>
+          </div>
+          <h2>Request Sent</h2>
+          <p>Thank you. Your request has been submitted. You will be notified once it is reviewed and approved.</p>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-confirm" data-action="close">OK</button>
+          </div>
+        </div>
 
-    <div class="modal-step" data-step="3">
-      <div class="modal-icon-wrapper success">
-        <i class="fas fa-check"></i>
-      </div>
-      <h2>Request Sent</h2>
-      <p>Thank you. Your request has been submitted. You will be notified once it is reviewed and approved.</p>
-      <div class="modal-actions">
-        <button type="button" class="btn btn-confirm" data-action="close">OK</button>
-      </div>
-    </div>
+        <div class="modal-step" data-step="4">
+          <div class="modal-icon-wrapper error">
+            <i class="fas fa-exclamation-triangle"></i> 
+          </div>
+          <h2>Something went wrong</h2>
+          <p>Please check your network and try again.</p>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-confirm" data-action="try-again">Try again</button>
+          </div>
+        </div>
+      </div> 
+    </div> 
 
-    <div class="modal-step" data-step="4">
-      <div class="modal-icon-wrapper error">
-        <i class="fas fa-exclamation-triangle"></i> 
-      </div>
-      <h2>Something went wrong</h2>
-      <p>Please check your network and try again.</p>
-      <div class="modal-actions">
-        <button type="button" class="btn btn-confirm" data-action="try-again">Try again</button>
-      </div>
-    </div>
-
-  </div> 
-</div> 
-
-<div id="setRoleModal" class="modal-overlay" style="display: none;">
-  <div class="set-role-modal-content">
-    
-    <h2>Choose your role as SK</h2>
-    
-    <form id="setRoleForm">
-      <div class="role-options-list">
+    <!-- Set Role Modal -->
+    <div id="setRoleModal" class="modal-overlay" style="display: none;">
+      <div class="set-role-modal-content">
+        <h2>Choose your role as SK</h2>
         
-        <label class="role-option">
-          <input type="radio" name="sk_role" value="Kagawad" checked>
-          <span class="radio-circle"></span>
-          <span class="role-name">Kagawad</span>
-        </label>
-        
-        <label class="role-option">
-          <input type="radio" name="sk_role" value="Secretary">
-          <span class="radio-circle"></span>
-          <span class="role-name">Secretary</span>
-        </label>
-        
-        <label class="role-option">
-          <input type="radio" name="sk_role" value="Treasurer">
-          <span class="radio-circle"></span>
-          <span class="role-name">Treasurer</span>
-        </label>
-
+        <form id="setRoleForm">
+          <div class="role-options-list">
+            <label class="role-option">
+              <input type="radio" name="sk_role" value="Kagawad" checked>
+              <span class="radio-circle"></span>
+              <span class="role-name">Kagawad</span>
+            </label>
+            
+            <label class="role-option">
+              <input type="radio" name="sk_role" value="Secretary">
+              <span class="radio-circle"></span>
+              <span class="role-name">Secretary</span>
+            </label>
+            
+            <label class="role-option">
+              <input type="radio" name="sk_role" value="Treasurer">
+              <span class="radio-circle"></span>
+              <span class="role-name">Treasurer</span>
+            </label>
+          </div>
+          
+          <div class="modal-actions">
+            <button type="submit" class="btn btn-confirm">Set Role</button>
+          </div>
+        </form>
       </div>
-      
-      <div class="modal-actions">
-        <button type="submit" class="btn btn-confirm">Set Role</button>
-      </div>
-    </form>
-  </div>
-</div>
-  
+    </div>
 
-
+    <!-- Feedback Modal -->
     <div id="feedbackModal" class="modal-overlay">
       <div class="modal-content">
         <span class="close-btn" id="closeModal">&times;</span>
@@ -438,6 +403,7 @@
       </div>
     </div>
 
+    <!-- Success Modal -->
     <div id="successModal" class="modal-overlay simple-alert-modal">
       <div class="modal-content">
         <div class="success-icon">
@@ -449,54 +415,142 @@
       </div>
     </div>
 
-    <!-- === Pages Container === -->
+    <!-- Dashboard Content -->
     <div id="dashboard-page" class="page active">
       <div class="row">
 
-        <!-- Welcome -->
         <section class="welcome">
           <div class="slides">
-            <!-- Slide 1: Welcome -->
-            <div class="slide">
-              <h2>Welcome, {{ $user->given_name }}!</h2>
-              <h3>Have a nice day!</h3><br>
-              <p>
-                <span>KatiBayan</span> provides a platform for the youth to stay updated on SK events 
-                and programs while fostering active participation in community development.
-              </p>
-            </div>
+            @foreach($sliderItems as $index => $item)
+              @if($item['type'] == 'welcome')
+                <!-- Welcome Slide -->
+                <div class="slide welcome-slide">
+                  <h2>Welcome, {{ $user->given_name }}!</h2>
+                  <h3>Have a nice day!</h3><br>
+                  <p>
+                    <span>KatiBayan</span> provides a platform for the youth to stay updated on SK events 
+                    and programs while fostering active participation in community development.
+                  </p>
+                </div>
+              
+              @elseif($item['type'] == 'no_events')
+                <!-- No Events Slide -->
+                <div class="slide no-events-slide">
+                  <i class="fas fa-calendar-times"></i>
+                  <h3>No Upcoming Activities</h3>
+                  <p>Check back later for new events and programs in your barangay!</p>
+                </div>
+              
+              @elseif($item['type'] == 'event')
+                <!-- Event Slide -->
+                @php
+                  $event = $item['data'];
+                  $eventDate = \Carbon\Carbon::parse($event['event_date']);
+                  $eventMonth = $eventDate->format('M');
+                  $eventDay = $eventDate->format('d');
+                  
+                  // Get image URL or use default
+                  $imageUrl = $event['image'] ? asset('storage/' . $event['image']) : asset('images/default-event.jpg');
+                  
+                  // Truncate description
+                  $description = $event['description'] ?? 'No description available.';
+                  if(strlen($description) > 100) {
+                    $description = substr($description, 0, 100) . '...';
+                  }
+                  
+                  // Format time
+                  $time = $event['event_time'] ? \Carbon\Carbon::parse($event['event_time'])->format('g:i A') : 'TBA';
+                @endphp
+                
+                <div class="slide event-slide">
+                  <div class="left">
+                    <div class="date">
+                      <span class="month">{{ $eventMonth }}</span>
+                      <span class="day">{{ $eventDay }}</span>
+                    </div>
+                    <div class="event-info">
+                      <span class="activity-type event">EVENT</span>
+                      <h4>{{ $event['title'] }}</h4>
+                      <div class="details">
+                        <i class="fas fa-clock"></i> {{ $time }}<br>
+                        <i class="fas fa-map-marker-alt"></i> {{ $event['location'] }}
+                      </div>
+                      <p class="description">{{ $description }}</p>
+                    </div>
+                  </div>
+                  <div class="event-banner" style="background-image: url('{{ $imageUrl }}');"></div>
+                </div>
+              
+              @elseif($item['type'] == 'program')
+                <!-- Program Slide -->
+                @php
+                  $program = $item['data'];
+                  $programDate = \Carbon\Carbon::parse($program['event_date']);
+                  $programMonth = $programDate->format('M');
+                  $programDay = $programDate->format('d');
+                  
+                  // Get image URL or use default
+                  $imageUrl = $program['display_image'] ? asset('storage/' . $program['display_image']) : asset('images/default-program.jpg');
+                  
+                  // Truncate description
+                  $description = $program['description'] ?? 'No description available.';
+                  if(strlen($description) > 100) {
+                    $description = substr($description, 0, 100) . '...';
+                  }
+                  
+                  // Format time
+                  $time = $program['event_time'] ? \Carbon\Carbon::parse($program['event_time'])->format('g:i A') : 'TBA';
+                  
+                  // Registration type
+                  $regType = $program['registration_type'] == 'create' ? 'Registration Open' : 'External Link';
+                @endphp
+                
+                <div class="slide event-slide">
+                  <div class="left">
+                    <div class="date">
+                      <span class="month">{{ $programMonth }}</span>
+                      <span class="day">{{ $programDay }}</span>
+                    </div>
+                    <div class="event-info">
+                      <span class="activity-type program">PROGRAM</span>
+                      <h4>{{ $program['title'] }}</h4>
+                      <div class="details">
+                        <i class="fas fa-clock"></i> {{ $time }}<br>
+                        <i class="fas fa-map-marker-alt"></i> {{ $program['location'] }}
+                      </div>
+                      <p class="description">{{ $description }}</p>
+                    </div>
+                  </div>
+                  <div class="event-banner" style="background-image: url('{{ $imageUrl }}');"></div>
+                </div>
+              @endif
+            @endforeach
 
-            <!-- Slide 2 -->
-            <div class="slide event">
-              <div class="date">
-                <span class="month">AUG</span>
-                <span class="day">22</span>
+            <!-- Fallback if somehow no slides exist -->
+            @if($sliderItems->count() == 0)
+              <div class="slide welcome-slide">
+                <h2>Welcome, {{ $user->given_name }}!</h2>
+                <h3>Have a nice day!</h3><br>
+                <p>
+                  <span>KatiBayan</span> provides a platform for the youth to stay updated on SK events 
+                  and programs while fostering active participation in community development.
+                </p>
               </div>
-              <div class="event-info">
-                <p><strong>UPCOMING!</strong> Anti-Rabies Vaccination</p>
-                <small>Please, Don't Forget to Participate</small>
-                <span class="desc">KatiBayan provides a platform for the youth to stay updated on SK events and 
-                  programs while fostering active participation in community development</span>
+              
+              <div class="slide no-events-slide">
+                <i class="fas fa-calendar-times"></i>
+                <h3>No Upcoming Activities</h3>
+                <p>Check back later for new events and programs in your barangay!</p>
               </div>
-              <div class="event-banner" style="background-image: url('images/vaccine.jpg');"></div>
-            </div>
-
-            <!-- Slide 3 -->
-            <div class="slide event">
-              <div class="date">
-                <span class="month">SEP</span>
-                <span class="day">10</span>
-              </div>
-              <div class="event-info">
-                <p><strong>LEADERSHIP TRAINING</strong></p>
-                <small>Boost your skills as a youth leader</small>
-                <span class="desc">Join our 2-day leadership bootcamp</span>
-              </div>
-              <div class="event-banner" style="background-image: url('images/team.jpg');"></div>
-            </div>
+            @endif
           </div>
+          
           <!-- Pagination dots -->
-          <div class="dots"></div>
+          <div class="dots">
+            @for($i = 0; $i < $sliderItems->count(); $i++)
+              <button class="{{ $i === 0 ? 'active' : '' }}"></button>
+            @endfor
+          </div>
         </section>
 
         <!-- Calendar -->
@@ -540,13 +594,13 @@
               <div class="card-content">
                 <div class="text">
                   <h4>Evaluation</h4>
-                <p>
-    @if($activitiesToEvaluate > 0)
-        You have {{ $activitiesToEvaluate }} {{ $activitiesToEvaluate == 1 ? 'activity' : 'activities' }} to evaluate.
-    @else
-        All evaluations completed!
-    @endif
-</p>
+                  <p>
+                    @if($activitiesToEvaluate > 0)
+                      You have {{ $activitiesToEvaluate }} {{ $activitiesToEvaluate == 1 ? 'activity' : 'activities' }} to evaluate.
+                    @else
+                      All evaluations completed!
+                    @endif
+                  </p>
                 </div>
                 <div class="icon">
                   <i data-lucide="thumbs-up"></i>
@@ -581,7 +635,6 @@
           <h3 class="events-title">Upcoming Events</h3>
           <div class="events">
             <div class="events-top">
-              <button class="events-menu">⋯</button>
             </div>
             <ul>
               @if($displayItems->count() > 0)
@@ -609,85 +662,76 @@
           </div>
         </div>
 
+        <!-- Announcements -->
         <div class="announcements-section">
-  <h3 class="announcements-title">Announcements</h3>
-  <div class="announcements" id="announcementsList"> {{-- Added ID --}}
+          <h3 class="announcements-title">Announcements</h3>
+          <div class="announcements" id="announcementsList">
+            @forelse ($announcements as $announcement)
+              @php
+                $isCertificateSchedule = optional($announcement)->type == 'certificate_schedule';
+                preg_match("/'([^']+)'/", optional($announcement)->message, $matches);
+                $eventTitleFromMessage = $matches[1] ?? null;
+                $announcementId = optional($announcement)->id;
+                $relatedEventId = null; 
+              @endphp
 
-    @forelse ($announcements as $announcement)
-      {{-- Check if this is a certificate schedule announcement --}}
-      @php
-        $isCertificateSchedule = optional($announcement)->type == 'certificate_schedule';
-        preg_match("/'([^']+)'/", optional($announcement)->message, $matches);
-        $eventTitleFromMessage = $matches[1] ?? null;
-        $announcementId = optional($announcement)->id;
-        $relatedEventId = null; 
-      @endphp
-
-      {{-- Add data attributes and a class to the card --}}
-      <div class="card {{ $isCertificateSchedule ? 'certificate-schedule-announcement' : '' }}"
-           @if($isCertificateSchedule && $announcementId)
-             data-announcement-id="{{ $announcementId }}"
-           @endif
-           style="{{ $isCertificateSchedule ? 'cursor: pointer;' : '' }}"
-           >
-        <div class="card-content">
-          <div class="icon">
-            @if($isCertificateSchedule)
-               <i class="fas fa-calendar-check" style="color: #FFCA3A;"></i>
-            @else
-               <i class="fas fa-info-circle"></i>
-            @endif
-          </div>
-          <div class="text">
-            <strong>{{ optional($announcement)->title }}</strong>
-            <p>{{ optional($announcement)->message }}</p>
-            <small style="color: #888; margin-top: 5px; display: block;">
-                 Posted: {{ optional($announcement)->created_at?->diffForHumans() ?? 'Just now' }}
-            </small>
+              <div class="card {{ $isCertificateSchedule ? 'certificate-schedule-announcement' : '' }}"
+                   @if($isCertificateSchedule && $announcementId)
+                     data-announcement-id="{{ $announcementId }}"
+                   @endif
+                   style="{{ $isCertificateSchedule ? 'cursor: pointer;' : '' }}">
+                <div class="card-content">
+                  <div class="icon">
+                    @if($isCertificateSchedule)
+                      <i class="fas fa-calendar-check" style="color: #FFCA3A;"></i>
+                    @else
+                      <i class="fas fa-info-circle"></i>
+                    @endif
+                  </div>
+                  <div class="text">
+                    <strong>{{ optional($announcement)->title }}</strong>
+                    <p>{{ optional($announcement)->message }}</p>
+                    <small style="color: #888; margin-top: 5px; display: block;">
+                      Posted: {{ optional($announcement)->created_at?->diffForHumans() ?? 'Just now' }}
+                    </small>
+                  </div>
+                </div>
+              </div>
+            
+            @empty
+              <div style="
+                display: flex;
+                flex-direction: column;
+                justify-content: center; 
+                align-items: center;     
+                height: 100%;            
+                min-height: 200px;       
+                padding: 20px;
+                color: #999;
+              ">
+                <i class="fas fa-bell-slash" style="
+                  font-size: 2.5rem; 
+                  color: #ccc; 
+                  margin-bottom: 15px;
+                "></i>
+                
+                <strong style="
+                  font-size: 1.1rem; 
+                  color: #888; 
+                  display: block; 
+                  margin-bottom: 5px;
+                  font-weight: 600;
+                ">
+                  No Announcements Yet
+                </strong>
+                
+                <p style="font-size: 0.9rem; margin: 0; color: #999;">
+                  Check back later for new updates.
+                </p>
+              </div>
+            @endforelse
           </div>
         </div>
-      </div>
-    
-    @empty
-
-      {{-- === ITO YUNG FIX (Naka-Gitna) === --}}
-      <div style="
-          display: flex;
-          flex-direction: column;
-          justify-content: center; 
-          align-items: center;     
-          height: 100%;            
-          min-height: 200px;       
-          padding: 20px;
-          color: #999;
-      ">
-        
-        <i class="fas fa-bell-slash" style="
-            font-size: 2.5rem; 
-            color: #ccc; 
-            margin-bottom: 15px;
-        "></i>
-        
-        <strong style="
-            font-size: 1.1rem; 
-            color: #888; 
-            display: block; 
-            margin-bottom: 5px;
-            font-weight: 600;
-        ">
-          No Announcements Yet
-        </strong>
-        
-        <p style="font-size: 0.9rem; margin: 0; color: #999;">
-          Check back later for new updates.
-        </p>
-      </div>
-      {{-- === END NG FIX === --}}
-
-    @endforelse
-
-  </div>
-</div>
 
         <!-- Suggestion Box -->
         <div class="suggestion-box">
@@ -757,42 +801,28 @@
   // CSRF Token for AJAX requests
   window.csrfToken = '{{ csrf_token() }}';
 
-  // ===================================================
-  // ✅ DINAGDAG: THEME TOGGLE HELPER FUNCTION
-  // ===================================================
-  /**
-   * Applies the dark or light theme based on the boolean parameter.
-   */
+  // Theme Toggle Function
   function applyTheme(isDark) {
     const body = document.body;
     const themeToggle = document.getElementById('themeToggle');
     
     body.classList.toggle('dark-mode', isDark);
     
-    // Piliin kung 'sun' o 'moon' icon ang ipapakita (Lucide icons)
     const icon = isDark ? 'sun' : 'moon';
 
     if (themeToggle) {
-      // Palitan ang icon sa loob ng button
       themeToggle.innerHTML = `<i data-lucide="${icon}"></i>`;
     }
 
-    // Re-initialize Lucide icons para mag-update ang icon
-    // Tiyakin na defined ang 'lucide' bago tawagin
     if (typeof lucide !== 'undefined') {
       lucide.createIcons();
     }
     
-    // Save theme to localStorage and update HTML attribute (data-theme)
     localStorage.setItem('theme', isDark ? 'dark' : 'light');
     document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
   }
-  // ===================================================
 
-  
-  /**
-   * Updates the time in the topbar.
-   */
+  // Update Time
   function updateTime() {
     const timeEl = document.querySelector(".time");
     if (!timeEl) return;
@@ -811,9 +841,7 @@
     timeEl.innerHTML = `${weekday}, ${month} ${day} ${hours}:${minutes} <span>${ampm}</span>`;
   }
 
-  /**
-   * Initializes sidebar toggle and profile submenu.
-   */
+  // Initialize Sidebar
   function initSidebar() {
     const menuToggle = document.querySelector('.menu-toggle');
     const sidebar = document.querySelector('.sidebar');
@@ -846,22 +874,17 @@
     }
   }
 
-  /**
-   * Initializes topbar dropdowns (notifications, profile)
-   * and handles global clicks to close them.
-   */
-  function initTopbar(openEvaluationModal) { // Tumatanggap ng function
-    // --- Time ---
+  // Initialize Topbar - UPDATED NOTIFICATION HANDLING
+  function initTopbar(openEvaluationModal) {
     updateTime();
     setInterval(updateTime, 60000);
 
-    // --- Elements ---
     const notifWrapper = document.querySelector(".notification-wrapper");
     const profileWrapper = document.querySelector(".profile-wrapper");
     const profileToggle = document.getElementById("profileToggle");
     const profileDropdown = profileWrapper?.querySelector(".profile-dropdown");
 
-    // --- Notifications Dropdown ---
+    // Notifications Dropdown
     if (notifWrapper) {
       const bell = notifWrapper.querySelector(".fa-bell");
       bell?.addEventListener("click", (e) => {
@@ -873,18 +896,23 @@
       const dropdown = notifWrapper.querySelector(".notif-dropdown");
       dropdown?.addEventListener("click", (e) => e.stopPropagation());
 
-      // Handle evaluation notification clicks for both events and programs
+      // Handle evaluation notification clicks - UPDATED
       notifWrapper.querySelectorAll('.notif-link[data-event-id], .notif-link[data-program-id]').forEach(notification => {
         notification.addEventListener('click', function(e) {
-          e.preventDefault(); // Pigilan 'yung default link behavior
+          // Don't prevent default for database notifications with data-id
+          if (this.hasAttribute('data-id')) {
+            return;
+          }
+          
+          e.preventDefault();
           const eventId = this.getAttribute('data-event-id');
           const programId = this.getAttribute('data-program-id');
 
           if (openEvaluationModal) {
             if (eventId) {
-              openEvaluationModal(eventId, 'event'); // Specify activity type
+              openEvaluationModal(eventId, 'event');
             } else if (programId) {
-              openEvaluationModal(programId, 'program'); // Specify activity type
+              openEvaluationModal(programId, 'program');
             }
           }
           notifWrapper.classList.remove('active');
@@ -892,7 +920,7 @@
       });
     }
 
-    // --- Profile Dropdown ---
+    // Profile Dropdown
     if (profileWrapper && profileToggle && profileDropdown) {
       profileToggle.addEventListener("click", (e) => {
         e.stopPropagation();
@@ -903,33 +931,26 @@
       profileDropdown.addEventListener("click", (e) => e.stopPropagation());
     }
 
-    // --- Global Click Listener for Topbar/Sidebar ---
-      document.addEventListener("click", (e) => {
-        const sidebar = document.querySelector('.sidebar');
-        const menuToggle = document.querySelector('.menu-toggle');
-        
-        // (FIX) Only run this sidebar logic on DESKTOP. 
-        // Mobile has its own listener in the other script tag.
-        if (window.innerWidth > 768 && sidebar && menuToggle && !sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
-          sidebar.classList.remove('open');
-          document.querySelector('.profile-item')?.classList.remove('open');
-        }
+    // Global Click Listener
+    document.addEventListener("click", (e) => {
+      const sidebar = document.querySelector('.sidebar');
+      const menuToggle = document.querySelector('.menu-toggle');
+      
+      if (window.innerWidth > 768 && sidebar && menuToggle && !sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+        sidebar.classList.remove('open');
+        document.querySelector('.profile-item')?.classList.remove('open');
+      }
 
-        // Ito ay para sa profile at notif dropdowns (OK ito)
-        if (profileWrapper && !profileWrapper.contains(e.target)) {
-          profileWrapper.classList.remove('active');
-        }
-        if (notifWrapper && !notifWrapper.contains(e.target)) {
-          notifWrapper.classList.remove('active');
-        }
-      });
-
-
+      if (profileWrapper && !profileWrapper.contains(e.target)) {
+        profileWrapper.classList.remove('active');
+      }
+      if (notifWrapper && !notifWrapper.contains(e.target)) {
+        notifWrapper.classList.remove('active');
+      }
+    });
   }
 
-  /**
-   * Initializes the 7-day week calendar.
-   */
+  // Initialize Calendar
   function initCalendar() {
     const calendar = document.querySelector(".calendar");
     if (!calendar) return;
@@ -943,10 +964,9 @@
 
     const weekdays = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
     const holidays = [
-      // (Assuming 2024 for example, update this as needed)
-      "2024-01-01", "2024-04-09", "2024-04-10", "2024-05-01",
-      "2024-06-12", "2024-08-26", "2024-11-30", "2024-12-25",
-      "2024-12-30", "2024-12-31"
+      "2025-01-01", "2025-04-09", "2025-04-17", "2025-04-18", "2025-05-01",
+      "2025-06-06", "2025-06-12", "2025-08-25", "2025-11-30", "2025-12-25",
+      "2025-12-30"
     ];
     let today = new Date();
     let currentView = new Date();
@@ -1009,92 +1029,88 @@
       renderCalendar(currentView);
     });
   }
+/**
+ * Initializes the Welcome Slider / Carousel.
+ */
+function initWelcomeSlider() {
+  const welcomeSection = document.querySelector(".welcome");
+  if (!welcomeSection) return;
 
-  /**
-   * Initializes the Welcome Slider / Carousel.
-   */
-  function initWelcomeSlider() {
-    const welcomeSection = document.querySelector(".welcome");
-    if (!welcomeSection) return;
+  const slideTrack = welcomeSection.querySelector(".slides");
+  const slides = welcomeSection.querySelectorAll(".slide");
+  const dotsContainer = welcomeSection.querySelector(".dots");
 
-    const slideTrack = welcomeSection.querySelector(".slides");
-    const slides = welcomeSection.querySelectorAll(".slide");
-    const dotsContainer = welcomeSection.querySelector(".dots");
+  if (!slideTrack || slides.length === 0 || !dotsContainer) return;
 
-    if (!slideTrack || slides.length === 0 || !dotsContainer) return;
+  let currentIndex = 0;
+  let autoPlay;
+  const dots = [];
 
-    let currentIndex = 0;
-    let autoPlay;
-    const dots = [];
+  // FIRST: Clear any existing dots
+  dotsContainer.innerHTML = '';
 
-    slides.forEach((_, i) => {
-      const dot = document.createElement("button");
-      if (i === 0) dot.classList.add("active");
-      dot.addEventListener("click", () => {
-        currentIndex = i;
-        updateSlide();
-        restartAuto();
-      });
-      dotsContainer.appendChild(dot);
-      dots.push(dot);
-    });
-
-    function updateSlide() {
-      // (FIX) Recalculate width on update, important for resize
-      const containerWidth = welcomeSection.getBoundingClientRect().width;
-      if (containerWidth === 0) return; // Avoid error if hidden
-      slideTrack.style.transform = `translateX(-${currentIndex * containerWidth}px)`;
-
-      dots.forEach(dot => dot.classList.remove("active"));
-      if (dots[currentIndex]) dots[currentIndex].classList.add("active");
-    }
-
-    function nextSlide() {
-      currentIndex = (currentIndex + 1) % slides.length;
+  // Create dots ONLY for existing slides
+  for (let i = 0; i < slides.length; i++) {
+    const dot = document.createElement("button");
+    if (i === 0) dot.classList.add("active");
+    dot.addEventListener("click", () => {
+      currentIndex = i;
       updateSlide();
-    }
-
-    function startAuto() {
-      stopAuto();
-      autoPlay = setInterval(nextSlide, 4000);
-    }
-
-    function stopAuto() {
-      clearInterval(autoPlay);
-    }
-
-    function restartAuto() {
-      stopAuto();
-      startAuto();
-    }
-
-    updateSlide();
-    startAuto();
-
-    welcomeSection.addEventListener("mouseenter", stopAuto);
-    welcomeSection.addEventListener("mouseleave", startAuto);
-    window.addEventListener("resize", updateSlide);
+      restartAuto();
+    });
+    dotsContainer.appendChild(dot);
+    dots.push(dot);
   }
 
-  /**
-   * (FIXED STRUCTURE)
-   * Initializes the Activity Evaluation Modal.
-   * Returns the function to open the modal.
-   */
+  function updateSlide() {
+    // (FIX) Recalculate width on update, important for resize
+    const containerWidth = welcomeSection.getBoundingClientRect().width;
+    if (containerWidth === 0) return; // Avoid error if hidden
+    slideTrack.style.transform = `translateX(-${currentIndex * containerWidth}px)`;
+
+    dots.forEach(dot => dot.classList.remove("active"));
+    if (dots[currentIndex]) dots[currentIndex].classList.add("active");
+  }
+
+  function nextSlide() {
+    currentIndex = (currentIndex + 1) % slides.length;
+    updateSlide();
+  }
+
+  function startAuto() {
+    stopAuto();
+    autoPlay = setInterval(nextSlide, 4000);
+  }
+
+  function stopAuto() {
+    clearInterval(autoPlay);
+  }
+
+  function restartAuto() {
+    stopAuto();
+    startAuto();
+  }
+
+  updateSlide();
+  startAuto();
+
+  welcomeSection.addEventListener("mouseenter", stopAuto);
+  welcomeSection.addEventListener("mouseleave", startAuto);
+  window.addEventListener("resize", updateSlide);
+}
+
+  // Initialize Evaluation Modal
   function initEvaluationModal() {
     const evalModal = document.getElementById('evaluationModal');
 
-    // (FIX) Define the opener function here
     function openEvaluationModal(activityId, activityType = 'event') {
       if (!evalModal) {
         console.error("Evaluation modal not found in DOM.");
         return;
       }
 
-      // Determine the API endpoint based on activity type
       const apiUrl = activityType === 'event' ? `/events/${activityId}` : `/programs/${activityId}`;
 
-      // Fetch activity details
       fetch(apiUrl)
         .then(response => {
           if (!response.ok) throw new Error('Activity not found or server error');
@@ -1112,21 +1128,18 @@
         });
     }
 
-    // If modal doesn't exist, return a dummy function to avoid errors
     if (!evalModal) {
       return function() {
         console.warn("Tried to open evaluation modal, but it was not found.");
       };
     }
 
-    // --- Modal exists, proceed with setup ---
     const evalCloseIcon = evalModal.querySelector('.close');
     const evalCloseBtn = evalModal.querySelector('.close-btn');
     const evalSubmitBtn = evalModal.querySelector('.submit-evaluation-btn');
     const evalStars = evalModal.querySelectorAll('.star');
     const evalForm = document.getElementById('evaluationForm');
 
-    // Star rating logic
     evalStars.forEach(star => {
       star.addEventListener('click', function() {
         const rating = this.getAttribute('data-rating');
@@ -1138,24 +1151,20 @@
       });
     });
 
-    // Close modal function
     const closeModal = () => {
       evalModal.style.display = 'none';
-      // Reset form
       evalForm.reset();
       evalStars.forEach(s => s.classList.remove('active'));
     };
 
     evalCloseIcon?.addEventListener('click', closeModal);
     evalCloseBtn?.addEventListener('click', closeModal);
-    // Close on outside click
     evalModal.addEventListener('click', (e) => {
       if (e.target === evalModal) {
         closeModal();
       }
     });
 
-    // Submit evaluation logic
     evalSubmitBtn?.addEventListener('click', function() {
       const formData = new FormData(evalForm);
       const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
@@ -1165,7 +1174,6 @@
         return;
       }
 
-      // Determine which field to set based on activity type
       const activityType = formData.get('activity_type');
       if (activityType === 'event') {
         formData.set('event_id', formData.get('activity_id'));
@@ -1179,7 +1187,7 @@
             'X-CSRF-TOKEN': csrfToken,
             'Accept': 'application/json'
           },
-          body: formData // Send as FormData
+          body: formData
         })
         .then(response => {
           if (!response.ok) {
@@ -1193,9 +1201,8 @@
           if (data.success) {
             alert('Evaluation submitted successfully!');
             closeModal();
-            location.reload(); // Reload to update progress/notifications
+            location.reload();
           } else {
-            // Handle validation errors or other specific errors
             let errorMsg = data.message || 'Submission failed.';
             if (data.errors) {
               errorMsg += '\n' + Object.values(data.errors).join('\n');
@@ -1209,15 +1216,12 @@
         });
     });
 
-    // (FIX) Return the opener function
     return openEvaluationModal;
   }
 
-  /**
-   * Initializes the "Send Feedback" Modal.
-   */
+  // Initialize Feedback Modal
   function initFeedbackModal() {
-    const feedbackTriggerBtn = document.getElementById('openFeedbackBtn'); // "Send Feedback" item
+    const feedbackTriggerBtn = document.getElementById('openFeedbackBtn');
     const feedbackModal = document.getElementById('feedbackModal');
     if (!feedbackTriggerBtn || !feedbackModal) {
       console.warn("Feedback modal or trigger not found.");
@@ -1227,14 +1231,12 @@
     const feedbackCloseBtn = document.getElementById('closeModal');
     const feedbackStars = document.querySelectorAll('#starRating i');
     const feedbackRatingInput = document.getElementById('ratingInput');
-
     const feedbackForm = document.getElementById('feedbackForm');
     const submitBtn = feedbackForm?.querySelector('.submit-btn');
-
     const successModal = document.getElementById('successModal');
     const closeSuccessBtn = document.getElementById('closeSuccessModal');
 
-    // Custom Select Box Logic
+    // Custom Select Box
     const customSelect = document.getElementById('customSelect');
     if (customSelect) {
       const trigger = customSelect.querySelector('.custom-select-trigger');
@@ -1243,13 +1245,11 @@
       const options = customSelect.querySelectorAll('.custom-option');
       const realSelect = document.getElementById('type');
 
-      // Toggle dropdown
       trigger?.addEventListener('click', (e) => {
         e.stopPropagation();
         customSelect.classList.toggle('open');
       });
 
-      // Handle option click
       options?.forEach(option => {
         option.addEventListener('click', () => {
           const value = option.getAttribute('data-value');
@@ -1263,24 +1263,20 @@
         });
       });
 
-      // Close custom select on outside click
       document.addEventListener('click', () => {
         customSelect.classList.remove('open');
       });
     }
 
-    // Open modal
     feedbackTriggerBtn.addEventListener('click', (e) => {
-      e.preventDefault(); // Prevent link from navigating
+      e.preventDefault();
       feedbackModal.style.display = 'flex';
     });
 
-    // Close modal
     feedbackCloseBtn?.addEventListener('click', () => {
       feedbackModal.style.display = 'none';
     });
 
-    // Close when clicking outside
     window.addEventListener('click', (e) => {
       if (e.target === feedbackModal) {
         feedbackModal.style.display = 'none';
@@ -1290,7 +1286,6 @@
       }
     });
 
-    // Star rating system
     feedbackStars.forEach(star => {
       star.addEventListener('click', () => {
         const rating = star.getAttribute('data-value');
@@ -1307,7 +1302,6 @@
       });
     });
 
-    // AJAX Form Submission
     if (feedbackForm) {
       feedbackForm.addEventListener('submit', function(e) {
         e.preventDefault();
@@ -1328,13 +1322,12 @@
             },
             body: formData
           })
-          .then(response => response.json()) // Assume it always returns JSON
+          .then(response => response.json())
           .then(data => {
             if (data.success) {
               feedbackModal.style.display = 'none';
               if (successModal) successModal.style.display = 'flex';
             } else {
-              // Handle validation errors or other errors
               let errorMsg = data.message || 'Submission failed.';
               if (data.errors) {
                 errorMsg += '\n' + Object.values(data.errors).join('\n');
@@ -1347,7 +1340,6 @@
             alert(error.message || 'An error occurred. Please try again.');
           })
           .finally(() => {
-            // Reset form in finally block
             if (submitBtn) {
               submitBtn.disabled = false;
               submitBtn.textContent = submitButtonText;
@@ -1360,7 +1352,6 @@
             });
             if (feedbackRatingInput) feedbackRatingInput.value = '';
 
-            // Reset custom select
             const selectedText = document.getElementById('selectedFeedbackType');
             const trigger = customSelect?.querySelector('.custom-select-trigger');
             const realSelect = document.getElementById('type');
@@ -1371,12 +1362,12 @@
       });
     }
 
-    // Close success modal
     closeSuccessBtn?.addEventListener('click', () => {
       if (successModal) successModal.style.display = 'none';
     });
   }
 
+  // UPDATED: Mark as Read Function
   function initMarkAsRead() {
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
     if (!csrfToken) {
@@ -1384,37 +1375,37 @@
       return;
     }
 
-    // Select all notifications with a data-id attribute
+    // Handle database notifications (not evaluation notifications)
     document.querySelectorAll('.notif-link[data-id]').forEach(link => {
       link.addEventListener('click', function(e) {
+        // Don't prevent default for evaluation notifications
+        if (this.hasAttribute('data-event-id') || this.hasAttribute('data-program-id')) {
+          return;
+        }
+        
         e.preventDefault();
         const notifId = this.dataset.id;
         const destinationUrl = this.href;
 
-        // Remove notification visually
         const notifItem = this.closest('li');
         notifItem?.remove();
 
-        // Update notification count
         const countEl = document.querySelector('.notif-count');
         if (countEl) {
           let currentCount = parseInt(countEl.textContent) || 0;
           countEl.textContent = Math.max(0, currentCount - 1);
           if (parseInt(countEl.textContent) === 0) {
             countEl.remove();
-            // Optional: remove red dot on bell icon
             const bellDot = document.querySelector('.notif-dot');
             if (bellDot) bellDot.remove();
           }
         }
 
-        // If no notifications left, show "No new notifications"
         const notifList = document.querySelector('.notif-list');
         if (notifList && notifList.children.length === 0) {
           notifList.innerHTML = `<li class="no-notifications"><p>No new notifications</p></li>`;
         }
 
-        // Send AJAX request to mark as read
         fetch(`/notifications/${notifId}/read`, {
             method: 'POST',
             headers: {
@@ -1438,33 +1429,32 @@
           });
       });
     });
+
+    // Handle evaluation notification clicks (system-generated)
+    document.querySelectorAll('.notif-link[data-event-id], .notif-link[data-program-id]').forEach(link => {
+      link.addEventListener('click', function(e) {
+        // These should navigate directly to evaluation page
+        // No need for AJAX mark as read since they're system-generated
+        // and not stored in database notifications table
+      });
+    });
   }
 
-  /**
-   * Initializes Certificate Claim
-   * (BINAGO) - Inalis na ang modal. 
-   * Kapag cliniclick ang card, mag-mark as read at diretso redirect.
-   */
   function initCertificateModal() {
-
     const announcementCards = document.querySelectorAll('.certificate-schedule-announcement');
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     const redirectUrl = '{{ route('certificatepage') }}';
 
     announcementCards.forEach(card => {
       card.addEventListener('click', (event) => {
-        event.preventDefault(); // Para mapigilan ang default behavior
-
-        // Kunin 'yung ID para sa "mark as read"
+        event.preventDefault();
         const annId = card.dataset.announcementId;
 
         if (!annId) {
-          // Kung walang ID, i-redirect na lang
           window.location.href = redirectUrl;
           return;
         }
 
-        // 1. Mark as read (POST request)
         fetch(`/notifications/mark-as-read/${annId}`, {
             method: 'POST',
             headers: {
@@ -1477,270 +1467,228 @@
           })
           .catch(error => {
             console.error('Error marking notification as read:', error);
-            // Kahit mag-error sa pag-mark as read, i-redirect pa rin
           })
           .finally(() => {
-            // 2. Redirect
             window.location.href = redirectUrl;
           });
       });
     });
   }
 
-  /**
-   * Handles logout confirmation.
-   * This is called directly from the HTML's onclick attribute.
-   */
   function confirmLogout(event) {
-    event.preventDefault(); // Prevent the <a> tag's default action
+    event.preventDefault();
     if (confirm('Are you sure you want to logout?')) {
       document.getElementById('logout-form').submit();
     }
   }
 
-
-
-  // ==========================================================
-  //  APP INITIALIZATION (MAIN)
-  // ==========================================================
+  // Main Initialization
   document.addEventListener("DOMContentLoaded", () => {
-    // Initialize Lucide icons first
     lucide.createIcons();
 
-    // ===================================================
-    // ✅ DINAGDAG: THEME TOGGLE INITIALIZATION
-    // ===================================================
+    // Theme Toggle
     const body = document.body;
     const themeToggle = document.getElementById('themeToggle');
     
-    // 1. Load saved theme and apply it immediately
     const savedTheme = localStorage.getItem('theme') === 'dark';
-    applyTheme(savedTheme); 
+    applyTheme(savedTheme);
 
-    // 2. Add event listener to theme toggle
     if (themeToggle) {
       themeToggle.addEventListener('click', () => {
-        // Tiyakin na ang theme check ay base sa body class
-        const isDark = !body.classList.contains('dark-mode'); 
+        const isDark = !body.classList.contains('dark-mode');
         applyTheme(isDark);
       });
     }
-    // ===================================================
 
-
-    // Initialize all components
+    // Initialize Components
     initSidebar();
-
-    // (FIX) Kunin 'yung function na nireturn ng initEvaluationModal()
     const openEvalModalFn = initEvaluationModal();
-
-    // Ipasa 'yung function sa initTopbar()
     initTopbar(openEvalModalFn);
-
-    initCalendar(); // <-- Ito 'yung para sa calendar
+    initCalendar();
     initWelcomeSlider();
     initFeedbackModal();
     initMarkAsRead();
     initCertificateModal();
-
   });
-</script>
+  </script>
 
-<script>
+  <script>
   const mobileBtn = document.getElementById('mobileMenuBtn');
   const sidebar = document.querySelector('.sidebar');
-  const mainContent = document.querySelector('.main'); // (BAGO)
+  const mainContent = document.querySelector('.main');
 
   mobileBtn?.addEventListener('click', (e) => {
-    e.stopPropagation(); // (BAGO)
+    e.stopPropagation();
     sidebar.classList.toggle('open');
-    document.body.classList.toggle('mobile-sidebar-active'); // (BAGO)
+    document.body.classList.toggle('mobile-sidebar-active');
   });
 
-  // Close sidebar when clicking outside (mobile only)
   document.addEventListener('click', (e) => {
     if (window.innerWidth <= 768 &&
-      sidebar.classList.contains('open') && // (BAGO) Check kung open
+      sidebar.classList.contains('open') &&
       !sidebar.contains(e.target) &&
       !mobileBtn.contains(e.target)) {
       
       sidebar.classList.remove('open');
-      document.body.classList.remove('mobile-sidebar-active'); // (BAGO)
+      document.body.classList.remove('mobile-sidebar-active');
     }
   });
-</script>
+  </script>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-
-    // ==========================================
-    // 1. ACCESS SK ROLE MODAL (REQUEST LOGIC)
-    // ==========================================
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // SK Access Modal
     const skModal = document.getElementById('skAccessModal');
     const openModalBtn = document.getElementById('accessSKRoleBtn');
 
-    // Helper: Show specific step
     function showModalStep(stepNumber) {
-        if (!skModal) return;
-        skModal.querySelectorAll('.modal-step').forEach(step => {
-            step.classList.remove('active');
-            step.style.display = 'none'; // Fallback
-        });
-        const activeStep = skModal.querySelector(`.modal-step[data-step="${stepNumber}"]`);
-        if (activeStep) {
-            activeStep.classList.add('active');
-            activeStep.style.display = 'block'; // Fallback
-        }
+      if (!skModal) return;
+      skModal.querySelectorAll('.modal-step').forEach(step => {
+        step.classList.remove('active');
+        step.style.display = 'none';
+      });
+      const activeStep = skModal.querySelector(`.modal-step[data-step="${stepNumber}"]`);
+      if (activeStep) {
+        activeStep.classList.add('active');
+        activeStep.style.display = 'block';
+      }
     }
 
-    // Helper: Close SK Modal
     function closeSkModal() {
-        if (skModal) skModal.style.display = 'none';
+      if (skModal) skModal.style.display = 'none';
     }
 
-    // Submit Request Logic
     async function handleSubmitRequest() {
-        console.log("Sending request to backend...");
-        showModalStep(2); // Loading
+      console.log("Sending request to backend...");
+      showModalStep(2);
 
-        const btn = document.getElementById('accessSKRoleBtn');
-        const skAccessUrl = btn?.dataset.url || '/sk/request-access'; // Fallback URL
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+      const btn = document.getElementById('accessSKRoleBtn');
+      const skAccessUrl = btn?.dataset.url || '/sk/request-access';
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
-        if (!csrfToken) {
-            console.error('CSRF Token is missing!');
-            showModalStep(4);
-            return;
+      if (!csrfToken) {
+        console.error('CSRF Token is missing!');
+        showModalStep(4);
+        return;
+      }
+
+      try {
+        const response = await fetch(skAccessUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({ _token: csrfToken })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          showModalStep(3);
+        } else {
+          console.error(data.message);
+          const errText = skModal.querySelector('.modal-step[data-step="4"] p');
+          if(errText) errText.textContent = data.message || 'Failed to submit request.';
+          showModalStep(4);
         }
-
-        try {
-            const response = await fetch(skAccessUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({ _token: csrfToken })
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                showModalStep(3); // Success
-            } else {
-                console.error(data.message);
-                const errText = skModal.querySelector('.modal-step[data-step="4"] p');
-                if(errText) errText.textContent = data.message || 'Failed to submit request.';
-                showModalStep(4);
-            }
-        } catch (error) {
-            console.error('Fetch error:', error);
-            showModalStep(4);
-        }
+      } catch (error) {
+        console.error('Fetch error:', error);
+        showModalStep(4);
+      }
     }
 
-    // Event Listeners: Open Request Modal
     if (openModalBtn) {
-        openModalBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            showModalStep(1);
-            skModal.style.display = 'flex';
-        });
+      openModalBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        showModalStep(1);
+        skModal.style.display = 'flex';
+      });
     }
 
-    // Event Listeners: Modal Buttons
     if (skModal) {
-        skModal.addEventListener('click', function(e) {
-            const action = e.target.dataset.action;
-            if (!action) return;
+      skModal.addEventListener('click', function(e) {
+        const action = e.target.dataset.action;
+        if (!action) return;
 
-            switch (action) {
-                case 'close':
-                    closeSkModal();
-                    break;
-                case 'confirm-request':
-                    handleSubmitRequest();
-                    break;
-                case 'try-again':
-                    handleSubmitRequest();
-                    break;
-            }
-        });
+        switch (action) {
+          case 'close':
+            closeSkModal();
+            break;
+          case 'confirm-request':
+            handleSubmitRequest();
+            break;
+          case 'try-again':
+            handleSubmitRequest();
+            break;
+        }
+      });
     }
 
-
-    // ==========================================
-    // 2. SET ROLE MODAL LOGIC (New Addition)
-    // ==========================================
+    // Set Role Modal
     const setRoleModal = document.getElementById('setRoleModal');
     const setRoleForm = document.getElementById('setRoleForm');
 
-    // Make this GLOBAL so the notification onClick can call it
     window.openSetRoleModal = function() {
-        if (setRoleModal) {
-            setRoleModal.style.display = 'flex';
-            console.log('Opening Set Role Modal...');
-        } else {
-            console.error('Error: Cannot find modal with id "setRoleModal"');
-        }
+      if (setRoleModal) {
+        setRoleModal.style.display = 'flex';
+        console.log('Opening Set Role Modal...');
+      } else {
+        console.error('Error: Cannot find modal with id "setRoleModal"');
+      }
     };
 
-    // Close Set Role Modal on outside click
     window.addEventListener('click', function(e) {
-        if (e.target === setRoleModal) {
-            setRoleModal.style.display = 'none';
-        }
+      if (e.target === setRoleModal) {
+        setRoleModal.style.display = 'none';
+      }
     });
 
-    // Handle Form Submit (Set Role)
     if (setRoleForm) {
-        setRoleForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
+      setRoleForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
 
-            const btn = setRoleForm.querySelector('button[type="submit"]');
-            const originalText = btn.textContent;
-            
-            // UI Feedback
-            btn.textContent = "Saving...";
-            btn.disabled = true;
+        const btn = setRoleForm.querySelector('button[type="submit"]');
+        const originalText = btn.textContent;
+        
+        btn.textContent = "Saving...";
+        btn.disabled = true;
 
-            const formData = new FormData(setRoleForm);
-            const selectedRole = formData.get('sk_role');
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        const formData = new FormData(setRoleForm);
+        const selectedRole = formData.get('sk_role');
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
-            try {
-                // FIXED URL: Matches your web.php route '/sk/set-role'
-                const response = await fetch('/sk/set-role', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken,
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({ role: selectedRole })
-                });
+        try {
+          const response = await fetch('/sk/set-role', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-TOKEN': csrfToken,
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify({ role: selectedRole })
+          });
 
-                const data = await response.json();
+          const data = await response.json();
 
-                if (response.ok) {
-                    alert('Role set successfully! Redirecting...');
-                    window.location.reload(); // Reloads page to update Button to "Enter SK Dashboard"
-                } else {
-                    alert(data.message || 'Failed to set role.');
-                    btn.textContent = originalText;
-                    btn.disabled = false;
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Something went wrong. Please try again.');
-                btn.textContent = originalText;
-                btn.disabled = false;
-            }
-        });
+          if (response.ok) {
+            alert('Role set successfully! Redirecting...');
+            window.location.reload();
+          } else {
+            alert(data.message || 'Failed to set role.');
+            btn.textContent = originalText;
+            btn.disabled = false;
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          alert('Something went wrong. Please try again.');
+          btn.textContent = originalText;
+          btn.disabled = false;
+        }
+      });
     }
-
-});
-</script>
+  });
+  </script>
 </body>
 </html>

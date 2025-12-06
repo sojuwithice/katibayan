@@ -6,6 +6,7 @@ use App\Models\Event;
 use App\Models\Program;
 use App\Models\Attendance;
 use App\Models\Evaluation;
+use App\Models\Notification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,9 +24,8 @@ class EventController extends Controller
     public function index(): View
     {
         try {
-            $user = Auth::user(); // Get the authenticated user
+            $user = Auth::user();
             
-            // Get events from the SAME BARANGAY as the SK user
             $events = Event::where('barangay_id', $user->barangay_id)
                 ->orderBy('event_date', 'asc')
                 ->orderBy('event_time', 'asc')
@@ -33,23 +33,17 @@ class EventController extends Controller
 
             Log::info('Total events found for barangay ' . $user->barangay_id . ': ' . $events->count());
 
-            foreach ($events as $event) {
-                Log::info("Event: {$event->id} - {$event->title} - {$event->event_date} - {$event->event_time} - Status: {$event->status} - Barangay: {$event->barangay_id}");
-            }
-
             $groupedEvents = $events->groupBy(function($event) {
                 return Carbon::parse($event->event_date)->format('F Y');
             });
 
-            $today = Carbon::today(); // Keep as Carbon object
+            $today = Carbon::today();
             $todayEvents = $events->filter(function($event) use ($today) {
                 return Carbon::parse($event->event_date)->isSameDay($today);
             });
 
             Log::info('Today events count: ' . $todayEvents->count());
-            Log::info('Grouped events months: ' . implode(', ', $groupedEvents->keys()->toArray()));
 
-            // Calculate role badge and age for the user
             $roleBadge = $user && $user->role ? strtoupper($user->role) . '-Member' : 'GUEST';
             $age = $user && $user->date_of_birth 
                 ? Carbon::parse($user->date_of_birth)->age 
@@ -84,22 +78,19 @@ class EventController extends Controller
     /**
      * Show the form for creating a new event.
      */
-     public function create(): View|RedirectResponse
-{
-    $user = Auth::user();
-    
-    if (!$user) {
-        return redirect()->route('login');
+    public function create(): View|RedirectResponse
+    {
+        $user = Auth::user();
+        
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        $age = $user->date_of_birth ? Carbon::parse($user->date_of_birth)->age : 'N/A';
+        $roleBadge = $user->role === 'sk' ? 'SK Member' : 'KK Member';
+
+        return view('create-event', compact('user', 'age', 'roleBadge'));
     }
-
-    // Calculate age from date_of_birth
-    $age = $user->date_of_birth ? Carbon::parse($user->date_of_birth)->age : 'N/A';
-
-    // Determine role badge based on actual enum values
-    $roleBadge = $user->role === 'sk' ? 'SK Member' : 'KK Member';
-
-    return view('create-event', compact('user', 'age', 'roleBadge'));
-}
 
     /**
      * Display the specified event.
@@ -108,11 +99,9 @@ class EventController extends Controller
     {
         try {
             $user = Auth::user();
-            // Convert to integer to ensure type consistency
             $eventId = (int)$id;
             Log::info("Fetching event with ID: {$eventId} for barangay: {$user->barangay_id}");
 
-            // Only show events from the same barangay
             $event = Event::where('id', $eventId)
                         ->where('barangay_id', $user->barangay_id)
                         ->first();
@@ -124,7 +113,6 @@ class EventController extends Controller
 
             Log::info("Event found: {$event->title}");
 
-            // Build response data safely
             $responseData = [
                 'id' => $event->id,
                 'title' => $event->title,
@@ -140,10 +128,8 @@ class EventController extends Controller
                 'barangay_id' => $event->barangay_id,
             ];
 
-            // Safely handle image URL
             if ($event->image) {
                 try {
-                    // Check if file exists in storage
                     if (Storage::disk('public')->exists($event->image)) {
                         $responseData['image'] = asset('storage/' . $event->image);
                     } else {
@@ -159,13 +145,11 @@ class EventController extends Controller
                 $responseData['image'] = null;
             }
 
-            // Safely handle event_date_time
             try {
                 if ($event->event_date && $event->event_time) {
                     $formattedDate = Carbon::parse($event->event_date)->format('F j, Y');
                     $formattedTime = $event->event_time;
                     
-                    // Convert time to 12-hour format if needed
                     if (preg_match('/^\d{2}:\d{2}:\d{2}$/', $event->event_time)) {
                         $formattedTime = Carbon::createFromFormat('H:i:s', $event->event_time)->format('h:i A');
                     } elseif (preg_match('/^\d{2}:\d{2}$/', $event->event_time)) {
@@ -249,10 +233,8 @@ class EventController extends Controller
     {
         try {
             $user = Auth::user();
-            // Convert to integer to ensure type consistency
             $eventId = (int)$id;
             
-            // Only allow launching events from the same barangay
             $event = Event::where('id', $eventId)
                         ->where('barangay_id', $user->barangay_id)
                         ->first();
@@ -281,12 +263,9 @@ class EventController extends Controller
     {
         try {
             $user = Auth::user();
-            // Convert to integer to ensure type consistency
             $eventId = (int)$id;
             Log::info("Generating passcode for event ID: {$eventId} for barangay: {$user->barangay_id}");
-            Log::info("Request data: ", $request->all());
 
-            // Only allow generating passcode for events from the same barangay
             $event = Event::where('id', $eventId)
                         ->where('barangay_id', $user->barangay_id)
                         ->first();
@@ -302,7 +281,6 @@ class EventController extends Controller
             $passcode = $request->passcode ?? $this->generateRandomPasscode();
             Log::info("Generated passcode: {$passcode}");
 
-            // Update the event with passcode
             $event->passcode = $passcode;
             $event->save();
 
@@ -315,7 +293,6 @@ class EventController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Error generating passcode: ' . $e->getMessage());
-            Log::error('Stack trace: ' . $e->getTraceAsString());
             return response()->json([
                 'success' => false, 
                 'error' => 'Failed to generate passcode: ' . $e->getMessage()
@@ -330,10 +307,8 @@ class EventController extends Controller
     {
         try {
             $user = Auth::user();
-            // Convert to integer to ensure type consistency
             $eventId = (int)$id;
             
-            // Only allow deleting events from the same barangay
             $event = Event::where('id', $eventId)
                         ->where('barangay_id', $user->barangay_id)
                         ->first();
@@ -359,14 +334,28 @@ class EventController extends Controller
     /**
      * Display events page for regular users
      */
-    public function userEvents(): View
+    public function userEvents(): View|RedirectResponse
     {
         try {
             $user = Auth::user();
+            
+            // Check if user is authenticated
+            if (!$user) {
+                return redirect()->route('login')->with('error', 'Please login to view events.');
+            }
+
             $today = Carbon::today();
             $currentDateTime = Carbon::now();
 
             Log::info("Loading events for user ID: {$user->id}, Barangay ID: {$user->barangay_id}");
+
+            // === GET GENERAL NOTIFICATIONS (FIXED) ===
+            $generalNotifications = Notification::where('user_id', $user->id)
+                ->orderBy('created_at', 'desc')
+                ->limit(5)
+                ->get();
+            
+            $unreadNotificationCount = $generalNotifications->where('is_read', 0)->count();
 
             // Get LAUNCHED events from the SAME BARANGAY as the user
             $events = Event::where('is_launched', true)
@@ -410,7 +399,8 @@ class EventController extends Controller
             ->orderBy('event_date', 'desc')
             ->get();
 
-            $notificationCount = $unevaluatedEvents->count();
+            // Calculate total notification count (general + unevaluated events)
+            $notificationCount = $unreadNotificationCount + $unevaluatedEvents->count();
 
             // Filter upcoming events (considering date AND time) - only future launched events
             $upcomingEvents = $events->filter(function($event) use ($currentDateTime) {
@@ -462,53 +452,21 @@ class EventController extends Controller
                 return $programDateTime->gt($currentDateTime);
             });
 
-            // Compute role badge & age
+            // Compute role badge & age - with null checks
             $roleBadge = $user && $user->role ? strtoupper($user->role) . '-Member' : 'GUEST';
             $age = $user && $user->date_of_birth 
                 ? Carbon::parse($user->date_of_birth)->age 
                 : 'N/A';
 
-            // Debug logging - VERY DETAILED
+            // Debug logging
             Log::info("=== EVENT DEBUG INFO ===");
+            Log::info("User ID: " . $user->id);
             Log::info("User barangay_id: " . $user->barangay_id);
-            Log::info("Today's date: " . $today->format('Y-m-d'));
-            Log::info("Current datetime: " . $currentDateTime->format('Y-m-d H:i:s'));
-            Log::info("Total launched events found: " . $events->count());
-            Log::info("Total programs found: " . $programs->count());
-            Log::info("Today's events count: " . $todayEvents->count());
-            Log::info("Today's programs count: " . $todayPrograms->count());
-            Log::info("Upcoming events count: " . $upcomingEvents->count());
-            Log::info("Upcoming programs count: " . $upcomingPrograms->count());
-            Log::info("Unevaluated events count: " . $unevaluatedEvents->count());
-
-            // Log ALL events for debugging
-            foreach ($events as $event) {
-                $eventDate = Carbon::parse($event->event_date);
-                $isToday = $eventDate->isSameDay($today) ? 'YES' : 'NO';
-                $isLaunched = $event->is_launched ? 'YES' : 'NO';
-                
-                Log::info("Event: {$event->id} - '{$event->title}' - Date: {$eventDate->format('Y-m-d')} - Today: {$isToday} - Launched: {$isLaunched} - Barangay: {$event->barangay_id}");
-            }
-
-            // Log ALL programs for debugging
-            foreach ($programs as $program) {
-                $programDate = Carbon::parse($program->event_date);
-                $isToday = $programDate->isSameDay($today) ? 'YES' : 'NO';
-                
-                Log::info("Program: {$program->id} - '{$program->title}' - Date: {$programDate->format('Y-m-d')} - Today: {$isToday} - Barangay: {$program->barangay_id}");
-            }
-
-            // Log today's events specifically
-            foreach ($todayEvents as $event) {
-                $eventDate = Carbon::parse($event->event_date);
-                Log::info("TODAY'S EVENT: {$event->id} - '{$event->title}' - Date: {$eventDate->format('Y-m-d')} - Time: {$event->event_time}");
-            }
-
-            // Log today's programs specifically
-            foreach ($todayPrograms as $program) {
-                $programDate = Carbon::parse($program->event_date);
-                Log::info("TODAY'S PROGRAM: {$program->id} - '{$program->title}' - Date: {$programDate->format('Y-m-d')} - Time: {$program->event_time}");
-            }
+            Log::info("Total events: " . $events->count());
+            Log::info("Total programs: " . $programs->count());
+            Log::info("Today's events: " . $todayEvents->count());
+            Log::info("Today's programs: " . $todayPrograms->count());
+            Log::info("Notification count: " . $notificationCount);
 
             return view('eventpage', compact(
                 'events', 
@@ -521,6 +479,7 @@ class EventController extends Controller
                 'roleBadge', 
                 'age',
                 'unevaluatedEvents',
+                'generalNotifications',
                 'notificationCount',
                 'today',
                 'currentDateTime'
@@ -532,6 +491,12 @@ class EventController extends Controller
             // Provide default values for the missing variables
             $today = Carbon::today();
             $currentDateTime = Carbon::now();
+            $user = Auth::user();
+
+            // If user is not authenticated, redirect to login
+            if (!$user) {
+                return redirect()->route('login')->with('error', 'Please login to view events.');
+            }
 
             return view('eventpage', [
                 'events' => collect(),
@@ -540,10 +505,11 @@ class EventController extends Controller
                 'todayPrograms' => collect(),
                 'upcomingEvents' => collect(),
                 'upcomingPrograms' => collect(),
-                'user' => Auth::user(),
-                'roleBadge' => 'GUEST',
-                'age' => 'N/A',
+                'user' => $user,
+                'roleBadge' => $user ? (strtoupper($user->role) . '-Member') : 'GUEST',
+                'age' => $user && $user->date_of_birth ? Carbon::parse($user->date_of_birth)->age : 'N/A',
                 'unevaluatedEvents' => collect(),
+                'generalNotifications' => collect(),
                 'notificationCount' => 0,
                 'today' => $today,
                 'currentDateTime' => $currentDateTime
@@ -589,7 +555,6 @@ class EventController extends Controller
             $user = Auth::user();
             $eventId = (int)$id;
             
-            // Only allow QR generation for events from the same barangay
             $event = Event::where('id', $eventId)
                         ->where('barangay_id', $user->barangay_id)
                         ->first();
@@ -598,13 +563,11 @@ class EventController extends Controller
                 return response()->json(['success' => false, 'error' => 'Event not found'], 404);
             }
 
-            // Generate passcode if not exists
             if (!$event->passcode) {
                 $event->passcode = $this->generateRandomPasscode();
                 $event->save();
             }
 
-            // QR code data - this will be scanned and sent to attendance endpoint
             $qrData = json_encode([
                 'event_id' => $event->id,
                 'passcode' => $event->passcode,
@@ -637,7 +600,6 @@ class EventController extends Controller
 
             Log::info("Getting attended events for user: {$user->id}");
 
-            // Get events that user has attended but not yet evaluated (same barangay)
             $attendedEvents = Event::whereHas('attendances', function($query) use ($user) {
                 $query->where('user_id', $user->id)
                       ->whereNotNull('attended_at');
@@ -653,14 +615,8 @@ class EventController extends Controller
             ->orderBy('event_date', 'desc')
             ->get();
 
-            Log::info("Found {$attendedEvents->count()} attended events for user {$user->id} in barangay {$user->barangay_id}");
+            Log::info("Found {$attendedEvents->count()} attended events for user {$user->id}");
 
-            // Debug: Log each attended event
-            foreach ($attendedEvents as $event) {
-                Log::info("Attended event: {$event->id} - {$event->title} - {$event->event_date} - Barangay: {$event->barangay_id}");
-            }
-
-            // Compute role badge & age
             $roleBadge = $user && $user->role ? strtoupper($user->role) . '-Member' : 'GUEST';
             $age = $user && $user->date_of_birth 
                 ? Carbon::parse($user->date_of_birth)->age 
@@ -689,7 +645,6 @@ class EventController extends Controller
     {
         $event = Event::findOrFail($id);
 
-        // Get event title and passcode - FIXED: use 'title' instead of 'event_title'
         $title = $event->title ?? 'Untitled Event';
         $passcode = $event->passcode ?? 'N/A';
 
@@ -710,7 +665,6 @@ class EventController extends Controller
             $programId = (int)$id;
             Log::info("Fetching program with ID: {$programId} for barangay: {$user->barangay_id}");
 
-            // Only show programs from the same barangay
             $program = Program::where('id', $programId)
                         ->where('barangay_id', $user->barangay_id)
                         ->first();
@@ -722,7 +676,6 @@ class EventController extends Controller
 
             Log::info("Program found: {$program->title}");
 
-            // Build response data safely
             $responseData = [
                 'id' => $program->id,
                 'title' => $program->title,
@@ -738,10 +691,8 @@ class EventController extends Controller
                 'barangay_id' => $program->barangay_id,
             ];
 
-            // Safely handle display_image URL
             if ($program->display_image) {
                 try {
-                    // Check if file exists in storage
                     if (Storage::disk('public')->exists($program->display_image)) {
                         $responseData['display_image'] = asset('storage/' . $program->display_image);
                     } else {
@@ -772,110 +723,102 @@ class EventController extends Controller
     }
 
     /**
- * Show the form for editing the specified event.
- */
-public function edit($id): View|RedirectResponse
-{
-    try {
-        $user = Auth::user();
-        
-        if (!$user) {
-            return redirect()->route('login');
-        }
-
-        // Convert to integer to ensure type consistency
-        $eventId = (int)$id;
-        
-        // Only allow editing events from the same barangay
-        $event = Event::where('id', $eventId)
-                    ->where('barangay_id', $user->barangay_id)
-                    ->first();
-        
-        if (!$event) {
-            Log::warning("Event not found for editing with ID: {$eventId} for barangay: {$user->barangay_id}");
-            return redirect()->route('sk-eventpage')->with('error', 'Event not found.');
-        }
-
-        // Calculate role badge and age for the user
-        $roleBadge = $user && $user->role ? strtoupper($user->role) . '-Member' : 'GUEST';
-        $age = $user && $user->date_of_birth 
-            ? Carbon::parse($user->date_of_birth)->age 
-            : 'N/A';
-
-        return view('edit-event', compact('event', 'user', 'roleBadge', 'age'));
-
-    } catch (\Exception $e) {
-        Log::error('Error loading edit event form: ' . $e->getMessage());
-        return redirect()->route('sk-eventpage')->with('error', 'Error loading edit form.');
-    }
-}
-
-/**
- * Update the specified event in storage.
- */
-public function update(Request $request, $id): RedirectResponse
-{
-    try {
-        $user = Auth::user();
-        
-        if (!$user) {
-            return redirect()->route('login');
-        }
-
-        // Convert to integer to ensure type consistency
-        $eventId = (int)$id;
-        
-        // Only allow updating events from the same barangay
-        $event = Event::where('id', $eventId)
-                    ->where('barangay_id', $user->barangay_id)
-                    ->first();
-        
-        if (!$event) {
-            Log::warning("Event not found for updating with ID: {$eventId} for barangay: {$user->barangay_id}");
-            return redirect()->route('sk-eventpage')->with('error', 'Event not found.');
-        }
-
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'event_date' => 'required|date',
-            'event_time' => 'required|string',
-            'location' => 'required|string|max:255',
-            'category' => 'required|string|max:255',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'published_by' => 'required|string|max:255',
-        ]);
-
-        Log::info('Updating event with data:', $validated);
-
-        // Handle image upload
-        if ($request->hasFile('image')) {
-            // Delete old image if exists
-            if ($event->image) {
-                Storage::disk('public')->delete($event->image);
+     * Show the form for editing the specified event.
+     */
+    public function edit($id): View|RedirectResponse
+    {
+        try {
+            $user = Auth::user();
+            
+            if (!$user) {
+                return redirect()->route('login');
             }
-            $validated['image'] = $request->file('image')->store('events', 'public');
+
+            $eventId = (int)$id;
+            
+            $event = Event::where('id', $eventId)
+                        ->where('barangay_id', $user->barangay_id)
+                        ->first();
+            
+            if (!$event) {
+                Log::warning("Event not found for editing with ID: {$eventId} for barangay: {$user->barangay_id}");
+                return redirect()->route('sk-eventpage')->with('error', 'Event not found.');
+            }
+
+            $roleBadge = $user && $user->role ? strtoupper($user->role) . '-Member' : 'GUEST';
+            $age = $user && $user->date_of_birth 
+                ? Carbon::parse($user->date_of_birth)->age 
+                : 'N/A';
+
+            return view('edit-event', compact('event', 'user', 'roleBadge', 'age'));
+
+        } catch (\Exception $e) {
+            Log::error('Error loading edit event form: ' . $e->getMessage());
+            return redirect()->route('sk-eventpage')->with('error', 'Error loading edit form.');
         }
-
-        // Update event data
-        $event->update([
-            'title' => $validated['title'],
-            'description' => $validated['description'] ?? null,
-            'event_date' => $validated['event_date'],
-            'event_time' => $validated['event_time'],
-            'location' => $validated['location'],
-            'category' => $validated['category'],
-            'published_by' => $validated['published_by'],
-            'image' => $validated['image'] ?? $event->image, // Keep existing image if not updated
-        ]);
-
-        Log::info('Event updated successfully with ID: ' . $event->id . ' for barangay: ' . $user->barangay_id);
-
-        return redirect()->route('sk-eventpage')->with('success', 'Event updated successfully!');
-
-    } catch (\Exception $e) {
-        Log::error('Error updating event: ' . $e->getMessage());
-        return back()->withInput()->with('error', 'Error updating event: ' . $e->getMessage());
     }
-}
+
+    /**
+     * Update the specified event in storage.
+     */
+    public function update(Request $request, $id): RedirectResponse
+    {
+        try {
+            $user = Auth::user();
+            
+            if (!$user) {
+                return redirect()->route('login');
+            }
+
+            $eventId = (int)$id;
+            
+            $event = Event::where('id', $eventId)
+                        ->where('barangay_id', $user->barangay_id)
+                        ->first();
+            
+            if (!$event) {
+                Log::warning("Event not found for updating with ID: {$eventId} for barangay: {$user->barangay_id}");
+                return redirect()->route('sk-eventpage')->with('error', 'Event not found.');
+            }
+
+            $validated = $request->validate([
+                'title' => 'required|string|max:255',
+                'description' => 'nullable|string',
+                'event_date' => 'required|date',
+                'event_time' => 'required|string',
+                'location' => 'required|string|max:255',
+                'category' => 'required|string|max:255',
+                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+                'published_by' => 'required|string|max:255',
+            ]);
+
+            Log::info('Updating event with data:', $validated);
+
+            if ($request->hasFile('image')) {
+                if ($event->image) {
+                    Storage::disk('public')->delete($event->image);
+                }
+                $validated['image'] = $request->file('image')->store('events', 'public');
+            }
+
+            $event->update([
+                'title' => $validated['title'],
+                'description' => $validated['description'] ?? null,
+                'event_date' => $validated['event_date'],
+                'event_time' => $validated['event_time'],
+                'location' => $validated['location'],
+                'category' => $validated['category'],
+                'published_by' => $validated['published_by'],
+                'image' => $validated['image'] ?? $event->image,
+            ]);
+
+            Log::info('Event updated successfully with ID: ' . $event->id . ' for barangay: ' . $user->barangay_id);
+
+            return redirect()->route('sk-eventpage')->with('success', 'Event updated successfully!');
+
+        } catch (\Exception $e) {
+            Log::error('Error updating event: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Error updating event: ' . $e->getMessage());
+        }
+    }
 }

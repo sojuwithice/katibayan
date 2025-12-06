@@ -45,6 +45,8 @@ use App\Models\Event;
 use App\Models\Program;
 use App\Http\Controllers\ReportController;
 
+use App\Http\Controllers\FAQController;
+
 Route::get('/', function () {
     return view('landingpage');
 });
@@ -82,16 +84,17 @@ Route::post('/events/{id}/generate-passcode', [EventController::class, 'generate
 Route::delete('/events/{id}', [EventController::class, 'destroy'])->name('events.destroy');
 Route::get('/eventpage', [EventController::class, 'userEvents'])->name('eventpage');
 
-// routes/web.php
-Route::get('/faqspage', function () {
-    return view('faqspage'); 
-})->name('faqspage');
+
+// FAQs Routes
+
+Route::get('/faqs', [FAQController::class, 'index'])->name('faqs');
+Route::get('/faqspage', [FAQController::class, 'index'])->name('faqspage');
+
 Route::get('/sk-analytics', [SKAnalyticsController::class, 'index'])->name('sk.analytics');
 
 // FIXED: Suggestion Box route - use controller instead of direct view
 Route::get('/suggestionbox', [SuggestionController::class, 'index'])->name('suggestionbox');
 
-Route::view('/attendance', 'attendancepage')->name('attendancepage');
 
 Route::get('/service-offers', [ServiceOffersController::class, 'index'])->name('serviceoffers');
 
@@ -382,7 +385,7 @@ Route::get('/attendance/records', [AttendanceController::class, 'getAllAttendanc
 
 Route::get('/attendance/records', [AttendanceController::class, 'getEventAttendances'])
     ->name('attendance.records');
-
+Route::get('/attendance', [AttendanceController::class, 'showAttendancePage'])->name('attendancepage');
 // List of Attendees Route
 Route::get('/list-of-attendees', [AttendanceController::class, 'showAttendees'])->name('attendees.index');
 
