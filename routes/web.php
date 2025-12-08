@@ -44,6 +44,7 @@ use App\Models\User;
 use App\Models\Event;   
 use App\Models\Program;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\OcrController;
 
 Route::get('/', function () {
     return view('landingpage');
@@ -596,3 +597,5 @@ Route::middleware(['auth:admin'])->group(function () {
     Route::put('/admin/system-feedbacks/{systemFeedback}/status', [SystemFeedbackController::class, 'updateStatus'])->name('admin.system-feedbacks.updateStatus');
     Route::get('/admin/system-feedbacks/stats', [SystemFeedbackController::class, 'getStats'])->name('admin.system-feedbacks.stats');
 });
+
+Route::post('/process-ocr', [OcrController::class, 'process']);
