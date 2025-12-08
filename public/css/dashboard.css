@@ -267,7 +267,7 @@ body {
 }
 
 .logo img {
-  height: 90px;         
+  height: 50px;         
   width: auto;
 }
 
@@ -275,6 +275,7 @@ body {
   display: flex;
   flex-direction: column;
   line-height: 1.2;
+  margin-left: 10px;
 }
 
 .logo-text .title {

@@ -247,7 +247,7 @@ body {
 }
 
 .logo img {
-  height: 90px;         
+  height: 50px;         
   width: auto;
 }
 
@@ -255,7 +255,9 @@ body {
   display: flex;
   flex-direction: column;
   line-height: 1.2;
+  margin-left: 10px;
 }
+
 
 .logo-text .title {
   font-size: 18px;
@@ -992,7 +994,7 @@ body.mobile-sidebar-active::before {
 .service-offer-container {
   max-width: 400px;   
   margin: 0 auto;
-  text-align: center;
+  text-align: left;
   margin-bottom: 2rem;
 }
 

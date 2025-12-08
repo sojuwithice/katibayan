@@ -13,7 +13,7 @@
     <div class="logo">
       <img src="{{ asset('images/KatiBayan-Logo_B.png') }}" alt="KatiBayan Logo" class="logo-img">
       <div class="logo-text">
-        <span><span class="blue">K</span>ati<span class="blue">B</span>ayan.</span>
+        <span>KatiBayan</span>
         <small>Katipunan ng Kabataan Web Portal</small>
       </div>
     </div>
@@ -301,43 +301,61 @@
     </div> 
   </section>
 
-  <!-- Footer Section -->
-  <footer class="footer">  
-    <div class="footer-container">
-      <div class="footer-contact">
-        <h3>CONTACT INFORMATION</h3>
-        <p>katibayan.system@gmail.com</p>
-      </div>
 
-      <!-- Quick Links -->
-      <div class="footer-links">
-        <h3>QUICK LINKS</h3>
-        <ul>
-          <li><a href="#home">Home</a></li>
-          <li><a href="#features">Main feature</a></li>
-          <li><a href="#faqs">Faqs</a></li>
-          <li><a href="#about">About us</a></li>
-        </ul>
-      </div>
-
-      <!-- Legal -->
-      <div class="footer-legal">
-        <h3>LEGAL</h3>
-        <ul>
-          <li><a href="#">Privacy Policy</a></li>
-          <li><a href="#">Terms and Conditions</a></li>
-        </ul>
+<!-- Footer Section -->
+<footer class="footer">  
+  <div class="footer-above"></div>
+  <div class="footer-container">
+    <!-- CONTACT INFORMATION -->
+    <div class="footer-contact">
+      <h3>CONTACT INFORMATION</h3>
+      <p>For inquiries or feedback, contact us via email.</p>
+      <!-- EMAIL + BUTTON INLINE -->
+      <div class="email-wrapper">
+        <div class="email-container">
+          <p class="email-text">katibayan.system@gmail.com </p>
+           <button id="emailBtn" class="email-btn">Send us email<i class="fa fa-paper-plane" aria-hidden="true"></i></button>
+        </div>
       </div>
     </div>
-
-    <!-- Bottom Bar -->
-    <div class="footer-bottom">
-      <p>© 2025 SK Barangay 3 | All Rights Reserved | Powered by KatiBayan</p>
+    <!-- QUICK LINKS -->
+    <div class="footer-links">
+      <h3>QUICK LINKS</h3>
+      <ul>
+        <li><a href="#home">Home</a></li>
+        <li><a href="#features">Main feature</a></li>
+        <li><a href="#faqs">Faqs</a></li>
+        <li><a href="#about">About us</a></li>
+      </ul>
     </div>
-  </footer>
+    <!-- LEGAL -->
+    <div class="footer-legal">
+      <h3>LEGAL</h3>
+      <ul>
+        <li><a href="#">Terms and Conditions</a></li>
+      </ul>
+    </div>
+     <div class="footer-legal">
+      <h3>USER GUIDE</h3>
+      <ul>
+     <li><a href="{{ route('user.guide') }}">Learn to Use</a></li>
+      </ul>
+    </div>
+  </div>
+  </div>
+  <!-- Bottom Bar -->
+  <div class="footer-bottom">
+    <p>© 2025 | All Rights Reserved | Powered by KatiBayan</p>
+  </div>
+</footer>
 
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>
+
+  document.getElementById("emailBtn").addEventListener("click", function() {
+    window.open("https://mail.google.com/mail/?view=cm&fs=1&to=katibayan.system@gmail.com", "_blank");
+  });
+
     // === NAVBAR TOGGLE ===
     const toggle = document.getElementById('menu-toggle');
     const navLinks = document.getElementById('nav-links');

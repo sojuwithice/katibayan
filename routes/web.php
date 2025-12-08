@@ -63,6 +63,14 @@ Route::get('/sk-role-view', function () {
     return view('/sk-role-view');
 });
 
+Route::get('/user-guide', function () {
+    return view('/user-guide');
+});
+
+Route::get('/terms-condition', function () {
+    return view('terms-condition');
+});
+
 // UPDATED: Certificate page route
 Route::get('/certificatepage', [EvaluationController::class, 'certificatePage'])->name('certificatepage');
 
@@ -162,6 +170,11 @@ Route::get('/sk-evaluation-feedback', function () {
 Route::get('/sk-eval-review', function () {
     return view('sk-eval-review');
 })->name('sk-eval-review');
+
+
+Route::get('/user-guide', function () {
+    return view('user-guide');
+})->name('user.guide');
 
 // CONTROLLER ROUTES
 

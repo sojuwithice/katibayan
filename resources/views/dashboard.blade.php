@@ -61,7 +61,7 @@
 </button>
 
       <div class="logo">
-        <img src="{{ asset('images/logo.png') }}" alt="Logo">
+        <img src="{{ asset('images/KatiBayan-Logo_B.png') }}" alt="Logo">
         <div class="logo-text">
           <span class="title">Katibayan</span>
           <span class="subtitle">Web Portal</span>
