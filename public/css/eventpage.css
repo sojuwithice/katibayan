@@ -4360,3 +4360,412 @@ body.mobile-sidebar-active::before {
 [data-theme="dark"] #allProgramsModal .modal-tab.active {
   color: #FB8500;
 }
+/* ================================================= */
+/* === CUSTOM MODAL STYLES FOR ALL POPUPS        === */
+/* ================================================= */
+
+/* Alert Modal */
+.alert-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.alert-modal-overlay.active {
+  display: flex;
+  opacity: 1;
+  animation: fadeInOverlay 0.3s ease;
+}
+
+.alert-modal-box {
+  background-color: var(--card-bg);
+  border-radius: 16px;
+  padding: 2.5rem;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  animation: modalSlideIn 0.3s ease;
+}
+
+.alert-modal-icon {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background-color: var(--primary-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem auto;
+}
+
+.alert-modal-icon i {
+  color: #fff;
+  font-size: 2rem;
+}
+
+.alert-modal-icon.warning {
+  background-color: #FFB703;
+}
+
+.alert-modal-icon.error {
+  background-color: #e74c3c;
+}
+
+.alert-modal-icon.info {
+  background-color: #3498db;
+}
+
+.alert-modal-icon.success {
+  background-color: #2ecc71;
+}
+
+.alert-modal-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-color);
+  margin-bottom: 0.8rem;
+}
+
+.alert-modal-message {
+  font-size: 1rem;
+  color: var(--text-color);
+  line-height: 1.5;
+  margin-bottom: 2rem;
+}
+
+.alert-modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.alert-modal-btn {
+  padding: 12px 28px;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  min-width: 100px;
+  transition: all 0.2s ease;
+}
+
+.alert-modal-btn.ok {
+  background-color: var(--primary-color);
+  color: #fff;
+}
+
+.alert-modal-btn.ok:hover {
+  background-color: #357abb;
+}
+
+.alert-modal-btn.cancel {
+  background-color: #f1f3f4;
+  color: var(--text-color);
+}
+
+.alert-modal-btn.cancel:hover {
+  background-color: #e8eaed;
+}
+
+.alert-modal-btn.confirm {
+  background-color: #2ecc71;
+  color: #fff;
+}
+
+.alert-modal-btn.confirm:hover {
+  background-color: #27ae60;
+}
+
+/* Confirmation Modal (Logout) */
+.confirmation-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.confirmation-modal-overlay.active {
+  display: flex;
+  opacity: 1;
+  animation: fadeInOverlay 0.3s ease;
+}
+
+.confirmation-modal-box {
+  background-color: var(--card-bg);
+  border-radius: 16px;
+  padding: 2.5rem;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  animation: modalSlideIn 0.3s ease;
+}
+
+.confirmation-modal-icon {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background-color: var(--primary-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem auto;
+}
+
+.confirmation-modal-icon i {
+  color: #fff;
+  font-size: 2rem;
+}
+
+.confirmation-modal-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-color);
+  margin-bottom: 0.8rem;
+}
+
+.confirmation-modal-message {
+  font-size: 1rem;
+  color: var(--text-color);
+  line-height: 1.5;
+  margin-bottom: 2rem;
+}
+
+.confirmation-modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.confirmation-modal-btn {
+  padding: 12px 28px;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  min-width: 100px;
+  transition: all 0.2s ease;
+}
+
+.confirmation-modal-btn.confirm {
+  background-color: var(--primary-color);
+  color: #fff;
+}
+
+.confirmation-modal-btn.confirm:hover {
+  background-color: #357abb;
+}
+
+.confirmation-modal-btn.cancel {
+  background-color: #f1f3f4;
+  color: var(--text-color);
+}
+
+.confirmation-modal-btn.cancel:hover {
+  background-color: #e8eaed;
+}
+
+/* Prompt Modal */
+.prompt-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.prompt-modal-overlay.active {
+  display: flex;
+  opacity: 1;
+  animation: fadeInOverlay 0.3s ease;
+}
+
+.prompt-modal-box {
+  background-color: var(--card-bg);
+  border-radius: 16px;
+  padding: 2.5rem;
+  width: 90%;
+  max-width: 450px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  animation: modalSlideIn 0.3s ease;
+}
+
+.prompt-modal-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-color);
+  margin-bottom: 1rem;
+}
+
+.prompt-modal-message {
+  font-size: 1rem;
+  color: var(--text-color);
+  line-height: 1.5;
+  margin-bottom: 1.5rem;
+}
+
+.prompt-modal-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #3C87C4;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: 'Montserrat', sans-serif;
+  background: var(--card-bg);
+  color: var(--text-color);
+  margin-bottom: 1.5rem;
+  box-sizing: border-box;
+}
+
+.prompt-modal-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+.prompt-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.prompt-modal-btn {
+  padding: 10px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  min-width: 100px;
+  transition: all 0.2s ease;
+}
+
+.prompt-modal-btn.ok {
+  background-color: var(--primary-color);
+  color: #fff;
+}
+
+.prompt-modal-btn.ok:hover {
+  background-color: #357abb;
+}
+
+.prompt-modal-btn.cancel {
+  background-color: #f1f3f4;
+  color: var(--text-color);
+}
+
+.prompt-modal-btn.cancel:hover {
+  background-color: #e8eaed;
+}
+
+/* Animations */
+@keyframes fadeInOverlay {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalSlideIn {
+  from { 
+    opacity: 0; 
+    transform: translateY(-30px) scale(0.95); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0) scale(1); 
+  }
+}
+
+/* Dark mode specific adjustments for new modals */
+[data-theme="dark"] .alert-modal-box,
+[data-theme="dark"] .confirmation-modal-box,
+[data-theme="dark"] .prompt-modal-box {
+  background-color: var(--card-bg);
+  color: var(--text-color);
+}
+
+[data-theme="dark"] .alert-modal-btn.cancel,
+[data-theme="dark"] .confirmation-modal-btn.cancel,
+[data-theme="dark"] .prompt-modal-btn.cancel {
+  background-color: #2a2a2a;
+  color: var(--text-color);
+}
+
+[data-theme="dark"] .alert-modal-btn.cancel:hover,
+[data-theme="dark"] .confirmation-modal-btn.cancel:hover,
+[data-theme="dark"] .prompt-modal-btn.cancel:hover {
+  background-color: #333;
+}
+
+[data-theme="dark"] .prompt-modal-input {
+  background-color: #2a2a2a;
+  border-color: #444;
+  color: var(--text-color);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .alert-modal-box,
+  .confirmation-modal-box,
+  .prompt-modal-box {
+    max-width: 90%;
+    padding: 2rem;
+  }
+  
+  .alert-modal-actions,
+  .confirmation-modal-actions,
+  .prompt-modal-actions {
+    flex-direction: column;
+  }
+  
+  .alert-modal-btn,
+  .confirmation-modal-btn,
+  .prompt-modal-btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .alert-modal-box,
+  .confirmation-modal-box,
+  .prompt-modal-box {
+    padding: 1.2rem;
+  }
+  
+  .alert-modal-title,
+  .confirmation-modal-title,
+  .prompt-modal-title {
+    font-size: 1.3rem;
+  }
+  
+  .alert-modal-message,
+  .confirmation-modal-message,
+  .prompt-modal-message {
+    font-size: 0.9rem;
+  }
+}

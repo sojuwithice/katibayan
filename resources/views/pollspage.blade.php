@@ -3,12 +3,38 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <script>
+    // Make CSRF token globally available
+    window.csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    
+    // Override browser default alert, confirm, and prompt
+    window.originalAlert = window.alert;
+    window.originalConfirm = window.confirm;
+    window.originalPrompt = window.prompt;
+    
+    // Custom alert function
+    window.alert = function(message, title = 'Alert', icon = 'info', callback = null) {
+      window.showCustomAlert(message, title, icon, callback);
+      return undefined;
+    };
+    
+    // Custom confirm function
+    window.confirm = function(message, title = 'Confirmation', icon = 'warning', callback = null) {
+      return window.showCustomConfirm(message, title, icon, callback);
+    };
+    
+    // Custom prompt function
+    window.prompt = function(message, defaultValue = '', title = 'Input Required', callback = null) {
+      return window.showCustomPrompt(message, defaultValue, title, callback);
+    };
+  </script>
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/favicon.png') }}">
   <title>KatiBayan - Poll</title>
   <link rel="stylesheet" href="{{ asset('css/polls.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 </head>
 <body>
   
@@ -242,7 +268,7 @@
               </a>
             </li>
             <li class="logout-item">
-              <a href="loginpage" onclick="confirmLogout(event)">
+              <a href="#" onclick="showLogoutConfirmation(); return false;">
                 <i class="fas fa-sign-out-alt"></i> Logout
               </a>
             </li>
@@ -257,7 +283,53 @@
     </div>
   </header>
 
-  <!-- SK Access Modal (Same as Dashboard) -->
+  <!-- ========================================== -->
+  <!-- CUSTOM MODALS FOR BROWSER POPUP REPLACEMENT -->
+  <!-- ========================================== -->
+
+  <!-- Custom Alert Modal -->
+  <div id="customAlertModal" class="alert-modal-overlay">
+    <div class="alert-modal-box">
+      <div class="alert-modal-icon" id="alertModalIcon">
+        <i class="fas fa-info-circle"></i>
+      </div>
+      <h3 class="alert-modal-title" id="alertModalTitle">Alert</h3>
+      <p class="alert-modal-message" id="alertModalMessage"></p>
+      <div class="alert-modal-actions">
+        <button class="alert-modal-btn ok" id="alertModalOK">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Confirm Modal (Logout & Others) -->
+  <div id="customConfirmModal" class="confirmation-modal-overlay">
+    <div class="confirmation-modal-box">
+      <div class="confirmation-modal-icon" id="confirmModalIcon">
+        <i class="fas fa-question-circle"></i>
+      </div>
+      <h3 class="confirmation-modal-title" id="confirmModalTitle">Confirmation</h3>
+      <p class="confirmation-modal-message" id="confirmModalMessage"></p>
+      <div class="confirmation-modal-actions">
+        <button class="confirmation-modal-btn cancel" id="confirmModalCancel">Cancel</button>
+        <button class="confirmation-modal-btn confirm" id="confirmModalOK">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Prompt Modal -->
+  <div id="customPromptModal" class="prompt-modal-overlay">
+    <div class="prompt-modal-box">
+      <h3 class="prompt-modal-title" id="promptModalTitle">Input Required</h3>
+      <p class="prompt-modal-message" id="promptModalMessage"></p>
+      <input type="text" class="prompt-modal-input" id="promptModalInput" placeholder="Enter your response...">
+      <div class="prompt-modal-actions">
+        <button class="prompt-modal-btn cancel" id="promptModalCancel">Cancel</button>
+        <button class="prompt-modal-btn ok" id="promptModalOK">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SK Access Modal -->
   <div id="skAccessModal" class="modal-overlay" style="display: none;">
     <div class="sk-modal-box"> 
       <div class="modal-step active" data-step="1">
@@ -299,7 +371,7 @@
     </div> 
   </div>
 
-  <!-- Set Role Modal (Same as Dashboard) -->
+  <!-- Set Role Modal -->
   <div id="setRoleModal" class="modal-overlay" style="display: none;">
     <div class="set-role-modal-content">
       <h2>Choose your role as SK</h2>
@@ -329,7 +401,7 @@
     </div>
   </div>
 
-  <!-- Feedback Modal (Same as Dashboard) -->
+  <!-- Feedback Modal -->
   <div id="feedbackModal" class="modal-overlay">
     <div class="modal-content">
       <span class="close-btn" id="closeModal">&times;</span>
@@ -407,7 +479,7 @@
     </div>
   </div>
 
-  <!-- Success Modal (Same as Dashboard) -->
+  <!-- Success Modal -->
   <div id="successModal" class="modal-overlay simple-alert-modal">
     <div class="modal-content">
       <div class="success-icon">
@@ -485,8 +557,7 @@
               
               @foreach($poll->options as $index => $option)
                 <label class="choice">
-                  <input type="radio" name="poll{{ $poll->id }}" value="{{ $index }}" 
-                         {{ $poll->getUserVote(Auth::id()) == $index ? 'checked' : '' }}>
+                  <input type="radio" name="poll{{ $poll->id }}" value="{{ $index }}">
                   <span class="choice-text">{{ $option }}</span>
                 </label>
               @endforeach
@@ -527,7 +598,7 @@
   </div>
 </div>
 
-<!-- Evaluation Modal (Same as Dashboard) -->
+<!-- Evaluation Modal -->
 <div id="evaluationModal" class="modal" style="display: none;">
   <div class="modal-content">
     <span class="close">&times;</span>
@@ -581,6 +652,226 @@
 <script>
 // CSRF Token for AJAX requests
 window.csrfToken = '{{ csrf_token() }}';
+
+// ============================================
+// CUSTOM MODAL FUNCTIONS (Alert, Confirm, Prompt)
+// ============================================
+
+let currentAlertResolve = null;
+let currentConfirmResolve = null;
+let currentPromptResolve = null;
+
+// Custom Alert Function
+window.showCustomAlert = function(message, title = 'Alert', icon = 'info', callback = null) {
+  const modal = document.getElementById('customAlertModal');
+  const modalTitle = document.getElementById('alertModalTitle');
+  const modalMessage = document.getElementById('alertModalMessage');
+  const modalIcon = document.getElementById('alertModalIcon');
+  const okBtn = document.getElementById('alertModalOK');
+
+  // Set modal content
+  modalTitle.textContent = title;
+  modalMessage.textContent = message;
+
+  // Set icon
+  const iconElement = modalIcon.querySelector('i');
+  iconElement.className = '';
+  if (icon === 'warning') {
+    iconElement.className = 'fas fa-exclamation-triangle';
+    modalIcon.className = 'alert-modal-icon warning';
+  } else if (icon === 'error') {
+    iconElement.className = 'fas fa-times-circle';
+    modalIcon.className = 'alert-modal-icon error';
+  } else if (icon === 'success') {
+    iconElement.className = 'fas fa-check-circle';
+    modalIcon.className = 'alert-modal-icon success';
+  } else {
+    iconElement.className = 'fas fa-info-circle';
+    modalIcon.className = 'alert-modal-icon info';
+  }
+
+  // Show modal
+  modal.classList.add('active');
+
+  // Return promise
+  return new Promise((resolve) => {
+    currentAlertResolve = resolve;
+
+    const handleClose = () => {
+      modal.classList.remove('active');
+      okBtn.removeEventListener('click', handleClose);
+      modal.removeEventListener('click', handleOutsideClick);
+      if (currentAlertResolve) {
+        currentAlertResolve();
+        currentAlertResolve = null;
+      }
+      if (callback) callback();
+    };
+
+    const handleOutsideClick = (e) => {
+      if (e.target === modal) {
+        handleClose();
+      }
+    };
+
+    okBtn.addEventListener('click', handleClose);
+    modal.addEventListener('click', handleOutsideClick);
+  });
+};
+
+// Custom Confirm Function
+window.showCustomConfirm = function(message, title = 'Confirmation', icon = 'warning', callback = null) {
+  const modal = document.getElementById('customConfirmModal');
+  const modalTitle = document.getElementById('confirmModalTitle');
+  const modalMessage = document.getElementById('confirmModalMessage');
+  const modalIcon = document.getElementById('confirmModalIcon');
+  const okBtn = document.getElementById('confirmModalOK');
+  const cancelBtn = document.getElementById('confirmModalCancel');
+
+  // Set modal content
+  modalTitle.textContent = title;
+  modalMessage.textContent = message;
+
+  // Set icon
+  const iconElement = modalIcon.querySelector('i');
+  iconElement.className = '';
+  if (icon === 'warning') {
+    iconElement.className = 'fas fa-exclamation-triangle';
+    modalIcon.className = 'confirmation-modal-icon warning';
+  } else if (icon === 'question') {
+    iconElement.className = 'fas fa-question-circle';
+    modalIcon.className = 'confirmation-modal-icon info';
+  } else {
+    iconElement.className = 'fas fa-question-circle';
+    modalIcon.className = 'confirmation-modal-icon info';
+  }
+
+  // Show modal
+  modal.classList.add('active');
+
+  // Return promise
+  return new Promise((resolve) => {
+    currentConfirmResolve = resolve;
+
+    const handleConfirm = () => {
+      modal.classList.remove('active');
+      okBtn.removeEventListener('click', handleConfirm);
+      cancelBtn.removeEventListener('click', handleCancel);
+      modal.removeEventListener('click', handleOutsideClick);
+      if (currentConfirmResolve) {
+        currentConfirmResolve(true);
+        currentConfirmResolve = null;
+      }
+      if (callback) callback(true);
+    };
+
+    const handleCancel = () => {
+      modal.classList.remove('active');
+      okBtn.removeEventListener('click', handleConfirm);
+      cancelBtn.removeEventListener('click', handleCancel);
+      modal.removeEventListener('click', handleOutsideClick);
+      if (currentConfirmResolve) {
+        currentConfirmResolve(false);
+        currentConfirmResolve = null;
+      }
+      if (callback) callback(false);
+    };
+
+    const handleOutsideClick = (e) => {
+      if (e.target === modal) {
+        handleCancel();
+      }
+    };
+
+    okBtn.addEventListener('click', handleConfirm);
+    cancelBtn.addEventListener('click', handleCancel);
+    modal.addEventListener('click', handleOutsideClick);
+  });
+};
+
+// Custom Prompt Function
+window.showCustomPrompt = function(message, defaultValue = '', title = 'Input Required', callback = null) {
+  const modal = document.getElementById('customPromptModal');
+  const modalTitle = document.getElementById('promptModalTitle');
+  const modalMessage = document.getElementById('promptModalMessage');
+  const modalInput = document.getElementById('promptModalInput');
+  const okBtn = document.getElementById('promptModalOK');
+  const cancelBtn = document.getElementById('promptModalCancel');
+
+  // Set modal content
+  modalTitle.textContent = title;
+  modalMessage.textContent = message;
+  modalInput.value = defaultValue;
+
+  // Show modal and focus input
+  modal.classList.add('active');
+  setTimeout(() => {
+    modalInput.focus();
+    modalInput.select();
+  }, 100);
+
+  // Return promise
+  return new Promise((resolve) => {
+    currentPromptResolve = resolve;
+
+    const handleConfirm = () => {
+      const value = modalInput.value;
+      modal.classList.remove('active');
+      okBtn.removeEventListener('click', handleConfirm);
+      cancelBtn.removeEventListener('click', handleCancel);
+      modalInput.removeEventListener('keypress', handleKeyPress);
+      modal.removeEventListener('click', handleOutsideClick);
+      if (currentPromptResolve) {
+        currentPromptResolve(value);
+        currentPromptResolve = null;
+      }
+      if (callback) callback(value);
+    };
+
+    const handleCancel = () => {
+      modal.classList.remove('active');
+      okBtn.removeEventListener('click', handleConfirm);
+      cancelBtn.removeEventListener('click', handleCancel);
+      modalInput.removeEventListener('keypress', handleKeyPress);
+      modal.removeEventListener('click', handleOutsideClick);
+      if (currentPromptResolve) {
+        currentPromptResolve(null);
+        currentPromptResolve = null;
+      }
+      if (callback) callback(null);
+    };
+
+    const handleKeyPress = (e) => {
+      if (e.key === 'Enter') {
+        handleConfirm();
+      }
+    };
+
+    const handleOutsideClick = (e) => {
+      if (e.target === modal) {
+        handleCancel();
+      }
+    };
+
+    okBtn.addEventListener('click', handleConfirm);
+    cancelBtn.addEventListener('click', handleCancel);
+    modalInput.addEventListener('keypress', handleKeyPress);
+    modal.addEventListener('click', handleOutsideClick);
+  });
+};
+
+// Logout Confirmation Function
+function showLogoutConfirmation() {
+  showCustomConfirm(
+    'Are you sure you want to logout?',
+    'Confirm Logout',
+    'warning'
+  ).then((confirmed) => {
+    if (confirmed) {
+      document.getElementById('logout-form').submit();
+    }
+  });
+}
 
 /**
  * Updates the time in the topbar.
@@ -718,14 +1009,13 @@ function initTopbar(openEvaluationModal) {
 }
 
 /**
- * (FIXED STRUCTURE)
  * Initializes the Activity Evaluation Modal.
  * Returns the function to open the modal.
  */
 function initEvaluationModal() {
   const evalModal = document.getElementById('evaluationModal');
 
-  // (FIX) Define the opener function here
+  // Define the opener function here
   function openEvaluationModal(activityId, activityType = 'event') {
     if (!evalModal) {
       console.error("Evaluation modal not found in DOM.");
@@ -749,7 +1039,7 @@ function initEvaluationModal() {
       })
       .catch(error => {
         console.error('Error fetching activity details:', error);
-        alert('Error loading activity details');
+        showCustomAlert('Error loading activity details', 'Error', 'error');
       });
   }
 
@@ -802,7 +1092,7 @@ function initEvaluationModal() {
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
     if (!formData.get('rating')) {
-      alert('Please provide a rating');
+      showCustomAlert('Please provide a rating', 'Validation Error', 'warning');
       return;
     }
 
@@ -832,25 +1122,25 @@ function initEvaluationModal() {
       })
       .then(data => {
         if (data.success) {
-          alert('Evaluation submitted successfully!');
+          showCustomAlert('Evaluation submitted successfully!', 'Success', 'success');
           closeModal();
-          location.reload(); // Reload to update progress/notifications
+          setTimeout(() => location.reload(), 1500); // Reload to update progress/notifications
         } else {
           // Handle validation errors or other specific errors
           let errorMsg = data.message || 'Submission failed.';
           if (data.errors) {
             errorMsg += '\n' + Object.values(data.errors).join('\n');
           }
-          alert(errorMsg);
+          showCustomAlert(errorMsg, 'Error', 'error');
         }
       })
       .catch(error => {
         console.error('Error:', error);
-        alert(error.message || 'An error occurred while submitting.');
+        showCustomAlert(error.message || 'An error occurred while submitting.', 'Error', 'error');
       });
   });
 
-  // (FIX) Return the opener function
+  // Return the opener function
   return openEvaluationModal;
 }
 
@@ -985,7 +1275,7 @@ function initFeedbackModal() {
         })
         .catch(error => {
           console.error('Error:', error);
-          alert(error.message || 'An error occurred. Please try again.');
+          showCustomAlert(error.message || 'An error occurred. Please try again.', 'Error', 'error');
         })
         .finally(() => {
           // Reset form in finally block
@@ -1081,17 +1371,6 @@ function initMarkAsRead() {
   });
 }
 
-/**
- * Handles logout confirmation.
- * This is called directly from the HTML's onclick attribute.
- */
-function confirmLogout(event) {
-  event.preventDefault(); // Prevent the <a> tag's default action
-  if (confirm('Are you sure you want to logout?')) {
-    document.getElementById('logout-form').submit();
-  }
-}
-
 // ==========================================================
 //  APP INITIALIZATION (MAIN)
 // ==========================================================
@@ -1122,7 +1401,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Initialize all components
   initSidebar();
 
-  // (FIX) Kunin 'yung function na nireturn ng initEvaluationModal()
+  // Kunin 'yung function na nireturn ng initEvaluationModal()
   const openEvalModalFn = initEvaluationModal();
 
   // Ipasa 'yung function sa initTopbar()
@@ -1251,6 +1530,14 @@ function initPollFunctionality() {
           voteBtn.classList.add('voted');
           voteBtn.innerHTML = '<i class="fas fa-check"></i> Voted';
           
+          // Disable all radio buttons in this poll
+          pollBox.querySelectorAll('input[type="radio"]').forEach(input => {
+            input.disabled = true;
+          });
+          
+          // Enable the selected one
+          this.disabled = false;
+          
           // Add change vote button
           const changeVoteSection = document.createElement('div');
           changeVoteSection.className = 'change-vote-section';
@@ -1269,13 +1556,13 @@ function initPollFunctionality() {
           // Reload poll results
           loadPollResults(pollId);
         } else {
-          alert(data.error);
+          showCustomAlert(data.error, 'Error', 'error');
           this.checked = false;
         }
       })
       .catch(error => {
         console.error('Error:', error);
-        alert('Error submitting vote');
+        showCustomAlert('Error submitting vote', 'Error', 'error');
         this.checked = false;
       });
     });
@@ -1333,7 +1620,7 @@ function initPollFunctionality() {
         voteBtn.classList.remove('voted');
         voteBtn.innerHTML = 'Vote';
         
-        // Enable radio buttons
+        // Enable all radio buttons
         pollBox.querySelectorAll('input[type="radio"]').forEach(input => {
           input.disabled = false;
           input.checked = false;
@@ -1348,12 +1635,12 @@ function initPollFunctionality() {
         // Reload results
         loadPollResults(pollId);
       } else {
-        alert(data.error);
+        showCustomAlert(data.error, 'Error', 'error');
       }
     })
     .catch(error => {
       console.error('Error:', error);
-      alert('Error resetting vote');
+      showCustomAlert('Error resetting vote', 'Error', 'error');
     });
   }
 
@@ -1380,23 +1667,25 @@ function initPollFunctionality() {
         
         // Update avatars in header
         const avatarsContainer = pollBox.querySelector('.poll-meta .avatars');
-        avatarsContainer.innerHTML = '';
-        
-        // Add first 4 voter avatars
-        data.poll.votes.slice(0, 4).forEach(vote => {
-          const img = document.createElement('img');
-          img.src = vote.user.avatar ? `/storage/${vote.user.avatar}` : '/images/default-avatar.png';
-          img.alt = 'User';
-          img.className = 'avatar-img';
-          avatarsContainer.appendChild(img);
-        });
-        
-        // Update "others" count
-        const othersSpan = pollBox.querySelector('.others');
-        if (othersSpan && data.total_votes > 4) {
-          othersSpan.textContent = `+ ${data.total_votes - 4} others`;
-        } else if (othersSpan && data.total_votes <= 4) {
-          othersSpan.remove();
+        if (avatarsContainer) {
+          avatarsContainer.innerHTML = '';
+          
+          // Add first 4 voter avatars
+          data.poll.votes.slice(0, 4).forEach(vote => {
+            const img = document.createElement('img');
+            img.src = vote.user.avatar ? `/storage/${vote.user.avatar}` : '/images/default-avatar.png';
+            img.alt = 'User';
+            img.className = 'avatar-img';
+            avatarsContainer.appendChild(img);
+          });
+          
+          // Update "others" count
+          const othersSpan = pollBox.querySelector('.others');
+          if (othersSpan && data.total_votes > 4) {
+            othersSpan.textContent = `+ ${data.total_votes - 4} others`;
+          } else if (othersSpan && data.total_votes <= 4) {
+            othersSpan.remove();
+          }
         }
       })
       .catch(error => console.error('Error loading results:', error));
@@ -1551,16 +1840,18 @@ document.addEventListener('DOMContentLoaded', function() {
         const data = await response.json();
 
         if (response.ok) {
-          alert('Role set successfully! Redirecting...');
-          window.location.reload();
+          showCustomAlert('Role set successfully! Redirecting...', 'Success', 'success');
+          setTimeout(() => {
+            window.location.reload();
+          }, 1500);
         } else {
-          alert(data.message || 'Failed to set role.');
+          showCustomAlert(data.message || 'Failed to set role.', 'Error', 'error');
           btn.textContent = originalText;
           btn.disabled = false;
         }
       } catch (error) {
         console.error('Error:', error);
-        alert('Something went wrong. Please try again.');
+        showCustomAlert('Something went wrong. Please try again.', 'Error', 'error');
         btn.textContent = originalText;
         btn.disabled = false;
       }
@@ -1592,8 +1883,6 @@ document.addEventListener('click', (e) => {
     document.body.classList.remove('mobile-sidebar-active');
   }
 });
-
-
 </script>
 </body>
 </html>

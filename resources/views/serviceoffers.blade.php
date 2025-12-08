@@ -517,8 +517,8 @@
       </section>
     </main>
 
-    <!-- Service Modal -->
-    <div id="serviceModal" class="modal" style="display: none;">
+    <!-- Service Details Modal - Updated -->
+    <div id="serviceModal" class="modal">
       <div class="modal-content">
         <span id="closeServiceModal" class="close">&times;</span>
         
@@ -651,6 +651,11 @@
       if (notifWrapper && !notifWrapper.contains(e.target)) {
         notifWrapper.classList.remove('active');
       }
+      
+      // Close service modal when clicking outside
+      if (serviceModal && serviceModal.style.display !== 'none' && !serviceModal.querySelector('.modal-content').contains(e.target)) {
+        serviceModal.style.display = 'none';
+      }
     });
 
     // === Profile dropdown toggle (topbar) ===
@@ -700,15 +705,11 @@
 
     // === Service Modal ===
     // Close service modal
-    closeServiceModal?.addEventListener('click', () => {
-      serviceModal.style.display = 'none';
-    });
-
-    serviceModal?.addEventListener('click', (e) => {
-      if (e.target === serviceModal) {
+    if (closeServiceModal) {
+      closeServiceModal.addEventListener('click', () => {
         serviceModal.style.display = 'none';
-      }
-    });
+      });
+    }
 
     // Event delegation for Read More buttons
     servicesContainer?.addEventListener('click', (e) => {
@@ -765,8 +766,9 @@
           document.getElementById('modalHowToAvail').textContent = service.how_to_avail || '';
           document.getElementById('modalContactInfo').textContent = service.contact_info || '';
 
-          // Show modal
-          serviceModal.style.display = 'block';
+          // Show modal - centered properly
+          serviceModal.style.display = 'flex';
+          serviceModal.classList.add('active');
 
         } else {
           alert('Error loading service details');
