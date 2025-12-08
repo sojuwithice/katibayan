@@ -38,6 +38,17 @@ use App\Http\Controllers\ServiceOffersController;
 use App\Http\Controllers\YouthProgramRegistrationController;
 use App\Http\Controllers\YouthAssistanceController;
 use App\Http\Controllers\SystemFeedbackController;
+use App\Http\Controllers\SKController;
+use App\Http\Controllers\SkRoleRequestController;
+use App\Models\User;
+use App\Models\Event;   
+use App\Models\Program;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\OcrController;
+use App\Http\Controllers\BackupController;
+use App\Http\Controllers\FAQController;
+use App\Http\Controllers\MaintenanceController;
+
 
 Route::get('/', function () {
     return view('landingpage');
@@ -71,8 +82,9 @@ Route::get('/terms-condition', function () {
     return view('terms-condition');
 });
 
-// UPDATED: Certificate page route
-Route::get('/certificatepage', [EvaluationController::class, 'certificatePage'])->name('certificatepage');
+// FIXED: Certificate page route - use CertificateController instead of EvaluationController
+Route::get('/certificatepage', [CertificateController::class, 'index'])->name('certificatepage');
+
 
 // ========== EVENT ROUTES ==========
 Route::get('/events', [EventController::class, 'index'])->name('sk-eventpage');
@@ -84,16 +96,17 @@ Route::post('/events/{id}/generate-passcode', [EventController::class, 'generate
 Route::delete('/events/{id}', [EventController::class, 'destroy'])->name('events.destroy');
 Route::get('/eventpage', [EventController::class, 'userEvents'])->name('eventpage');
 
-// routes/web.php
-Route::get('/faqspage', function () {
-    return view('faqspage'); 
-})->name('faqspage');
+
+// FAQs Routes
+
+Route::get('/faqs', [FAQController::class, 'index'])->name('faqs');
+Route::get('/faqspage', [FAQController::class, 'index'])->name('faqspage');
+
 Route::get('/sk-analytics', [SKAnalyticsController::class, 'index'])->name('sk.analytics');
 
 // FIXED: Suggestion Box route - use controller instead of direct view
 Route::get('/suggestionbox', [SuggestionController::class, 'index'])->name('suggestionbox');
 
-Route::view('/attendance', 'attendancepage')->name('attendancepage');
 
 Route::get('/service-offers', [ServiceOffersController::class, 'index'])->name('serviceoffers');
 
@@ -137,7 +150,8 @@ Route::get('/programs/{id}/edit', [ProgramController::class, 'edit'])->name('pro
 Route::put('/programs/{id}', [ProgramController::class, 'update'])->name('programs.update');
 Route::delete('/programs/{id}', [ProgramController::class, 'destroy'])->name('programs.destroy');
 
-// Program registration routes
+// Program registration routes - FIXED: Added missing route
+Route::post('/programs/register', [ProgramController::class, 'storeRegistration'])->name('programs.register'); // ADDED THIS LINE
 Route::post('/program-registrations', [ProgramController::class, 'storeRegistration'])->name('programs.store-registration');
 Route::get('/my-program-registrations', [ProgramController::class, 'getUserRegistrations'])->name('programs.my-registrations');
 Route::get('/programs/{programId}/registrations', [ProgramController::class, 'getProgramRegistrations'])->name('programs.registrations');
@@ -242,11 +256,26 @@ Route::get('/admin/analytics', [AdminController::class, 'analytics'])
     ->name('admin-analytics')
     ->middleware('auth:admin');
 
-Route::get('/user-management', [AdminController::class, 'userManagement']) 
-    ->name('user-management')
-    ->middleware('auth:admin'); 
+// ✅ User management route - FIXED NAME
+Route::get('/admin/user-management', [AdminController::class, 'userManagement'])
+    ->name('user-management2')
+    ->middleware('auth:admin');
 
-// User approval and rejection routes
+// ========== ADMIN USER MANAGEMENT API ROUTES ==========
+Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(function () {
+    // User Actions
+    Route::post('/users/{id}/approve', [AdminController::class, 'approve'])->name('users.approve');
+    Route::post('/users/{id}/reject', [AdminController::class, 'reject'])->name('users.reject');
+    Route::post('/users/{id}/lock', [AdminController::class, 'toggleLock'])->name('users.lock');
+    Route::delete('/users/{id}', [AdminController::class, 'deleteUser'])->name('users.delete');
+    Route::post('/users/{id}/delete', [AdminController::class, 'deleteUser'])->name('users.delete.post');
+    Route::get('/users/{id}/details', [AdminController::class, 'getUserDetails'])->name('users.details');
+    
+    // Notifications
+    Route::get('/notifications', [AdminController::class, 'getNotifications'])->name('notifications');
+});
+
+// User approval and rejection routes (legacy - keep for compatibility)
 Route::patch('/admin/users/{id}/approve', [AdminController::class, 'approve'])->name('admin.users.approve')->middleware('auth:admin');
 Route::patch('/admin/users/{id}/reject', [AdminController::class, 'reject'])->name('admin.users.reject')->middleware('auth:admin');
 
@@ -255,9 +284,7 @@ Route::get('/admin/login', [AdminLoginController::class, 'showLoginForm'])->name
 Route::post('/admin/login', [AdminLoginController::class, 'login'])->name('admin.login.post');
 Route::post('/admin/logout', [AdminLoginController::class, 'logout'])->name('admin.logout');
 
-Route::get('/admin/user-management', [AdminController::class, 'userManagement'])
-    ->name('user-management2')
-    ->middleware('auth:admin');
+
 
 // UPDATED: Users Feedback route - use controller instead of direct view
 Route::get('/users-feedback', [SystemFeedbackController::class, 'index'])->name('users-feedback')->middleware('auth:admin');
@@ -335,6 +362,7 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/programs/{id}', [ProgramController::class, 'destroy'])->name('programs.destroy');
     
     // Protected Program Registration Routes
+    Route::post('/programs/register', [ProgramController::class, 'storeRegistration'])->name('programs.register'); // ADDED INSIDE AUTH
     Route::post('/program-registrations', [ProgramController::class, 'storeRegistration'])->name('programs.store-registration');
     Route::get('/my-program-registrations', [ProgramController::class, 'getUserRegistrations'])->name('programs.my-registrations');
     Route::get('/programs/{programId}/registrations', [ProgramController::class, 'getProgramRegistrations'])->name('programs.registrations');
@@ -389,7 +417,7 @@ Route::get('/attendance/records', [AttendanceController::class, 'getAllAttendanc
 
 Route::get('/attendance/records', [AttendanceController::class, 'getEventAttendances'])
     ->name('attendance.records');
-
+Route::get('/attendance', [AttendanceController::class, 'showAttendancePage'])->name('attendancepage');
 // List of Attendees Route
 Route::get('/list-of-attendees', [AttendanceController::class, 'showAttendees'])->name('attendees.index');
 
@@ -472,9 +500,160 @@ Route::post('/notifications/read-all', [NotificationController::class, 'markAllA
 Route::post('/programs/update-daily-attendance', [YouthProgramRegistrationController::class, 'updateDailyAttendance'])
     ->name('programs.update-daily-attendance');
 
-// ========== ADMIN SYSTEM FEEDBACK ROUTES ==========
+
+
+
+Route::post('/assistance/update', [SKController::class, 'updateAssistanceInfo'])->name('sk.assistance.update');
+Route::post('/sk/assistance/save', [SKDashboardController::class, 'saveAssistanceInfo'])
+    ->name('sk.save.assistance');
+
+
+
+Route::middleware(['auth'])->group(function () {
+
+
+    // PART 1: Request Access
+    Route::post('/sk/request-access', [SkRoleRequestController::class, 'store'])
+           ->name('sk.request.access');
+
+    // PART 2: SK Chair Requests
+    Route::get('/sk/requests', [SkRoleRequestController::class, 'index'])
+           ->name('sk.requests.index');
+           
+    Route::post('/sk/requests/{id}/approve', [SkRoleRequestController::class, 'approve'])
+           ->name('sk.requests.approve');
+           
+    Route::post('/sk/requests/{id}/reject', [SkRoleRequestController::class, 'reject'])
+           ->name('sk.requests.reject');
+
+    Route::post('/sk/set-role', [SkRoleRequestController::class, 'setRole'])
+       ->name('sk.set.role');
+
+    Route::get('/sk/role-dashboard', function () {
+        $currentUser = Auth::user(); 
+
+        // 1. Chairperson Logic (Existing)
+        $chairperson = App\Models\User::where('barangay_id', $currentUser->barangay_id)
+                           ->where('role', 'sk')
+                           ->first();
+
+        // 2. Members Logic (Existing)
+        $members = App\Models\User::where('barangay_id', $currentUser->barangay_id)
+                       ->whereNotNull('sk_role') 
+                       ->where('sk_role', '!=', '') 
+                       ->where('id', '!=', $chairperson ? $chairperson->id : 0) 
+                       ->orderBy('sk_role', 'asc') 
+                       ->get();
+
+        // === 3. NEW: GET ACCOMPLISHED PROJECTS (Grouped by Year) ===
+        
+        // A. Kunin ang PAST EVENTS (Filtered by Barangay)
+        $pastEvents = App\Models\Event::where('barangay_id', $currentUser->barangay_id)
+                        ->where('created_at', '<', now()) // Gamit ang created_at (sure ball column)
+                        ->orderBy('created_at', 'desc') 
+                        ->get()
+                        ->map(function ($item) {
+                            return (object)[
+                                'title' => $item->title,
+                                'type'  => 'Event', 
+                                'date'  => $item->created_at 
+                            ];
+                        });
+
+        // B. Kunin ang PAST PROGRAMS (Kung meron)
+        $pastPrograms = collect([]); 
+        if (class_exists('App\Models\Program')) {
+             $pastPrograms = App\Models\Program::where('barangay_id', $currentUser->barangay_id)
+                        ->where('created_at', '<', now()) 
+                        ->orderBy('created_at', 'desc')
+                        ->get()
+                        ->map(function ($item) {
+                            return (object)[
+                                'title' => $item->title,
+                                'type'  => 'Program',
+                                'date'  => $item->created_at
+                            ];
+                        });
+        }
+
+        // C. Pagsamahin, I-sort, at I-GROUP BY YEAR
+        $completedProjects = $pastEvents->concat($pastPrograms)
+            ->sortByDesc('date')
+            ->groupBy(function($item) {
+                // Kukunin ang Year mula sa date (e.g. "2025")
+                return \Carbon\Carbon::parse($item->date)->format('Y');
+            });
+
+        return view('sk-role-view', compact('currentUser', 'chairperson', 'members', 'completedProjects')); 
+    })->name('sk.role.view');
+
+    Route::post('/sk/update-committees', [SkRoleRequestController::class, 'updateCommittees'])
+        ->name('sk.committees.update');
+
+});
+
+Route::get('/notifications/unread-count', [NotificationController::class, 'getUnreadCount'])->name('notifications.unread_count');
+Route::get('/sk/committee', [SKController::class, 'showSKCommittee'])->name('sk.committee.view');
+
+// Magdagdag ng route para sa fetch
+Route::get('/sk/officials-list', [SKDashboardController::class, 'getSkOfficials'])->name('sk.officials.list');
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/reports', [ReportController::class, 'index'])->name('reports');
+    Route::post('/reports/folder', [ReportController::class, 'storeFolder'])->name('reports.folder.store');
+    Route::post('/reports/upload', [ReportController::class, 'uploadFile'])->name('reports.upload');
+    Route::delete('/reports/{type}/{id}', [ReportController::class, 'destroy'])->name('reports.delete');
+    Route::get('/reports/download/{id}', [ReportController::class, 'download'])->name('reports.download');
+});
+
+// Idagdag ito sa loob ng iyong auth middleware group, kasama ng ibang reports routes
+Route::get('/reports/view/{id}', [App\Http\Controllers\ReportController::class, 'viewFile'])->name('reports.view');
+Route::post('/reports/backup/{id}', [App\Http\Controllers\ReportController::class, 'createBackup'])->name('reports.backup');
+Route::post('/reports/archive/{id}', [App\Http\Controllers\ReportController::class, 'archiveFile'])->name('reports.archive');
+Route::post('/reports/rename/{type}/{id}', [App\Http\Controllers\ReportController::class, 'renameItem'])->name('reports.rename');
+Route::post('/submit-report', [ReportController::class, 'submitReport'])->name('reports.submit');
+
+Route::post('/sk/assistance-info', [ServiceOffersController::class, 'updateAssistanceInfo'])->name('sk.assistance.update');
+
+// web.php (I-verify at i-apply ang dalawang ito)
+
+// 1. DELETE Route (Gagamit ng POST + _method: DELETE)
+Route::post('/sk/organizational-chart/{id}/delete', [ServiceOffersController::class, 'deleteOrganizationalChart']) // ADDED '/delete' suffix
+    ->name('sk.organizational-chart.delete');
+    
+// 2. UPDATE Route (Gagamit ng POST + _method: PUT)
+Route::post('/sk/organizational-chart/{id}/update', [ServiceOffersController::class, 'updateOrganizationalChart']) // ADDED '/update' suffix
+    ->name('sk.organizational-chart.update');
+
+    // ========== ADMIN SYSTEM FEEDBACK ROUTES ==========
 Route::middleware(['auth:admin'])->group(function () {
     Route::get('/admin/system-feedbacks', [SystemFeedbackController::class, 'index'])->name('admin.system-feedbacks.index');
     Route::put('/admin/system-feedbacks/{systemFeedback}/status', [SystemFeedbackController::class, 'updateStatus'])->name('admin.system-feedbacks.updateStatus');
     Route::get('/admin/system-feedbacks/stats', [SystemFeedbackController::class, 'getStats'])->name('admin.system-feedbacks.stats');
 });
+
+Route::post('/process-ocr', [OcrController::class, 'process']);
+
+// Backup Routes
+Route::prefix('admin')->group(function () {
+    Route::get('/backup-data', [BackupController::class, 'getBackupData']);
+    Route::post('/backup/create', [BackupController::class, 'createBackup']);
+    Route::get('/backup/download/{filename}', [BackupController::class, 'downloadBackup']);
+    Route::delete('/backup/delete/{filename}', [BackupController::class, 'deleteBackup']);
+    Route::post('/backup/cleanup', [BackupController::class, 'cleanupOldBackups']);
+});
+
+// Maintenance Mode Routes
+Route::prefix('admin')->group(function () {
+    Route::get('/maintenance/status', [MaintenanceController::class, 'status']);
+    Route::post('/maintenance/enable', [MaintenanceController::class, 'enable']);
+    Route::post('/maintenance/disable', [MaintenanceController::class, 'disable']);
+    Route::post('/maintenance/update', [MaintenanceController::class, 'update']);
+    Route::get('/check-access', function() {
+        return response()->json(['access' => 'granted']);
+    })->middleware('auth'); // Only for authenticated admins
+});
+
+// Maintenance page route (must be outside middleware to always be accessible)
+Route::get('/maintenance', [MaintenanceController::class, 'showMaintenancePage']);
+

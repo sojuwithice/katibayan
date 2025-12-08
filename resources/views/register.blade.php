@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KatiBayan - Register</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/favicon.png') }}">
   <link rel="stylesheet" href="{{ asset('css/register.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <!-- Icons -->
@@ -13,14 +14,9 @@
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 
   <meta name="google-signin-client_id" content="559838334805-eijtdl99nj2m05ohpcasmg6p8v5v2a5e.apps.googleusercontent.com">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
-  <style>
-    /* Remove asterisk from middle name and suffix fields */
-    .input-wrapper:has(#step1_middlename)::after,
-    .input-wrapper:has(#step1_suffix)::after {
-      content: none !important;
-    }
-  </style>
+  
 </head>
 <body>
 
@@ -96,27 +92,28 @@
   <form id="multiStepForm" class="register-form" action="{{ route('register.preview') }}" method="POST" enctype="multipart/form-data">
     @csrf
     @if($errors->any())
-<div class="error-container" style="background: #fee; border: 1px solid #f00; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
-    <h4 style="color: #d00; margin-top: 0;">Please fix the following errors:</h4>
-    <ul style="margin: 0; padding-left: 20px;">
+    <div class="error-container" style="background: #fee; border: 1px solid #f00; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
+      <h4 style="color: #d00; margin-top: 0;">Please fix the following errors:</h4>
+      <ul style="margin: 0; padding-left: 20px;">
         @foreach($errors->all() as $error)
-            <li style="color: #d00;">{{ $error }}</li>
+        <li style="color: #d00;">{{ $error }}</li>
         @endforeach
-    </ul>
-</div>
-@endif
+      </ul>
+    </div>
+    @endif
 
-@if(session('error'))
-<div class="error-message" style="background: #fee; border: 1px solid #f00; padding: 15px; margin-bottom: 20px; border-radius: 4px; color: #d00;">
-    {{ session('error') }}
-</div>
-@endif
+    @if(session('error'))
+    <div class="error-message" style="background: #fee; border: 1px solid #f00; padding: 15px; margin-bottom: 20px; border-radius: 4px; color: #d00;">
+      {{ session('error') }}
+    </div>
+    @endif
 
-<!-- Real-time validation errors container -->
-<div id="stepErrors" class="error-container" style="display: none; background: #fee; border: 1px solid #f00; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
-    <h4 style="color: #d00; margin-top: 0;">Please fill out the required fields:</h4>
-    <ul id="stepErrorsList" style="margin: 0; padding-left: 20px;"></ul>
-</div>
+    <!-- Real-time validation errors container -->
+    <div id="stepErrors" class="error-container" style="display: none; background: #fee; border: 1px solid #f00; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
+      <h4 style="color: #d00; margin-top: 0;">Please fill out the required fields:</h4>
+      <ul id="stepErrorsList" style="margin: 0; padding-left: 20px;"></ul>
+    </div>
+    
     <!-- Hidden fields for storing location IDs -->
     <input type="hidden" name="region_id" id="regionId">
     <input type="hidden" name="province_id" id="provinceId">
@@ -137,55 +134,57 @@
 
         <div class="form-grid">
           <div class="input-wrapper">
-            <input type="text" id="step1_lastname" name="last_name" placeholder="Last Name" required>
+            <label for="step1_lastname">Last Name<span class="required-asterisk">*</span></label>
+            <input type="text" id="step1_lastname" name="last_name" required>
             <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
           </div>
           <div class="input-wrapper">
-            <input type="text" id="step1_givenname" name="given_name" placeholder="Given Name" required>
+            <label for="step1_givenname">Given Name<span class="required-asterisk">*</span></label>
+            <input type="text" id="step1_givenname" name="given_name" required>
             <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
           </div>
           <div class="input-wrapper">
-            <input type="text" id="step1_middlename" name="middle_name" placeholder="Middle Name">
-            <!-- No error for optional field -->
+            <label for="step1_middlename">Middle Name</label>
+            <input type="text" id="step1_middlename" name="middle_name">
           </div>
           <div class="input-wrapper">
-            <input type="text" id="step1_suffix" name="suffix" placeholder="Suffix (optional)">
-            <!-- No error for optional field -->
+            <label for="step1_suffix">Suffix (optional)</label>
+            <input type="text" id="step1_suffix" name="suffix">
           </div>
         </div>
 
         <div class="form-grid">
-          <!-- Region -->
           <div class="select-wrapper">
-            <input type="text" id="regionInput" placeholder="-- Select Region --" readonly required>
+            <label for="regionInput">Region<span class="required-asterisk">*</span></label>
+            <input type="text" id="regionInput" readonly required>
             <ul class="dropdown-options">
               @foreach($regions as $region)
-                <li data-id="{{ $region->id }}">{{ $region->name }}</li>
+              <li data-id="{{ $region->id }}">{{ $region->name }}</li>
               @endforeach
             </ul>
             <span class="arrow"><i data-lucide="chevron-down" class="lucide-icon"></i></span>
             <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
           </div>
 
-          <!-- Province -->
           <div class="select-wrapper">
-            <input type="text" id="provinceInput" placeholder="-- Select Province --" readonly disabled required>
-            <ul class="dropdown-options"></ul>
-            <span class="arrow"><i data-lucide="chevron-down" class="lucide-icon"></i></span>
-            <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
-          </div>
-          
-          <!-- City/Municipality -->
-          <div class="select-wrapper">
-            <input type="text" id="cityInput" placeholder="-- Select City/Municipality --" readonly disabled required>
+            <label for="provinceInput">Province<span class="required-asterisk">*</span></label>
+            <input type="text" id="provinceInput" readonly disabled required>
             <ul class="dropdown-options"></ul>
             <span class="arrow"><i data-lucide="chevron-down" class="lucide-icon"></i></span>
             <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
           </div>
 
-          <!-- Barangay -->
           <div class="select-wrapper">
-            <input type="text" id="barangayInput" placeholder="-- Select Barangay --" readonly disabled required>
+            <label for="cityInput">City/Municipality<span class="required-asterisk">*</span></label>
+            <input type="text" id="cityInput" readonly disabled required>
+            <ul class="dropdown-options"></ul>
+            <span class="arrow"><i data-lucide="chevron-down" class="lucide-icon"></i></span>
+            <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
+          </div>
+
+          <div class="select-wrapper">
+            <label for="barangayInput">Barangay<span class="required-asterisk">*</span></label>
+            <input type="text" id="barangayInput" readonly disabled required>
             <ul class="dropdown-options"></ul>
             <span class="arrow"><i data-lucide="chevron-down" class="lucide-icon"></i></span>
             <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
@@ -193,27 +192,29 @@
         </div>
 
         <div class="form-grid">
-          <!-- Zip Code -->
           <div class="input-wrapper">
-            <input type="text" id="step1_zip" name="zip_code" placeholder="Zip Code" required>
+            <label for="step1_zip">Zip Code<span class="required-asterisk">*</span></label>
+            <input type="text" id="step1_zip" name="zip_code" required>
             <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
           </div>
 
-          <!-- Purok/Zone -->
           <div class="input-wrapper">
-            <input type="text" id="step1_purok" name="purok_zone" placeholder="Purok/Zone" required>
+            <label for="step1_purok">Purok/Zone<span class="required-asterisk">*</span></label>
+            <input type="text" id="step1_purok" name="purok_zone" required>
             <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
           </div>
         </div>
 
         <div class="form-grid-4">
           <div class="input-icon input-wrapper">
+            <label for="step1_dob">Date of Birth<span class="required-asterisk">*</span></label>
             <input type="date" id="step1_dob" name="date_of_birth" placeholder="Date of Birth" required>
             <span class="icon" id="calendarIcon"><i data-lucide="calendar" class="lucide-icon"></i></span>
             <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
           </div>
 
           <div class="select-wrapper">
+            <label for="step1_sex">Sex<span class="required-asterisk">*</span></label>
             <input type="text" id="step1_sex" name="sex" placeholder="Sex" readonly required>
             <span class="arrow"><i data-lucide="chevron-down" class="lucide-icon"></i></span>
             <ul class="dropdown-options">
@@ -224,12 +225,14 @@
           </div>
 
           <div class="input-wrapper">
-            <input type="email" id="step1_email" name="email" placeholder="Email Address" required>
+            <label for="step1_email">Email Address<span class="required-asterisk">*</span></label>
+            <input type="email" id="step1_email" name="email" required>
             <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
           </div>
 
           <div class="input-wrapper">
-            <input type="tel" name="contact_no" placeholder="Contact No." required>
+            <label for="step1_contact">Contact No.<span class="required-asterisk">*</span></label>
+            <input type="tel" id="step1_contact" name="contact_no" required>
             <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
           </div>
         </div>
@@ -240,7 +243,8 @@
       </div>
       <div class="form-grid">
         <div class="select-wrapper">
-          <input type="text" id="step1_civil" name="civil_status" placeholder="Civil Status" readonly required>
+          <label for="step1_civil">Civil Status<span class="required-asterisk">*</span></label>
+          <input type="text" id="step1_civil" name="civil_status"readonly required>
           <ul class="dropdown-options">
             <li data-value="Single">Single</li>
             <li data-value="Married">Married</li>
@@ -255,9 +259,10 @@
           <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
         </div>
         <div class="select-wrapper">
-          <input type="text" name="education" placeholder="Educational Background" readonly required>
+          <label for="step1_education">Educational Background<span class="required-asterisk">*</span></label>
+          <input type="text" id="step1_education" name="education"readonly required>
           <ul class="dropdown-options">
-           <li data-value="Elementary Level">Elementary Level</li>
+            <li data-value="Elementary Level">Elementary Level</li>
             <li data-value="Elementary Graduate">Elementary Graduate</li>
             <li data-value="High School Level">High School Level</li>
             <li data-value="High School Graduate">High School Graduate</li>
@@ -273,7 +278,8 @@
           <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
         </div>
         <div class="select-wrapper">
-          <input type="text" name="work_status" placeholder="Work Status" readonly required>
+          <label for="step1_work_status">Work Status<span class="required-asterisk">*</span></label>
+          <input type="text" id="step1_work_status" name="work_status" readonly required>
           <ul class="dropdown-options">
             <li data-value="Student">Student</li>
             <li data-value="Employed">Employed</li>
@@ -289,9 +295,10 @@
 
       <div class="form-grid">
         <div class="select-wrapper">
-          <input type="text" name="youth_classification" placeholder="Youth Classification" readonly required>
+          <label for="step1_youth_class">Youth Classification<span class="required-asterisk">*</span></label>
+          <input type="text" id="step1_youth_class" name="youth_classification"readonly required>
           <ul class="dropdown-options">
-           <li data-value="In-School Youth">In-School Youth</li>
+            <li data-value="In-School Youth">In-School Youth</li>
             <li data-value="Out-of-School Youth">Out-of-School Youth</li>
             <li data-value="Working Youth">Working Youth</li>
             <li data-value="Youth with Specific Needs">Youth with Specific Needs</li>
@@ -304,9 +311,10 @@
         </div>
 
         <div class="select-wrapper">
-          <input type="text" name="sk_voter" placeholder="Are you a registered SK voter?" readonly required>
+          <label for="step1_sk_voter">Are you a registered SK voter?<span class="required-asterisk">*</span></label>
+          <input type="text" id="step1_sk_voter" name="sk_voter" placeholder="Are you a registered SK voter?" readonly required>
           <ul class="dropdown-options">
-           <li data-value="Yes">Yes</li>
+            <li data-value="Yes">Yes</li>
             <li data-value="No">No</li>
           </ul>
           <span class="arrow"><i data-lucide="chevron-down" class="lucide-icon"></i></span>
@@ -318,112 +326,116 @@
     <!-- STEP 2 -->
     <section class="step-content" data-step="2">
       <h2>III. Verification Document</h2>
-      <div class="select-wrapper short-select">
-    <input type="text" name="role" placeholder="Select your role (SK, KK, etc)" readonly required>
-    <ul class="dropdown-options">
-      <li data-value="sk">SK</li>
-      <li data-value="kk">KK</li>
-    </ul>
-    <span class="arrow"><i data-lucide="chevron-down" class="lucide-icon"></i></span>
-    <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
-  </div>
-
-      <!-- SK Specific Fields -->
-      <div id="skFields" style="display: none;">
-    <div class="file-section">
-      <p>Upload Oath Taking Certificate</p>
-      <div class="upload-box">
-        <div class="upload-row">
-          <label for="oath_certificate" class="upload-label">Choose Files</label>
-          <span id="fileText1" class="file-text">Accepted: PDF, PNG, JPG (up to 2 files), max 5 MB</span>
-        </div>
-
-        <input type="file" id="oath_certificate" name="oath_certificate[]" accept="application/pdf, image/png, image/jpeg" hidden multiple>
-
-        <div class="image-preview-container" id="skPreviewContainer"></div>
-      </div>
-
-      <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
-    </div>
-  </div>
-
-
-      <!-- KK Specific Fields -->
-      <div id="kkFields" style="display: none;">
-    <div class="file-section">
-      <p>Upload Barangay Indigency or Valid ID with Full Address</p>
-      <div class="upload-box">
-        <div class="upload-row">
-          <label for="barangay_indigency" class="upload-label">Choose Files</label>
-          <span id="fileText3" class="file-text">Accepted: PDF, PNG, JPG (up to 2 files), max 5 MB</span>
-        </div>
-
-        <input type="file" id="barangay_indigency" name="barangay_indigency[]" accept="application/pdf, image/png, image/jpeg" hidden multiple>
-
-        <div class="image-preview-container" id="kkPreviewContainer"></div>
-      </div>
-
-      <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
-    </div>
-  </div>
-
       
+      <!-- Updated role selection instructions -->
+      <div class="info-note" id="roleInfoNote">
+        <i data-lucide="info" class="info-icon"></i>
+        <span>
+          <strong>SK Chairperson:</strong> Requires admin approval (no matching needed)<br>
+          <strong>KK Member:</strong> Auto-approved with instant access
+        </span>
+      </div>
 
-<h2>IV. Account Setup & Verification</h2>
-<p>Confirmation of your account details.</p>
+      <div class="select-wrapper short-select">
+        <label for="role_select">Select your role<span class="required-asterisk">*</span></label>
+        <input type="text" id="role_select" name="role"readonly required>
+        <ul class="dropdown-options">
+          <li data-value="sk">SK Chairperson</li>
+          <li data-value="kk">KK Member</li>
+        </ul>
+        <span class="arrow"><i data-lucide="chevron-down" class="lucide-icon"></i></span>
+        <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">This field is required</span>
+      </div>
+      
+      <!-- Role-specific information notes -->
+      <div id="skInfoNote" class="role-info-note sk" style="display: none;">
+        <i data-lucide="shield" style="color: #ffc107; margin-right: 8px;"></i>
+        <strong>SK Chairperson Registration:</strong> Your account requires admin approval. You will receive login credentials via email once approved by the administrator.
+      </div>
+      
+      <div id="kkInfoNote" class="role-info-note kk" style="display: none;">
+        <i data-lucide="check-circle" style="color: #4caf50; margin-right: 8px;"></i>
+        <strong>KK Member Registration:</strong> Your account will be auto-approved and you will receive login credentials immediately via email.
+      </div>
+      
+      <!-- File upload section - CHANGED: Two separate file inputs -->
+      <div id="verificationUploads" style="display: none;">
+        <div class="file-section">
+          <div id="uploadInstruction">
+            <!-- Instruction text will be updated by JavaScript -->
+          </div>
+          <div class="upload-box">
+            <div class="upload-row">
+              <label for="verification_document" class="upload-label">Choose File</label>
+              <span id="fileText" class="file-text">Accepted: PDF, PNG, JPG (1 file only), max 5 MB</span>
+            </div>
+            <!-- SK OATH CERTIFICATE -->
+            <input type="file" id="oath_certificate" name="oath_certificate" 
+             accept="application/pdf, image/png, image/jpeg, image/jpg" hidden style="display: none;">
+            <!-- KK BARANGAY INDIGENCY -->
+            <input type="file" id="barangay_indigency" name="barangay_indigency" 
+             accept="application/pdf, image/png, image/jpeg, image/jpg" hidden style="display: none;">
+            <div class="image-preview-container" id="documentPreviewContainer"></div>
+          </div>
+          <span id="ocrLoadingStatus" style="color: blue; font-size: 12px; margin-top: 5px; display: none;">
+            Processing image for OCR...
+          </span>
+          <span class="field-error" style="display: none; color: #d00; font-size: 12px; margin-top: 5px;">
+            This field is required
+          </span>
+        </div>
+      </div>
 
-<div class="form-grid">
-  <div class="input-with-btn">
-    <input
-      type="text"
-      id="contactInput"
-      placeholder="Click here to choose your Google account"
-      readonly
-      style="cursor: pointer;"
-    />
+      <h2>IV. Account Setup & Verification</h2>
+      <p>Confirmation of your account details.</p>
 
-    <button type="button" id="openMethodBtn" class="verify-btn">Verify</button>
-  </div>
-</div>
+      <div class="form-grid email-row">
+        <div class="input-wrapper">
+          <label for="emailInput">Recovery Email Address<span class="required-asterisk">*</span></label>
+          <input type="email" id="emailInput" class="email-input-box" required />
+        </div>
+               
+        <button id="sendOtpBtn" class="primary-btn">
+          <span>Send OTP</span>
+        </button>
 
+        <input type="hidden" id="contactInput" name="verified_email" />
+      </div>
 
+      <!-- ENTER CODE MODAL -->
+      <div class="modal-overlay" id="codeModal" style="display:none;">
+        <div class="code-modal">
+          <h2>Enter the code</h2>
+          <p id="codeMessage">Please enter the 6-digit code sent to your email.</p>
+          <div class="code-inputs">
+            <input type="text" maxlength="1" class="code-box" />
+            <input type="text" maxlength="1" class="code-box" />
+            <input type="text" maxlength="1" class="code-box" />
+            <input type="text" maxlength="1" class="code-box" />
+            <input type="text" maxlength="1" class="code-box" />
+            <input type="text" maxlength="1" class="code-box" />
+          </div>
+          <p class="resend">
+            Didn't get the code? Tap <a href="#" id="resendLink">Resend</a>
+          </p>
+          <button id="codeVerifyBtn" type="button">Verify</button>
+        </div>
+      </div>
 
-<!-- ENTER CODE MODAL -->
-<div class="modal-overlay" id="codeModal" style="display:none;">
-  <div class="code-modal">
-    <h2>Enter the code</h2>
-    <p id="codeMessage">Please enter the 6-digit code sent to your email.</p>
-    <div class="code-inputs">
-      <input type="text" maxlength="1" class="code-box" />
-      <input type="text" maxlength="1" class="code-box" />
-      <input type="text" maxlength="1" class="code-box" />
-      <input type="text" maxlength="1" class="code-box" />
-      <input type="text" maxlength="1" class="code-box" />
-      <input type="text" maxlength="1" class="code-box" />
-    </div>
-    <p class="resend">
-      Didn't get the code? Tap <a href="#" id="resendLink">Resend</a>
-    </p>
-    <button id="codeVerifyBtn" type="button">Verify</button>
-  </div>
-</div>
-
-
-<!-- SUCCESS MODAL -->
-<div class="modal-overlay" id="successModal" style="display:none;">
-  <div class="success-modal">
-    <div class="success-icon">
-      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2">
-        <circle cx="12" cy="12" r="11" fill="#3C87C4" stroke="none"/>
-        <path stroke-linecap="round" stroke-linejoin="round" d="M8 12.5l2.5 2.5 5-5"/>
-      </svg>
-    </div>
-    <h2>Verified</h2>
-    <p>Verification complete! Please proceed to review your details.</p>
-    <button id="successOkBtn">Ok</button>
-  </div>
-</div>
-
+      <!-- SUCCESS MODAL -->
+      <div class="modal-overlay" id="successModal" style="display:none;">
+        <div class="success-modal">
+          <div class="success-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2">
+              <circle cx="12" cy="12" r="11" fill="#3C87C4" stroke="none"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8 12.5l2.5 2.5 5-5"/>
+            </svg>
+          </div>
+          <h2>Verified</h2>
+          <p>Verification complete! Please proceed to review your details.</p>
+          <button id="successOkBtn">Ok</button>
+        </div>
+      </div>
 
       <div class="checkbox-group">
         <label>
@@ -467,7 +479,8 @@
         <h2>III. Document</h2>
         <div class="review-grid">
           <p><strong>Role:</strong> <span id="review_role"></span></p>
-          <p><strong>Uploaded Files:</strong> <span id="review_files"></span></p>
+          <p><strong>Document Type:</strong> <span id="review_document_type"></span></p>
+          <p><strong>Uploaded File:</strong> <span id="review_files"></span></p>
         </div>
       </div>
 
@@ -487,14 +500,46 @@
     </section>
 
     <!-- Form Actions -->
-    <div class="form-actions">
-      <button type="button" class="back-btn">Back</button>
-      <button type="button" class="next-btn">Next</button>
-      
-      <!-- REMOVED: reCAPTCHA container from here -->
-    </div>
+<div class="form-actions">
+  <button type="button" class="back-btn">Back</button>
+  <button type="button" class="next-btn" id="nextSubmitBtn">Next</button>
+</div>
   </form>
 </section>
+
+<div id="confirmationModal" class="modal-overlay" style="display: none;">
+  <div class="modal simple-confirmation-modal">
+    <div class="modal-header">
+      <h2>Confirm Registration</h2>
+      <button type="button" class="modal-close-btn" id="closeConfirmationBtn" aria-label="Close">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="confirmation-icon">
+        <i class="fas fa-question-circle"></i>
+      </div>
+      
+      <div class="confirmation-message">
+        <h3>Are you sure you want to submit your registration?</h3>
+        <p class="warning-text">
+          <i class="fas fa-exclamation-triangle"></i> 
+          Once submitted, you cannot edit your information anymore.
+        </p>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button type="button" id="cancelSubmission" class="cancel-btn">
+        Cancel
+      </button>
+      <button type="button" id="confirmSubmission" class="confirm-btn">
+        Yes, Submit Now
+      </button>
+    </div>
+  </div>
+</div>
 
 <!-- Footer Section -->
 <footer class="footer">
@@ -538,6 +583,65 @@
 </footer>
 
 <script>
+// --- START: OCR FUNCTIONS (DISABLED) ---
+function matchOcrDataToForm(data) {
+    let fieldsUpdated = 0;
+    const fieldsMap = {
+        'lastName': 'step1_lastname',
+        'firstName': 'step1_givenname',
+        'birthdate': 'step1_dob',
+        'email': 'step1_email',
+    };
+
+    for (const dataKey in fieldsMap) {
+        const inputId = fieldsMap[dataKey];
+        const inputElement = document.getElementById(inputId) || document.querySelector(`[name="${inputId}"]`);
+        
+        if (inputElement && data[dataKey]) {
+            inputElement.value = data[dataKey];
+            inputElement.dispatchEvent(new Event('input'));
+            fieldsUpdated++;
+        }
+    }
+
+    if (fieldsUpdated > 0) {
+        alert(`Successfully populated ${fieldsUpdated} fields using OCR data! Please review the details.`);
+    } else {
+        alert('OCR data found, but no fields were automatically populated. Please ensure the ID details are clear.');
+    }
+}
+
+function processFileForOCR(file) {
+    const loadingMessage = document.getElementById('ocrLoadingStatus');
+    
+    if (loadingMessage) {
+        loadingMessage.textContent = 'File uploaded successfully. Please enter details manually.';
+        loadingMessage.style.display = 'block';
+        setTimeout(() => {
+            loadingMessage.style.display = 'none';
+        }, 3000);
+    }
+    
+    console.log('File uploaded:', file.name, 'OCR feature is currently disabled.');
+    return;
+}
+
+function isImageOrPdf(file) {
+    const acceptedTypes = [
+        'application/pdf', 
+        'image/jpeg', 
+        'image/jpg',
+        'image/png', 
+        'image/webp'
+    ];
+    
+    const fileExtension = file.name.split('.').pop().toLowerCase();
+    const validExtensions = ['pdf', 'jpeg', 'jpg', 'png', 'webp'];
+    
+    return acceptedTypes.includes(file.type) || validExtensions.includes(fileExtension);
+}
+// --- END: OCR FUNCTIONS ---
+
 // Lucide Icons Initialization with Error Handling
 function initializeLucideIcons() {
     if (typeof lucide === 'undefined') {
@@ -555,7 +659,6 @@ function initializeLucideIcons() {
     }
 }
 
-// Fallback function to replace Lucide icons with Font Awesome
 function replaceLucideIcons() {
     console.log('Using Font Awesome as fallback for icons');
     
@@ -567,7 +670,10 @@ function replaceLucideIcons() {
         'check-square': 'fas fa-check-square',
         'chevron-down': 'fas fa-chevron-down',
         'calendar': 'fas fa-calendar',
-        'arrow-left': 'fas fa-arrow-left'
+        'arrow-left': 'fas fa-arrow-left',
+        'shield': 'fas fa-shield-alt',
+        'check-circle': 'fas fa-check-circle',
+        'info': 'fas fa-info-circle'
     };
 
     document.querySelectorAll('.lucide-icon').forEach(icon => {
@@ -651,8 +757,18 @@ document.addEventListener("DOMContentLoaded", function() {
 
         dropdown?.querySelectorAll("li").forEach(option => {
             option.addEventListener("click", () => {
-                // Use data-value if present, else use text
-                input.value = option.getAttribute("data-value") || option.textContent;
+                // Set visible label
+                input.value = option.textContent;
+
+                // Save internal value
+                input.dataset.value = option.getAttribute('data-value');
+                
+                // For sex field, ensure proper value is stored
+                if (input.name === "sex") {
+                    input.dataset.value = option.getAttribute('data-value').toLowerCase();
+                }
+                
+                localStorage.setItem(input.name || input.id, input.dataset.value);
 
                 // Close dropdown
                 wrapper.classList.remove("open");
@@ -662,20 +778,42 @@ document.addEventListener("DOMContentLoaded", function() {
                 const errorSpan = wrapper.querySelector('.field-error');
                 if (errorSpan) errorSpan.style.display = 'none';
 
-                // Show/hide role-specific fields
+                // Show/hide UPLOAD FIELD and role info based on role
                 if (input.name === "role") {
-                    const skFields = document.getElementById("skFields");
-                    const kkFields = document.getElementById("kkFields");
+                    const verificationUploadsContainer = document.getElementById('verificationUploads');
+                    const uploadInstruction = document.getElementById('uploadInstruction');
+                    const roleValue = input.dataset.value ? input.dataset.value.toLowerCase() : '';
+                    const skInfoNote = document.getElementById('skInfoNote');
+                    const kkInfoNote = document.getElementById('kkInfoNote');
 
-                    if (input.value.toLowerCase() === "sk") {
-                        skFields.style.display = "block";
-                        kkFields.style.display = "none";
-                    } else if (input.value.toLowerCase() === "kk") {
-                        skFields.style.display = "none";
-                        kkFields.style.display = "block";
+                    if (roleValue === "sk" || roleValue === "kk") {
+                        // Show the single upload container
+                        if (verificationUploadsContainer) {
+                            verificationUploadsContainer.style.display = "block";
+                            
+                            // Update instruction text based on role
+                            if (uploadInstruction) {
+                                if (roleValue === "sk") {
+                                    uploadInstruction.innerHTML = 'Upload Oath Taking Certificate<span class="required-asterisk">*</span>';
+                                } else if (roleValue === "kk") {
+                                    uploadInstruction.innerHTML = 'Upload Barangay Indigency or Valid ID with Full Address<span class="required-asterisk">*</span>';
+                                }
+                            }
+                        }
+                        
+                        // Show role-specific info notes
+                        if (roleValue === "sk" && skInfoNote) {
+                            skInfoNote.style.display = "block";
+                            if (kkInfoNote) kkInfoNote.style.display = "none";
+                        } else if (roleValue === "kk" && kkInfoNote) {
+                            kkInfoNote.style.display = "block";
+                            if (skInfoNote) skInfoNote.style.display = "none";
+                        }
                     } else {
-                        skFields.style.display = "none";
-                        kkFields.style.display = "none";
+                        // No role selected, hide upload section
+                        if (verificationUploadsContainer) verificationUploadsContainer.style.display = "none";
+                        if (skInfoNote) skInfoNote.style.display = "none";
+                        if (kkInfoNote) kkInfoNote.style.display = "none";
                     }
                 }
             });
@@ -692,204 +830,450 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 
-    // ---- MULTI-STEP FORM WITH REAL-TIME VALIDATION ----
-    let currentStep = 1;
-    const steps = document.querySelectorAll(".step-content");
-    const progressSteps = document.querySelectorAll(".step");
-    const backBtn = document.querySelector(".back-btn");
-    const nextBtn = document.querySelector(".next-btn");
-    const form = document.getElementById("multiStepForm");
-    const currentStepInput = document.getElementById("currentStep");
-    const stepErrors = document.getElementById("stepErrors");
-    const stepErrorsList = document.getElementById("stepErrorsList");
+// ---- MULTI-STEP FORM WITH REAL-TIME VALIDATION & SCROLL-TO-ERROR ----
+let currentStep = 1;
+const steps = document.querySelectorAll(".step-content");
+const progressSteps = document.querySelectorAll(".step");
+const backBtn = document.querySelector(".back-btn");
+const nextBtn = document.querySelector(".next-btn");
+const form = document.getElementById("multiStepForm");
+const currentStepInput = document.getElementById("currentStep");
+const stepErrors = document.getElementById("stepErrors");
+const stepErrorsList = document.getElementById("stepErrorsList");
 
-    // Function to validate current step
-    function validateCurrentStep() {
-        const currentStepElement = document.querySelector(`.step-content[data-step="${currentStep}"]`);
-        const requiredFields = currentStepElement.querySelectorAll('[required]');
-        const errors = [];
-        
-        // Clear previous errors
-        stepErrors.style.display = 'none';
-        stepErrorsList.innerHTML = '';
-        document.querySelectorAll('.field-error').forEach(error => error.style.display = 'none');
-        
-        // Check each required field
-        requiredFields.forEach(field => {
-            let isValid = true;
+// Confirmation Modal Elements
+const confirmationModal = document.getElementById("confirmationModal");
+const closeConfirmationBtn = document.getElementById("closeConfirmationBtn");
+const cancelSubmissionBtn = document.getElementById("cancelSubmission");
+const confirmSubmissionBtn = document.getElementById("confirmSubmission");
+
+// Show a specific step and update button text
+function showStep(step) {
+    steps.forEach((s,i) => s.classList.toggle('active', i === step-1));
+    progressSteps.forEach((p,i) => {
+        p.classList.toggle('active', i < step);
+        p.classList.toggle('completed', i < step-1);
+    });
+
+    currentStep = step;
+    if(currentStepInput) currentStepInput.value = currentStep;
+    
+    // Update button text and class based on current step
+    if (nextBtn) {
+        if (currentStep === steps.length) {
+            nextBtn.textContent = "Submit";
+            nextBtn.classList.add("step3-submit-btn");
+        } else {
+            nextBtn.textContent = "Next";
+            nextBtn.classList.remove("step3-submit-btn");
+        }
+    }
+    
+    if (currentStep === steps.length) {
+        fillStep3();
+    }
+}
+
+// Validate current step with enhanced PDF/image validation
+function validateCurrentStep() {
+    const currentStepElement = document.querySelector(`.step-content[data-step="${currentStep}"]`);
+    const requiredFields = currentStepElement.querySelectorAll('[required]');
+    const errors = [];
+
+    // Clear previous errors visuals
+    stepErrors.style.display = 'none';
+    stepErrorsList.innerHTML = '';
+    document.querySelectorAll('.field-error').forEach(error => error.style.display = 'none');
+    document.querySelectorAll('.input-error').forEach(input => input.classList.remove('input-error'));
+
+    requiredFields.forEach(field => {
+        let isValid = true;
+        let errorMessage = 'This field is required';
+
+        if (field.type === 'checkbox') {
+            isValid = field.checked;
+        } else if (field.type === 'file') {
+            // File validation - check which file input is active based on role
+            const roleInput = document.querySelector('input[name="role"]'); 
+            let selectedRole = '';
             
-            if (field.type === 'checkbox') {
-                isValid = field.checked;
-            } else if (field.type === 'file') {
-                // Special handling for file inputs - only validate if they are visible and for the selected role
-                const roleInput = document.querySelector('input[name="role"]');
-                const selectedRole = roleInput ? roleInput.value.toLowerCase() : '';
-                
-                if (field.id === 'oath_certificate' && selectedRole !== 'sk') {
-                    return; // Skip SK file validation if role is not SK
-                }
-                if (field.id === 'barangay_indigency' && selectedRole !== 'kk') {
-                    return; // Skip KK file validation if role is not KK
-                }
-                
-                isValid = field.files.length > 0;
-            } else {
-                isValid = field.value.trim() !== '';
-                
-                // Special validation for location dropdowns
-                if (field.id === 'regionInput' || field.id === 'provinceInput' || 
-                    field.id === 'cityInput' || field.id === 'barangayInput') {
-                    const hiddenIdField = document.getElementById(field.id.replace('Input', 'Id'));
-                    isValid = hiddenIdField && hiddenIdField.value !== '';
-                }
+            if (roleInput) {
+                selectedRole = roleInput.dataset.value || roleInput.value;
+                selectedRole = selectedRole.toLowerCase();
             }
             
-            if (!isValid) {
-                let fieldName = field.placeholder || field.name;
-                // Make file field names more user-friendly
-                if (field.type === 'file') {
-                    if (field.id === 'oath_certificate') {
-                        fieldName = 'Oath Taking Certificate';
-                    } else if (field.id === 'barangay_indigency') {
-                        fieldName = 'Barangay Indigency';
+            // Only validate file if role is selected
+            if (!selectedRole) return;
+            
+            // Get the correct file input based on role
+            let activeFileInput;
+            if (selectedRole === "sk") {
+                activeFileInput = document.getElementById('oath_certificate');
+            } else if (selectedRole === "kk") {
+                activeFileInput = document.getElementById('barangay_indigency');
+            }
+            
+            if (activeFileInput) {
+                isValid = activeFileInput.files.length > 0;
+                
+                if (isValid && activeFileInput.files.length > 0) {
+                    const file = activeFileInput.files[0];
+                    const maxSizeMB = 5;
+                    const maxSizeBytes = maxSizeMB * 1024 * 1024;
+                    
+                    // Validate file type
+                    if (!isImageOrPdf(file)) {
+                        isValid = false;
+                        errorMessage = `Invalid file type. Please upload PDF, JPG, PNG, or WEBP files only.`;
+                    }
+                    // Validate file size
+                    else if (file.size > maxSizeBytes) {
+                        isValid = false;
+                        errorMessage = `File size exceeds ${maxSizeMB}MB limit.`;
                     }
                 }
-                errors.push(fieldName);
                 
-                // Show individual field error
-                const fieldWrapper = field.closest('.input-wrapper, .select-wrapper, .checkbox-group, .file-section');
-                if (fieldWrapper) {
-                    const errorSpan = fieldWrapper.querySelector('.field-error');
-                    if (errorSpan) errorSpan.style.display = 'block';
+                if (!isValid) {
+                    let fieldName = selectedRole === "sk" ? 'Oath Taking Certificate' : 'Barangay Indigency';
+                    errors.push({
+                        element: activeFileInput, 
+                        message: fieldName + ': ' + errorMessage
+                    });
+
+                    activeFileInput.classList.add('input-error');
+                    const fieldWrapper = activeFileInput.closest('.file-section');
+                    if (fieldWrapper) {
+                        const errorSpan = fieldWrapper.querySelector('.field-error');
+                            if (errorSpan) {
+                            errorSpan.textContent = errorMessage;
+                            errorSpan.style.display = 'block';
+                        }
+                    }
                 }
             }
-        });
-        
-        return errors;
-    }
-
-    function showStep(step) {
-        steps.forEach((s, i) => s.classList.toggle("active", i === step - 1));
-        progressSteps.forEach((p, i) => {
-            p.classList.toggle("active", i < step);
-            p.classList.toggle("completed", i < step - 1);
-        });
-
-        if (step === steps.length) {
-            nextBtn.innerText = "Submit";
-            nextBtn.type = "button";
-            
-            // Fill review data
-            fillStep3();
-            
-            nextBtn.onclick = () => {
-                const errors = validateCurrentStep();
-                if (errors.length === 0) {
-                    // Submit form directly - this will go to preview route
-                    // which then redirects to captcha page
-                    form.submit();
-                } else {
-                    stepErrors.style.display = 'block';
-                    errors.forEach(error => {
-                        const li = document.createElement('li');
-                        li.textContent = error;
-                        li.style.color = '#d00';
-                        stepErrorsList.appendChild(li);
-                    });
-                }
-            };
+        } else if (field.name === "sex") {
+            // Sex validation - handle case-insensitive
+            const sexValue = field.value.trim().toLowerCase();
+            isValid = sexValue === 'male' || sexValue === 'female';
+            if (!isValid) errorMessage = 'Please select either Male or Female';
         } else {
-            nextBtn.innerText = "Next";
-            nextBtn.type = "button";
-            nextBtn.onclick = () => {
-                const errors = validateCurrentStep();
-                if (errors.length > 0) {
-                    stepErrors.style.display = 'block';
-                    errors.forEach(error => {
-                        const li = document.createElement('li');
-                        li.textContent = error;
-                        li.style.color = '#d00';
-                        stepErrorsList.appendChild(li);
-                    });
-                    return;
-                }
-                
-                // Clear errors if validation passes
-                stepErrors.style.display = 'none';
-                stepErrorsList.innerHTML = '';
-                
-                if (currentStep === 2) fillStep3();
-                if (currentStep < steps.length) {
-                    currentStep++;
-                    showStep(currentStep);
-                    currentStepInput.value = currentStep;
-                }
-            };
+            isValid = field.value.trim() !== '';
+            // Validation for custom location dropdowns
+            if (['regionInput','provinceInput','cityInput','barangayInput'].includes(field.id)) {
+                const hiddenIdField = document.getElementById(field.id.replace('Input','Id'));
+                isValid = hiddenIdField && hiddenIdField.value !== '';
+            }
         }
-    }
 
-    backBtn?.addEventListener("click", () => {
-        if (currentStep > 1) {
-            currentStep--;
-            showStep(currentStep);
-            currentStepInput.value = currentStep;
-            
-            // Clear errors when going back
-            stepErrors.style.display = 'none';
-            stepErrorsList.innerHTML = '';
-            document.querySelectorAll('.field-error').forEach(error => error.style.display = 'none');
+        if (!isValid && field.type !== 'file') {
+            let fieldName = field.placeholder || field.name;
+            errors.push({
+                element: field, 
+                message: fieldName + ': ' + errorMessage
+            });
+
+            field.classList.add('input-error');
+            const fieldWrapper = field.closest('.input-wrapper, .select-wrapper, .checkbox-group, .file-section');
+            if (fieldWrapper) {
+                const errorSpan = fieldWrapper.querySelector('.field-error');
+                if (errorSpan) {
+                    errorSpan.textContent = errorMessage;
+                    errorSpan.style.display = 'block';
+                }
+            }
         }
     });
 
-    // Add real-time validation for input fields
-    document.querySelectorAll('input[required]').forEach(input => {
-        input.addEventListener('input', function() {
-            if (this.value.trim() !== '') {
-                const fieldWrapper = this.closest('.input-wrapper, .select-wrapper, .checkbox-group');
-                if (fieldWrapper) {
-                    const errorSpan = fieldWrapper.querySelector('.field-error');
-                    if (errorSpan) errorSpan.style.display = 'none';
-                }
+    return errors;
+}
+
+// Handle Next/Submit button click
+nextBtn?.addEventListener('click', (e) => {
+    e.preventDefault(); 
+
+    // Age validation for Step 1
+    if (currentStep === 1) {
+        const dobInput = document.getElementById('step1_dob');
+        if (dobInput) {
+            const isAgeValid = validateAgeForRegistration(dobInput); 
+            if (!isAgeValid) {
+                dobInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
             }
-        });
+        }
+    }
+
+    const errors = validateCurrentStep();
+
+    if (errors.length === 0) {
+        // --- VALID ---
+        if (currentStep < steps.length) {
+            currentStep++;
+            showStep(currentStep);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+            // --- STEP 3 (Final Step): SHOW CONFIRMATION MODAL ---
+            showConfirmationModal();
+        }
+    } else {
+        // --- INVALID (Error Handling) ---
+        const firstErrorField = errors[0].element; 
+
+        if (firstErrorField) {
+            const stepContainer = firstErrorField.closest(".step-content");
+            const stepNumber = parseInt(stepContainer.dataset.step);
+            
+            if (stepNumber !== currentStep) {
+                showStep(stepNumber);
+            }
+
+            // SCROLL PAPUNTA SA ERROR
+            firstErrorField.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center', 
+                inline: 'nearest'
+            });
+
+            // Focus input
+            setTimeout(() => {
+                firstErrorField.focus();
+            }, 500);
+        }
+    }
+});
+
+// Handle Back
+backBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (currentStep > 1) {
+        currentStep--;
+        showStep(currentStep);
+    }
+});
+
+// Real-time input validation cleanup
+document.querySelectorAll('input, select, textarea').forEach(input => {
+    input.addEventListener('input', () => {
+        if (input.value.trim() !== '') {
+            input.classList.remove('input-error');
+            const wrapper = input.closest('.input-wrapper, .select-wrapper, .checkbox-group, .file-section');
+            const err = wrapper?.querySelector('.field-error');
+            if (err) err.style.display = 'none';
+        }
+    });
+});
+
+// Initialize first step
+showStep(currentStep);
+
+// ======================
+// SIMPLE CONFIRMATION MODAL FUNCTIONS
+// ======================
+
+// Show confirmation modal
+function showConfirmationModal() {
+    if (confirmationModal) {
+        confirmationModal.style.display = "flex";
+        document.body.style.overflow = "hidden";
+    } else {
+        // Fallback: direct submission if modal not found
+        submitFinalForm();
+    }
+}
+
+// Close confirmation modal
+function closeConfirmationModal() {
+    if (confirmationModal) {
+        confirmationModal.style.display = "none";
+        document.body.style.overflow = "auto";
+    }
+}
+
+// Setup modal event listeners
+if (closeConfirmationBtn) {
+    closeConfirmationBtn.addEventListener('click', closeConfirmationModal);
+}
+
+if (cancelSubmissionBtn) {
+    cancelSubmissionBtn.addEventListener('click', closeConfirmationModal);
+}
+
+// Close modal when clicking outside
+if (confirmationModal) {
+    confirmationModal.addEventListener('click', (e) => {
+        if (e.target === confirmationModal) {
+            closeConfirmationModal();
+        }
+    });
+}
+
+// Confirm submission
+if (confirmSubmissionBtn) {
+    confirmSubmissionBtn.addEventListener('click', function() {
+        // Close modal first
+        closeConfirmationModal();
         
-        // For dropdowns, clear error when value is selected
-        if (input.readOnly && input.placeholder && input.placeholder.includes('Select')) {
-            input.addEventListener('click', function() {
-                const fieldWrapper = this.closest('.select-wrapper');
-                if (fieldWrapper) {
-                    const errorSpan = fieldWrapper.querySelector('.field-error');
-                    if (errorSpan) errorSpan.style.display = 'none';
+        // Submit the form
+        submitFinalForm();
+    });
+}
+
+// Function to submit the final form
+function submitFinalForm() {
+    // Show loading state on submit button
+    if (nextBtn) {
+        const originalText = nextBtn.textContent;
+        nextBtn.innerHTML = '<span class="spinner"></span> Submitting...';
+        nextBtn.disabled = true;
+    }
+    
+    // Ensure internal role value is submitted instead of the full text
+    document.querySelectorAll("input[name='role']").forEach(input => {
+        if (input.dataset.value) input.value = input.dataset.value;
+    });
+    
+    // Ensure sex value is properly formatted for submission
+    const sexInput = document.querySelector('input[name="sex"]');
+    if (sexInput && sexInput.dataset.value) {
+        sexInput.value = sexInput.dataset.value;
+    }
+    
+    // Clear localStorage
+    localStorage.clear();
+    
+    // Submit the form after a small delay for visual feedback
+    setTimeout(() => {
+        form.submit();
+    }, 800);
+}
+
+// Add spinner CSS
+const style = document.createElement('style');
+style.textContent = `
+    .spinner {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: #fff;
+        animation: spin 1s ease-in-out infinite;
+        margin-right: 8px;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+`;
+document.head.appendChild(style);
+
+    // ---- SINGLE FILE UPLOAD SETUP ----
+    function setupFileUpload() {
+        const oathCertificateInput = document.getElementById('oath_certificate');
+        const barangayIndigencyInput = document.getElementById('barangay_indigency');
+        const text = document.getElementById('fileText');
+        const uploadLabel = document.querySelector('.upload-label');
+        
+        if (uploadLabel && text) {
+            // Handle click on upload label
+            uploadLabel.addEventListener("click", (e) => {
+                e.preventDefault();
+                
+                // Get the active file input based on selected role
+                const roleInput = document.querySelector('input[name="role"]');
+                const roleValue = roleInput?.dataset.value || roleInput?.value || '';
+                
+                if (roleValue === "sk" && oathCertificateInput) {
+                    oathCertificateInput.click();
+                } else if (roleValue === "kk" && barangayIndigencyInput) {
+                    barangayIndigencyInput.click();
                 }
             });
-        }
-    });
-
-    showStep(currentStep);
-
-    // ---- FILE UPLOAD LABEL UPDATE ----
-    function setupFileUpload(inputId, fileTextId) {
-        const input = document.getElementById(inputId);
-        const text = document.getElementById(fileTextId);
-        if (input && text) {
-            input.addEventListener("change", () => {
-                text.textContent = input.files.length > 0
-                    ? input.files[0].name
-                    : "Accepted: PDF, max 5 MB";
+            
+            // Handle file change for SK Oath Certificate
+            if (oathCertificateInput) {
+                oathCertificateInput.addEventListener("change", handleFileChange);
+            }
+            
+            // Handle file change for KK Barangay Indigency
+            if (barangayIndigencyInput) {
+                barangayIndigencyInput.addEventListener("change", handleFileChange);
+            }
+            
+            function handleFileChange(event) {
+                const files = event.target.files;
+                
+                if (files.length > 0) {
+                    const file = files[0];
+                    const maxSizeMB = 5;
+                    const maxSizeBytes = maxSizeMB * 1024 * 1024;
+                    
+                    // Validate file type
+                    if (!isImageOrPdf(file)) {
+                        alert('Invalid file type. Please upload PDF, JPG, PNG, or WEBP files only.');
+                        event.target.value = '';
+                        text.textContent = "Accepted: PDF, PNG, JPG (1 file only), max 5 MB";
+                        return;
+                    }
+                    
+                    // Validate file size
+                    if (file.size > maxSizeBytes) {
+                        alert(`File size exceeds ${maxSizeMB}MB limit. Please upload a smaller file.`);
+                        event.target.value = '';
+                        text.textContent = "Accepted: PDF, PNG, JPG (1 file only), max 5 MB";
+                        return;
+                    }
+                    
+                    // Update display text
+                    text.textContent = `${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+                    
+                    // Process OCR
+                    processFileForOCR(file);
+                    
+                    // Show preview
+                    showFilePreview(file);
+                } else {
+                    text.textContent = "Accepted: PDF, PNG, JPG (1 file only), max 5 MB";
+                }
                 
                 // Clear file error when file is selected
-                if (input.files.length > 0) {
-                    const fieldWrapper = input.closest('.file-section');
+                if (files.length > 0) {
+                    const fieldWrapper = event.target.closest('.file-section');
                     if (fieldWrapper) {
                         const errorSpan = fieldWrapper.querySelector('.field-error');
                         if (errorSpan) errorSpan.style.display = 'none';
                     }
                 }
-            });
+            }
         }
     }
-    setupFileUpload("oath_certificate", "fileText1");
-    setupFileUpload("barangay_indigency", "fileText3");
+    
+    // Initialize file upload
+    setupFileUpload();
+
+    // ** File Preview Functionality **
+    function showFilePreview(file) {
+        const previewContainer = document.getElementById('documentPreviewContainer');
+        
+        if (!previewContainer) return;
+        
+        previewContainer.innerHTML = ''; // Clear previous previews
+
+        if (file.type.startsWith('image/')) {
+            const img = document.createElement('img');
+            img.src = URL.createObjectURL(file);
+            img.classList.add('img-preview');
+            img.onload = function() {
+                URL.revokeObjectURL(this.src); // Clean up memory
+            };
+            previewContainer.appendChild(img);
+        } else if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+            const pdfDiv = document.createElement('div');
+            pdfDiv.classList.add('pdf-preview');
+            pdfDiv.innerHTML = `<span>PDF</span><br><small>${file.name}</small>`;
+            previewContainer.appendChild(pdfDiv);
+        }
+    }
 
     // ---- LOCATION DROPDOWNS WITH ID STORAGE ----
     const regionInput = document.getElementById("regionInput");
@@ -903,22 +1287,23 @@ document.addEventListener("DOMContentLoaded", function() {
     const cityIdInput = document.getElementById("cityId");
     const barangayIdInput = document.getElementById("barangayId");
 
-    const regionDropdown = regionInput.nextElementSibling;
-    const provinceDropdown = provinceInput.nextElementSibling;
-    const cityDropdown = cityInput.nextElementSibling;
-    const barangayDropdown = barangayInput.nextElementSibling;
+    const regionDropdown = regionInput?.nextElementSibling;
+    const provinceDropdown = provinceInput?.nextElementSibling;
+    const cityDropdown = cityInput?.nextElementSibling;
+    const barangayDropdown = barangayInput?.nextElementSibling;
 
     function closeAllDropdowns() {
-        [regionDropdown, provinceDropdown, cityDropdown, barangayDropdown].forEach(dd => dd.style.display = "none");
+        [regionDropdown, provinceDropdown, cityDropdown, barangayDropdown].forEach(dd => dd && (dd.style.display = "none"));
     }
 
     function openDropdown(input, dropdown) {
         closeAllDropdowns();
-        dropdown.style.display = "block";
+        if (dropdown) dropdown.style.display = "block";
     }
 
     // Show dropdown on input click
     [regionInput, provinceInput, cityInput, barangayInput].forEach((input, i) => {
+        if (!input) return;
         input.addEventListener("click", e => {
             e.stopPropagation();
             const dropdown = input.nextElementSibling;
@@ -928,6 +1313,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // Event delegation for dropdown items with ID storage
     function setupDropdownSelection(parentDropdown, input, hiddenInput, fetchNext = null) {
+        if (!parentDropdown) return;
         parentDropdown.addEventListener("click", e => {
             if (e.target.tagName === "LI") {
                 input.value = e.target.textContent;
@@ -955,29 +1341,31 @@ document.addEventListener("DOMContentLoaded", function() {
     // Region → Province
     setupDropdownSelection(regionDropdown, regionInput, regionIdInput, regionId => {
         provinceInput.value = "";
-        provinceInput.disabled = false;
-        provinceDropdown.innerHTML = "";
-        provinceIdInput.value = "";
+        if (provinceInput) provinceInput.disabled = false;
+        if (provinceDropdown) provinceDropdown.innerHTML = "";
+        if (provinceIdInput) provinceIdInput.value = "";
         
         cityInput.value = "";
-        cityInput.disabled = true;
-        cityDropdown.innerHTML = "";
-        cityIdInput.value = "";
+        if (cityInput) cityInput.disabled = true;
+        if (cityDropdown) cityDropdown.innerHTML = "";
+        if (cityIdInput) cityIdInput.value = "";
         
         barangayInput.value = "";
-        barangayInput.disabled = true;
-        barangayDropdown.innerHTML = "";
-        barangayIdInput.value = "";
+        if (barangayInput) barangayInput.disabled = true;
+        if (barangayDropdown) barangayDropdown.innerHTML = "";
+        if (barangayIdInput) barangayIdInput.value = "";
 
         fetch(`/get-provinces/${regionId}`)
             .then(res => res.json())
             .then(provinces => {
-                provinces.forEach(p => {
-                    const li = document.createElement("li");
-                    li.textContent = p.name;
-                    li.dataset.id = p.id;
-                    provinceDropdown.appendChild(li);
-                });
+                if (provinceDropdown) {
+                    provinces.forEach(p => {
+                        const li = document.createElement("li");
+                        li.textContent = p.name;
+                        li.dataset.id = p.id;
+                        provinceDropdown.appendChild(li);
+                    });
+                }
             })
             .catch(error => console.error('Error fetching provinces:', error));
     });
@@ -985,24 +1373,26 @@ document.addEventListener("DOMContentLoaded", function() {
     // Province → City
     setupDropdownSelection(provinceDropdown, provinceInput, provinceIdInput, provinceId => {
         cityInput.value = "";
-        cityInput.disabled = false;
-        cityDropdown.innerHTML = "";
-        cityIdInput.value = "";
+        if (cityInput) cityInput.disabled = false;
+        if (cityDropdown) cityDropdown.innerHTML = "";
+        if (cityIdInput) cityIdInput.value = "";
         
         barangayInput.value = "";
-        barangayInput.disabled = true;
-        barangayDropdown.innerHTML = "";
-        barangayIdInput.value = "";
+        if (barangayInput) barangayInput.disabled = true;
+        if (barangayDropdown) barangayDropdown.innerHTML = "";
+        if (barangayIdInput) barangayIdInput.value = "";
 
         fetch(`/get-cities/${provinceId}`)
             .then(res => res.json())
             .then(cities => {
-                cities.forEach(c => {
-                    const li = document.createElement("li");
-                    li.textContent = c.name;
-                    li.dataset.id = c.id;
-                    cityDropdown.appendChild(li);
-                });
+                if (cityDropdown) {
+                    cities.forEach(c => {
+                        const li = document.createElement("li");
+                        li.textContent = c.name;
+                        li.dataset.id = c.id;
+                        cityDropdown.appendChild(li);
+                    });
+                }
             })
             .catch(error => console.error('Error fetching cities:', error));
     });
@@ -1010,19 +1400,21 @@ document.addEventListener("DOMContentLoaded", function() {
     // City → Barangay
     setupDropdownSelection(cityDropdown, cityInput, cityIdInput, cityId => {
         barangayInput.value = "";
-        barangayInput.disabled = false;
-        barangayDropdown.innerHTML = "";
-        barangayIdInput.value = "";
+        if (barangayInput) barangayInput.disabled = false;
+        if (barangayDropdown) barangayDropdown.innerHTML = "";
+        if (barangayIdInput) barangayIdInput.value = "";
 
         fetch(`/get-barangays/${cityId}`)
             .then(res => res.json())
             .then(barangays => {
-                barangays.forEach(b => {
-                    const li = document.createElement("li");
-                    li.textContent = b.name;
-                    li.dataset.id = b.id;
-                    barangayDropdown.appendChild(li);
-                });
+                if (barangayDropdown) {
+                    barangays.forEach(b => {
+                        const li = document.createElement("li");
+                        li.textContent = b.name;
+                        li.dataset.id = b.id;
+                        barangayDropdown.appendChild(li);
+                    });
+                }
             })
             .catch(error => console.error('Error fetching barangays:', error));
     });
@@ -1082,392 +1474,383 @@ document.addEventListener("DOMContentLoaded", function() {
             document.querySelector("input[name='sk_voter']")?.value || "";
 
         // Role and Documents
+        const roleInput = document.querySelector("input[name='role']");
+        const roleValue = roleInput?.dataset.value || roleInput?.value || "";
         document.getElementById("review_role").textContent =
-            document.querySelector("input[name='role']")?.value || "";
+            roleValue === "sk" ? "SK Chairperson" : 
+            roleValue === "kk" ? "KK Member" : "";
+        
+        // Document Type
+        document.getElementById("review_document_type").textContent =
+            roleValue === "sk" ? "Oath Taking Certificate" : 
+            roleValue === "kk" ? "Barangay Indigency/Valid ID" : "";
 
-        const oathCert = document.getElementById("oath_certificate")?.files[0]?.name;
-        const barangayInd = document.getElementById("barangay_indigency")?.files[0]?.name;
+        // Get uploaded file name based on role
+        let uploadedFile = "";
+        if (roleValue === "sk") {
+            const oathCertificateFile = document.getElementById("oath_certificate")?.files[0]?.name;
+            uploadedFile = oathCertificateFile || "No file uploaded";
+        } else if (roleValue === "kk") {
+            const barangayIndigencyFile = document.getElementById("barangay_indigency")?.files[0]?.name;
+            uploadedFile = barangayIndigencyFile || "No file uploaded";
+        }
         
-        let filesText = "";
-        if (oathCert) filesText += `Oath Certificate: ${oathCert} `;
-        if (barangayInd) filesText += `Barangay Indigency: ${barangayInd}`;
-        
-        document.getElementById("review_files").textContent =
-            filesText || "No files uploaded";
+        document.getElementById("review_files").textContent = uploadedFile;
     }
 
-    // OTP functionality
+    // --- OTP VERIFICATION ---
+    const emailInput = document.getElementById("emailInput");
+    const sendOtpBtn = document.getElementById("sendOtpBtn");
     const contactInput = document.getElementById("contactInput");
-    const verifyBtn = document.getElementById("openMethodBtn");
-    
-
-    // --- Disable Verify button initially ---
-verifyBtn.disabled = true;
-verifyBtn.style.opacity = "0.6";
-verifyBtn.style.cursor = "not-allowed";
-
-
     const codeModal = document.getElementById("codeModal");
     const codeMessage = document.getElementById("codeMessage");
     const codeBoxes = document.querySelectorAll(".code-box");
     const codeVerifyBtn = document.getElementById("codeVerifyBtn");
     const resendLink = document.getElementById("resendLink");
-
     const successModal = document.getElementById("successModal");
     const successOkBtn = document.getElementById("successOkBtn");
 
-    const clientId = document.querySelector('meta[name="google-signin-client_id"]')?.getAttribute("content");
     let resendTimer = 30;
     let resendInterval;
+    const defaultSendOtpText = '<span>Send OTP</span>';
 
-    // Initialize Google OAuth
-    if (typeof google !== 'undefined' && google.accounts && google.accounts.oauth2) {
-        const tokenClient = google.accounts.oauth2.initTokenClient({
-            client_id: clientId,
-            scope: "email profile openid",
-            callback: async (response) => {
-                if (response.access_token) {
-                    try {
-                        const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-                            headers: { Authorization: `Bearer ${response.access_token}` },
-                        });
-                        const userInfo = await res.json();
-                        contactInput.value = userInfo.email;
-                        // --- Enable Verify button after selecting Google account ---
-verifyBtn.disabled = false;
-verifyBtn.style.opacity = "1";
-verifyBtn.style.cursor = "pointer";
+    // Send OTP Listener
+    sendOtpBtn?.addEventListener("click", async () => {
+        const email = emailInput.value.trim();
 
-                    } catch (error) {
-                        console.error("Error fetching user info:", error);
-                    }
-                }
-            }
-        });
-
-        // Google Account Selection (click input to choose account)
-contactInput.addEventListener("click", () => {
-    // Only open if verify button is still disabled (hasn’t chosen yet)
-    if (verifyBtn.disabled) {
-        tokenClient.requestAccessToken();
-    }
-});
-
-
-
-        // Send OTP Button
-        verifyBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    if (verifyBtn.disabled) return; // stop if disabled
-
-
-            const email = contactInput.value.trim();
-            
-            if (!email) {
-                // If no email, open Google Picker instead of error
-                // Make sure not verified before opening
-                if (!verifyBtn.disabled) {
-                    tokenClient.requestAccessToken();
-                }
-                return; // Stop here, don't continue fetch
-            }
-
-            // If there's email, proceed to send OTP
-            fetch("/send-otp", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": "{{ csrf_token() }}",
-                },
-                body: JSON.stringify({ email }),
-            })
-            .then((res) => res.json())
-            .then((data) => {
-                if (data.success) {
-                    codeModal.style.display = "flex";
-                    showMessage(`We sent a code to ${email}`);
-                    clearCodeBoxes();
-                    codeBoxes[0].focus();
-                    startResendTimer();
-                } else {
-                    showMessage(data.error || "Failed to send OTP.");
-                }
-            })
-            .catch((err) => console.error("Error sending OTP:", err));
-        });
-
-        // Resend OTP Link
-        resendLink.addEventListener("click", (e) => {
-            e.preventDefault();
-            if (resendLink.disabled) return;
-
-            const email = contactInput.value.trim();
-            if (!email) return showMessage("Please select your Google account first.");
-
-            fetch("/send-otp", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": "{{ csrf_token() }}",
-                },
-                body: JSON.stringify({ email }),
-            })
-            .then((res) => res.json())
-            .then((data) => {
-                if (data.success) {
-                    showMessage(`A new code has been sent to ${email}`);
-                    clearCodeBoxes();
-                    codeBoxes[0].focus();
-                    startResendTimer();
-                } else {
-                    showMessage(data.error || "Failed to resend OTP.");
-                }
-            })
-            .catch((err) => console.error("Error resending OTP:", err));
-        });
-
-        // Verify OTP Button
-        codeVerifyBtn.addEventListener("click", async (e) => {
-            e.preventDefault();
-            const code = Array.from(codeBoxes).map((box) => box.value).join("");
-            const email = contactInput.value.trim();
-
-            if (code.length !== 6) return showMessage("Please enter the 6-digit code.");
-
-            try {
-                const res = await fetch("/verify-otp", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRF-TOKEN": "{{ csrf_token() }}",
-                    },
-                    body: JSON.stringify({ email, code: code.split("") }),
-                });
-
-                const data = await res.json();
-                if (data.verified === true) {
-                    codeModal.style.display = "none";
-                    setTimeout(() => {
-                        successModal.style.display = "flex";
-                    }, 150);
-
-                    verifyBtn.textContent = "Verified";
-                    verifyBtn.disabled = true;
-                    verifyBtn.classList.add("verified");
-                } else {
-                    showMessage(data.error || "Invalid or expired code.");
-                }
-            } catch (err) {
-                console.error("Error verifying OTP:", err);
-            }
-        });
-
-        // Success Modal OK Button
-        successOkBtn.addEventListener("click", () => {
-            successModal.style.display = "none";
-        });
-
-        // OTP Input Box Logic
-        codeBoxes.forEach((box, index) => {
-            box.addEventListener("input", (e) => {
-                if (e.target.value && index < codeBoxes.length - 1) {
-                    codeBoxes[index + 1].focus();
-                }
-            });
-            box.addEventListener("keydown", (e) => {
-                if (e.key === "Backspace" && !e.target.value && index > 0) {
-                    codeBoxes[index - 1].focus();
-                }
-            });
-        });
-
-        function clearCodeBoxes() {
-            codeBoxes.forEach((box) => (box.value = ""));
+        if (!email) {
+            return showMessage("Please enter your email address.");
         }
 
-        function startResendTimer() {
-            resendLink.disabled = true;
-            let timeLeft = resendTimer;
-            resendLink.textContent = `Resend (${timeLeft}s)`;
+        // Basic email validation
+        if (!/\S+@\S+\.\S+/.test(email)) {
+            return showMessage("Please enter a valid email address.");
+        }
 
-            clearInterval(resendInterval);
-            resendInterval = setInterval(() => {
-                timeLeft--;
-                resendLink.textContent = `Resend (${timeLeft}s)`;
-                if (timeLeft <= 0) {
-                    clearInterval(resendInterval);
+        // 1. Loading State (Spinner)
+        sendOtpBtn.disabled = true;
+        sendOtpBtn.innerHTML = '<span class="spinner"></span> Sending...';
+
+        // Store email
+        if (contactInput) {
+            contactInput.value = email;
+            localStorage.setItem(contactInput.name || contactInput.id, email);
+        }
+
+        try {
+            // 2. Send OTP
+            await autoSendOTP(email);
+        } catch (error) {
+            // Restore button state on failure
+            sendOtpBtn.disabled = false;
+            sendOtpBtn.innerHTML = defaultSendOtpText;
+        }
+    });
+
+    function autoSendOTP(email) {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+        
+        return new Promise((resolve, reject) => {
+            fetch("/send-otp", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": csrfToken },
+                body: JSON.stringify({ email }),
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    if (codeModal) codeModal.style.display = "flex";
+                    showMessage(`We sent a code to ${email}`);
+                    clearCodeBoxes();
+                    codeBoxes[0]?.focus();
+                    startResendTimer();
+                    resolve(data); 
+                } else {
+                    showMessage(data.error || "Failed to send OTP.");
+                    reject(data.error); 
+                }
+            })
+            .catch(err => {
+                console.error("Error sending OTP:", err);
+                showMessage("An error occurred while sending OTP.");
+                reject(err);
+            });
+        });
+    }
+
+    resendLink?.addEventListener("click", async e => {
+        e.preventDefault();
+        if (resendLink.disabled) return;
+
+        const email = contactInput.value.trim();
+        if (!email) return showMessage("Please enter your email address first.");
+
+        // Loading State for Resend Link
+        resendLink.disabled = true; 
+        const originalResendText = resendLink.textContent;
+        resendLink.textContent = "Sending...";
+
+        try {
+            await autoSendOTP(email);
+        } catch (error) {
+            // Restore state if error
+            resendLink.disabled = false;
+            resendLink.textContent = originalResendText;
+        }
+    });
+
+    codeVerifyBtn?.addEventListener("click", async e => {
+        e.preventDefault();
+        const code = Array.from(codeBoxes).map(b => b.value).join("");
+        const email = contactInput.value.trim();
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+
+        if (code.length !== 6) return showMessage("Enter the 6-digit code.");
+
+        codeVerifyBtn.disabled = true;
+
+        try {
+            const res = await fetch("/verify-otp", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": csrfToken },
+                body: JSON.stringify({ email, code: code.split("") }),
+            });
+
+            const data = await res.json();
+
+            if (data.verified) {
+                // Hide OTP modal
+                if (codeModal) codeModal.style.display = "none";
+
+                // ✅ Permanently disable SEND OTP button & update text
+                if (sendOtpBtn) {
+                    sendOtpBtn.disabled = true;
+                    sendOtpBtn.innerHTML = '<span>Verified</span>'; 
+                }
+
+                // Show success modal
+                if (successModal) successModal.style.display = "flex";
+
+            } else {
+                showMessage(data.error || "Invalid or expired code.");
+            }
+
+        } catch (err) {
+            console.error("Error verifying OTP:", err);
+        } finally {
+            codeVerifyBtn.disabled = false;
+        }
+    });
+
+    successOkBtn?.addEventListener("click", () => {
+        if (successModal) successModal.style.display = "none";
+    });
+
+    // OTP BOX NAVIGATION
+    codeBoxes.forEach((box, i) => {
+        box.addEventListener("input", () => {
+            if (box.value && i < codeBoxes.length - 1) codeBoxes[i + 1].focus();
+        });
+        box.addEventListener("keydown", e => {
+            if (e.key === "Backspace" && !box.value && i > 0) codeBoxes[i - 1].focus();
+        });
+    });
+
+    function clearCodeBoxes() { 
+        codeBoxes.forEach(b => b.value = ""); 
+    }
+
+    function startResendTimer() {
+        if (resendLink) resendLink.disabled = true;
+        let timeLeft = resendTimer;
+        if (resendLink) resendLink.textContent = `Resend (${timeLeft}s)`;
+
+        clearInterval(resendInterval);
+        resendInterval = setInterval(() => {
+            timeLeft--;
+            if (resendLink) resendLink.textContent = `Resend (${timeLeft}s)`;
+            if (timeLeft <= 0) {
+                clearInterval(resendInterval);
+                if (resendLink) {
                     resendLink.disabled = false;
                     resendLink.textContent = "Resend";
                 }
-            }, 1000);
-        }
+            }
+        }, 1000);
+    }
 
-        function showMessage(msg) {
-            const originalMessage = codeMessage.innerText;
+    function showMessage(msg) {
+        if (codeMessage) {
+            const original = codeMessage.innerText;
             codeMessage.innerText = msg;
-            setTimeout(() => {
-                codeMessage.innerText = originalMessage;
-            }, 5000);
+            setTimeout(() => codeMessage.innerText = original, 5000);
         }
-    } else {
-        console.error('Google OAuth library not loaded');
     }
 
     // ---- SAVE STEP & INPUTS ON RELOAD ----
+    const registrationFailed = window.location.search.includes("failed=1") || {{ $errors->any() ? 'true' : 'false' }};
 
-// ✅ Check if registration failed (from Laravel redirect or query param)
-const registrationFailed = window.location.search.includes("failed=1") || {{ $errors->any() ? 'true' : 'false' }};
-
-if (registrationFailed) {
-    console.warn("Registration failed. Resetting progress to Step 1.");
-    // Clear all saved data to ensure it always starts at Step 1
-    localStorage.clear();
-    currentStep = 1;
-    showStep(currentStep);
-    currentStepInput.value = currentStep;
-} else {
-    // 🔹 Restore saved step if no registration failure
-    const savedStep = localStorage.getItem("currentStep");
-
-    if (!savedStep || isNaN(savedStep) || savedStep < 1 || savedStep > steps.length) {
+    if (registrationFailed) {
+        console.warn("Registration failed. Resetting progress to Step 1.");
+        localStorage.clear();
         currentStep = 1;
+        showStep(currentStep);
+        if(currentStepInput) currentStepInput.value = currentStep;
     } else {
-        currentStep = parseInt(savedStep);
+        // Restore saved step if no registration failure
+        const savedStep = localStorage.getItem("currentStep");
+
+        if (!savedStep || isNaN(savedStep) || savedStep < 1 || savedStep > steps.length) {
+            currentStep = 1;
+        } else {
+            currentStep = parseInt(savedStep);
+        }
+
+        showStep(currentStep);
+        if(currentStepInput) currentStepInput.value = currentStep;
     }
 
-    showStep(currentStep);
-    currentStepInput.value = currentStep;
-}
+    // Save step changes
+    function saveCurrentStepAfterChange() {
+        localStorage.setItem("currentStep", currentStep);
+    }
 
-// ---- SAVE STEP CHANGES ----
-function saveCurrentStepAfterChange() {
-    localStorage.setItem("currentStep", currentStep);
-}
+    nextBtn?.addEventListener("click", () => {
+        setTimeout(saveCurrentStepAfterChange, 100);
+    });
 
-nextBtn?.addEventListener("click", () => {
-    setTimeout(saveCurrentStepAfterChange, 100);
-});
+    backBtn?.addEventListener("click", () => {
+        setTimeout(saveCurrentStepAfterChange, 100);
+    });
 
-backBtn?.addEventListener("click", () => {
-    setTimeout(saveCurrentStepAfterChange, 100);
-});
+    // ---- SAVE INPUT VALUES ----
+    const formInputsToSave = form.querySelectorAll("input[type='text'], input[type='email'], input[type='date'], input[type='number'], input[type='hidden'], input[type='checkbox']");
 
-// ---- SAVE INPUT VALUES ----
-const formInputs = form.querySelectorAll("input[type='text'], input[type='email'], input[type='date'], input[type='number'], input[type='hidden'], input[type='checkbox']");
+    // Restore saved input values
+    formInputsToSave.forEach(input => {
+        const savedValue = localStorage.getItem(input.name || input.id);
+        if (savedValue !== null) {
+            if (input.type === "checkbox") {
+                input.checked = savedValue === "true";
+            } else {
+                input.value = savedValue;
+            }
+        }
+    });
 
-// Restore saved input values
-formInputs.forEach(input => {
-    const savedValue = localStorage.getItem(input.name || input.id);
-    if (savedValue !== null) {
-        if (input.type === "checkbox") {
-            input.checked = savedValue === "true";
-        } else {
-            input.value = savedValue;
+    // Save input values on change
+    formInputsToSave.forEach(input => {
+        input.addEventListener("input", () => {
+            if (input.type === "checkbox") {
+                localStorage.setItem(input.name || input.id, input.checked);
+            } else {
+                localStorage.setItem(input.name || input.id, input.value);
+            }
+        });
+    });
+
+    // ---- RESTORE ROLE-BASED FIELD DISPLAY ----
+    const roleSelectInput = document.querySelector('input[name="role"]');
+    if (roleSelectInput) {
+        const roleValue = localStorage.getItem(roleSelectInput.name || roleSelectInput.id);
+        const verificationUploadsContainer = document.getElementById('verificationUploads');
+        const uploadInstruction = document.getElementById('uploadInstruction');
+        const skInfoNote = document.getElementById('skInfoNote');
+        const kkInfoNote = document.getElementById('kkInfoNote');
+
+        if (roleValue) {
+            // Restore display value from saved internal value
+            const option = document.querySelector(`.dropdown-options li[data-value="${roleValue}"]`);
+            if (option) {
+                roleSelectInput.value = option.textContent;
+                roleSelectInput.dataset.value = roleValue;
+            }
+
+            const lowerCaseRole = roleValue.toLowerCase();
+            if (lowerCaseRole === "sk" || lowerCaseRole === "kk") {
+                if (verificationUploadsContainer) {
+                    verificationUploadsContainer.style.display = "block";
+                    
+                    // Update instruction text based on role
+                    if (uploadInstruction) {
+                        if (lowerCaseRole === "sk") {
+                            uploadInstruction.innerHTML = 'Upload Oath Taking Certificate<span class="required-asterisk">*</span>';
+                        } else if (lowerCaseRole === "kk") {
+                            uploadInstruction.innerHTML = 'Upload Barangay Indigency or Valid ID with Full Address<span class="required-asterisk">*</span>';
+                        }
+                    }
+                }
+                
+                // Show role-specific info notes
+                if (lowerCaseRole === "sk" && skInfoNote) {
+                    skInfoNote.style.display = "block";
+                } else if (lowerCaseRole === "kk" && kkInfoNote) {
+                    kkInfoNote.style.display = "block";
+                }
+            } else {
+                if (verificationUploadsContainer) verificationUploadsContainer.style.display = "none";
+                if (skInfoNote) skInfoNote.style.display = "none";
+                if (kkInfoNote) kkInfoNote.style.display = "none";
+            }
         }
     }
-});
 
-// Save input values on change
-formInputs.forEach(input => {
-    input.addEventListener("input", () => {
-        if (input.type === "checkbox") {
-            localStorage.setItem(input.name || input.id, input.checked);
-        } else {
-            localStorage.setItem(input.name || input.id, input.value);
-        }
+    // ---- RESTORE LOCATION DROPDOWNS ----
+    ["regionInput", "provinceInput", "cityInput", "barangayInput"].forEach(id => {
+        const input = document.getElementById(id);
+        const savedValue = localStorage.getItem(id);
+        if (input && savedValue) input.value = savedValue;
+
+        input?.addEventListener("input", () => localStorage.setItem(id, input.value));
     });
-});
 
-// ---- RESTORE ROLE-BASED FIELD DISPLAY ----
-const roleInput = document.querySelector('input[name="role"]');
-if (roleInput) {
-    const roleValue = localStorage.getItem(roleInput.name || roleInput.id);
-    const skFields = document.getElementById("skFields");
-    const kkFields = document.getElementById("kkFields");
+    // Age calculation and validation functions
+    function calculateAge(dobString) {
+        const today = new Date();
+        const birthDate = new Date(dobString);
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDifference = today.getMonth() - birthDate.getMonth();
+        
+        if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        return age;
+    }
 
-    if (roleValue) {
-        if (roleValue.toLowerCase() === "sk") {
-            skFields.style.display = "block";
-            kkFields.style.display = "none";
-        } else if (roleValue.toLowerCase() === "kk") {
-            skFields.style.display = "none";
-            kkFields.style.display = "block";
+    function validateAgeForRegistration(dateOfBirthInput) {
+        const dobValue = dateOfBirthInput.value;
+        const errorSpan = dateOfBirthInput.closest('.input-wrapper')?.querySelector('.field-error');
+        
+        const minAge = 15;
+        const maxAge = 30;
+
+        if (!dobValue) {
+            if (errorSpan) {
+                errorSpan.textContent = 'Date of Birth is required';
+                errorSpan.style.display = 'block';
+            }
+            dateOfBirthInput.classList.add('input-error');
+            return false;
+        }
+
+        const age = calculateAge(dobValue);
+
+        if (age < minAge || age > maxAge) {
+            const errorMessage = `The age must be between ${minAge} and ${maxAge} years old. Your age is ${age}.`;
+            
+            if (errorSpan) {
+                errorSpan.textContent = errorMessage;
+                errorSpan.style.display = 'block';
+            }
+            dateOfBirthInput.classList.add('input-error');
+            return false;
         } else {
-            skFields.style.display = "none";
-            kkFields.style.display = "none";
+            // Valid age, hide error
+            if (errorSpan) errorSpan.style.display = 'none';
+            dateOfBirthInput.classList.remove('input-error');
+            return true;
         }
     }
-}
-
-// ---- RESTORE LOCATION DROPDOWNS ----
-["regionInput", "provinceInput", "cityInput", "barangayInput"].forEach(id => {
-    const input = document.getElementById(id);
-    const savedValue = localStorage.getItem(id);
-    if (input && savedValue) input.value = savedValue;
-
-    input?.addEventListener("input", () => localStorage.setItem(id, input.value));
-});
-
-
-
-function initFileUploadPreview(inputId, previewContainerId) {
-  const input = document.getElementById(inputId);
-  const previewContainer = document.getElementById(previewContainerId);
-
-  input.addEventListener('change', () => {
-    previewContainer.innerHTML = ''; // Clear previous previews
-
-    const files = Array.from(input.files).slice(0, 2); // max 2 files
-
-    files.forEach(file => {
-      if (file.type.startsWith('image/')) {
-        const img = document.createElement('img');
-        img.src = URL.createObjectURL(file);
-        img.classList.add('img-preview');
-        previewContainer.appendChild(img);
-      } else if (file.type === 'application/pdf') {
-        const pdfDiv = document.createElement('div');
-        pdfDiv.classList.add('pdf-preview');
-        pdfDiv.innerHTML = `<span>PDF</span><br><small>${file.name}</small>`;
-        previewContainer.appendChild(pdfDiv);
-      }
-    });
-  });
-}
-
-// Initialize SK and KK previews
-initFileUploadPreview('oath_certificate', 'skPreviewContainer');
-initFileUploadPreview('barangay_indigency', 'kkPreviewContainer');
-
-    
-
-    // Hintayin na ma-load ang buong HTML
-document.addEventListener("DOMContentLoaded", function() {
-
-  // Dito mo ilagay lahat ng code mo
-  
-  const contactInput = document.querySelector("#contactInput");
-  const verifyButton = document.querySelector("#openMethodBtn");
-
-  if (contactInput && verifyButton) {
-    
-    console.log("Elements found!"); // Check mo sa console kung lumabas 'to
-    
-    verifyButton.addEventListener("click", function() {
-      alert("Verify button clicked!");
-      // Ilagay ang verify logic mo dito
-    });
-
-    contactInput.addEventListener("click", function() {
-      alert("Input clicked!");
-      // Ilagay ang logic mo para sa input dito
-    });
-
-  } else {
-    console.error("Error: Hindi makita ang #contactInput or #openMethodBtn");
-  }
-
-});
 });
 </script>
 </body>

@@ -56,8 +56,8 @@
     <!-- Topbar -->
     <header class="topbar">
       <button id="mobileMenuBtn" class="mobile-hamburger">
-  <i data-lucide="menu"></i>
-</button>
+        <i data-lucide="menu"></i>
+      </button>
       <div class="logo">
         <img src="{{ asset('images/KatiBayan-Logo_B.png') }}" alt="Logo">
         <div class="logo-text">
@@ -68,6 +68,10 @@
 
       <div class="topbar-right">
         <div class="time" id="currentTime">Loading...</div>
+
+        <button class="theme-toggle" id="themeToggle">
+          <i data-lucide="moon"></i>
+        </button>
 
         <!-- Notifications -->
         <div class="notification-wrapper">
@@ -87,13 +91,27 @@
               @foreach ($generalNotifications as $notif)
                 @php
                   $link = '#'; // Default
+                  $onclickAction = ''; // Default na walang click action
+                  
+                  // --- Para sa Links ---
                   if ($notif->type == 'certificate_schedule') {
                     $link = route('certificatepage'); 
+                  } 
+                  // FIX: Check kung SK Request Approved
+                  elseif ($notif->type == 'sk_request_approved' || $notif->type == 'App\Notifications\SkRequestAccepted') { 
+                    $link = '#'; 
+                    $onclickAction = 'openSetRoleModal(); return false;';
                   }
+
+                  $title = $notif->data['title'] ?? $notif->title ?? 'Notification';
+                  $message = $notif->data['message'] ?? $notif->message ?? 'You have a new notification.';
                 @endphp
                 
                 <li>
-                  <a href="{{ $link }}" class="notif-link {{ $notif->is_read == 0 ? 'unread' : '' }}" data-id="{{ $notif->id }}">
+                  <a href="{{ $link }}" 
+                     class="notif-link {{ $notif->is_read == 0 ? 'unread' : '' }}" 
+                     data-id="{{ $notif->id }}"
+                     @if($onclickAction) onclick="{{ $onclickAction }}" @endif>
                     
                     <div class="notif-dot-container">
                       @if ($notif->is_read == 0)
@@ -105,20 +123,21 @@
 
                     <div class="notif-main-content">
                       <div class="notif-header-line">
-                        <strong>{{ $notif->title }}</strong>
+                        <strong>{{ $title }}</strong>
                         <span class="notif-timestamp">
                           {{ $notif->created_at->format('m/d/Y g:i A') }}
                         </span>
                       </div>
-                      <p class="notif-message">{{ $notif->message }}</p>
+                      <p class="notif-message">{{ $message }}</p>
                     </div>
                   </a>
                 </li>
               @endforeach
 
-              @foreach($unevaluatedEvents as $event)
+              @foreach($unevaluatedActivities as $activity)
                 <li>
-                  <a href="{{ route('evaluation.show', $event->id) }}" class="notif-link unread" data-event-id="{{ $event->id }}">
+                  <a href="{{ route('evaluation.show', $activity['id']) }}" class="notif-link unread" 
+                     data-{{ $activity['type'] }}-id="{{ $activity['id'] }}">
                     
                     <div class="notif-dot-container">
                       <span class="notif-dot"></span>
@@ -126,20 +145,18 @@
                     
                     <div class="notif-main-content">
                       <div class="notif-header-line">
-                        <strong>Program Evaluation Required</strong>
-                        @if($event->attendances->first())
-                          <span class="notif-timestamp">
-                            {{ $event->attendances->first()->created_at->format('m/d/Y g:i A') }}
-                          </span>
-                        @endif
+                        <strong>{{ ucfirst($activity['type']) }} Evaluation Required</strong>
+                        <span class="notif-timestamp">
+                          {{ $activity['created_at']->format('m/d/Y g:i A') }}
+                        </span>
                       </div>
-                      <p class="notif-message">Please evaluate "{{ $event->title }}"</p>
+                      <p class="notif-message">Please evaluate "{{ $activity['title'] }}"</p>
                     </div>
                   </a>
                 </li>
               @endforeach
 
-              @if($generalNotifications->isEmpty() && $unevaluatedEvents->isEmpty())
+              @if($generalNotifications->isEmpty() && $unevaluatedActivities->isEmpty())
                 <li class="no-notifications">
                   <p>No new notifications</p>
                 </li>
@@ -158,26 +175,66 @@
                    alt="User" class="profile-avatar">
               <div class="profile-info">
                 <h4>{{ $user->given_name }} {{ $user->middle_name }} {{ $user->last_name }} {{ $user->suffix }}</h4>
-                <div class="profile-badge">
-                  <span class="badge">{{ $roleBadge }}</span>
-                  <span class="badge">{{ $age }} yrs old</span>
+                
+                <!-- FIXED: Added badges-wrapper with SK badge logic -->
+                <div class="badges-wrapper">
+                  <div class="profile-badge">
+                    <span class="badge">{{ $roleBadge }}</span>
+                    <span class="badge">{{ $age }} yrs old</span>
+                  </div>
+
+                  @php
+                    $skTitle = '';
+                    if (!empty(Auth::user()->sk_role)) {
+                      $skTitle = Auth::user()->sk_role; 
+                    } 
+                    elseif (Auth::user()->role === 'sk_chairperson') {
+                      $skTitle = 'SK Chairperson';
+                    }
+                  @endphp
+
+                  @if($skTitle)
+                    <div class="profile-badge sk-badge-yellow">
+                      <span>{{ $skTitle }}</span>
+                    </div>
+                  @endif
                 </div>
               </div>
             </div>
             <hr>
+            
+            <div class="profile-button-container">
+              @php
+                $isSkOfficial = !empty(Auth::user()->sk_role) || Auth::user()->role === 'sk_chairperson';
+              @endphp
+
+              @if($isSkOfficial)
+                <a href="{{ route('sk.role.view') }}" class="profile-sk-button">
+                  Switch to SK Role
+                </a>
+              @else
+                <a href="#" class="profile-sk-button" id="accessSKRoleBtn" data-url="{{ route('sk.request.access') }}">
+                  Access SK role
+                </a>
+              @endif
+            </div>
+            
             <ul class="profile-menu">
               <li>
                 <a href="{{ route('profilepage') }}">
                   <i class="fas fa-user"></i> Profile
                 </a>
               </li>
-              <li><i class="fas fa-cog"></i> Manage Password</li>
               <li>
-                <a href="{{ route('faqspage') }}">
+                <a href="{{ route('faqs') }}">
                   <i class="fas fa-question-circle"></i> FAQs
                 </a>
               </li>
-              <li><i class="fas fa-star"></i> Send Feedback to Katibayan</li>
+              <li>
+                <a href="#" id="openFeedbackBtn">
+                  <i class="fas fa-star"></i> Send Feedback to Katibayan
+                </a>
+              </li>
               <li class="logout-item">
                 <a href="loginpage" onclick="confirmLogout(event)">
                   <i class="fas fa-sign-out-alt"></i> Logout
@@ -193,6 +250,168 @@
         </div>
       </div>
     </header>
+
+    <!-- SK Access Modal -->
+    <div id="skAccessModal" class="modal-overlay" style="display: none;">
+      <div class="sk-modal-box"> 
+        <div class="modal-step active" data-step="1">
+          <h2>Do you want to request access?</h2>
+          <p>This will send a request to your SK Chairperson for permission to access your SK role. Would you like to proceed?</p>
+          
+          <div class="modal-actions" style="justify-content: flex-end;">
+            <button type="button" class="btn btn-cancel" data-action="close">Cancel</button>
+            <button type="button" class="btn btn-confirm" data-action="confirm-request">Yes</button>
+          </div>
+        </div>
+
+        <div class="modal-step" data-step="2">
+          <div class="spinner"></div>
+          <p>Please wait while we send your request to the SK Chairperson. This will just take a moment.</p>
+        </div>
+
+        <div class="modal-step" data-step="3">
+          <div class="modal-icon-wrapper success">
+            <i class="fas fa-check"></i>
+          </div>
+          <h2>Request Sent</h2>
+          <p>Thank you. Your request has been submitted. You will be notified once it is reviewed and approved.</p>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-confirm" data-action="close">OK</button>
+          </div>
+        </div>
+
+        <div class="modal-step" data-step="4">
+          <div class="modal-icon-wrapper error">
+            <i class="fas fa-exclamation-triangle"></i> 
+          </div>
+          <h2>Something went wrong</h2>
+          <p>Please check your network and try again.</p>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-confirm" data-action="try-again">Try again</button>
+          </div>
+        </div>
+      </div> 
+    </div>
+
+    <!-- Set Role Modal -->
+    <div id="setRoleModal" class="modal-overlay" style="display: none;">
+      <div class="set-role-modal-content">
+        <h2>Choose your role as SK</h2>
+        <form id="setRoleForm">
+          <div class="role-options-list">
+            <label class="role-option">
+              <input type="radio" name="sk_role" value="Kagawad" checked>
+              <span class="radio-circle"></span>
+              <span class="role-name">Kagawad</span>
+            </label>
+            <label class="role-option">
+              <input type="radio" name="sk_role" value="Secretary">
+              <span class="radio-circle"></span>
+              <span class="role-name">Secretary</span>
+            </label>
+            <label class="role-option">
+              <input type="radio" name="sk_role" value="Treasurer">
+              <span class="radio-circle"></span>
+              <span class="role-name">Treasurer</span>
+            </label>
+          </div>
+          
+          <div class="modal-actions">
+            <button type="submit" class="btn btn-confirm">Set Role</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Feedback Modal -->
+    <div id="feedbackModal" class="modal-overlay">
+      <div class="modal-content">
+        <span class="close-btn" id="closeModal">&times;</span>
+        <h2>Send us feedback</h2>
+        <p>Help us improve by sharing your thoughts, suggestions, and experiences with our service.</p>
+
+        <div class="feedback-options">
+          <div class="option-card">
+            <i class="fas fa-star"></i>
+            <p><strong>Star Rating</strong><br>Rate your experience with 1–5 stars</p>
+          </div>
+          <div class="option-card">
+            <i class="fas fa-comment"></i> 
+            <p><strong>Comment Section</strong><br>Share your thoughts</p>
+          </div>
+          <div class="option-card">
+            <i class="fas fa-bolt"></i>
+            <p><strong>Quick Submission</strong><br>Simple and intuitive feedback process</p>
+          </div>
+        </div>
+
+        <h3>Enjoying it? Rate us!</h3>
+        <div class="star-rating" id="starRating">
+          <i class="far fa-star" data-value="1"></i>
+          <i class="far fa-star" data-value="2"></i>
+          <i class="far fa-star" data-value="3"></i>
+          <i class="far fa-star" data-value="4"></i>
+          <i class="far fa-star" data-value="5"></i>
+        </div>
+
+        <form id="feedbackForm" action="{{ route('feedback.submit') }}" method="POST">
+          @csrf
+          
+          <label for="type">Feedback Type</label>
+          
+          <div class="custom-select-wrapper" id="customSelect">
+            <div class="custom-select-trigger">
+              <span id="selectedFeedbackType">Select feedback type</span>
+              <div class="custom-arrow"></div>
+            </div>
+            
+            <div class="custom-options-list">
+              <div class="custom-option" data-value="suggestion">
+                <span class="dot suggestion"></span> Suggestion
+              </div>
+              <div class="custom-option" data-value="bug">
+                <span class="dot bug"></span> Bug or Issue
+              </div>
+              <div class="custom-option" data-value="appreciation">
+                <span class="dot appreciation"></span> Appreciation
+              </div>
+              <div class="custom-option" data-value="others">
+                <span class="dot others"></span> Others
+              </div>
+            </div>
+            
+            <select id="type" name="type" required style="display: none;">
+              <option value="" disabled selected>Select feedback type</option>
+              <option value="suggestion">Suggestion</option>
+              <option value="bug">Bug or Issue</option>
+              <option value="appreciation">Appreciation</option>
+              <option value="others">Others</option>
+            </select>
+          </div>
+          
+          <label for="message">Your message</label>
+          <textarea id="message" name="message" rows="5"></textarea>
+
+          <input type="hidden" name="rating" id="ratingInput">
+          
+          <div class="form-actions">
+            <button type="submit" class="submit-btn">Submit</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="modal-overlay simple-alert-modal">
+      <div class="modal-content">
+        <div class="success-icon">
+          <i class="fas fa-check"></i>
+        </div>
+        <h2>Submitted</h2>
+        <p>Thank you for your feedback! Your thoughts help us improve.</p>
+        <button id="closeSuccessModal" class="ok-btn">OK</button>
+      </div>
+    </div>
 
     <div class="profile-calendar">
       <!-- Profile Card -->
@@ -215,6 +434,22 @@
           <!-- badges row -->
           <div class="badges-row">
             <span class="badge blue">{{ $roleBadge }}</span>
+            
+            <!-- FIXED: Added SK badge on profile card -->
+            @php
+              $skTitle = '';
+              if (!empty(Auth::user()->sk_role)) {
+                $skTitle = Auth::user()->sk_role; 
+              } 
+              elseif (Auth::user()->role === 'sk_chairperson') {
+                $skTitle = 'SK Chairperson';
+              }
+            @endphp
+
+            @if($skTitle)
+              <span class="badge sk-badge">{{ $skTitle }}</span>
+            @endif
+            
             <span class="status">{{ $user && $user->sk_voter === 'Yes' ? 'Registered Voter' : 'Not Registered' }}</span>
           </div>
 
@@ -260,18 +495,29 @@
           <div class="progress-eval-row">
             <div class="progress-card">
                 <h3>Progress</h3>
-                <div class="progress-circle">75%</div>
+                <div class="progress-circle" style="--progress: {{ $attendancePercentage }}%">
+                  <span>{{ $attendancePercentage }}%</span>
+                </div>
                 <p>Still a long journey ahead!<p>
             </div>
             <div class="evaluation-card">
-              <h3>Evaluated Programs</h3>
+              <h3>Evaluated Activities</h3>
               <div class="progress-wrapper">
-                <span class="progress-number">3</span>
+                <span class="progress-number">{{ $evaluatedActivities }}</span>
                 <div class="progress-bar">
-                  <div class="progress-fill" style="width: 60%;"></div>
+                  @php
+                    $evaluationPercentage = $totalActivities > 0 ? ($evaluatedActivities / $totalActivities * 100) : 0;
+                  @endphp
+                  <div class="progress-fill" style="width: {{ $evaluationPercentage }}%;"></div>
                 </div>
               </div>
-              <p>You have 3 events/programs to evaluate</p>
+              <p>
+                @if($activitiesToEvaluate > 0)
+                  You have {{ $activitiesToEvaluate }} {{ $activitiesToEvaluate == 1 ? 'activity' : 'activities' }} to evaluate.
+                @else
+                  All evaluations completed!
+                @endif
+              </p>
             </div>
           </div>
 
@@ -548,6 +794,41 @@
   </div>
 
   <script>
+    // === DARK/LIGHT MODE TOGGLE ===
+    const body = document.body;
+    const themeToggle = document.getElementById('themeToggle');
+
+    // Function to apply theme
+    function applyTheme(isDark) {
+      body.classList.toggle('dark-mode', isDark);
+      // Show sun when dark mode, moon when light mode
+      const icon = isDark ? 'sun' : 'moon';
+
+      if (themeToggle) {
+        themeToggle.innerHTML = `<i data-lucide="${icon}"></i>`;
+      }
+
+      // Re-initialize Lucide icons
+      if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+      }
+      
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+    }
+
+    // Load saved theme
+    const savedTheme = localStorage.getItem('theme') === 'dark';
+    applyTheme(savedTheme);
+
+    // Add event listener to theme toggle
+    if (themeToggle) {
+      themeToggle.addEventListener('click', () => {
+        const isDark = !body.classList.contains('dark-mode');
+        applyTheme(isDark);
+      });
+    }
+
     // Avatar Manager Class
     class AvatarManager {
       constructor() {
@@ -1476,28 +1757,346 @@
     });
   </script>
 
+  <!-- SK Access Modal JavaScript -->
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // 1. ACCESS SK ROLE MODAL (REQUEST LOGIC)
+    const skModal = document.getElementById('skAccessModal');
+    const openModalBtn = document.getElementById('accessSKRoleBtn');
+
+    // Helper: Show specific step
+    function showModalStep(stepNumber) {
+      if (!skModal) return;
+      skModal.querySelectorAll('.modal-step').forEach(step => {
+        step.classList.remove('active');
+        step.style.display = 'none';
+      });
+      const activeStep = skModal.querySelector(`.modal-step[data-step="${stepNumber}"]`);
+      if (activeStep) {
+        activeStep.classList.add('active');
+        activeStep.style.display = 'block';
+      }
+    }
+
+    // Helper: Close SK Modal
+    function closeSkModal() {
+      if (skModal) skModal.style.display = 'none';
+    }
+
+    // Submit Request Logic
+    async function handleSubmitRequest() {
+      showModalStep(2); // Loading
+
+      const btn = document.getElementById('accessSKRoleBtn');
+      const skAccessUrl = btn?.dataset.url || '/sk/request-access';
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+      if (!csrfToken) {
+        console.error('CSRF Token is missing!');
+        showModalStep(4);
+        return;
+      }
+
+      try {
+        const response = await fetch(skAccessUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({ _token: csrfToken })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          showModalStep(3); // Success
+        } else {
+          console.error(data.message);
+          const errText = skModal.querySelector('.modal-step[data-step="4"] p');
+          if(errText) errText.textContent = data.message || 'Failed to submit request.';
+          showModalStep(4);
+        }
+      } catch (error) {
+        console.error('Fetch error:', error);
+        showModalStep(4);
+      }
+    }
+
+    // Event Listeners: Open Request Modal
+    if (openModalBtn) {
+      openModalBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        showModalStep(1);
+        skModal.style.display = 'flex';
+      });
+    }
+
+    // Event Listeners: Modal Buttons
+    if (skModal) {
+      skModal.addEventListener('click', function(e) {
+        const action = e.target.dataset.action;
+        if (!action) return;
+
+        switch (action) {
+          case 'close':
+            closeSkModal();
+            break;
+          case 'confirm-request':
+            handleSubmitRequest();
+            break;
+          case 'try-again':
+            handleSubmitRequest();
+            break;
+        }
+      });
+    }
+
+    // 2. SET ROLE MODAL LOGIC
+    const setRoleModal = document.getElementById('setRoleModal');
+    const setRoleForm = document.getElementById('setRoleForm');
+
+    // Make this GLOBAL so the notification onClick can call it
+    window.openSetRoleModal = function() {
+      if (setRoleModal) {
+        setRoleModal.style.display = 'flex';
+        console.log('Opening Set Role Modal...');
+      } else {
+        console.error('Error: Cannot find modal with id "setRoleModal"');
+      }
+    };
+
+    // Close Set Role Modal on outside click
+    window.addEventListener('click', function(e) {
+      if (e.target === setRoleModal) {
+        setRoleModal.style.display = 'none';
+      }
+    });
+
+    // Handle Form Submit (Set Role)
+    if (setRoleForm) {
+      setRoleForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const btn = setRoleForm.querySelector('button[type="submit"]');
+        const originalText = btn.textContent;
+        
+        // UI Feedback
+        btn.textContent = "Saving...";
+        btn.disabled = true;
+
+        const formData = new FormData(setRoleForm);
+        const selectedRole = formData.get('sk_role');
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+        try {
+          const response = await fetch('/sk/set-role', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-TOKEN': csrfToken,
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify({ role: selectedRole })
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            alert('Role set successfully! Redirecting...');
+            window.location.reload();
+          } else {
+            alert(data.message || 'Failed to set role.');
+            btn.textContent = originalText;
+            btn.disabled = false;
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          alert('Something went wrong. Please try again.');
+          btn.textContent = originalText;
+          btn.disabled = false;
+        }
+      });
+    }
+  });
+  </script>
+
+  <!-- Mobile Sidebar Toggle -->
   <script>
   const mobileBtn = document.getElementById('mobileMenuBtn');
   const sidebar = document.querySelector('.sidebar');
-  const mainContent = document.querySelector('.main'); // (BAGO)
+  const mainContent = document.querySelector('.main');
 
   mobileBtn?.addEventListener('click', (e) => {
-    e.stopPropagation(); // (BAGO)
+    e.stopPropagation();
     sidebar.classList.toggle('open');
-    document.body.classList.toggle('mobile-sidebar-active'); // (BAGO)
+    document.body.classList.toggle('mobile-sidebar-active');
   });
 
   // Close sidebar when clicking outside (mobile only)
   document.addEventListener('click', (e) => {
     if (window.innerWidth <= 768 &&
-      sidebar.classList.contains('open') && // (BAGO) Check kung open
+      sidebar.classList.contains('open') &&
       !sidebar.contains(e.target) &&
       !mobileBtn.contains(e.target)) {
       
       sidebar.classList.remove('open');
-      document.body.classList.remove('mobile-sidebar-active'); // (BAGO)
+      document.body.classList.remove('mobile-sidebar-active');
     }
   });
-</script>
+  </script>
+
+  <!-- Feedback Modal Script (needs to be added to profilepage.css) -->
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Feedback Modal
+    const feedbackTriggerBtn = document.getElementById('openFeedbackBtn');
+    const feedbackModal = document.getElementById('feedbackModal');
+    if (feedbackTriggerBtn && feedbackModal) {
+      const feedbackCloseBtn = document.getElementById('closeModal');
+      const feedbackStars = document.querySelectorAll('#starRating i');
+      const feedbackRatingInput = document.getElementById('ratingInput');
+      const feedbackForm = document.getElementById('feedbackForm');
+      const submitBtn = feedbackForm?.querySelector('.submit-btn');
+      const successModal = document.getElementById('successModal');
+      const closeSuccessBtn = document.getElementById('closeSuccessModal');
+
+      // Custom Select Box Logic
+      const customSelect = document.getElementById('customSelect');
+      if (customSelect) {
+        const trigger = customSelect.querySelector('.custom-select-trigger');
+        const selectedText = document.getElementById('selectedFeedbackType');
+        const optionsList = customSelect.querySelector('.custom-options-list');
+        const options = customSelect.querySelectorAll('.custom-option');
+        const realSelect = document.getElementById('type');
+
+        // Toggle dropdown
+        trigger?.addEventListener('click', (e) => {
+          e.stopPropagation();
+          customSelect.classList.toggle('open');
+        });
+
+        // Handle option click
+        options?.forEach(option => {
+          option.addEventListener('click', () => {
+            const value = option.getAttribute('data-value');
+            const text = option.textContent.trim();
+
+            if (selectedText) selectedText.textContent = text;
+            if (realSelect) realSelect.value = value;
+            trigger?.classList.add('selected');
+
+            customSelect.classList.remove('open');
+          });
+        });
+
+        // Close custom select on outside click
+        document.addEventListener('click', () => {
+          customSelect.classList.remove('open');
+        });
+      }
+
+      feedbackTriggerBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        feedbackModal.style.display = 'flex';
+      });
+
+      feedbackCloseBtn?.addEventListener('click', () => {
+        feedbackModal.style.display = 'none';
+      });
+
+      window.addEventListener('click', (e) => {
+        if (e.target === feedbackModal) {
+          feedbackModal.style.display = 'none';
+        }
+        if (e.target === successModal) {
+          successModal.style.display = 'none';
+        }
+      });
+
+      feedbackStars.forEach(star => {
+        star.addEventListener('click', () => {
+          const rating = star.getAttribute('data-value');
+          if (feedbackRatingInput) feedbackRatingInput.value = rating;
+
+          feedbackStars.forEach(s => {
+            s.classList.remove('fas');
+            s.classList.add('far');
+          });
+          for (let i = 0; i < rating; i++) {
+            feedbackStars[i].classList.remove('far');
+            feedbackStars[i].classList.add('fas');
+          }
+        });
+      });
+
+      if (feedbackForm) {
+        feedbackForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+
+          const formData = new FormData(feedbackForm);
+          const submitButtonText = submitBtn.textContent;
+
+          if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+          }
+
+          fetch(feedbackForm.action, {
+              method: 'POST',
+              headers: {
+                'X-CSRF-TOKEN': formData.get('_token'),
+                'Accept': 'application/json'
+              },
+              body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                feedbackModal.style.display = 'none';
+                if (successModal) successModal.style.display = 'flex';
+              } else {
+                let errorMsg = data.message || 'Submission failed.';
+                if (data.errors) {
+                  errorMsg += '\n' + Object.values(data.errors).join('\n');
+                }
+                throw new Error(errorMsg);
+              }
+            })
+            .catch(error => {
+              console.error('Error:', error);
+              alert(error.message || 'An error occurred. Please try again.');
+            })
+            .finally(() => {
+              if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = submitButtonText;
+              }
+
+              feedbackForm.reset();
+              feedbackStars.forEach(s => {
+                s.classList.remove('fas');
+                s.classList.add('far');
+              });
+              if (feedbackRatingInput) feedbackRatingInput.value = '';
+
+              // Reset custom select
+              const selectedText = document.getElementById('selectedFeedbackType');
+              const trigger = customSelect?.querySelector('.custom-select-trigger');
+              const realSelect = document.getElementById('type');
+              if (selectedText) selectedText.textContent = 'Select feedback type';
+              trigger?.classList.remove('selected');
+              if (realSelect) realSelect.value = '';
+            });
+        });
+      }
+
+      closeSuccessBtn?.addEventListener('click', () => {
+        if (successModal) successModal.style.display = 'none';
+      });
+    }
+  });
+  </script>
 </body>
 </html>

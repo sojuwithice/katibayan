@@ -533,6 +533,74 @@ body {
   pointer-events: auto;       
 }
 
+.assistance-section {
+      margin-bottom: 2rem; 
+    }
+    .assistance-card {
+      background: #ffffff;
+      border-radius: 16px; 
+      padding: 24px 30px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07);
+      border: 1px solid #e9ecef;
+      position: relative; 
+    }
+
+    
+    .edit-assistance-btn {
+      position: absolute;
+      top: 24px;
+      right: 30px;
+      font-size: 1rem;
+      color: #adb5bd; /* A subtle gray */
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .edit-assistance-btn:hover {
+      color: #335b8f; /* Same as the title color on hover */
+    }
+    /* --- END: BAGO: STYLES PARA SA EDIT ICON --- */
+
+    .assistance-card h2 {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #3C87C4; 
+      margin: 0 0 10px 0;
+      margin-right: 30px; /* <-- BAGO: Nagbigay space para sa edit icon */
+    }
+    .assistance-card > p { 
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.95rem;
+      color: #495057;
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+    .assistance-links {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .link-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .link-item i {
+      font-size: 1.75rem; 
+      color: #3C87C4; 
+      width: 30px; 
+      text-align: center;
+    }
+    .link-item a {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 1rem;
+      color: #3C87C4;
+      text-decoration: none;
+      word-break: break-all; 
+    }
+    .link-item a:hover {
+      text-decoration: underline;
+    }
 
 /* === General Section Layout === */
 .service-offer, .org-chart {
@@ -715,9 +783,10 @@ body {
 
 .card-header img {
   width: 100%;
-  height: auto;
+  height: 220px;
+  
   border-radius: 10px;
-  object-fit: contain;
+  object-fit: fill;
 }
 
 /* === Card Body === */
@@ -751,88 +820,108 @@ body {
 }
 
 
-/* === Org Upload === */
-.org-upload {
-  position: relative;
-  width: 100%;
-  margin-top: 2rem;
+/* --- ORG CHART UPLOAD BOX AND BASE STYLES --- */
+
+.org-upload .upload-box {
+    position: relative;
+    height: auto; 
+    overflow-y: visible !important; 
+    overflow-x: hidden;
+    border: 2px dashed #9bbbd4;
+    border-radius: 12px;
+    background: #f7f9fc;
+    transition: 0.3s ease;
 }
 
-/* Upload Container */
-.upload-container {
-  width: 100%;
-  margin-top: 1rem;
-  display: flex;
-  justify-content: center;
+/* FIX: Container para sa maramihang images (Column Stack) */
+.org-upload .preview-column {
+    display: flex !important;
+    flex-direction: column !important; 
+    
+    justify-content: flex-start !important;
+    align-items: center; 
+    height: auto !important;
+    width: 100%;
+    gap: 15px !important; 
+    padding: 10px; 
 }
 
-/* Upload Box */
-.upload-box {
-  width: 100%;
-  height: 650px; /* big enough for full chart */
-  border: 2px dashed #ccc;
-  border-radius: 12px;
-  background: #f9f9f9;
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: 0.3s ease;
+/* Style for the container wrapping each displayed image */
+.preview-item {
+    position: relative; 
+    max-width: 98%; 
+    width: 100%;
+    height: auto; 
+    overflow: hidden;
+    border-radius: 8px;
+    border: 1px solid #eee; 
 }
 
-.upload-box:hover {
-  border-color: #3C87C4;
-  background: #f5faff;
+/* Style for the image itself */
+.preview-img {
+    width: 100%; 
+    height: auto;
+    object-fit: contain; 
+    display: block;
 }
 
-/* Placeholder (before upload) */
+/* Overlay container for the buttons (No change needed here) */
+.overlay-buttons {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    flex-direction: column; 
+    justify-content: center;
+    align-items: center;
+    opacity: 0; 
+    transition: opacity 0.3s ease;
+    padding: 15px;
+}
+
+.preview-item:hover .overlay-buttons {
+    opacity: 1; 
+}
+
+/* Styling for the action buttons (No change needed here) */
+.btn-action {
+    margin: 8px;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: bold;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.delete-existing-btn {
+    background-color: #dc3545;
+    color: white;
+}
+
+.update-existing-btn {
+    background-color: #007bff;
+    color: white;
+}
+
+/* --- UPLOAD PLACEHOLDER (No change needed here) --- */
+
 .upload-placeholder {
-  text-align: center;
-  color: #666;
-  pointer-events: none;
-}
-.upload-placeholder i {
-  color: #3C87C4;
-  margin-bottom: 0.6rem;
-}
-.upload-placeholder p {
-  font-size: 0.95rem;
-}
-.upload-placeholder a {
-  color: #3C87C4;
-  font-weight: 600;
-  text-decoration: none;
-  pointer-events: auto;
-}
-
-/* Uploaded image fills the entire section */
-.upload-box img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain; /* full image visible, no crop */
-  display: block;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+    color: #9bbbd4;
+    text-align: center;
 }
 
 
-#uploadBox {
-  width: 100%;
-  height: 600px; /* bigger height */
-  border: 2px dashed #9bbbd4;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f7f9fc;
-  cursor: pointer;
-  overflow: hidden; /* hides image overflow for clean edges */
-  transition: 0.3s ease;
-}
-
-#uploadBox:hover {
-  border-color: #3C87C4;
-  background: #eef5fb;
-}
 
 
 
@@ -857,10 +946,12 @@ body {
   border-radius: 20px;
   width: 95%;
   max-width: 800px;
-  padding: 2rem 2.5rem;
+  padding: 1.5rem 2.5rem;
   position: relative;
   box-shadow: 0 5px 25px rgba(0,0,0,0.15);
   animation: fadeIn 0.3s ease;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 /* Close Button */

@@ -20,7 +20,11 @@ class Service extends Model
         'location',
         'how_to_avail',
         'contact_info',
+        'assistance_description',
+        'assistance_fb_link',
+        'assistance_msgr_link',
         'is_active'
+        
     ];
 
     protected $casts = [

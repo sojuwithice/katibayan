@@ -29,8 +29,14 @@ class Barangay extends Model
     {
         return $this->hasMany(OrganizationalChart::class);
     }
+    
     public function users()
     {
         return $this->hasMany(User::class);
+    }
+
+        public function skContactDetail()
+    {
+        return $this->hasOne(SkContactDetail::class)->withDefault();
     }
 }

@@ -546,6 +546,8 @@ body[data-theme="dark"] {
   background: #0C4B92; 
   margin-bottom: 2rem; }
 
+
+  
 /* Step 2 content */
 .step-content[data-step="2"] {
   margin-top: 20px;
@@ -566,17 +568,168 @@ body[data-theme="dark"] {
   margin-top: -10px;
 }
 
+/* ---------------------------------------------------- */
+/* 🚀 FIX: WRAPPER, LABEL, and ASTERISK STYLING (REUSABLE) */
+/* ---------------------------------------------------- */
+.input-wrapper,
+.select-wrapper {
+    /* FIX: Ginawang column para ma-stack ang label at input */
+    display: flex; 
+    flex-direction: column; 
+    position: relative; 
+    margin-bottom: 0; /* Let grid/flex handle gap */
+}
+
+/* Styling for the new label element */
+.input-wrapper label,
+.select-wrapper label {
+    font-size: 0.95rem; 
+    font-weight: 600; 
+    color: #0C4B92; 
+    margin-bottom: 4px; /* Space sa pagitan ng label at box */
+    width: 100%; 
+}
+
+/* Styling for the required asterisk */
+.required-asterisk {
+    color: #B14141; /* Red color */
+    margin-left: 4px; 
+    font-weight: 700;
+}
+
+/* REMOVE: Tanggalin ang lumang asterisk na naka-position: absolute sa input-wrapper */
+.input-wrapper::after {
+  content: none; 
+}
+
+
+/* === Input & Select Base Styles === */
+input,
+select,
+.email-input-box { /* Add email-input-box here for consistency */
+  padding: 0.9rem 1.2rem;
+  border: 2px solid #0C4B92;
+  border-radius: 50px;
+  outline: none;
+  font-size: 1rem;
+  width: 100%;
+  height: 48px; 
+  line-height: 1.2;
+  box-sizing: border-box;
+}
+
+/* Dropdown specific styles */
+.select-wrapper input {
+  /* Set specific padding for dropdowns to make space for the arrow */
+  padding: 0.9rem 1.2rem; 
+  padding-right: 3rem; 
+  cursor: pointer;
+}
+
+/* ------------------------------------ */
+/* 🎯 FIX: DROPDOWN ARROW POSITIONING */
+/* ------------------------------------ */
+.select-wrapper .arrow {
+  position: absolute;
+  right: 15px;
+  /* FIX: Adjusted 'top' value to center the icon inside the 48px input box 
+     after the label has been pushed up (~49px total height clearance) */
+  top: 49px; 
+  transform: translateY(-50%) rotate(0deg);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #3C87C4;
+  color: #fff;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  transition: transform 0.3s ease, background 0.3s ease;
+}
+/* ------------------------------------ */
+
+.select-wrapper.open .arrow {
+  transform: translateY(-50%) rotate(180deg);
+  background: #2a5e8f;
+}
+
+/* dropdown options */
+.dropdown-options {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: #fff;
+  border-radius: 15px;
+  border: 1px solid #ccc;
+  position: absolute;
+  /* FIX: Ibinaba ang dropdown para hindi matakpan ng label */
+  top: calc(100% + 5px); 
+  left: 0;
+  right: 0;
+  display: none;
+  z-index: 999;
+  box-shadow: 0px 4px 8px rgba(0,0,0,0.1);
+
+  max-height: 200px;   
+  overflow-y: auto;    
+}
+
+/* --- EMAIL/OTP Section Fixes --- */
+
+/* FLEX CONTAINER */
+/* ONLY apply flex layout to the email OTP row */
+.form-grid.email-row {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: flex-end !important;
+    gap: 1rem;
+}
+
+
+/* Email Input Specific Styling */
+.email-input-box {
+    flex: 1 1 auto !important;   
+    max-width: 350px;
+    min-width: 0 !important;     
+    /* Inherits styling from input, just adjust height if needed */
+    height: 48px; /* Consistent height */
+}
+
+/* The input-wrapper needs to flex properly inside the form-grid */
+.form-grid > .input-wrapper {
+    /* Need specific flex property to align with the button which is also a grid item */
+    flex: 1 1 350px; /* Allow it to grow/shrink based on max-width */
+    max-width: 350px;
+}
+
+/* SEND OTP BUTTON */
+.primary-btn {
+    width: 160px;       
+    height: 48px; /* Consistent height with input */
+    background-color: #3C87C4;
+    color: white;
+    border-radius: 30px;
+    border: none;
+    font-size: 1rem; /* Adjusted font size for 48px height */
+    font-weight: 500; /* Adjusted font weight for better look */
+    /* ... other styles remain the same ... */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    white-space: nowrap;
+}
+
+
+/* ... (the rest of the CSS for buttons, file uploads, and info-note remains the same) ... */
+
+
+/* --- Original styles kept below for completeness --- */
 
 .step-2 .form-group input[name="address"] {
   width: 500px;
 }
-
-.form-grid {
-  display: grid;
-  gap: 15px;
-  margin-bottom: 20px;
-}
-
 
 .input-with-btn {
   display: flex;
@@ -649,6 +802,26 @@ body[data-theme="dark"] {
   pointer-events: auto;
 }
 
+.info-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: #e8f1ff;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin: 12px 0 20px 0;
+  border-left: 4px solid #3C87C4;
+  font-size: 14px;
+  color: #0a2a4f;
+  line-height: 1.4;
+}
+
+.info-note .info-icon {
+  width: 18px;
+  height: 18px;
+  color: #3C87C4;
+  margin-top: 2px;
+}
 
 
 
@@ -729,6 +902,165 @@ p{
   margin-bottom: 1rem;
 }
 
+/* SPINNER STYLING */
+.spinner {
+    display: inline-block;
+    width: 1.2em;
+    height: 1.2em;
+    border: 3px solid rgba(255, 255, 255, 0.5);
+    border-right-color: #fff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-right: 8px; 
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+
+
+
+
+/* Remove asterisk from middle name and suffix fields */
+    .input-wrapper:has(#step1_middlename)::after,
+    .input-wrapper:has(#step1_suffix)::after {
+      content: none !important;
+    }
+    
+    /* New styles for SK vs KK info */
+    .role-info-note {
+      background-color: #e8f4fc;
+      border-left: 4px solid #3C87C4;
+      padding: 12px 15px;
+      margin: 15px 0;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    
+    .role-info-note.sk {
+      background-color: #fff8e6;
+      border-left-color: #ffc107;
+    }
+    
+    .role-info-note.kk {
+      background-color: #e8f5e9;
+      border-left-color: #4caf50;
+    }
+    
+    /* File upload specific styling */
+    #uploadInstruction {
+      margin-bottom: 15px;
+      font-weight: 600;
+      color: #333;
+    }
+
+
+
+ 
+
+/* Main modal box */
+.modal.simple-confirmation-modal {
+  background: #ffffff;
+  border-radius: 20px !important;
+  max-width: 420px !important;     /* smaller */
+  width: 90% !important;
+  padding: 0 !important;
+  text-align: center !important;
+  box-shadow: 0px 6px 25px rgba(0, 0, 0, 0.18) !important;
+  font-family: "Inter", sans-serif !important;
+}
+
+/* Hide default header */
+.simple-confirmation-modal .modal-header {
+  display: none !important;
+}
+
+/* Body */
+.simple-confirmation-modal .modal-body {
+  padding: 35px 30px 10px !important;
+  text-align: center !important;
+}
+
+/* Icon (smaller) */
+.simple-confirmation-modal .confirmation-icon {
+  font-size: 60px !important;   /* smaller */
+  color: #3C87C4 !important;
+  margin-bottom: 25px !important;
+  line-height: 1;
+}
+
+/* Title */
+.simple-confirmation-modal .confirmation-message h3 {
+  color: #3C87C4 !important;
+  font-size: 1.4rem !important; /* smaller */
+  font-weight: 600 !important;
+  margin-bottom: 6px !important;
+}
+
+/* Subtext */
+.simple-confirmation-modal .warning-text {
+  color: #666 !important;
+  font-size: 0.95rem !important;
+  margin-top: 0 !important;
+}
+.simple-confirmation-modal .warning-text i {
+  display: none !important;
+}
+
+/* Footer */
+.simple-confirmation-modal .modal-footer {
+  padding: 20px 25px 30px !important;
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+
+
+/* Button base */
+.simple-confirmation-modal .cancel-btn,
+.simple-confirmation-modal .confirm-btn {
+  width: 150px !important;     /* SAME fixed width for both */
+  padding: 10px 0 !important;
+  border-radius: 8px !important;
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  text-align: center !important;
+  border: none !important;
+  display: inline-flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+
+
+/* Cancel */
+.simple-confirmation-modal .cancel-btn {
+  background: #e2e6ea !important;
+  color: #2e3a48 !important;
+}
+.simple-confirmation-modal .cancel-btn:hover {
+  background: #d5d9dd !important;
+}
+
+/* Confirm */
+.simple-confirmation-modal .confirm-btn {
+  background: #3C87C4 !important;
+  color: #ffffff !important;
+  white-space: nowrap !important;
+}
+.simple-confirmation-modal .confirm-btn:hover {
+  background: #3C87C4 !important;
+}
+
+
+
+
+
+
 
 /* Checkbox group */
 .checkbox-group {
@@ -774,7 +1106,8 @@ p{
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1rem;
-  margin-bottom: 1rem;
+  /* Panatilihin ang margin-bottom na ito */
+  margin-bottom: 1rem; 
 }
 
 .full-width {
@@ -806,11 +1139,47 @@ p{
 
 .role-select {
   min-width: 200px;
-}.section-header h3 {
+}
+.section-header h3 {
   font-size: 1.5rem;       
   font-weight: 700;        
   color: #0C4B92;          
   margin-bottom: 1.5rem;   
+}
+
+/* ---------------------------------------------------- */
+/* 🚀 FIX: WRAPPER, LABEL, and ASTERISK STYLING */
+/* ---------------------------------------------------- */
+.input-wrapper,
+.select-wrapper,
+.input-icon.input-wrapper {
+    /* FIX: Ginawang column para ma-stack ang label at input */
+    display: flex; 
+    flex-direction: column; 
+    position: relative; 
+    /* Huwag baguhin ang margin-bottom dito, hayaan ang form-grid gap */
+}
+
+/* Styling for the new label element */
+.input-wrapper label,
+.select-wrapper label {
+    font-size: 0.95rem; 
+    font-weight: 600; 
+    color: #0C4B92; 
+    margin-bottom: 4px; /* Space sa pagitan ng label at box */
+    width: 100%; 
+}
+
+/* Styling for the required asterisk */
+.required-asterisk {
+    color: #B14141; /* Red color */
+    margin-left: 4px; 
+    font-weight: 700;
+}
+
+/* REMOVE: Tanggalin ang lumang asterisk na naka-position: absolute sa input-wrapper */
+.input-wrapper::after {
+  content: none; 
 }
 
 /* === Fix Input & Select Sizes === */
@@ -831,12 +1200,14 @@ select {
 .select-wrapper {
   position: relative;
   width: 100%;
+  /* Panatilihin ang margin-bottom kung gusto mo ng dagdag na space */
   margin-bottom: 1rem;
 }
 
 .select-wrapper input {
   width: 100%;
-  padding: 0.10rem 1.2rem;
+  /* Palitan ang padding para maging consistent sa input: */
+  padding: 0.9rem 1.2rem; 
   padding-right: 3rem; 
   border: 2px solid #0C4B92;
   border-radius: 50px;
@@ -857,10 +1228,14 @@ select {
   background: #f9fbff;
 }
 
+/* ------------------------------------ */
+/* 🎯 FIX: DROPDOWN ARROW POSITIONING */
+/* ------------------------------------ */
 .select-wrapper .arrow {
   position: absolute;
-  top: 50%;
   right: 15px;
+  
+  top: 49px; 
   transform: translateY(-50%) rotate(0deg);
   width: 28px;
   height: 28px;
@@ -874,18 +1249,23 @@ select {
   pointer-events: none;
   transition: transform 0.3s ease, background 0.3s ease;
 }
+/* ------------------------------------ */
 
 .select-wrapper.open .arrow {
   transform: translateY(-50%) rotate(180deg);
   background: #2a5e8f;
 }
 
+/* FIXED: short selects should NOT exceed container */
 .select-wrapper.short-select {
-  width: fit-content;
-  min-width: 270px;  
-  max-width: 400px;  
+    width: 100%;          
+    max-width: 350px;     /* optional, same as normal input */
 }
 
+.select-wrapper.short-select .arrow {
+    top: 50% !important;  
+    transform: translateY(-50%) !important;
+}
 
 /* dropdown options */
 .dropdown-options {
@@ -896,7 +1276,8 @@ select {
   border-radius: 15px;
   border: 1px solid #ccc;
   position: absolute;
-  top: 110%;
+  /* FIX: Ibinaba ang dropdown para hindi matakpan ng label */
+  top: calc(100% + 5px); /* Mag-start sa baba ng input box */
   left: 0;
   right: 0;
   display: none;
@@ -935,36 +1316,38 @@ select {
   background: #2a5e8f;
 }
 
-
 .dropdown-options {
   scrollbar-width: thin;
   scrollbar-color: #3C87C4 #f1f5f9;
 }
 
 
-
 /* Calendar Icon */
 .input-icon {
-  position: relative;
-  height: 48px; 
+  position: relative; 
 }
 
 .input-icon input {
-  height: 100%;
+  height: 48px; 
   padding-right: 3rem;
 }
 
+/* ------------------------------------ */
+/*  FIX: CALENDAR ICON POSITIONING */
+/* ------------------------------------ */
 .input-icon .icon {
   position: absolute;
   right: 15px;
-  top: 50%;
+  top: 49px;
   transform: translateY(-50%);
   color: #0C4B92;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  pointer-events: none;
 }
+/* ------------------------------------ */
 
 .input-icon .icon svg {
   width: 18px;
@@ -972,43 +1355,40 @@ select {
   stroke: #0C4B92;
 }
 
+/* Date Input Hacks */
 input[type="date"]::-webkit-calendar-picker-indicator {
-  opacity: 0;
-  pointer-events: all; 
-  position: absolute;  
-  right: 15px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 18px;
-  height: 18px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0; 
+    cursor: pointer;
+}
+
+input[type="date"]:invalid::-webkit-datetime-edit {
+    color: transparent;
+}
+
+/* FIX: Inalis ang :before hack dahil may label na sa itaas */
+input[type="date"]:invalid::before {
+    content: none;
+}
+
+input[type="date"]:focus::before,
+input[type="date"]:valid::before {
+    display: none;
 }
 
 
-/* If you have a calendar icon inside input */
+input[type="date"]:focus::-webkit-datetime-edit,
+input[type="date"]:valid::-webkit-datetime-edit {
+    color: inherit;
+}
+
 .input-icon .icon {
   pointer-events: none; 
 }
-
-
-
-.input-wrapper {
-  position: relative;
-  width: 100%;
-}
-
-.input-wrapper::after {
-  content: "*";
-  color: #B14141;
-  position: absolute;
-  right: 15px;
-  top: 0;  
-  height: 100%;
-  display: flex;
-  align-items: center;  
-  pointer-events: none;
-  font-size: 1.3rem;
-}
-
 
 
 
@@ -1669,14 +2049,14 @@ body.dark-mode .input-with-btn .verify-btn:hover {
     max-width: 200%;   
   }
 
-  .form-grid-4 {
-    grid-template-columns: 1fr;
-  }
+  
   #step2_address {
     grid-column: span 1;
   }
 
-  
+  .form-grid-4 {
+    grid-template-columns: 1fr !important;
+  }
 
 
   .form-actions .back-btn,

@@ -4,6 +4,32 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
+  <script>
+    // Make CSRF token globally available
+    window.csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    
+    // Override browser default alert, confirm, and prompt
+    window.originalAlert = window.alert;
+    window.originalConfirm = window.confirm;
+    window.originalPrompt = window.prompt;
+    
+    // Custom alert function
+    window.alert = function(message, title = 'Alert', icon = 'info', callback = null) {
+      window.showCustomAlert(message, title, icon, callback);
+      return undefined;
+    };
+    
+    // Custom confirm function
+    window.confirm = function(message, title = 'Confirmation', icon = 'warning', callback = null) {
+      return window.showCustomConfirm(message, title, icon, callback);
+    };
+    
+    // Custom prompt function
+    window.prompt = function(message, defaultValue = '', title = 'Input Required', callback = null) {
+      return window.showCustomPrompt(message, defaultValue, title, callback);
+    };
+  </script>
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/favicon.png') }}">
   <title>KatiBayan - Dashboard</title>
   <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
@@ -57,8 +83,8 @@
     <!-- Topbar -->
     <header class="topbar">
       <button id="mobileMenuBtn" class="mobile-hamburger">
-  <i data-lucide="menu"></i>
-</button>
+        <i data-lucide="menu"></i>
+      </button>
 
       <div class="logo">
         <img src="{{ asset('images/KatiBayan-Logo_B.png') }}" alt="Logo">
@@ -71,134 +97,172 @@
       <div class="topbar-right">
         <div class="time">MON 10:00 <span>AM</span></div>
 
- <!-- Theme Toggle Button - ADDED HERE -->
+        <!-- Theme Toggle Button -->
         <button class="theme-toggle" id="themeToggle">
           <i data-lucide="moon"></i>
         </button>
-
-    <!-- Notifications -->
-<div class="notification-wrapper">
-    <i class="fas fa-bell"></i>
-    @if($notificationCount > 0)
-        <span class="notif-count">{{ $notificationCount }}</span>
-    @endif
-    <div class="notif-dropdown">
-        <div class="notif-header">
-            <strong>Notification</strong>
-            @if($notificationCount > 0)
-                <span>{{ $notificationCount }}</span>
-            @endif
-        </div>
         
-        <ul class="notif-list">
-
-            @foreach ($generalNotifications as $notif)
+        <!-- Notification Wrapper - UPDATED -->
+        <div class="notification-wrapper">
+          <i class="fas fa-bell"></i>
+          @if($notificationCount > 0)
+            <span class="notif-count">{{ $notificationCount }}</span>
+          @endif
+          <div class="notif-dropdown">
+            <div class="notif-header">
+              <strong>Notification</strong>
+              @if($notificationCount > 0)
+                <span>{{ $notificationCount }}</span>
+              @endif
+            </div>
+            
+            <ul class="notif-list">
+              @foreach ($generalNotifications as $notif)
                 @php
-                    $link = '#'; // Default
-                    if ($notif->type == 'certificate_schedule') {
-                        $link = route('certificatepage'); 
-                    }
+                  $link = '#';
+                  $onclickAction = '';
+                  
+                  if ($notif['type'] == 'certificate_schedule') {
+                    $link = route('certificatepage'); 
+                  } 
+                  elseif ($notif['type'] == 'sk_request_approved' || $notif['type'] == 'App\Notifications\SkRequestAccepted') { 
+                    $link = '#'; 
+                    $onclickAction = 'openSetRoleModal(); return false;';
+                  }
+                  elseif ($notif['notification_type'] == 'evaluation_required') {
+                    $link = route('evaluation.show', $notif['activity_id']);
+                  }
+
+                  $title = $notif['title'] ?? 'Notification';
+                  $message = $notif['message'] ?? 'You have a new notification.';
+                  $isRead = $notif['is_read'] ?? 0;
                 @endphp
                 
                 <li>
-                    <a href="{{ $link }}" class="notif-link {{ $notif->is_read == 0 ? 'unread' : '' }}" data-id="{{ $notif->id }}">
-                        
-                        <div class="notif-dot-container">
-                            @if ($notif->is_read == 0)
-                                <span class="notif-dot"></span>
-                            @else
-                                <span class="notif-dot-placeholder"></span>
-                            @endif
-                        </div>
+                  <a href="{{ $link }}" 
+                     class="notif-link {{ $isRead == 0 ? 'unread' : '' }}" 
+                     @if(isset($notif['id']) && !str_starts_with($notif['id'], 'eval_'))
+                         data-id="{{ $notif['id'] }}"
+                     @endif
+                     @if(isset($notif['activity_id']))
+                         data-{{ $notif['activity_type'] }}-id="{{ $notif['activity_id'] }}"
+                     @endif
+                     @if($onclickAction) onclick="{{ $onclickAction }}" @endif>
+                    
+                    <div class="notif-dot-container">
+                      @if ($isRead == 0)
+                        <span class="notif-dot"></span>
+                      @else
+                        <span class="notif-dot-placeholder"></span>
+                      @endif
+                    </div>
 
-                        <div class="notif-main-content">
-                            <div class="notif-header-line">
-                                <strong>{{ $notif->title }}</strong>
-                                <span class="notif-timestamp">
-                                    {{ $notif->created_at->format('m/d/Y g:i A') }}
-                                </span>
-                            </div>
-                            <p class="notif-message">{{ $notif->message }}</p>
-                        </div>
-                    </a>
+                    <div class="notif-main-content">
+                      <div class="notif-header-line">
+                        <strong>{{ $title }}</strong>
+                        <span class="notif-timestamp">
+                          @if($notif['created_at'] instanceof \Carbon\Carbon)
+                            {{ $notif['created_at']->format('m/d/Y g:i A') }}
+                          @else
+                            {{ \Carbon\Carbon::parse($notif['created_at'])->format('m/d/Y g:i A') }}
+                          @endif
+                        </span>
+                      </div>
+                      <p class="notif-message">{{ $message }}</p>
+                    </div>
+                  </a>
                 </li>
-            @endforeach
+              @endforeach
 
-            @foreach($unevaluatedActivities as $activity)
-                <li>
-                    <a href="{{ route('evaluation.show', $activity['id']) }}" class="notif-link unread" 
-                       data-{{ $activity['type'] }}-id="{{ $activity['id'] }}">
-                        
-                        <div class="notif-dot-container">
-                            <span class="notif-dot"></span>
-                        </div>
-                        
-                        <div class="notif-main-content">
-                            <div class="notif-header-line">
-                                <strong>{{ ucfirst($activity['type']) }} Evaluation Required</strong>
-                                <span class="notif-timestamp">
-                                    {{ $activity['created_at']->format('m/d/Y g:i A') }}
-                                </span>
-                            </div>
-                            <p class="notif-message">Please evaluate "{{ $activity['title'] }}"</p>
-                        </div>
-                    </a>
-                </li>
-            @endforeach
-
-            @if($generalNotifications->isEmpty() && $unevaluatedActivities->isEmpty())
+              @if($generalNotifications->isEmpty())
                 <li class="no-notifications">
-                    <p>No new notifications</p>
+                  <p>No new notifications</p>
                 </li>
-            @endif
+              @endif
+            </ul>
+          </div>
+        </div>
 
-        </ul>
-        
-    </div>
-</div>
-
-        <!-- Profile Avatar -->
         <div class="profile-wrapper">
           <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
                alt="User" class="avatar" id="profileToggle">
+          
           <div class="profile-dropdown">
             <div class="profile-header">
               <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
                    alt="User" class="profile-avatar">
+                   
               <div class="profile-info">
                 <h4>{{ $user->given_name }} {{ $user->middle_name }} {{ $user->last_name }} {{ $user->suffix }}</h4>
-                <div class="profile-badge">
-                  <span class="badge">{{ $roleBadge }}</span>
-                  <span class="badge">{{ $age }} yrs old</span>
+                
+                <div class="badges-wrapper">
+                  <div class="profile-badge">
+                    <span class="badge">{{ $roleBadge }}</span>
+                    <span class="badge">{{ $age }} yrs old</span>
+                  </div>
+
+                  @php
+                    $skTitle = '';
+                    if (!empty(Auth::user()->sk_role)) {
+                      $skTitle = Auth::user()->sk_role; 
+                    } 
+                    elseif (Auth::user()->role === 'sk_chairperson') {
+                      $skTitle = 'SK Chairperson';
+                    }
+                  @endphp
+
+                  @if($skTitle)
+                    <div class="profile-badge sk-badge-yellow">
+                      <span>{{ $skTitle }}</span>
+                    </div>
+                  @endif
                 </div>
               </div>
             </div>
             <hr>
+
+            <div class="profile-button-container">
+              @php
+                $isSkOfficial = !empty(Auth::user()->sk_role) || Auth::user()->role === 'sk_chairperson';
+              @endphp
+
+              @if($isSkOfficial)
+                <a href="{{ route('sk.role.view') }}" class="profile-sk-button">
+                  Switch to SK Role
+                </a>
+              @else
+                <a href="#" class="profile-sk-button" id="accessSKRoleBtn" data-url="{{ route('sk.request.access') }}">
+                  Access SK role
+                </a>
+              @endif
+            </div>
+
             <ul class="profile-menu">
               <li>
                 <a href="{{ route('profilepage') }}">
                   <i class="fas fa-user"></i> Profile
                 </a>
               </li>
-              <li><i class="fas fa-cog"></i> Manage Password</li>
+              
               <li>
-                <a href="{{ route('faqspage') }}">
+                <a href="{{ route('faqs') }}">
                   <i class="fas fa-question-circle"></i> FAQs
                 </a>
               </li>
-              <li class="feedback-item">
-                <a href="#" id="feedbackTrigger">
+
+              <li>
+                <a href="#" id="openFeedbackBtn">
                   <i class="fas fa-star"></i> Send Feedback to Katibayan
                 </a>
               </li>
+              
               <li class="logout-item">
-                <a href="loginpage" onclick="confirmLogout(event)">
+                <a href="#" onclick="showLogoutConfirmation(); return false;">
                   <i class="fas fa-sign-out-alt"></i> Logout
                 </a>
               </li>
             </ul>
             
-            <!-- Hidden Logout Form -->
             <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
               @csrf
             </form>
@@ -206,6 +270,127 @@
         </div>
       </div>
     </header>
+
+    <!-- ========================================== -->
+    <!-- CUSTOM MODALS FOR BROWSER POPUP REPLACEMENT -->
+    <!-- ========================================== -->
+
+    <!-- Custom Alert Modal -->
+    <div id="customAlertModal" class="alert-modal-overlay">
+      <div class="alert-modal-box">
+        <div class="alert-modal-icon" id="alertModalIcon">
+          <i class="fas fa-info-circle"></i>
+        </div>
+        <h3 class="alert-modal-title" id="alertModalTitle">Alert</h3>
+        <p class="alert-modal-message" id="alertModalMessage"></p>
+        <div class="alert-modal-actions">
+          <button class="alert-modal-btn ok" id="alertModalOK">OK</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Custom Confirm Modal (Logout & Others) -->
+    <div id="customConfirmModal" class="confirmation-modal-overlay">
+      <div class="confirmation-modal-box">
+        <div class="confirmation-modal-icon" id="confirmModalIcon">
+          <i class="fas fa-question-circle"></i>
+        </div>
+        <h3 class="confirmation-modal-title" id="confirmModalTitle">Confirmation</h3>
+        <p class="confirmation-modal-message" id="confirmModalMessage"></p>
+        <div class="confirmation-modal-actions">
+          <button class="confirmation-modal-btn cancel" id="confirmModalCancel">Cancel</button>
+          <button class="confirmation-modal-btn confirm" id="confirmModalOK">Confirm</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Custom Prompt Modal -->
+    <div id="customPromptModal" class="prompt-modal-overlay">
+      <div class="prompt-modal-box">
+        <h3 class="prompt-modal-title" id="promptModalTitle">Input Required</h3>
+        <p class="prompt-modal-message" id="promptModalMessage"></p>
+        <input type="text" class="prompt-modal-input" id="promptModalInput" placeholder="Enter your response...">
+        <div class="prompt-modal-actions">
+          <button class="prompt-modal-btn cancel" id="promptModalCancel">Cancel</button>
+          <button class="prompt-modal-btn ok" id="promptModalOK">OK</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SK Access Modal -->
+    <div id="skAccessModal" class="modal-overlay" style="display: none;">
+      <div class="sk-modal-box"> 
+        <div class="modal-step active" data-step="1">
+          <h2>Do you want to request access?</h2>
+          <p>This will send a request to your SK Chairperson for permission to access your SK role. Would you like to proceed?</p>
+          
+          <div class="modal-actions" style="justify-content: flex-end;">
+            <button type="button" class="btn btn-cancel" data-action="close">Cancel</button>
+            <button type="button" class="btn btn-confirm" data-action="confirm-request">Yes</button>
+          </div>
+        </div>
+
+        <div class="modal-step" data-step="2">
+          <div class="spinner"></div>
+          <p>Please wait while we send your request to the SK Chairperson. This will just take a moment.</p>
+        </div>
+
+        <div class="modal-step" data-step="3">
+          <div class="modal-icon-wrapper success">
+            <i class="fas fa-check"></i>
+          </div>
+          <h2>Request Sent</h2>
+          <p>Thank you. Your request has been submitted. You will be notified once it is reviewed and approved.</p>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-confirm" data-action="close">OK</button>
+          </div>
+        </div>
+
+        <div class="modal-step" data-step="4">
+          <div class="modal-icon-wrapper error">
+            <i class="fas fa-exclamation-triangle"></i> 
+          </div>
+          <h2>Something went wrong</h2>
+          <p>Please check your network and try again.</p>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-confirm" data-action="try-again">Try again</button>
+          </div>
+        </div>
+      </div> 
+    </div> 
+
+    <!-- Set Role Modal -->
+    <div id="setRoleModal" class="modal-overlay" style="display: none;">
+      <div class="set-role-modal-content">
+        <h2>Choose your role as SK</h2>
+        
+        <form id="setRoleForm">
+          <div class="role-options-list">
+            <label class="role-option">
+              <input type="radio" name="sk_role" value="Kagawad" checked>
+              <span class="radio-circle"></span>
+              <span class="role-name">Kagawad</span>
+            </label>
+            
+            <label class="role-option">
+              <input type="radio" name="sk_role" value="Secretary">
+              <span class="radio-circle"></span>
+              <span class="role-name">Secretary</span>
+            </label>
+            
+            <label class="role-option">
+              <input type="radio" name="sk_role" value="Treasurer">
+              <span class="radio-circle"></span>
+              <span class="role-name">Treasurer</span>
+            </label>
+          </div>
+          
+          <div class="modal-actions">
+            <button type="submit" class="btn btn-confirm">Set Role</button>
+          </div>
+        </form>
+      </div>
+    </div>
 
     <!-- Feedback Modal -->
     <div id="feedbackModal" class="modal-overlay">
@@ -274,7 +459,7 @@
             </select>
           </div>
           <label for="message">Your message</label>
-          <textarea id="message" name="message" rows="5" required></textarea>
+          <textarea id="message" name="message" rows="5"></textarea>
 
           <input type="hidden" name="rating" id="ratingInput">
           
@@ -285,6 +470,7 @@
       </div>
     </div>
 
+    <!-- Success Modal -->
     <div id="successModal" class="modal-overlay simple-alert-modal">
       <div class="modal-content">
         <div class="success-icon">
@@ -292,102 +478,146 @@
         </div>
         <h2>Submitted</h2>
         <p>Thank you for your feedback! Your thoughts help us improve.</p>
-        <button id="closeSuccessModal" class="ok-btn">Ok</button>
+        <button id="closeSuccessModal" class="ok-btn">OK</button>
       </div>
     </div>
 
-    <!-- === Pages Container === -->
+    <!-- Dashboard Content -->
     <div id="dashboard-page" class="page active">
       <div class="row">
 
-        <!-- Welcome -->
         <section class="welcome">
           <div class="slides">
-            <!-- Slide 1: Welcome -->
-            <div class="slide">
-              <h2>Welcome, {{ $user->given_name }}!</h2>
-              <h3>Have a nice day!</h3><br>
-              <p>
-                <span>KatiBayan</span> provides a platform for the youth to stay updated on SK events 
-                and programs while fostering active participation in community development.
-              </p>
-            </div>
-
-            <!-- Slide 2: Upcoming Event -->
-            @php
-                $upcomingEvent = $upcomingEvents->first();
-                $upcomingProgram = $upcomingPrograms->first();
-            @endphp
-
-            @if($upcomingEvent)
-            <div class="slide event">
-              <div class="date">
-                <span class="month">{{ $upcomingEvent->event_date->format('M') }}</span>
-                <span class="day">{{ $upcomingEvent->event_date->format('d') }}</span>
-              </div>
-              <div class="event-info">
-                <p><strong>UPCOMING EVENT!</strong> {{ $upcomingEvent->title }}</p>
-                <small>Don't forget to participate</small>
-                <span class="desc">{{ $upcomingEvent->description ? Str::limit($upcomingEvent->description, 150) : 'Join us for this exciting event in our community.' }}</span>
-              </div>
-              @if($upcomingEvent->image)
-              <div class="event-banner" style="background-image: url('{{ asset('storage/' . $upcomingEvent->image) }}');"></div>
-              @else
-              <div class="event-banner" style="background-image: url('{{ asset('images/event-default.jpg') }}');"></div>
+            @foreach($sliderItems as $index => $item)
+              @if($item['type'] == 'welcome')
+                <!-- Welcome Slide -->
+                <div class="slide welcome-slide">
+                  <h2>Welcome, {{ $user->given_name }}!</h2>
+                  <h3>Have a nice day!</h3><br>
+                  <p>
+                    <span>KatiBayan</span> provides a platform for the youth to stay updated on SK events 
+                    and programs while fostering active participation in community development.
+                  </p>
+                </div>
+              
+              @elseif($item['type'] == 'no_events')
+                <!-- No Events Slide -->
+                <div class="slide no-events-slide">
+                  <i class="fas fa-calendar-times"></i>
+                  <h3>No Upcoming Activities</h3>
+                  <p>Check back later for new events and programs in your barangay!</p>
+                </div>
+              
+              @elseif($item['type'] == 'event')
+                <!-- Event Slide -->
+                @php
+                  $event = $item['data'];
+                  $eventDate = \Carbon\Carbon::parse($event['event_date']);
+                  $eventMonth = $eventDate->format('M');
+                  $eventDay = $eventDate->format('d');
+                  
+                  // Get image URL or use default
+                  $imageUrl = $event['image'] ? asset('storage/' . $event['image']) : asset('images/default-event.jpg');
+                  
+                  // Truncate description
+                  $description = $event['description'] ?? 'No description available.';
+                  if(strlen($description) > 100) {
+                    $description = substr($description, 0, 100) . '...';
+                  }
+                  
+                  // Format time
+                  $time = $event['event_time'] ? \Carbon\Carbon::parse($event['event_time'])->format('g:i A') : 'TBA';
+                @endphp
+                
+                <div class="slide event-slide">
+                  <div class="left">
+                    <div class="date">
+                      <span class="month">{{ $eventMonth }}</span>
+                      <span class="day">{{ $eventDay }}</span>
+                    </div>
+                    <div class="event-info">
+                      <span class="activity-type event">EVENT</span>
+                      <h4>{{ $event['title'] }}</h4>
+                      <div class="details">
+                        <i class="fas fa-clock"></i> {{ $time }}<br>
+                        <i class="fas fa-map-marker-alt"></i> {{ $event['location'] }}
+                      </div>
+                      <p class="description">{{ $description }}</p>
+                    </div>
+                  </div>
+                  <div class="event-banner" style="background-image: url('{{ $imageUrl }}');"></div>
+                </div>
+              
+              @elseif($item['type'] == 'program')
+                <!-- Program Slide -->
+                @php
+                  $program = $item['data'];
+                  $programDate = \Carbon\Carbon::parse($program['event_date']);
+                  $programMonth = $programDate->format('M');
+                  $programDay = $programDate->format('d');
+                  
+                  // Get image URL or use default
+                  $imageUrl = $program['display_image'] ? asset('storage/' . $program['display_image']) : asset('images/default-program.jpg');
+                  
+                  // Truncate description
+                  $description = $program['description'] ?? 'No description available.';
+                  if(strlen($description) > 100) {
+                    $description = substr($description, 0, 100) . '...';
+                  }
+                  
+                  // Format time
+                  $time = $program['event_time'] ? \Carbon\Carbon::parse($program['event_time'])->format('g:i A') : 'TBA';
+                  
+                  // Registration type
+                  $regType = $program['registration_type'] == 'create' ? 'Registration Open' : 'External Link';
+                @endphp
+                
+                <div class="slide event-slide">
+                  <div class="left">
+                    <div class="date">
+                      <span class="month">{{ $programMonth }}</span>
+                      <span class="day">{{ $programDay }}</span>
+                    </div>
+                    <div class="event-info">
+                      <span class="activity-type program">PROGRAM</span>
+                      <h4>{{ $program['title'] }}</h4>
+                      <div class="details">
+                        <i class="fas fa-clock"></i> {{ $time }}<br>
+                        <i class="fas fa-map-marker-alt"></i> {{ $program['location'] }}
+                      </div>
+                      <p class="description">{{ $description }}</p>
+                    </div>
+                  </div>
+                  <div class="event-banner" style="background-image: url('{{ $imageUrl }}');"></div>
+                </div>
               @endif
-            </div>
-            @else
-            <!-- If no upcoming event, show default slide -->
-            <div class="slide event">
-              <div class="date">
-                <span class="month">COMING</span>
-                <span class="day">SOON</span>
-              </div>
-              <div class="event-info">
-                <p><strong>STAY TUNED!</strong> More Events Coming Soon</p>
-                <small>We're preparing exciting activities for you</small>
-                <span class="desc">Check back regularly for new events and programs in your barangay.</span>
-              </div>
-              <div class="event-banner" style="background-image: url('{{ asset('images/event-coming-soon.jpg') }}');"></div>
-            </div>
-            @endif
+            @endforeach
 
-            <!-- Slide 3: Upcoming Program -->
-            @if($upcomingProgram)
-            <div class="slide event">
-              <div class="date">
-                <span class="month">{{ $upcomingProgram->event_date->format('M') }}</span>
-                <span class="day">{{ $upcomingProgram->event_date->format('d') }}</span>
+            <!-- Fallback if somehow no slides exist -->
+            @if($sliderItems->count() == 0)
+              <div class="slide welcome-slide">
+                <h2>Welcome, {{ $user->given_name }}!</h2>
+                <h3>Have a nice day!</h3><br>
+                <p>
+                  <span>KatiBayan</span> provides a platform for the youth to stay updated on SK events 
+                  and programs while fostering active participation in community development.
+                </p>
               </div>
-              <div class="event-info">
-                <p><strong>UPCOMING PROGRAM!</strong> {{ $upcomingProgram->title }}</p>
-                <small>Register now to secure your spot</small>
-                <span class="desc">{{ $upcomingProgram->description ? Str::limit($upcomingProgram->description, 150) : 'Join this program to learn new skills and connect with the community.' }}</span>
+              
+              <div class="slide no-events-slide">
+                <i class="fas fa-calendar-times"></i>
+                <h3>No Upcoming Activities</h3>
+                <p>Check back later for new events and programs in your barangay!</p>
               </div>
-              @if($upcomingProgram->display_image)
-              <div class="event-banner" style="background-image: url('{{ asset('storage/' . $upcomingProgram->display_image) }}');"></div>
-              @else
-              <div class="event-banner" style="background-image: url('{{ asset('images/program-default.jpg') }}');"></div>
-              @endif
-            </div>
-            @else
-            <!-- If no upcoming program, show default slide -->
-            <div class="slide event">
-              <div class="date">
-                <span class="month">NEW</span>
-                <span class="day">PROG</span>
-              </div>
-              <div class="event-info">
-                <p><strong>PROGRAMS COMING SOON!</strong> Enhance Your Skills</p>
-                <small>We're developing new programs for you</small>
-                <span class="desc">Exciting programs are being prepared to help you grow and develop new skills.</span>
-              </div>
-              <div class="event-banner" style="background-image: url('{{ asset('images/program-coming-soon.jpg') }}');"></div>
-            </div>
             @endif
           </div>
+          
           <!-- Pagination dots -->
-          <div class="dots"></div>
+          <div class="dots">
+            @for($i = 0; $i < $sliderItems->count(); $i++)
+              <button class="{{ $i === 0 ? 'active' : '' }}"></button>
+            @endfor
+          </div>
         </section>
 
         <!-- Calendar -->
@@ -431,13 +661,13 @@
               <div class="card-content">
                 <div class="text">
                   <h4>Evaluation</h4>
-                <p>
-    @if($activitiesToEvaluate > 0)
-        You have {{ $activitiesToEvaluate }} {{ $activitiesToEvaluate == 1 ? 'activity' : 'activities' }} to evaluate.
-    @else
-        All evaluations completed!
-    @endif
-</p>
+                  <p>
+                    @if($activitiesToEvaluate > 0)
+                      You have {{ $activitiesToEvaluate }} {{ $activitiesToEvaluate == 1 ? 'activity' : 'activities' }} to evaluate.
+                    @else
+                      All evaluations completed!
+                    @endif
+                  </p>
                 </div>
                 <div class="icon">
                   <i data-lucide="thumbs-up"></i>
@@ -472,7 +702,6 @@
           <h3 class="events-title">Upcoming Events</h3>
           <div class="events">
             <div class="events-top">
-              <button class="events-menu">⋯</button>
             </div>
             <ul>
               @if($displayItems->count() > 0)
@@ -500,85 +729,76 @@
           </div>
         </div>
 
+        <!-- Announcements -->
         <div class="announcements-section">
-  <h3 class="announcements-title">Announcements</h3>
-  <div class="announcements" id="announcementsList"> {{-- Added ID --}}
+          <h3 class="announcements-title">Announcements</h3>
+          <div class="announcements" id="announcementsList">
+            @forelse ($announcements as $announcement)
+              @php
+                $isCertificateSchedule = optional($announcement)->type == 'certificate_schedule';
+                preg_match("/'([^']+)'/", optional($announcement)->message, $matches);
+                $eventTitleFromMessage = $matches[1] ?? null;
+                $announcementId = optional($announcement)->id;
+                $relatedEventId = null; 
+              @endphp
 
-    @forelse ($announcements as $announcement)
-      {{-- Check if this is a certificate schedule announcement --}}
-      @php
-        $isCertificateSchedule = optional($announcement)->type == 'certificate_schedule';
-        preg_match("/'([^']+)'/", optional($announcement)->message, $matches);
-        $eventTitleFromMessage = $matches[1] ?? null;
-        $announcementId = optional($announcement)->id;
-        $relatedEventId = null; 
-      @endphp
-
-      {{-- Add data attributes and a class to the card --}}
-      <div class="card {{ $isCertificateSchedule ? 'certificate-schedule-announcement' : '' }}"
-           @if($isCertificateSchedule && $announcementId)
-             data-announcement-id="{{ $announcementId }}"
-           @endif
-           style="{{ $isCertificateSchedule ? 'cursor: pointer;' : '' }}"
-           >
-        <div class="card-content">
-          <div class="icon">
-            @if($isCertificateSchedule)
-               <i class="fas fa-calendar-check" style="color: #FFCA3A;"></i>
-            @else
-               <i class="fas fa-info-circle"></i>
-            @endif
-          </div>
-          <div class="text">
-            <strong>{{ optional($announcement)->title }}</strong>
-            <p>{{ optional($announcement)->message }}</p>
-            <small style="color: #888; margin-top: 5px; display: block;">
-                 Posted: {{ optional($announcement)->created_at?->diffForHumans() ?? 'Just now' }}
-            </small>
+              <div class="card {{ $isCertificateSchedule ? 'certificate-schedule-announcement' : '' }}"
+                   @if($isCertificateSchedule && $announcementId)
+                     data-announcement-id="{{ $announcementId }}"
+                   @endif
+                   style="{{ $isCertificateSchedule ? 'cursor: pointer;' : '' }}">
+                <div class="card-content">
+                  <div class="icon">
+                    @if($isCertificateSchedule)
+                      <i class="fas fa-calendar-check" style="color: #FFCA3A;"></i>
+                    @else
+                      <i class="fas fa-info-circle"></i>
+                    @endif
+                  </div>
+                  <div class="text">
+                    <strong>{{ optional($announcement)->title }}</strong>
+                    <p>{{ optional($announcement)->message }}</p>
+                    <small style="color: #888; margin-top: 5px; display: block;">
+                      Posted: {{ optional($announcement)->created_at?->diffForHumans() ?? 'Just now' }}
+                    </small>
+                  </div>
+                </div>
+              </div>
+            
+            @empty
+              <div style="
+                display: flex;
+                flex-direction: column;
+                justify-content: center; 
+                align-items: center;     
+                height: 100%;            
+                min-height: 200px;       
+                padding: 20px;
+                color: #999;
+              ">
+                <i class="fas fa-bell-slash" style="
+                  font-size: 2.5rem; 
+                  color: #ccc; 
+                  margin-bottom: 15px;
+                "></i>
+                
+                <strong style="
+                  font-size: 1.1rem; 
+                  color: #888; 
+                  display: block; 
+                  margin-bottom: 5px;
+                  font-weight: 600;
+                ">
+                  No Announcements Yet
+                </strong>
+                
+                <p style="font-size: 0.9rem; margin: 0; color: #999;">
+                  Check back later for new updates.
+                </p>
+              </div>
+            @endforelse
           </div>
         </div>
-      </div>
-    
-    @empty
-
-      {{-- === ITO YUNG FIX (Naka-Gitna) === --}}
-      <div style="
-          display: flex;
-          flex-direction: column;
-          justify-content: center; 
-          align-items: center;     
-          height: 100%;            
-          min-height: 200px;       
-          padding: 20px;
-          color: #999;
-      ">
-        
-        <i class="fas fa-bell-slash" style="
-            font-size: 2.5rem; 
-            color: #ccc; 
-            margin-bottom: 15px;
-        "></i>
-        
-        <strong style="
-            font-size: 1.1rem; 
-            color: #888; 
-            display: block; 
-            margin-bottom: 5px;
-            font-weight: 600;
-        ">
-          No Announcements Yet
-        </strong>
-        
-        <p style="font-size: 0.9rem; margin: 0; color: #999;">
-          Check back later for new updates.
-        </p>
-      </div>
-      {{-- === END NG FIX === --}}
-
-    @endforelse
-
-  </div>
-</div>
 
         <!-- Suggestion Box -->
         <div class="suggestion-box">
@@ -593,48 +813,303 @@
     </div>
   </div>
 
+  <!-- Evaluation Modal -->
+  <div id="evaluationModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <div class="modal-header">
+        <h2>Evaluate Activity</h2>
+        <span id="modalActivityName" class="activity-name"></span>
+      </div>
+      <div class="modal-body">
+        <form id="evaluationForm">
+          @csrf
+          <input type="hidden" id="evaluationActivityId" name="activity_id">
+          <input type="hidden" id="evaluationActivityType" name="activity_type">
+          
+          <div class="rating-section">
+            <label>Overall Rating:</label>
+            <div class="star-rating">
+              <span class="star" data-rating="1">★</span>
+              <span class="star" data-rating="2">★</span>
+              <span class="star" data-rating="3">★</span>
+              <span class="star" data-rating="4">★</span>
+              <span class="star" data-rating="5">★</span>
+            </div>
+            <input type="hidden" id="rating" name="rating" required>
+          </div>
+
+          <div class="form-group">
+            <label for="comments">Comments/Suggestions:</label>
+            <textarea id="comments" name="comments" rows="4" placeholder="Share your thoughts about the activity..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Would you recommend this activity to others?</label>
+            <div class="recommendation">
+              <label>
+                <input type="radio" name="recommend" value="yes" required> Yes
+              </label>
+              <label>
+                <input type="radio" name="recommend" value="no" required> No
+              </label>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="submit-evaluation-btn">Submit Evaluation</button>
+        <button class="close-btn">Close</button>
+      </div>
+    </div>
+  </div>
+
   <script>
   // CSRF Token for AJAX requests
   window.csrfToken = '{{ csrf_token() }}';
 
-  // === DARK/LIGHT MODE TOGGLE ===
-const body = document.body;
-const themeToggle = document.getElementById('themeToggle');
+  // ============================================
+  // CUSTOM MODAL FUNCTIONS (Alert, Confirm, Prompt)
+  // ============================================
 
-// Function to apply theme
-function applyTheme(isDark) {
-  body.classList.toggle('dark-mode', isDark);
-  // Show sun when dark mode, moon when light mode
-  const icon = isDark ? 'sun' : 'moon';
+  let currentAlertResolve = null;
+  let currentConfirmResolve = null;
+  let currentPromptResolve = null;
 
-  if (themeToggle) {
-    themeToggle.innerHTML = `<i data-lucide="${icon}"></i>`;
+  // Custom Alert Function
+  window.showCustomAlert = function(message, title = 'Alert', icon = 'info', callback = null) {
+    const modal = document.getElementById('customAlertModal');
+    const modalTitle = document.getElementById('alertModalTitle');
+    const modalMessage = document.getElementById('alertModalMessage');
+    const modalIcon = document.getElementById('alertModalIcon');
+    const okBtn = document.getElementById('alertModalOK');
+
+    // Set modal content
+    modalTitle.textContent = title;
+    modalMessage.textContent = message;
+
+    // Set icon
+    const iconElement = modalIcon.querySelector('i');
+    iconElement.className = '';
+    if (icon === 'warning') {
+      iconElement.className = 'fas fa-exclamation-triangle';
+      modalIcon.className = 'alert-modal-icon warning';
+    } else if (icon === 'error') {
+      iconElement.className = 'fas fa-times-circle';
+      modalIcon.className = 'alert-modal-icon error';
+    } else if (icon === 'success') {
+      iconElement.className = 'fas fa-check-circle';
+      modalIcon.className = 'alert-modal-icon success';
+    } else {
+      iconElement.className = 'fas fa-info-circle';
+      modalIcon.className = 'alert-modal-icon info';
+    }
+
+    // Show modal
+    modal.classList.add('active');
+
+    // Return promise
+    return new Promise((resolve) => {
+      currentAlertResolve = resolve;
+
+      const handleClose = () => {
+        modal.classList.remove('active');
+        okBtn.removeEventListener('click', handleClose);
+        modal.removeEventListener('click', handleOutsideClick);
+        if (currentAlertResolve) {
+          currentAlertResolve();
+          currentAlertResolve = null;
+        }
+        if (callback) callback();
+      };
+
+      const handleOutsideClick = (e) => {
+        if (e.target === modal) {
+          handleClose();
+        }
+      };
+
+      okBtn.addEventListener('click', handleClose);
+      modal.addEventListener('click', handleOutsideClick);
+    });
+  };
+
+  // Custom Confirm Function
+  window.showCustomConfirm = function(message, title = 'Confirmation', icon = 'warning', callback = null) {
+    const modal = document.getElementById('customConfirmModal');
+    const modalTitle = document.getElementById('confirmModalTitle');
+    const modalMessage = document.getElementById('confirmModalMessage');
+    const modalIcon = document.getElementById('confirmModalIcon');
+    const okBtn = document.getElementById('confirmModalOK');
+    const cancelBtn = document.getElementById('confirmModalCancel');
+
+    // Set modal content
+    modalTitle.textContent = title;
+    modalMessage.textContent = message;
+
+    // Set icon
+    const iconElement = modalIcon.querySelector('i');
+    iconElement.className = '';
+    if (icon === 'warning') {
+      iconElement.className = 'fas fa-exclamation-triangle';
+      modalIcon.className = 'confirmation-modal-icon warning';
+    } else if (icon === 'question') {
+      iconElement.className = 'fas fa-question-circle';
+      modalIcon.className = 'confirmation-modal-icon info';
+    } else {
+      iconElement.className = 'fas fa-question-circle';
+      modalIcon.className = 'confirmation-modal-icon info';
+    }
+
+    // Show modal
+    modal.classList.add('active');
+
+    // Return promise
+    return new Promise((resolve) => {
+      currentConfirmResolve = resolve;
+
+      const handleConfirm = () => {
+        modal.classList.remove('active');
+        okBtn.removeEventListener('click', handleConfirm);
+        cancelBtn.removeEventListener('click', handleCancel);
+        modal.removeEventListener('click', handleOutsideClick);
+        if (currentConfirmResolve) {
+          currentConfirmResolve(true);
+          currentConfirmResolve = null;
+        }
+        if (callback) callback(true);
+      };
+
+      const handleCancel = () => {
+        modal.classList.remove('active');
+        okBtn.removeEventListener('click', handleConfirm);
+        cancelBtn.removeEventListener('click', handleCancel);
+        modal.removeEventListener('click', handleOutsideClick);
+        if (currentConfirmResolve) {
+          currentConfirmResolve(false);
+          currentConfirmResolve = null;
+        }
+        if (callback) callback(false);
+      };
+
+      const handleOutsideClick = (e) => {
+        if (e.target === modal) {
+          handleCancel();
+        }
+      };
+
+      okBtn.addEventListener('click', handleConfirm);
+      cancelBtn.addEventListener('click', handleCancel);
+      modal.addEventListener('click', handleOutsideClick);
+    });
+  };
+
+  // Custom Prompt Function
+  window.showCustomPrompt = function(message, defaultValue = '', title = 'Input Required', callback = null) {
+    const modal = document.getElementById('customPromptModal');
+    const modalTitle = document.getElementById('promptModalTitle');
+    const modalMessage = document.getElementById('promptModalMessage');
+    const modalInput = document.getElementById('promptModalInput');
+    const okBtn = document.getElementById('promptModalOK');
+    const cancelBtn = document.getElementById('promptModalCancel');
+
+    // Set modal content
+    modalTitle.textContent = title;
+    modalMessage.textContent = message;
+    modalInput.value = defaultValue;
+
+    // Show modal and focus input
+    modal.classList.add('active');
+    setTimeout(() => {
+      modalInput.focus();
+      modalInput.select();
+    }, 100);
+
+    // Return promise
+    return new Promise((resolve) => {
+      currentPromptResolve = resolve;
+
+      const handleConfirm = () => {
+        const value = modalInput.value;
+        modal.classList.remove('active');
+        okBtn.removeEventListener('click', handleConfirm);
+        cancelBtn.removeEventListener('click', handleCancel);
+        modalInput.removeEventListener('keypress', handleKeyPress);
+        modal.removeEventListener('click', handleOutsideClick);
+        if (currentPromptResolve) {
+          currentPromptResolve(value);
+          currentPromptResolve = null;
+        }
+        if (callback) callback(value);
+      };
+
+      const handleCancel = () => {
+        modal.classList.remove('active');
+        okBtn.removeEventListener('click', handleConfirm);
+        cancelBtn.removeEventListener('click', handleCancel);
+        modalInput.removeEventListener('keypress', handleKeyPress);
+        modal.removeEventListener('click', handleOutsideClick);
+        if (currentPromptResolve) {
+          currentPromptResolve(null);
+          currentPromptResolve = null;
+        }
+        if (callback) callback(null);
+      };
+
+      const handleKeyPress = (e) => {
+        if (e.key === 'Enter') {
+          handleConfirm();
+        }
+      };
+
+      const handleOutsideClick = (e) => {
+        if (e.target === modal) {
+          handleCancel();
+        }
+      };
+
+      okBtn.addEventListener('click', handleConfirm);
+      cancelBtn.addEventListener('click', handleCancel);
+      modalInput.addEventListener('keypress', handleKeyPress);
+      modal.addEventListener('click', handleOutsideClick);
+    });
+  };
+
+  // Logout Confirmation Function
+  function showLogoutConfirmation() {
+    showCustomConfirm(
+      'Are you sure you want to logout?',
+      'Confirm Logout',
+      'warning'
+    ).then((confirmed) => {
+      if (confirmed) {
+        document.getElementById('logout-form').submit();
+      }
+    });
   }
 
-  // Re-initialize Lucide icons
-  if (typeof lucide !== 'undefined') {
-    lucide.createIcons();
+  // Theme Toggle Function
+  function applyTheme(isDark) {
+    const body = document.body;
+    const themeToggle = document.getElementById('themeToggle');
+    
+    body.classList.toggle('dark-mode', isDark);
+    
+    const icon = isDark ? 'sun' : 'moon';
+
+    if (themeToggle) {
+      themeToggle.innerHTML = `<i data-lucide="${icon}"></i>`;
+    }
+
+    if (typeof lucide !== 'undefined') {
+      lucide.createIcons();
+    }
+    
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
   }
-  
-  localStorage.setItem('theme', isDark ? 'dark' : 'light');
-  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
-}
 
-// Load saved theme
-const savedTheme = localStorage.getItem('theme') === 'dark';
-applyTheme(savedTheme);
-
-// Add event listener to theme toggle
-if (themeToggle) {
-  themeToggle.addEventListener('click', () => {
-    const isDark = !body.classList.contains('dark-mode');
-    applyTheme(isDark);
-  });
-}
-
-  /**
-   * Updates the time in the topbar.
-   */
+  // Update Time
   function updateTime() {
     const timeEl = document.querySelector(".time");
     if (!timeEl) return;
@@ -653,9 +1128,7 @@ if (themeToggle) {
     timeEl.innerHTML = `${weekday}, ${month} ${day} ${hours}:${minutes} <span>${ampm}</span>`;
   }
 
-  /**
-   * Initializes sidebar toggle and profile submenu.
-   */
+  // Initialize Sidebar
   function initSidebar() {
     const menuToggle = document.querySelector('.menu-toggle');
     const sidebar = document.querySelector('.sidebar');
@@ -688,22 +1161,17 @@ if (themeToggle) {
     }
   }
 
-  /**
-   * Initializes topbar dropdowns (notifications, profile)
-   * and handles global clicks to close them.
-   */
+  // Initialize Topbar - UPDATED NOTIFICATION HANDLING
   function initTopbar(openEvaluationModal) {
-    // --- Time ---
     updateTime();
     setInterval(updateTime, 60000);
 
-    // --- Elements ---
     const notifWrapper = document.querySelector(".notification-wrapper");
     const profileWrapper = document.querySelector(".profile-wrapper");
     const profileToggle = document.getElementById("profileToggle");
     const profileDropdown = profileWrapper?.querySelector(".profile-dropdown");
 
-    // --- Notifications Dropdown ---
+    // Notifications Dropdown
     if (notifWrapper) {
       const bell = notifWrapper.querySelector(".fa-bell");
       bell?.addEventListener("click", (e) => {
@@ -715,9 +1183,14 @@ if (themeToggle) {
       const dropdown = notifWrapper.querySelector(".notif-dropdown");
       dropdown?.addEventListener("click", (e) => e.stopPropagation());
 
-      // Handle evaluation notification clicks for both events and programs
+      // Handle evaluation notification clicks - UPDATED
       notifWrapper.querySelectorAll('.notif-link[data-event-id], .notif-link[data-program-id]').forEach(notification => {
         notification.addEventListener('click', function(e) {
+          // Don't prevent default for database notifications with data-id
+          if (this.hasAttribute('data-id')) {
+            return;
+          }
+          
           e.preventDefault();
           const eventId = this.getAttribute('data-event-id');
           const programId = this.getAttribute('data-program-id');
@@ -734,7 +1207,7 @@ if (themeToggle) {
       });
     }
 
-    // --- Profile Dropdown ---
+    // Profile Dropdown
     if (profileWrapper && profileToggle && profileDropdown) {
       profileToggle.addEventListener("click", (e) => {
         e.stopPropagation();
@@ -745,12 +1218,12 @@ if (themeToggle) {
       profileDropdown.addEventListener("click", (e) => e.stopPropagation());
     }
 
-    // --- Global Click Listener for Topbar/Sidebar ---
+    // Global Click Listener
     document.addEventListener("click", (e) => {
       const sidebar = document.querySelector('.sidebar');
       const menuToggle = document.querySelector('.menu-toggle');
       
-      if (window.innerWidth > 768 && sidebar && !sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+      if (window.innerWidth > 768 && sidebar && menuToggle && !sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
         sidebar.classList.remove('open');
         document.querySelector('.profile-item')?.classList.remove('open');
       }
@@ -764,9 +1237,7 @@ if (themeToggle) {
     });
   }
 
-  /**
-   * Initializes the 7-day week calendar.
-   */
+  // Initialize Calendar
   function initCalendar() {
     const calendar = document.querySelector(".calendar");
     if (!calendar) return;
@@ -780,9 +1251,9 @@ if (themeToggle) {
 
     const weekdays = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
     const holidays = [
-      "2024-01-01", "2024-04-09", "2024-04-10", "2024-05-01",
-      "2024-06-12", "2024-08-26", "2024-11-30", "2024-12-25",
-      "2024-12-30", "2024-12-31"
+      "2025-01-01", "2025-04-09", "2025-04-17", "2025-04-18", "2025-05-01",
+      "2025-06-06", "2025-06-12", "2025-08-25", "2025-11-30", "2025-12-25",
+      "2025-12-30"
     ];
     let today = new Date();
     let currentView = new Date();
@@ -863,7 +1334,11 @@ if (themeToggle) {
     let autoPlay;
     const dots = [];
 
-    slides.forEach((_, i) => {
+    // FIRST: Clear any existing dots
+    dotsContainer.innerHTML = '';
+
+    // Create dots ONLY for existing slides
+    for (let i = 0; i < slides.length; i++) {
       const dot = document.createElement("button");
       if (i === 0) dot.classList.add("active");
       dot.addEventListener("click", () => {
@@ -873,11 +1348,12 @@ if (themeToggle) {
       });
       dotsContainer.appendChild(dot);
       dots.push(dot);
-    });
+    }
 
     function updateSlide() {
+      // (FIX) Recalculate width on update, important for resize
       const containerWidth = welcomeSection.getBoundingClientRect().width;
-      if (containerWidth === 0) return;
+      if (containerWidth === 0) return; // Avoid error if hidden
       slideTrack.style.transform = `translateX(-${currentIndex * containerWidth}px)`;
 
       dots.forEach(dot => dot.classList.remove("active"));
@@ -911,9 +1387,7 @@ if (themeToggle) {
     window.addEventListener("resize", updateSlide);
   }
 
-  /**
-   * Initializes the Activity Evaluation Modal.
-   */
+  // Initialize Evaluation Modal
   function initEvaluationModal() {
     const evalModal = document.getElementById('evaluationModal');
 
@@ -984,7 +1458,7 @@ if (themeToggle) {
       const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
       if (!formData.get('rating')) {
-        alert('Please provide a rating');
+        showCustomAlert('Please provide a rating', 'Validation Error', 'warning');
         return;
       }
 
@@ -1013,33 +1487,30 @@ if (themeToggle) {
         })
         .then(data => {
           if (data.success) {
-            alert('Evaluation submitted successfully!');
+            showCustomAlert('Evaluation submitted successfully!', 'Success', 'success');
             closeModal();
-            location.reload();
+            setTimeout(() => location.reload(), 1500);
           } else {
             let errorMsg = data.message || 'Submission failed.';
             if (data.errors) {
               errorMsg += '\n' + Object.values(data.errors).join('\n');
             }
-            alert(errorMsg);
+            showCustomAlert(errorMsg, 'Error', 'error');
           }
         })
         .catch(error => {
           console.error('Error:', error);
-          alert(error.message || 'An error occurred while submitting.');
+          showCustomAlert(error.message || 'An error occurred while submitting.', 'Error', 'error');
         });
     });
 
     return openEvaluationModal;
   }
 
-  /**
-   * Initializes the "Send Feedback" Modal.
-   */
+  // Initialize Feedback Modal
   function initFeedbackModal() {
-    const feedbackTriggerBtn = document.getElementById('feedbackTrigger');
+    const feedbackTriggerBtn = document.getElementById('openFeedbackBtn');
     const feedbackModal = document.getElementById('feedbackModal');
-    
     if (!feedbackTriggerBtn || !feedbackModal) {
       console.warn("Feedback modal or trigger not found.");
       return;
@@ -1053,7 +1524,7 @@ if (themeToggle) {
     const successModal = document.getElementById('successModal');
     const closeSuccessBtn = document.getElementById('closeSuccessModal');
 
-    // Custom Select Box Logic
+    // Custom Select Box
     const customSelect = document.getElementById('customSelect');
     if (customSelect) {
       const trigger = customSelect.querySelector('.custom-select-trigger');
@@ -1085,18 +1556,15 @@ if (themeToggle) {
       });
     }
 
-    // Open modal
     feedbackTriggerBtn.addEventListener('click', (e) => {
       e.preventDefault();
       feedbackModal.style.display = 'flex';
     });
 
-    // Close modal
     feedbackCloseBtn?.addEventListener('click', () => {
       feedbackModal.style.display = 'none';
     });
 
-    // Close when clicking outside
     window.addEventListener('click', (e) => {
       if (e.target === feedbackModal) {
         feedbackModal.style.display = 'none';
@@ -1106,7 +1574,6 @@ if (themeToggle) {
       }
     });
 
-    // Star rating system
     feedbackStars.forEach(star => {
       star.addEventListener('click', () => {
         const rating = star.getAttribute('data-value');
@@ -1123,7 +1590,6 @@ if (themeToggle) {
       });
     });
 
-    // AJAX Form Submission
     if (feedbackForm) {
       feedbackForm.addEventListener('submit', function(e) {
         e.preventDefault();
@@ -1159,7 +1625,7 @@ if (themeToggle) {
           })
           .catch(error => {
             console.error('Error:', error);
-            alert(error.message || 'An error occurred. Please try again.');
+            showCustomAlert(error.message || 'An error occurred. Please try again.', 'Error', 'error');
           })
           .finally(() => {
             if (submitBtn) {
@@ -1184,12 +1650,12 @@ if (themeToggle) {
       });
     }
 
-    // Close success modal
     closeSuccessBtn?.addEventListener('click', () => {
       if (successModal) successModal.style.display = 'none';
     });
   }
 
+  // UPDATED: Mark as Read Function
   function initMarkAsRead() {
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
     if (!csrfToken) {
@@ -1197,8 +1663,14 @@ if (themeToggle) {
       return;
     }
 
+    // Handle database notifications (not evaluation notifications)
     document.querySelectorAll('.notif-link[data-id]').forEach(link => {
       link.addEventListener('click', function(e) {
+        // Don't prevent default for evaluation notifications
+        if (this.hasAttribute('data-event-id') || this.hasAttribute('data-program-id')) {
+          return;
+        }
+        
         e.preventDefault();
         const notifId = this.dataset.id;
         const destinationUrl = this.href;
@@ -1245,11 +1717,17 @@ if (themeToggle) {
           });
       });
     });
+
+    // Handle evaluation notification clicks (system-generated)
+    document.querySelectorAll('.notif-link[data-event-id], .notif-link[data-program-id]').forEach(link => {
+      link.addEventListener('click', function(e) {
+        // These should navigate directly to evaluation page
+        // No need for AJAX mark as read since they're system-generated
+        // and not stored in database notifications table
+      });
+    });
   }
 
-  /**
-   * Initializes Certificate Claim
-   */
   function initCertificateModal() {
     const announcementCards = document.querySelectorAll('.certificate-schedule-announcement');
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
@@ -1285,24 +1763,25 @@ if (themeToggle) {
     });
   }
 
-  /**
-   * Handles logout confirmation.
-   */
-  function confirmLogout(event) {
-    event.preventDefault();
-    if (confirm('Are you sure you want to logout?')) {
-      document.getElementById('logout-form').submit();
-    }
-  }
-
-  // ==========================================================
-  //  APP INITIALIZATION (MAIN)
-  // ==========================================================
+  // Main Initialization
   document.addEventListener("DOMContentLoaded", () => {
-    // Initialize Lucide icons first
     lucide.createIcons();
 
-    // Initialize all components
+    // Theme Toggle
+    const body = document.body;
+    const themeToggle = document.getElementById('themeToggle');
+    
+    const savedTheme = localStorage.getItem('theme') === 'dark';
+    applyTheme(savedTheme);
+
+    if (themeToggle) {
+      themeToggle.addEventListener('click', () => {
+        const isDark = !body.classList.contains('dark-mode');
+        applyTheme(isDark);
+      });
+    }
+
+    // Initialize Components
     initSidebar();
     const openEvalModalFn = initEvaluationModal();
     initTopbar(openEvalModalFn);
@@ -1312,9 +1791,9 @@ if (themeToggle) {
     initMarkAsRead();
     initCertificateModal();
   });
-</script>
+  </script>
 
-<script>
+  <script>
   const mobileBtn = document.getElementById('mobileMenuBtn');
   const sidebar = document.querySelector('.sidebar');
   const mainContent = document.querySelector('.main');
@@ -1325,7 +1804,6 @@ if (themeToggle) {
     document.body.classList.toggle('mobile-sidebar-active');
   });
 
-  // Close sidebar when clicking outside (mobile only)
   document.addEventListener('click', (e) => {
     if (window.innerWidth <= 768 &&
       sidebar.classList.contains('open') &&
@@ -1336,6 +1814,164 @@ if (themeToggle) {
       document.body.classList.remove('mobile-sidebar-active');
     }
   });
-</script>
+  </script>
+
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // SK Access Modal
+    const skModal = document.getElementById('skAccessModal');
+    const openModalBtn = document.getElementById('accessSKRoleBtn');
+
+    function showModalStep(stepNumber) {
+      if (!skModal) return;
+      skModal.querySelectorAll('.modal-step').forEach(step => {
+        step.classList.remove('active');
+        step.style.display = 'none';
+      });
+      const activeStep = skModal.querySelector(`.modal-step[data-step="${stepNumber}"]`);
+      if (activeStep) {
+        activeStep.classList.add('active');
+        activeStep.style.display = 'block';
+      }
+    }
+
+    function closeSkModal() {
+      if (skModal) skModal.style.display = 'none';
+    }
+
+    async function handleSubmitRequest() {
+      console.log("Sending request to backend...");
+      showModalStep(2);
+
+      const btn = document.getElementById('accessSKRoleBtn');
+      const skAccessUrl = btn?.dataset.url || '/sk/request-access';
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+      if (!csrfToken) {
+        console.error('CSRF Token is missing!');
+        showModalStep(4);
+        return;
+      }
+
+      try {
+        const response = await fetch(skAccessUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({ _token: csrfToken })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          showModalStep(3);
+        } else {
+          console.error(data.message);
+          const errText = skModal.querySelector('.modal-step[data-step="4"] p');
+          if(errText) errText.textContent = data.message || 'Failed to submit request.';
+          showModalStep(4);
+        }
+      } catch (error) {
+        console.error('Fetch error:', error);
+        showModalStep(4);
+      }
+    }
+
+    if (openModalBtn) {
+      openModalBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        showModalStep(1);
+        skModal.style.display = 'flex';
+      });
+    }
+
+    if (skModal) {
+      skModal.addEventListener('click', function(e) {
+        const action = e.target.dataset.action;
+        if (!action) return;
+
+        switch (action) {
+          case 'close':
+            closeSkModal();
+            break;
+          case 'confirm-request':
+            handleSubmitRequest();
+            break;
+          case 'try-again':
+            handleSubmitRequest();
+            break;
+        }
+      });
+    }
+
+    // Set Role Modal
+    const setRoleModal = document.getElementById('setRoleModal');
+    const setRoleForm = document.getElementById('setRoleForm');
+
+    window.openSetRoleModal = function() {
+      if (setRoleModal) {
+        setRoleModal.style.display = 'flex';
+        console.log('Opening Set Role Modal...');
+      } else {
+        console.error('Error: Cannot find modal with id "setRoleModal"');
+      }
+    };
+
+    window.addEventListener('click', function(e) {
+      if (e.target === setRoleModal) {
+        setRoleModal.style.display = 'none';
+      }
+    });
+
+    if (setRoleForm) {
+      setRoleForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const btn = setRoleForm.querySelector('button[type="submit"]');
+        const originalText = btn.textContent;
+        
+        btn.textContent = "Saving...";
+        btn.disabled = true;
+
+        const formData = new FormData(setRoleForm);
+        const selectedRole = formData.get('sk_role');
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+        try {
+          const response = await fetch('/sk/set-role', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-TOKEN': csrfToken,
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify({ role: selectedRole })
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            showCustomAlert('Role set successfully! Redirecting...', 'Success', 'success');
+            setTimeout(() => {
+              window.location.reload();
+            }, 1500);
+          } else {
+            showCustomAlert(data.message || 'Failed to set role.', 'Error', 'error');
+            btn.textContent = originalText;
+            btn.disabled = false;
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          showCustomAlert('Something went wrong. Please try again.', 'Error', 'error');
+          btn.textContent = originalText;
+          btn.disabled = false;
+        }
+      });
+    }
+  });
+  </script>
 </body>
 </html>

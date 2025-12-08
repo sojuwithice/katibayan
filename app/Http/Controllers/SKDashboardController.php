@@ -43,8 +43,34 @@ class SKDashboardController extends Controller
 
         // ✅ FIX: Define notifications before passing to view
         $notifications = Notification::where('recipient_role', 'sk')
+            ->where('user_id', $user->id) // only notifications meant for this SK user
             ->orderBy('created_at', 'desc')
             ->get();
+
+        // ==========================================================
+        // ✅ ADDED: SK COMMITTEE FETCHING LOGIC
+        // ==========================================================
+
+        // 1. Fetch ALL users with role='sk' in the same barangay
+        $allSkOfficials = User::where('barangay_id', $user->barangay_id)
+                              ->where('role', 'sk') 
+                              ->get();
+
+        // 2. Identify CHAIRPERSON (Check sk_role for "chair" keyword)
+        $skChairperson = $allSkOfficials->first(function ($official) {
+            return stripos($official->sk_role, 'chair') !== false;
+        });
+
+        // 3. Identify MEMBERS (Everyone else excluding Chair)
+        $skMembers = $allSkOfficials->filter(function ($official) use ($skChairperson) {
+             return $official->id !== ($skChairperson->id ?? null);
+        })->sortBy(function($member) {
+            // Sort Priority: Secretary -> Treasurer -> Kagawad
+            $role = strtolower($member->sk_role ?? '');
+            if (str_contains($role, 'sec')) return 1;
+            if (str_contains($role, 'treas')) return 2;
+            return 3;
+        });
 
         return view('sk-dashboard', compact(
             'user', 
@@ -54,8 +80,11 @@ class SKDashboardController extends Controller
             'populationData', 
             'ageGroupData',
             'remindersData',
-            'monthlyEventsData', // ✅ NEW: Add monthly events data
-            'notifications'
+            'monthlyEventsData',
+            'notifications',
+            // ✅ Pass the new variables to the view
+            'skChairperson',
+            'skMembers'
         ));
     }
 
@@ -270,4 +299,6 @@ class SKDashboardController extends Controller
         $events = Event::withCount('certificateRequests')->get();
         return view('sk.certificate-request', compact('events'));
     }
+
+    
 }

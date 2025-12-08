@@ -613,3 +613,219 @@
         cursor: not-allowed;
         opacity: 0.7;
         }
+/* ============================= */
+/* Account Locked Modal Styles   */
+/* ============================= */
+
+.account-locked-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(5px);
+    z-index: 10000;
+    animation: fadeIn 0.3s ease;
+}
+
+.account-locked-modal.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.locked-modal-content {
+    background: white;
+    width: 100%;
+    max-width: 500px;
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    animation: slideUp 0.4s ease;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.locked-modal-icon {
+    font-size: 60px;
+    color: #dc3545;
+    margin-bottom: 15px;
+}
+
+.locked-modal-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #dc3545;
+    margin-bottom: 10px;
+}
+
+.locked-modal-message {
+    color: #6c757d;
+    font-size: 16px;
+    line-height: 1.5;
+    margin-bottom: 25px;
+}
+
+.locked-email-section {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 20px 0;
+    border: 1px solid #dee2e6;
+}
+
+.locked-email-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.email-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin: 15px 0;
+    flex-wrap: wrap;
+}
+
+.email-address {
+    background: white;
+    border: 2px solid #3C87C4;
+    border-radius: 25px;
+    padding: 12px 25px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #3C87C4;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    word-break: break-all;
+    max-width: 100%;
+}
+
+.email-address:hover {
+    background: #3C87C4;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.copy-email-btn {
+    background: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 25px;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.copy-email-btn:hover {
+    background: #5a6268;
+    transform: translateY(-2px);
+}
+
+.locked-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 25px;
+}
+
+.locked-btn {
+    padding: 12px 25px;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.locked-btn-close {
+    background: #6c757d;
+    color: white;
+}
+
+.locked-btn-close:hover {
+    background: #5a6268;
+}
+
+.locked-btn-email {
+    background: #28a745;
+    color: white;
+}
+
+.locked-btn-email:hover {
+    background: #218838;
+}
+
+.locked-note {
+    margin-top: 20px;
+    font-size: 14px;
+    color: #6c757d;
+    font-style: italic;
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+    .account-locked-modal.active {
+        padding: 10px;
+    }
+    
+    .locked-modal-content {
+        padding: 25px 20px;
+    }
+    
+    .locked-modal-icon {
+        font-size: 50px;
+    }
+    
+    .locked-modal-title {
+        font-size: 22px;
+    }
+    
+    .email-display {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .email-address,
+    .copy-email-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .locked-actions {
+        flex-direction: column;
+    }
+    
+    .locked-btn {
+        width: 100%;
+    }
+}

@@ -1,248 +1,448 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="sk-view">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KatiBayan - SK Analytics</title>
-   <link rel="stylesheet" href="{{ asset('css/sk-view.css') }}">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>KatiBayan - SK Role</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/favicon.png') }}">
+  
+  <!-- CSS Files -->
+  <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+  <link rel="stylesheet" href="{{ asset('css/sk-view.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<body>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+</head>
+<body class="sk-view">
 <main class="dashboard-container">
 
     <header class="topbar">
+        <!-- Logo with correct dashboard classes -->
         <div class="logo">
-           <img src="{{ asset('images/KatiBayan-Logo_B.png') }}" alt="KatiBayan Logo" class="logo-img">
-             <div class="logo-text">
-                <span><span class="blue">K</span>ati<span class="blue">B</span>ayan.</span>
-                <small>Katipunan ng Kabataan Web Portal</small>
+            <img src="{{ asset('images/logo.png') }}" alt="Logo">
+            <div class="logo-text">
+                <span class="title">Katibayan</span>
+                <span class="subtitle">Web Portal</span>
             </div>
-        </div>
         </div>
 
         <div class="topbar-right">
-            <div class="time" id="currentTime">Loading...</div>
+            <!-- Time Widget -->
+            <div class="time" id="currentTime">MON 10:00 <span>AM</span></div>
 
-            <div class="topbar-icons">
-                <div class="notification-wrapper">
-                    <i class="fas fa-bell"></i>
-                    <span class="notif-count">3</span>
-                    <div class="notif-dropdown">
-                        <div class="notif-header">
-                            <strong>Notification</strong> <span>3</span>
-                        </div>
-                        <ul class="notif-list">
-                             <li>
-                                <div class="notif-icon"></div>
-                                <div class="notif-content">
-                                    <strong>Program Evaluation Due</strong>
-                                    <p>The evaluation for the KK-Assembly is due tomorrow.</p>
-                                </div>
-                                <span class="notif-dot"></span>
-                            </li>
-                            <li>
-                                <div class="notif-icon"></div>
-                                <div class="notif-content">
-                                    <strong>New Project Proposal</strong>
-                                    <p>Kagawad Dela Cruz submitted a new project proposal.</p>
-                                </div>
-                                <span class="notif-dot"></span>
-                            </li>
-                            <li>
-                                <div class="notif-icon"></div>
-                                <div class="notif-content">
-                                    <strong>Meeting Reminder</strong>
-                                    <p>SK Monthly Meeting is scheduled for Friday at 2 PM.</p>
-                                </div>
-                            </li>
-                             <li>
-                                <div class="notif-icon"></div>
-                                <div class="notif-content">
-                                    <strong>Report Received</strong>
-                                    <p>Received Accomplishment Report from Kagawad Santos.</p>
-                                </div>
-                            </li>
-                        </ul>
+            <!-- Theme Toggle Button -->
+            <button class="theme-toggle" id="themeToggle">
+                <i data-lucide="moon"></i>
+            </button>
+
+            <!-- Notification System -->
+            <div class="notification-wrapper">
+                <i class="fas fa-bell"></i>
+                @if(isset($notificationCount) && $notificationCount > 0)
+                    <span class="notif-count">{{ $notificationCount }}</span>
+                @endif
+                <div class="notif-dropdown">
+                    <div class="notif-header">
+                        <strong>Notification</strong>
+                        @if(isset($notificationCount) && $notificationCount > 0)
+                            <span>{{ $notificationCount }}</span>
+                        @endif
                     </div>
-                </div>
-
-                <div class="profile-wrapper">
-                    <img src="images/KatiBayan-Logo_B.png" alt="User" class="avatar" id="profileToggle"> <div class="profile-dropdown">
-                        <div class="profile-header">
-                            <img src="https://via.placeholder.com/55" alt="User" class="profile-avatar"> <div class="profile-info">
-                                <h4>Marijoy S. Novora</h4>
-                                <div class="profile-badge">
-                                    <span class="badge">SK Kagawad</span>
-                                    <span class="badge">19 yrs old</span>
-                                    
+                    
+                    <ul class="notif-list">
+                        <li>
+                            <a href="#" class="notif-link">
+                                <div class="notif-dot-container">
+                                    <span class="notif-dot"></span>
                                 </div>
-                                <span class="badge-2">Kagawad</span>
+                                <div class="notif-main-content">
+                                    <div class="notif-header-line">
+                                        <strong>Program Evaluation Due</strong>
+                                        <span class="notif-timestamp">12/15/2024 2:30 PM</span>
+                                    </div>
+                                    <p class="notif-message">The evaluation for the KK-Assembly is due tomorrow.</p>
+                                </div>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="notif-link">
+                                <div class="notif-dot-container">
+                                    <span class="notif-dot"></span>
+                                </div>
+                                <div class="notif-main-content">
+                                    <div class="notif-header-line">
+                                        <strong>New Project Proposal</strong>
+                                        <span class="notif-timestamp">12/14/2024 10:15 AM</span>
+                                    </div>
+                                    <p class="notif-message">Kagawad Dela Cruz submitted a new project proposal.</p>
+                                </div>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="notif-link">
+                                <div class="notif-dot-container">
+                                    <span class="notif-dot-placeholder"></span>
+                                </div>
+                                <div class="notif-main-content">
+                                    <div class="notif-header-line">
+                                        <strong>Meeting Reminder</strong>
+                                        <span class="notif-timestamp">12/13/2024 4:45 PM</span>
+                                    </div>
+                                    <p class="notif-message">SK Monthly Meeting is scheduled for Friday at 2 PM.</p>
+                                </div>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            @if(Auth::check())
+                @php
+                    $user = Auth::user();
+                    
+                    // Calculate Age
+                    $age = $user->date_of_birth ? \Carbon\Carbon::parse($user->date_of_birth)->age : 'N/A';
+
+                    // Fix "KK-Member" Logic
+                    $rawRole = strtolower($user->role);
+                    if ($rawRole === 'kk' || $rawRole === 'resident') {
+                        $roleBadge = 'KK-Member';
+                    } else {
+                        $roleBadge = ucfirst($rawRole);
+                    }
+
+                    // SK Role Logic
+                    $skTitle = '';
+                    if (!empty($user->sk_role)) {
+                        $skTitle = $user->sk_role; 
+                    } elseif ($user->role === 'sk_chairperson') {
+                        $skTitle = 'Chairperson';
+                    }
+                @endphp
+
+                <!-- Profile Dropdown -->
+                <div class="profile-wrapper">
+                    <img src="{{ $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+                         alt="User" class="avatar" id="profileToggle"> 
+
+                    <div class="profile-dropdown">
+                        <div class="profile-header">
+                            <img src="{{ $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+                                 alt="User" class="profile-avatar"> 
+
+                            <div class="profile-info">
+                                <h4>{{ $user->given_name }} {{ $user->middle_name }} {{ $user->last_name }} {{ $user->suffix }}</h4>
+                                
+                                <div class="badges-wrapper">
+                                    <!-- Blue Badge -->
+                                    <div class="profile-badge">
+                                        <span class="badge">{{ $roleBadge }}</span>
+                                        <span class="badge">{{ $age }} yrs old</span>
+                                    </div>
+
+                                    <!-- Yellow SK Badge -->
+                                    @if($skTitle)
+                                        <div class="profile-badge sk-badge-yellow">
+                                            <span>{{ $skTitle }}</span>
+                                        </div>
+                                    @endif
+                                </div>
                             </div>
                         </div>
                         <hr>
+                        
+                        <!-- Back to Profile Button -->
+                        <div class="profile-button-container">
+                            <a href="{{ route('dashboard.index') }}" class="profile-sk-button">
+                                Back to Profile
+                            </a>
+                        </div>
+
+                        <!-- Menu Items -->
                         <ul class="profile-menu">
-                             <li>
-                                 <button class="back-to-profile" id="btn-back-profile">Back to Profile</button>
+                            <li>
+                                <a href="{{ route('profilepage') }}">
+                                    <i class="fas fa-user"></i> Profile
+                                </a>
                             </li>
+                            
+                            <li>
+                                <a href="{{ route('faqs') }}">
+                                    <i class="fas fa-question-circle"></i> FAQs
+                                </a>
+                            </li>
+
+                            <li>
+                                <a href="#" id="openFeedbackBtn">
+                                    <i class="fas fa-star"></i> Send Feedback to Katibayan
+                                </a>
+                            </li>
+                            
                             <li class="logout-item">
-                                <a href="#">
+                                <a href="loginpage" onclick="confirmLogout(event)">
                                     <i class="fas fa-sign-out-alt"></i> Logout
                                 </a>
                             </li>
                         </ul>
+                        
+                        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                            @csrf
+                        </form>
                     </div>
                 </div>
-            </div>
+            @endif
         </div>
     </header>
 
-    <section class="welcome-section">
-        <div class="welcome-text">
-            <h1>Marijoy S. Novora</h1>
-            <p>19 years old <span class="tag tag-kagawad">SK Kagawad</span></p>
-        </div>
-         <button class="btn btn-secondary" id="setCommitteeBtn">Edit your committee</button>
-        </section>
+    <!-- Feedback Modal (Same as dashboard) -->
+    <div id="feedbackModal" class="modal-overlay">
+      <div class="modal-content">
+        <span class="close-btn" id="closeFeedbackModal">&times;</span>
 
-        <!-- Committee Selection Modal -->
-        <div class="modal-overlay" id="committeeModal">
-            <div class="committee-modal">
-                <div class="modal-header">
-                    <h2>Edit Your Committee</h2>
-                    <button class="close-modal" id="closeModal">&times;</button>
-                </div>
-                <div class="modal-content">
-                    <div class="modal-section">
-                        <p style="color: #252525ff; margin-bottom: 1rem; font-size: 0.9rem;">
-                          Select your respective committee.
-                        </p>
-                        <div class="committee-options">
-                            <div class="committee-option" data-committee="health">
-                                <input type="checkbox" id="health" name="committees" value="health">
-                                <label for="health">Committee on Health</label>
-                            </div>
-                            <div class="committee-option" data-committee="education">
-                                <input type="checkbox" id="education" name="committees" value="education">
-                                <label for="education">Committee on Education</label>
-                            </div>
-                            <div class="committee-option" data-committee="sports">
-                                <input type="checkbox" id="sports" name="committees" value="sports">
-                                <label for="sports">Committee on Sports</label>
-                            </div>
-                            <div class="committee-option" data-committee="culture">
-                                <input type="checkbox" id="culture" name="committees" value="culture">
-                                <label for="culture">Committee on Culture</label>
-                            </div>
-                            <div class="committee-option" data-committee="environment">
-                                <input type="checkbox" id="environment" name="committees" value="environment">
-                                <label for="environment">Committee on Environment</label>
-                            </div>
-                            <div class="committee-option" data-committee="citizenship">
-                                <input type="checkbox" id="citizenship" name="committees" value="citizenship">
-                                <label for="citizenship">Committee on Active Citizenship</label>
-                            </div>
-                            <div class="committee-option" data-committee="social">
-                                <input type="checkbox" id="social" name="committees" value="social">
-                                <label for="social">Committee on Social Inclusion</label>
-                            </div>
-                            <div class="committee-option" data-committee="finance">
-                                <input type="checkbox" id="finance" name="committees" value="finance">
-                                <label for="finance">Committee on Finance</label>
-                            </div>
+        <h2>Send us feedback</h2>
+        <p>Help us improve by sharing your thoughts, suggestions, and experiences with our service.</p>
+
+        <div class="feedback-options">
+          <div class="option-card">
+            <i class="fas fa-star"></i>
+            <p><strong>Star Rating</strong><br>Rate your experience with 1–5 stars</p>
+          </div>
+          <div class="option-card">
+            <i class="fas fa-comment"></i> 
+            <p><strong>Comment Section</strong><br>Share your thoughts</p>
+          </div>
+          <div class="option-card">
+            <i class="fas fa-bolt"></i>
+            <p><strong>Quick Submission</strong><br>Simple and intuitive feedback process</p>
+          </div>
+        </div>
+
+        <h3>Enjoying it? Rate us!</h3>
+        <div class="star-rating" id="starRating">
+          <i class="far fa-star" data-value="1"></i>
+          <i class="far fa-star" data-value="2"></i>
+          <i class="far fa-star" data-value="3"></i>
+          <i class="far fa-star" data-value="4"></i>
+          <i class="far fa-star" data-value="5"></i>
+        </div>
+
+        <form id="feedbackForm" action="{{ route('feedback.submit') }}" method="POST">
+          @csrf
+          
+          <label for="type">Feedback Type</label>
+          
+          <div class="custom-select-wrapper" id="customSelect">
+            <div class="custom-select-trigger">
+              <span id="selectedFeedbackType">Select feedback type</span>
+              <div class="custom-arrow"></div>
+            </div>
+            
+            <div class="custom-options-list">
+              <div class="custom-option" data-value="suggestion">
+                <span class="dot suggestion"></span> Suggestion
+              </div>
+              <div class="custom-option" data-value="bug">
+                <span class="dot bug"></span> Bug or Issue
+              </div>
+              <div class="custom-option" data-value="appreciation">
+                <span class="dot appreciation"></span> Appreciation
+              </div>
+              <div class="custom-option" data-value="others">
+                <span class="dot others"></span> Others
+              </div>
+            </div>
+            
+            <select id="type" name="type" required style="display: none;">
+              <option value="" disabled selected>Select feedback type</option>
+              <option value="suggestion">Suggestion</option>
+              <option value="bug">Bug or Issue</option>
+              <option value="appreciation">Appreciation</option>
+              <option value="others">Others</option>
+            </select>
+          </div>
+          <label for="message">Your message</label>
+          <textarea id="message" name="message" rows="5" placeholder="Share your feedback with us..."></textarea>
+
+          <input type="hidden" name="rating" id="ratingInput">
+          
+          <div class="form-actions">
+            <button type="submit" class="submit-btn">Submit</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="modal-overlay simple-alert-modal">
+      <div class="modal-content">
+        <div class="success-icon">
+          <i class="fas fa-check"></i>
+        </div>
+        <h2>Submitted</h2>
+        <p>Thank you for your feedback! Your thoughts help us improve.</p>
+        <button id="closeSuccessModal" class="ok-btn">OK</button>
+      </div>
+    </div>
+
+    <section class="welcome-section">
+        @php
+            // Get User Data
+            $fullName = $user->given_name . ' ' . $user->middle_name . ' ' . $user->last_name . ' ' . $user->suffix;
+            $age = $user->date_of_birth ? \Carbon\Carbon::parse($user->date_of_birth)->age : 'N/A';
+            
+            // Get SK Role
+            $skRole = $user->sk_role ?? 'Member';
+            $roleClass = strtolower($skRole);
+
+            // Get Committees
+            $savedCommittees = !empty($user->committees) ? json_decode($user->committees, true) : [];
+            $hasCommittees = !empty($savedCommittees);
+            
+            // Button Text
+            $buttonText = $hasCommittees ? 'Edit your committee' : 'Set your committee';
+        @endphp
+
+        <script>
+            window.userCommittees = @json($savedCommittees);
+        </script>
+
+        <div class="welcome-text">
+            <h1>{{ $fullName }}</h1>
+            <p>
+                {{ $age }} years old 
+                <span class="tag tag-{{ $roleClass }}">SK {{ $skRole }}</span>
+            </p>
+        </div>
+        
+        <button class="btn btn-secondary" id="setCommitteeBtn">
+            {{ $buttonText }}
+        </button>
+    </section>
+
+    <!-- Committee Modal -->
+    <div class="modal-overlay" id="committeeModal">
+        <div class="committee-modal">
+            <div class="modal-header">
+                <h2>Select Your Committee</h2>
+                <button class="close-modal" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-content">
+                <div class="modal-section">
+                    <p>
+                      Please select your respective committee to proceed.
+                    </p>
+                    <div class="committee-options">
+                        <div class="committee-option" data-committee="health">
+                            <input type="checkbox" id="health" name="committees" value="health">
+                            <label for="health">Committee on Health</label>
+                        </div>
+                        <div class="committee-option" data-committee="education">
+                            <input type="checkbox" id="education" name="committees" value="education">
+                            <label for="education">Committee on Education</label>
+                        </div>
+                        <div class="committee-option" data-committee="sports">
+                            <input type="checkbox" id="sports" name="committees" value="sports">
+                            <label for="sports">Committee on Sports</label>
+                        </div>
+                        <div class="committee-option" data-committee="culture">
+                            <input type="checkbox" id="culture" name="committees" value="culture">
+                            <label for="culture">Committee on Culture</label>
+                        </div>
+                        <div class="committee-option" data-committee="environment">
+                            <input type="checkbox" id="environment" name="committees" value="environment">
+                            <label for="environment">Committee on Environment</label>
+                        </div>
+                        <div class="committee-option" data-committee="citizenship">
+                            <input type="checkbox" id="citizenship" name="committees" value="citizenship">
+                            <label for="citizenship">Committee on Active Citizenship</label>
+                        </div>
+                        <div class="committee-option" data-committee="social">
+                            <input type="checkbox" id="social" name="committees" value="social">
+                            <label for="social">Committee on Social Inclusion</label>
+                        </div>
+                        <div class="committee-option" data-committee="finance">
+                            <input type="checkbox" id="finance" name="committees" value="finance">
+                            <label for="finance">Committee on Finance</label>
                         </div>
                     </div>
-                    
-                    <div class="modal-section">
-                        <h3>Current Selection</h3>
-                        <div id="selectedCommittees" style="
-                            background: #f8f9fa;
-                            padding: 1rem;
-                            border-radius: 8px;
-                            min-height: 60px;
-                            border: 2px dashed #ddd;
-                        ">
-                            <p style="color: #999; margin: 0; font-style: italic;">No committees selected yet</p>
-                        </div>
-                    </div>
                 </div>
-                <div class="modal-actions">
-                    <button class="btn btn-secondary" id="cancelSelection">Cancel</button>
-                    <button class="btn btn-primary" id="saveCommittees">Save Committees</button>
+                
+                <div class="modal-section">
+                    <h3>Current Selection</h3>
+                    <div id="selectedCommittees">
+                        <p style="color: var(--text-color); opacity: 0.7; margin: 0; font-style: italic;">No committees selected yet</p>
+                    </div>
                 </div>
             </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="cancelSelection">Cancel</button>
+                <button class="btn btn-primary" id="saveCommittees">Save Committees</button>
+            </div>
         </div>
-
-    </section>
+    </div>
 
     <div class="dashboard-grid">
         <div class="grid-col-1">
             <div class="card sk-committee">
                 <h2>SK COMMITTEE</h2>
                 <ul>
+                    <!-- Chairperson -->
                     <li class="committee-item">
-                        <span class="name">MARIJOY S. NOVORA</span>
-                        <div class="role-group">
-                            <span class="role-tag role-chairperson">SK CHAIRPERSON</span>
-                        </div>
-                    </li>
-                    <li class="members-header">MEMBERS</li>
-                    <li class="committee-item">
-                        <span class="name">JUAN DELA CRUZ</span>
-                        <div class="role-group">
-                            <span class="role-tag role-treasurer">SK TREASURER</span>
-                        </div>
-                    </li>
-                    <li class="committee-item">
-                        <span class="name">MARIA SANTOS</span>
-                        <div class="role-group">
-                            <span class="role-tag role-secretary">SK SECRETARY</span>
-                        </div>
+                        @if($chairperson)
+                            <span class="name">
+                                {{ strtoupper($chairperson->given_name . ' ' . $chairperson->last_name) }}
+                            </span>
+                            <div class="role-group">
+                                <span class="role-tag role-chairperson">SK CHAIRPERSON</span>
+                            </div>
+                        @else
+                            <span class="name" style="color: var(--text-color); opacity: 0.7; font-style: italic;">(VACANT)</span>
+                            <div class="role-group">
+                                <span class="role-tag role-chairperson">SK CHAIRPERSON</span>
+                            </div>
+                        @endif
                     </li>
 
-                    <li class="committee-item">
-                        <span class="name">PETER GARCIA</span>
-                        <div class="role-group">
-                            <span class="role-tag role-kagawad">SK KAGAWAD</span>
-                            <span class="committee-role">COMMITTEE ON HEALTH</span>
-                            <span class="committee-role">COMMITTEE ON ACTIVE CITIZENSHIP</span>
-                        </div>
-                    </li>
-                    <li class="committee-item">
-                        <span class="name">ANNA REYES</span>
-                        <div class="role-group">
-                            <span class="role-tag role-kagawad">SK KAGAWAD</span>
-                            <span class="committee-role">COMMITTEE ON SOCIAL INCLUSION</span>
-                        </div>
-                    </li>
-                     <li class="committee-item">
-                        <span class="name">MARK LIM</span>
-                        <div class="role-group">
-                            <span class="role-tag role-kagawad">SK KAGAWAD</span>
-                            <span class="committee-role">COMMITTEE ON EDUCATION</span>
-                         </div>
-                    </li>
-                     <li class="committee-item">
-                        <span class="name">ISABELA DAVID</span>
-                         <div class="role-group">
-                            <span class="role-tag role-kagawad">SK KAGAWAD</span>
-                             <span class="committee-role">COMMITTEE ON ENVIRONMENT</span>
-                        </div>
-                    </li>
-                    <li class="committee-item">
-                         <span class="name">CARLO FERNANDEZ</span>
-                        <div class="role-group">
-                            <span class="role-tag role-kagawad">SK KAGAWAD</span>
-                            <span class="committee-role">COMMITTEE ON SPORTS DEV</span>
-                        </div>
-                    </li>
-                    <li class="committee-item">
-                        <span class="name">SOFIA ANGELES</span>
-                        <div class="role-group">
-                            <span class="role-tag role-kagawad">SK KAGAWAD</span>
-                             <span class="committee-role">COMMITTEE ON CULTURE & ARTS</span>
-                        </div>
-                    </li>
+                    <li class="members-header">MEMBERS</li>
+
+                    @forelse($members as $member)
+                        @php
+                            // Format Name
+                            $fullName = strtoupper($member->given_name . ' ' . $member->last_name);
+                            
+                            // Format Role Class
+                            $roleClass = 'role-' . strtolower($member->sk_role);
+                            
+                            // Check Committees
+                            $commList = !empty($member->committees) ? json_decode($member->committees, true) : [];
+                        @endphp
+
+                        <li class="committee-item">
+                            <span class="name">{{ $fullName }}</span>
+                            
+                            <div class="role-group">
+                                <span class="role-tag {{ $roleClass }}">
+                                    SK {{ strtoupper($member->sk_role) }}
+                                </span>
+
+                                @if(!empty($commList))
+                                    @foreach($commList as $comm)
+                                        <span class="committee-role">
+                                            COMMITTEE ON {{ strtoupper($comm) }}
+                                        </span>
+                                    @endforeach
+                                @endif
+                            </div>
+                        </li>
+
+                    @empty
+                        <li class="committee-item" style="justify-content: center; padding: 20px;">
+                            <span class="name" style="color: var(--text-color); opacity: 0.7; font-style: italic; font-weight: normal; font-size: 13px;">
+                                No registered SK members yet.
+                            </span>
+                        </li>
+                    @endforelse
                 </ul>
             </div>
         </div>
@@ -250,364 +450,670 @@
         <div class="grid-col-2">
             <div class="card send-report">
                 <h2>SEND REPORT TO YOUR SK CHAIR</h2>
-                <form>
+                
+                <form id="sendReportForm">
                     <div class="form-group">
                         <label for="report-type">Report Type</label>
-                        <select id="report-type" name="report-type">
+                        <select id="report-type" name="report_type" required>
                             <option value="">Select type of report</option>
                             <option value="accomplishment">Accomplishment Report</option>
                             <option value="financial">Propose Project</option>
                         </select>
                     </div>
+
                     <div class="form-group file-upload">
                         <label for="file-attach">Attach files</label>
                         <div class="file-input-wrapper">
-                            <button type="button" class="file-input-btn">
+                            <button type="button" class="file-input-btn" id="browseBtn">
                                 <i class="fas fa-cloud-upload-alt"></i> Choose Files or Drag & Drop
                             </button>
-                            <input type="file" id="file-attach" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xls,.xlsx">
+                            <input type="file" id="file-attach" name="files[]" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xls,.xlsx" style="display:none;">
                         </div>
+                        
                         <div class="file-size-warning">Max file size: 10MB per file</div>
-                        <div class="file-list" id="fileList">
+                        
+                        <div class="file-list" id="uploadFileList">
                             <div class="file-empty-state">No files selected</div>
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-primary">Submit Report</button>
+
+                    <button type="submit" class="btn btn-primary" id="submitBtn">Submit Report</button>
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- Full Width Propose Project Section -->
     <div class="card propose-project-full">
-        <h2>Propose Project</h2>
-        <ul>
-            <li>
-                <div class="project-info">
-                    <span class="project-name">Community Pantry Drive</span>
-                    <span class="project-status">Active Citizenship</span>
-                </div>
-                <span class="project-date">Nov 15, 2025</span>
-            </li>
-             <li>
-                <div class="project-info">
-                    <span class="project-name">Free Medical Check-up</span>
-                     <span class="project-status">Health</span>
-                 </div>
-                 <span class="project-date">Nov 20, 2025</span>
-            </li>
-            <li>
-                <div class="project-info">
-                     <span class="project-name">Basketball League Finals</span>
-                    <span class="project-status">Sports</span>
-                </div>
-                <span class="project-date">Nov 28, 2025</span>
-            </li>
-            <li>
-                <div class="project-info">
-                    <span class="project-name">Scholarship Application Opening</span>
-                    <span class="project-status">Education</span>
-                </div>
-                <span class="project-date">Dec 01, 2025</span>
-            </li>
-             <li>
-                <div class="project-info">
-                     <span class="project-name">Barangay Christmas Decor Contest</span>
-                    <span class="project-status">Culture & Arts</span>
-                </div>
-                 <span class="project-date">Dec 10, 2025</span>
-             </li>
-             <li>
-                <div class="project-info">
-                     <span class="project-name">Coastal Clean-up Drive</span>
-                     <span class="project-status">Environment</span>
-                 </div>
-                 <span class="project-date">Dec 18, 2025</span>
-             </li>
-        </ul>
-    </div>
+        <div class="card-header-flex">
+            <h2>Accomplished Projects</h2>
+            
+            <div class="year-filter-wrapper">
+                <select id="projectYearFilter" class="year-select">
+                    @php
+                        $currentYear = \Carbon\Carbon::now()->year;
+                        $availableYears = $completedProjects->keys(); 
+                    @endphp
 
+                    @if(!$availableYears->contains($currentYear))
+                        <option value="{{ $currentYear }}" selected>{{ $currentYear }}</option>
+                    @endif
+
+                    @foreach($availableYears as $year)
+                        <option value="{{ $year }}" {{ $year == $currentYear ? 'selected' : '' }}>
+                            {{ $year }}
+                        </option>
+                    @endforeach
+                    
+                    <option value="all">All Years</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="projects-list-container">
+            @forelse($completedProjects as $year => $projects)
+                <div class="year-group-container" 
+                     id="year-group-{{ $year }}" 
+                     style="{{ $year == $currentYear ? 'display: block;' : 'display: none;' }}">
+                    
+                    <div class="year-header-small">
+                        <span>Records for {{ $year }}</span>
+                    </div>
+
+                    <ul class="project-year-group">
+                        @foreach($projects as $project)
+                            <li>
+                                <div class="project-info">
+                                    <span class="project-name">{{ $project->title }}</span>
+                                    <span class="project-status">
+                                        {{ $project->type }}
+                                    </span>
+                                </div>
+                                <span class="project-date">
+                                    {{ \Carbon\Carbon::parse($project->date)->format('M d') }}
+                                </span>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            @empty
+                <div style="padding: 20px; text-align: center;">
+                    <span style="color: var(--text-color); opacity: 0.7; font-style: italic;">
+                        No accomplished projects yet.
+                    </span>
+                </div>
+            @endforelse
+            
+            <div id="no-data-message" style="display: none; padding: 20px; text-align: center;">
+                <span style="color: var(--text-color); opacity: 0.7; font-style: italic;">No records found for this year.</span>
+            </div>
+        </div>
+    </div>
 </main>
 
+<!-- Main JavaScript -->
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        // === Profile dropdown toggle ===
-        const profileToggle = document.getElementById('profileToggle');
-        const profileWrapper = document.querySelector('.profile-wrapper');
-        const profileDropdown = document.querySelector('.profile-dropdown');
+document.addEventListener('DOMContentLoaded', () => {
+    // Initialize Lucide icons
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
 
-        // === Notifications dropdown toggle ===
-        const notifBell = document.querySelector('.notification-wrapper .fa-bell');
-        const notifWrapper = document.querySelector('.notification-wrapper');
-        const notifDropdown = document.querySelector('.notif-dropdown');
+    // =========================================================
+    // 1. TIME UPDATE FUNCTION
+    // =========================================================
+    function updateTime() {
+        const timeEl = document.querySelector(".time");
+        if (!timeEl) return;
 
-        // Profile dropdown toggle
-        profileToggle?.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevent click from closing immediately
-            profileWrapper.classList.toggle('active');
-            // Close notification dropdown if open
-            notifWrapper?.classList.remove('active');
-        });
-        // Prevent clicks inside dropdown from closing it
-        profileDropdown?.addEventListener('click', e => e.stopPropagation());
+        const now = new Date();
+        const shortWeekdays = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+        const shortMonths = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+        const weekday = shortWeekdays[now.getDay()];
+        const month = shortMonths[now.getMonth()];
+        const day = now.getDate();
+        let hours = now.getHours();
+        const minutes = now.getMinutes().toString().padStart(2, "0");
+        const ampm = hours >= 12 ? "PM" : "AM";
+        hours = hours % 12 || 12;
 
-        // Notifications dropdown toggle
-        notifBell?.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevent click from closing immediately
-            notifWrapper.classList.toggle('active');
-             // Close profile dropdown if open
-            profileWrapper?.classList.remove('active');
-        });
-         // Prevent clicks inside dropdown from closing it
-        notifDropdown?.addEventListener('click', e => e.stopPropagation());
+        timeEl.innerHTML = `${weekday}, ${month} ${day} ${hours}:${minutes} <span>${ampm}</span>`;
+    }
 
-        // === Time auto-update ===
-        const timeEl = document.getElementById("currentTime");
-        function updateTime() {
-            if (!timeEl) return;
-            const now = new Date();
+    // Initial call and set interval
+    updateTime();
+    setInterval(updateTime, 60000);
 
-            const shortWeekdays = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
-            const weekday = shortWeekdays[now.getDay()];
-
-            let hours = now.getHours();
-            const minutes = now.getMinutes().toString().padStart(2, '0');
-            const ampm = hours >= 12 ? 'PM' : 'AM';
-            hours = hours % 12;
-            hours = hours ? hours : 12; // Handle midnight (0) as 12
-            const timeString = `${hours}:${minutes} ${ampm}`;
-
-            // Format: MON 10:00 AM
-            timeEl.textContent = `${weekday} ${timeString}`;
+    // =========================================================
+    // 2. THEME TOGGLE FUNCTIONALITY
+    // =========================================================
+    const themeToggle = document.getElementById('themeToggle');
+    
+    function applyTheme(isDark) {
+        const body = document.body;
+        body.classList.toggle('dark-mode', isDark);
+        
+        const icon = isDark ? 'sun' : 'moon';
+        if (themeToggle) {
+            themeToggle.innerHTML = `<i data-lucide="${icon}"></i>`;
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
         }
-        updateTime(); // Run once on load
-        setInterval(updateTime, 60000); // Update every minute
+        
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+    }
 
-        // === File Upload Management ===
-        const fileInput = document.getElementById('file-attach');
-        const fileListContainer = document.getElementById('fileList'); // Renamed for clarity
-        let currentFiles = []; // Use a different variable name
+    // Initialize theme
+    const savedTheme = localStorage.getItem('theme') === 'dark';
+    applyTheme(savedTheme);
 
-        fileInput?.addEventListener('change', (e) => {
+    if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+            const isDark = !document.body.classList.contains('dark-mode');
+            applyTheme(isDark);
+        });
+    }
+
+    // =========================================================
+    // 3. PROFILE DROPDOWN & NOTIFICATION LOGIC
+    // =========================================================
+    const profileToggle = document.getElementById('profileToggle');
+    const profileWrapper = document.querySelector('.profile-wrapper');
+    const notifWrapper = document.querySelector('.notification-wrapper');
+    const notifBell = notifWrapper?.querySelector('.fa-bell');
+
+    // Profile Dropdown
+    if (profileToggle && profileWrapper) {
+        profileToggle.addEventListener("click", (e) => {
+            e.stopPropagation();
+            profileWrapper.classList.toggle("active");
+            notifWrapper?.classList.remove("active");
+        });
+    }
+
+    // Notifications Dropdown
+    if (notifWrapper && notifBell) {
+        notifBell.addEventListener("click", (e) => {
+            e.stopPropagation();
+            notifWrapper.classList.toggle("active");
+            profileWrapper?.classList.remove("active");
+        });
+    }
+
+    // Global Click Listener
+    document.addEventListener("click", (e) => {
+        if (profileWrapper && !profileWrapper.contains(e.target)) {
+            profileWrapper.classList.remove("active");
+        }
+        if (notifWrapper && !notifWrapper.contains(e.target)) {
+            notifWrapper.classList.remove("active");
+        }
+    });
+
+    // Logout Confirmation
+    function confirmLogout(event) {
+        event.preventDefault();
+        if (confirm('Are you sure you want to logout?')) {
+            document.getElementById('logout-form').submit();
+        }
+    }
+
+    // =========================================================
+    // 4. FEEDBACK MODAL FUNCTIONALITY (Same as dashboard)
+    // =========================================================
+    const feedbackTriggerBtn = document.getElementById('openFeedbackBtn');
+    const feedbackModal = document.getElementById('feedbackModal');
+    
+    if (feedbackTriggerBtn && feedbackModal) {
+        const feedbackCloseBtn = document.getElementById('closeFeedbackModal');
+        const feedbackStars = document.querySelectorAll('#starRating i');
+        const feedbackRatingInput = document.getElementById('ratingInput');
+        const feedbackForm = document.getElementById('feedbackForm');
+        const submitBtn = feedbackForm?.querySelector('.submit-btn');
+        const successModal = document.getElementById('successModal');
+        const closeSuccessBtn = document.getElementById('closeSuccessModal');
+
+        // Custom Select Box
+        const customSelect = document.getElementById('customSelect');
+        if (customSelect) {
+            const trigger = customSelect.querySelector('.custom-select-trigger');
+            const selectedText = document.getElementById('selectedFeedbackType');
+            const optionsList = customSelect.querySelector('.custom-options-list');
+            const options = customSelect.querySelectorAll('.custom-option');
+            const realSelect = document.getElementById('type');
+
+            trigger?.addEventListener('click', (e) => {
+                e.stopPropagation();
+                customSelect.classList.toggle('open');
+            });
+
+            options?.forEach(option => {
+                option.addEventListener('click', () => {
+                    const value = option.getAttribute('data-value');
+                    const text = option.textContent.trim();
+
+                    if (selectedText) selectedText.textContent = text;
+                    if (realSelect) realSelect.value = value;
+                    trigger?.classList.add('selected');
+
+                    customSelect.classList.remove('open');
+                });
+            });
+
+            document.addEventListener('click', () => {
+                customSelect.classList.remove('open');
+            });
+        }
+
+        feedbackTriggerBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            feedbackModal.style.display = 'flex';
+        });
+
+        feedbackCloseBtn?.addEventListener('click', () => {
+            feedbackModal.style.display = 'none';
+        });
+
+        window.addEventListener('click', (e) => {
+            if (e.target === feedbackModal) {
+                feedbackModal.style.display = 'none';
+            }
+            if (e.target === successModal) {
+                successModal.style.display = 'none';
+            }
+        });
+
+        feedbackStars.forEach(star => {
+            star.addEventListener('click', () => {
+                const rating = star.getAttribute('data-value');
+                if (feedbackRatingInput) feedbackRatingInput.value = rating;
+
+                feedbackStars.forEach(s => {
+                    s.classList.remove('fas');
+                    s.classList.add('far');
+                });
+                for (let i = 0; i < rating; i++) {
+                    feedbackStars[i].classList.remove('far');
+                    feedbackStars[i].classList.add('fas');
+                }
+            });
+        });
+
+        if (feedbackForm) {
+            feedbackForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                const formData = new FormData(feedbackForm);
+                const submitButtonText = submitBtn.textContent;
+
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = 'Submitting...';
+                }
+
+                // Get CSRF token
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                
+                // Add CSRF token to form data
+                if (csrfToken) {
+                    formData.append('_token', csrfToken);
+                }
+
+                fetch(feedbackForm.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        feedbackModal.style.display = 'none';
+                        if (successModal) successModal.style.display = 'flex';
+                    } else {
+                        let errorMsg = data.message || 'Submission failed.';
+                        if (data.errors) {
+                            errorMsg += '\n' + Object.values(data.errors).join('\n');
+                        }
+                        throw new Error(errorMsg);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert(error.message || 'An error occurred. Please try again.');
+                })
+                .finally(() => {
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = submitButtonText;
+                    }
+
+                    feedbackForm.reset();
+                    feedbackStars.forEach(s => {
+                        s.classList.remove('fas');
+                        s.classList.add('far');
+                    });
+                    if (feedbackRatingInput) feedbackRatingInput.value = '';
+
+                    const selectedText = document.getElementById('selectedFeedbackType');
+                    const trigger = customSelect?.querySelector('.custom-select-trigger');
+                    const realSelect = document.getElementById('type');
+                    if (selectedText) selectedText.textContent = 'Select feedback type';
+                    trigger?.classList.remove('selected');
+                    if (realSelect) realSelect.value = '';
+                });
+            });
+        }
+
+        closeSuccessBtn?.addEventListener('click', () => {
+            if (successModal) successModal.style.display = 'none';
+        });
+    }
+
+    // =========================================================
+    // 5. SEND REPORT & FILE UPLOAD LOGIC
+    // =========================================================
+    const fileInput = document.getElementById('file-attach');
+    const fileListContainer = document.getElementById('uploadFileList'); 
+    const browseBtn = document.getElementById('browseBtn'); 
+    const sendReportForm = document.getElementById('sendReportForm'); 
+    const submitBtn = document.getElementById('submitBtn');
+    
+    let currentFiles = [];
+
+    // Trigger file input click
+    if (browseBtn && fileInput) {
+        browseBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            fileInput.click();
+        });
+    }
+
+    // Handle file selection
+    if (fileInput) {
+        fileInput.addEventListener('change', (e) => {
             const newFiles = Array.from(e.target.files);
-            // Append new files, avoiding duplicates based on name and size (basic check)
-             newFiles.forEach(newFile => {
-                if (!currentFiles.some(existingFile => existingFile.name === newFile.name && existingFile.size === newFile.size)) {
+            
+            newFiles.forEach(newFile => {
+                if (!currentFiles.some(existing => existing.name === newFile.name)) {
                     currentFiles.push(newFile);
                 }
-             });
+            });
+
             updateFileListUI(fileListContainer, currentFiles);
+            fileInput.value = '';
+        });
+    }
+
+    // Helper: Update UI List
+    function updateFileListUI(container, filesToShow) {
+        if (!container) return;
+        container.innerHTML = '';
+        
+        if (filesToShow.length === 0) {
+            container.innerHTML = '<div class="file-empty-state">No files selected</div>';
+            return;
+        }
+
+        filesToShow.forEach((file, index) => {
+            const fileItem = document.createElement('div');
+            fileItem.className = 'file-item';
+            
+            // Format size logic
+            let size = (file.size / 1024).toFixed(1) + ' KB';
+            if(file.size > 1024 * 1024) size = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
+
+            fileItem.innerHTML = `
+                <div style="display:flex; align-items:center; gap:8px; overflow:hidden;">
+                    <i class="fas fa-file" style="color:var(--text-color);"></i>
+                    <span class="file-name" title="${file.name}" style="font-size:0.9rem;">${file.name}</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span style="font-size:0.8rem; color:var(--text-color); opacity:0.7;">${size}</span>
+                    <span class="file-remove" data-index="${index}" style="cursor:pointer; color:#ef4444;"><i class="fas fa-times"></i></span>
+                </div>
+            `;
+            container.appendChild(fileItem);
         });
 
-        function updateFileListUI(container, filesToShow) {
-            if (!container) return;
-            container.innerHTML = ''; // Clear previous list
-
-            if (filesToShow.length === 0) {
-                container.innerHTML = '<div class="file-empty-state">No files selected</div>';
-                return;
-            }
-
-            filesToShow.forEach((file, index) => {
-                const fileItem = document.createElement('div');
-                fileItem.className = 'file-item';
-
-                // Format file size
-                let fileSize = '';
-                if (file.size < 1024) fileSize = file.size + ' bytes';
-                else if (file.size < 1048576) fileSize = (file.size / 1024).toFixed(1) + ' KB';
-                else fileSize = (file.size / 1048576).toFixed(1) + ' MB';
-
-                fileItem.innerHTML = `
-                    <span class="file-name" title="${file.name}">${file.name}</span>
-                    <span class="file-size">${fileSize}</span>
-                    <span class="file-remove" data-index="${index}" title="Remove file">
-                        <i class="fas fa-times"></i>
-                    </span>
-                `;
-                container.appendChild(fileItem);
+        // Add remove functionality
+        container.querySelectorAll('.file-remove').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const idx = parseInt(e.currentTarget.dataset.index);
+                currentFiles.splice(idx, 1);
+                updateFileListUI(container, currentFiles);
             });
+        });
+    }
 
-            // Add remove functionality AFTER creating the elements
-            attachRemoveListeners(container, filesToShow);
-        }
+    // Submit form
+    if (sendReportForm) {
+        sendReportForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
 
-        function attachRemoveListeners(container, filesArray) {
-             container.querySelectorAll('.file-remove').forEach(removeBtn => {
-                // Remove previous listener to avoid duplicates if re-rendering
-                removeBtn.replaceWith(removeBtn.cloneNode(true));
-            });
-
-            // Attach new listeners
-            container.querySelectorAll('.file-remove').forEach(removeBtn => {
-                removeBtn.addEventListener('click', (e) => {
-                    const indexToRemove = parseInt(e.target.closest('.file-remove').dataset.index);
-                     if (!isNaN(indexToRemove) && indexToRemove >= 0 && indexToRemove < filesArray.length) {
-                        filesArray.splice(indexToRemove, 1); // Remove from the array
-                        updateFileListUI(container, filesArray); // Update the UI
-                    }
-                });
-            });
-        }
-
-        // === Form Submissions ===
-        const reportForm = document.querySelector('.send-report form');
-        const reportSuccessMsg = document.getElementById('reportSuccess'); // Renamed for clarity
-
-        reportForm?.addEventListener('submit', (e) => {
-            e.preventDefault(); // Stop default form submission
             const reportType = document.getElementById('report-type').value;
-
-            // Basic validation
+            
             if (!reportType) {
-                 alert('Please select a report type.');
-                 return;
-             }
-             if (currentFiles.length === 0) {
-                 alert('Please attach at least one file.');
+                alert('Please select a report type.');
+                return;
+            }
+            if (currentFiles.length === 0) {
+                alert('Please attach at least one file.');
                 return;
             }
 
-            // Simulate submission (replace with actual AJAX/fetch later)
-            console.log('Simulating report submission:');
-            console.log('Report Type:', reportType);
-            console.log('Files:', currentFiles.map(f => f.name)); // Log file names
-             showSuccess(); // Show success message (simulation)
-        });
-
-        function showSuccess() {
-             reportSuccessMsg.style.display = 'block';
-
-            // Reset form fields
-            reportForm.reset(); // Resets select dropdown
-            currentFiles = []; // Clear the file array
-            updateFileListUI(fileListContainer, currentFiles); // Clear the file list UI
-
-            // Hide the success message after 5 seconds
-            setTimeout(() => {
-                reportSuccessMsg.style.display = 'none';
-            }, 5000);
-        }
-
-        // === Close dropdowns when clicking outside ===
-        window.addEventListener('click', (e) => {
-             // Close profile dropdown if click is outside
-            if (!profileWrapper?.contains(e.target)) {
-                 profileWrapper?.classList.remove('active');
-             }
-             // Close notification dropdown if click is outside
-             if (!notifWrapper?.contains(e.target)) {
-                notifWrapper?.classList.remove('active');
-            }
-        });
-
-        // === Committee Modal Elements ===
-        const setCommitteeBtn = document.getElementById('setCommitteeBtn');
-        const committeeModal = document.getElementById('committeeModal');
-        const closeModal = document.getElementById('closeModal');
-        const cancelSelection = document.getElementById('cancelSelection');
-        const saveCommittees = document.getElementById('saveCommittees');
-        const committeeOptions = document.querySelectorAll('.committee-option');
-        const selectedCommittees = document.getElementById('selectedCommittees');
-
-        // === Committee Modal Functions ===
-        setCommitteeBtn?.addEventListener('click', () => {
-            committeeModal.classList.add('active');
-        });
-
-        closeModal?.addEventListener('click', () => {
-            committeeModal.classList.remove('active');
-        });
-
-        cancelSelection?.addEventListener('click', () => {
-            committeeModal.classList.remove('active');
-            resetSelections();
-        });
-
-        // Close modal when clicking outside
-        committeeModal?.addEventListener('click', (e) => {
-            if (e.target === committeeModal) {
-                committeeModal.classList.remove('active');
-                resetSelections();
-            }
-        });
-
-        // Committee selection functionality with checkboxes
-        committeeOptions.forEach(option => {
-            const checkbox = option.querySelector('input[type="checkbox"]');
+            // Prepare Data
+            const formData = new FormData();
+            formData.append('report_type', reportType);
             
-            option.addEventListener('click', (e) => {
-                if (e.target !== checkbox) {
-                    checkbox.checked = !checkbox.checked;
-                }
-                
-                if (checkbox.checked) {
-                    option.classList.add('selected');
-                } else {
-                    option.classList.remove('selected');
-                }
-                
-                updateSelectedCommittees();
+            currentFiles.forEach(file => {
+                formData.append('files[]', file);
             });
 
-            checkbox.addEventListener('change', () => {
-                if (checkbox.checked) {
-                    option.classList.add('selected');
-                } else {
-                    option.classList.remove('selected');
-                }
-                updateSelectedCommittees();
-            });
-        });
+            // UI Loading
+            const origText = submitBtn.innerText;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+            submitBtn.disabled = true;
 
-        function updateSelectedCommittees() {
-            const selected = Array.from(committeeOptions)
-                .filter(option => option.querySelector('input').checked)
-                .map(option => {
-                    const label = option.querySelector('label').textContent;
-                    return `<div class="selected-committee">${label}</div>`;
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+            try {
+                const response = await fetch('/submit-report', { 
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': csrfToken },
+                    body: formData
                 });
 
-            if (selected.length > 0) {
-                selectedCommittees.innerHTML = selected.join('');
-            } else {
-                selectedCommittees.innerHTML = '<p style="color: #999; margin: 0; font-style: italic;">No committees selected yet</p>';
-            }
-        }
+                const data = await response.json();
 
-        function resetSelections() {
-            committeeOptions.forEach(option => {
-                const checkbox = option.querySelector('input[type="checkbox"]');
-                checkbox.checked = false;
-                option.classList.remove('selected');
+                if (data.success) {
+                    alert(data.message);
+                    sendReportForm.reset();
+                    currentFiles = [];
+                    updateFileListUI(fileListContainer, currentFiles);
+                } else {
+                    alert('Failed: ' + (data.message || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error(error);
+                alert('An error occurred. Check console.');
+            } finally {
+                submitBtn.innerText = origText;
+                submitBtn.disabled = false;
+            }
+        });
+    }
+
+    // =========================================================
+    // 6. COMMITTEE SELECTION LOGIC
+    // =========================================================
+    const setCommitteeBtn = document.getElementById('setCommitteeBtn');
+    const committeeModal = document.getElementById('committeeModal');
+    const closeModal = document.getElementById('closeModal');
+    const cancelSelection = document.getElementById('cancelSelection');
+    const saveCommittees = document.getElementById('saveCommittees');
+    const committeeOptions = document.querySelectorAll('.committee-option');
+    const selectedCommittees = document.getElementById('selectedCommittees');
+
+    function loadSavedCommittees() {
+        committeeOptions.forEach(opt => {
+            const cb = opt.querySelector('input');
+            cb.checked = false;
+            opt.classList.remove('selected');
+        });
+
+        const saved = window.userCommittees || [];
+        if (saved.length > 0) {
+            saved.forEach(value => {
+                const targetCb = document.querySelector(`input[value="${value}"]`);
+                if (targetCb) {
+                    targetCb.checked = true;
+                    targetCb.closest('.committee-option').classList.add('selected');
+                }
             });
-            updateSelectedCommittees();
         }
+        updateSelectedCommitteesUI();
+    }
 
-        // Save committees
-        saveCommittees?.addEventListener('click', () => {
-            const selected = Array.from(committeeOptions)
-                .filter(option => option.querySelector('input').checked)
-                .map(option => option.querySelector('label').textContent);
+    // Initialize
+    loadSavedCommittees(); 
+    if (!window.userCommittees || window.userCommittees.length === 0) {
+        if (committeeModal) committeeModal.classList.add('active');
+    }
 
-            if (selected.length === 0) {
-                alert('Please select at least one committee.');
-                return;
-            }
+    setCommitteeBtn?.addEventListener('click', () => {
+        loadSavedCommittees();
+        committeeModal.classList.add('active');
+    });
 
-            // Here you would typically send the data to your backend
-            console.log('Selected committees:', selected);
-            
-            // Show success message
-            alert('Committees saved successfully!');
-            
-            // Close modal
+    closeModal?.addEventListener('click', () => committeeModal.classList.remove('active'));
+    cancelSelection?.addEventListener('click', () => {
+        committeeModal.classList.remove('active');
+        loadSavedCommittees();
+    });
+
+    committeeModal?.addEventListener('click', (e) => {
+        if (e.target === committeeModal) {
             committeeModal.classList.remove('active');
-            
-            // You can update the UI here to reflect the selected committees
-            // For example, update the user's committee display
+            loadSavedCommittees();
+        }
+    });
+
+    // Checkbox Interactions
+    committeeOptions.forEach(option => {
+        const checkbox = option.querySelector('input[type="checkbox"]');
+        
+        option.addEventListener('click', (e) => {
+            if (e.target !== checkbox) {
+                checkbox.checked = !checkbox.checked;
+            }
+            option.classList.toggle('selected', checkbox.checked);
+            updateSelectedCommitteesUI();
+        });
+
+        checkbox.addEventListener('change', () => {
+            option.classList.toggle('selected', checkbox.checked);
+            updateSelectedCommitteesUI();
         });
     });
+
+    function updateSelectedCommitteesUI() {
+        const selected = Array.from(committeeOptions)
+            .filter(option => option.querySelector('input').checked)
+            .map(option => `<div class="selected-committee">${option.querySelector('label').textContent}</div>`);
+
+        if (selectedCommittees) {
+            selectedCommittees.innerHTML = selected.length > 0 
+                ? selected.join('') 
+                : '<p style="color: var(--text-color); opacity: 0.7; margin: 0; font-style: italic;">No committees selected yet</p>';
+        }
+    }
+
+    // Save Committees Logic
+    saveCommittees?.addEventListener('click', async () => {
+        const selected = Array.from(committeeOptions)
+            .filter(option => option.querySelector('input').checked)
+            .map(option => option.querySelector('input').value);
+
+        if (selected.length === 0) {
+            alert('Please select at least one committee.');
+            return;
+        }
+
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        const originalText = saveCommittees.textContent;
+        saveCommittees.textContent = 'Saving...';
+        saveCommittees.disabled = true;
+
+        try {
+            const response = await fetch('/sk/update-committees', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ committees: selected })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                alert('Committees saved successfully!');
+                committeeModal.classList.remove('active');
+                window.location.reload(); 
+            } else {
+                alert('Failed to save: ' + (data.message || 'Unknown error'));
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Something went wrong.');
+        } finally {
+            saveCommittees.textContent = originalText;
+            saveCommittees.disabled = false;
+        }
+    });
+
+    // =========================================================
+    // 7. YEAR FILTER LOGIC
+    // =========================================================
+    const yearFilter = document.getElementById('projectYearFilter');
+    const yearGroups = document.querySelectorAll('.year-group-container');
+    const noDataMsg = document.getElementById('no-data-message');
+
+    if (yearFilter) {
+        yearFilter.addEventListener('change', function() {
+            const selectedYear = this.value;
+            let hasVisibleData = false;
+
+            yearGroups.forEach(group => {
+                if (selectedYear === 'all') {
+                    group.style.display = 'block';
+                    hasVisibleData = true;
+                } else {
+                    if (group.id === `year-group-${selectedYear}`) {
+                        group.style.display = 'block';
+                        hasVisibleData = true;
+                    } else {
+                        group.style.display = 'none';
+                    }
+                }
+            });
+
+            if (noDataMsg) {
+                noDataMsg.style.display = hasVisibleData ? 'none' : 'block';
+            }
+        });
+        
+        // Initial Trigger
+        const event = new Event('change');
+        yearFilter.dispatchEvent(event);
+    }
+
+});
 </script>
 </body>
 </html>

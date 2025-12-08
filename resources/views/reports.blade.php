@@ -3,21 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+
   <title>KatiBayan - Dashboard</title>
   <link rel="stylesheet" href="{{ asset('css/reports.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+  
 </head>
 <body>
   
-  <!-- Sidebar -->
   <aside class="sidebar">
   <button class="menu-toggle">Menu</button>
   <div class="divider"></div>
@@ -78,10 +75,8 @@
 </aside>
 
 
-  <!-- Main -->
   <div class="main">
 
-    <!-- Topbar -->
     <header class="topbar">
       <div class="logo">
         <img src="{{ asset('images/logo.png') }}" alt="Logo">
@@ -94,7 +89,6 @@
       <div class="topbar-right">
         <div class="time">MON 10:00 <span>AM</span></div>
 
-        <!-- Notifications -->
         <div class="notification-wrapper">
           <i class="fas fa-bell"></i>
           <span class="notif-count">3</span>
@@ -111,37 +105,23 @@
                 </div>
                 <span class="notif-dot"></span>
               </li>
-              <li>
-                <div class="notif-icon"></div>
-                <div class="notif-content">
-                  <strong>Program Evaluation</strong>
-                  <p>We need evaluation for the KK-Assembly Event</p>
-                </div>
-                <span class="notif-dot"></span>
-              </li>
-              <li>
-                <div class="notif-icon"></div>
-                <div class="notif-content">
-                  <strong>Program Evaluation</strong>
-                  <p>We need evaluation for the KK-Assembly Event</p>
-                </div>
-                <span class="notif-dot"></span>
-              </li>
             </ul>
           </div>
         </div>
 
         <!-- Profile Avatar -->
         <div class="profile-wrapper">
-          <img src="https://i.pravatar.cc/80" alt="User" class="avatar" id="profileToggle">
+          <img src="{{ ($user ?? null) && $user->avatar ? asset('storage/' . $user->avatar) : asset('default-avatar.png') }}"
+               alt="User" class="avatar" id="profileToggle">
           <div class="profile-dropdown">
             <div class="profile-header">
-              <img src="https://i.pravatar.cc/80" alt="User" class="profile-avatar">
+              <img src="{{ ($user ?? null) && $user->avatar ? asset('storage/' . $user->avatar) : asset('default-avatar.png') }}"
+                   alt="User" class="profile-avatar">
               <div class="profile-info">
-                <h4>Marijoy S. Novora</h4>
+                <h4>{{ $user->given_name }} {{ $user->middle_name }} {{ $user->last_name }} {{ $user->suffix }}</h4>
                 <div class="profile-badge">
-                  <span class="badge">KK- Member</span>
-                  <span class="badge">19 yrs old</span>
+                  <span class="badge">{{ $roleBadge }}</span>
+                  <span class="badge">{{ $age }} yrs old</span>
                 </div>
               </div>
             </div>
@@ -159,55 +139,55 @@
                 </a>
               </li>
               <li><i class="fas fa-star"></i> Send Feedback to Katibayan</li>
+              <li class="logout-item">
+                <a href="loginpage" onclick="confirmLogout(event)">
+                  <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+              </li>
             </ul>
+            
+            <!-- Hidden Logout Form -->
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+              @csrf
+            </form>
           </div>
         </div>
       </div>
     </header>
 
     <section class="reports-section">
-  <!-- Title Bar -->
   <div class="reports-titlebar">
     <h2>Reports Compilation</h2>
   </div>
 
-  <!-- Main Card -->
-<div class="reports-card">
+  <div class="reports-card">
   <div class="files-header">
     <h3>Files</h3>
-    <div class="file-actions-header">
-      <button class="upload-file-btn" id="uploadFileBtn">
-        <i class="fas fa-upload"></i>
-        Upload File
-      </button>
-      <button class="add-folder-btn" id="addFolderBtn">
-        Add Folder
-        <span class="icon-circle"><i class="fas fa-plus"></i></span>
-      </button>
-    </div>
+    <button class="add-folder-btn">
+      Add Folder
+      <span class="icon-circle"><i class="fas fa-plus"></i></span>
+    </button>
   </div>
 
     <div class="quick-access">
-  <button class="back-btn" style="display:none;" id="backBtn">
+  <button class="back-btn" style="display:none;">
     <i class="fas fa-arrow-left"></i> Back to Folders
   </button>
 
   <h4 class="quick-label">Quick Access</h4>
 
   <div class="folder-list" id="folderList">
-    <!-- Folders will be dynamically populated -->
-  </div>
+    </div>
 </div>
 
 
-    <!-- Search & Category -->
-<div class="file-tools">
-  <div class="all-files">All Files</div>
+    <div class="file-tools">
+  <div class="all-files">SK Report files</div>
 
   <div class="tools-right">
     <div class="search-box">
       <i class="fas fa-search"></i>
-      <input type="text" placeholder="Search" id="fileSearch" />
+      <input type="text" id="fileSearch" placeholder="Search" />
     </div>
 
     <div class="category-box">
@@ -224,11 +204,9 @@
           <div class="option" data-value="Summary">Summary</div>
           <div class="option" data-value="Documentation">Documentation</div>
           <div class="option" data-value="Youth">Youth</div>
-          <div class="option" data-value="Images">Images</div>
-          <div class="option" data-value="PDF">PDF</div>
         </div>
       </div>
-    </div>
+</div>
   </div>
 </div>
 
@@ -236,22 +214,18 @@
     <div class="file-list">
   <div class="file-header">
     <span>Name</span>
+    <span>Owner</span>
     <span>File size</span>
-    <span>Type</span>
-    <span>Date</span>
   </div>
 
-  <!-- Scrollable area -->
   <div class="file-list-container" id="fileListContainer">
-    <!-- Files will be dynamically populated -->
-  </div>
+    </div>
 </div>
 
 
   </div>
 </section>
 
-<!-- Add Folder Modal -->
 <div id="addFolderModal" class="modal-overlay">
   <div class="modal-box">
     <h3>Add New Folder</h3>
@@ -263,62 +237,61 @@
   </div>
 </div>
 
-<!-- Upload File Modal -->
-<div id="uploadFileModal" class="modal-overlay">
+<div id="addFileModal" class="modal-overlay">
   <div class="modal-box">
-    <h3>Upload Files</h3>
-    <input type="file" id="fileInput" multiple />
-    <div class="file-preview" id="filePreview"></div>
+    <h3>Add New File</h3>
+    <input type="file" id="fileInput" />
     <div class="modal-actions">
-      <button id="cancelUploadFile">Cancel</button>
-      <button id="confirmUploadFile">Upload Files</button>
+      <button id="cancelAddFile">Cancel</button>
+      <button id="confirmAddFile">Add File</button>
     </div>
   </div>
 </div>
 
-<!-- File Preview Modal -->
-<div id="filePreviewModal" class="modal-overlay">
-  <div class="modal-box preview-modal">
-    <h3 id="previewFileName">File Preview</h3>
-    <div id="previewContent" class="preview-content">
-      <!-- Preview content will be loaded here -->
+<div id="filePreviewModal" class="modal-overlay" style="display:none; align-items:center; justify-content:center;">
+  <div class="modal-box" style="text-align:center;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+        <h3 id="previewFileName" style="margin:0; text-align:left; word-break:break-all;">FileName</h3>
+        <button id="closePreviewBtn" style="background:none; border:none; font-size:18px; cursor:pointer;"><i class="fas fa-times"></i></button>
     </div>
-    <div class="modal-actions">
-      <button id="downloadPreviewBtn">
-        <i class="fas fa-download"></i> Download
+    <div id="previewContent">
+       <span style="color:#888;">Loading preview...</span>
+    </div>
+    <div class="modal-actions" style="justify-content: center; margin-top:20px;">
+      <button class="delete-btn" id="downloadPreviewBtn" style="background:#4a6cf7; color:white; width:100%;">
+        <i class="fas fa-download"></i> Download File
       </button>
-      <button id="closePreview">Close</button>
     </div>
   </div>
 </div>
 
-<!-- Context Menu -->
-<div id="contextMenu" class="context-menu">
-  <ul>
-    <li id="openFile"><i class="fas fa-folder-open"></i> Open</li>
-    <li id="renameItem"><i class="fas fa-edit"></i> Rename</li>
-    <li id="downloadItem"><i class="fas fa-download"></i> Download</li>
-    <li id="deleteItem"><i class="fas fa-trash"></i> Delete</li>
-  </ul>
-</div>
-
-<!-- Rename Modal -->
-<div class="modal-overlay" id="renameModal">
+<div class="modal-overlay" id="renameModal" style="display:none;">
   <div class="modal-box">
     <h3>Rename Item</h3>
     <input type="text" id="renameInput" placeholder="Enter new name" />
     <div class="modal-actions">
       <button class="cancel-btn" id="cancelRename">Cancel</button>
-      <button class="save-btn" id="saveRename">Save</button>
+      <button class="save-btn" id="saveRename" style="background:#10b981; color:white;">Save</button>
     </div>
   </div>
 </div>
 
-<!-- Delete Confirmation Modal -->
-<div class="modal-overlay" id="deleteModal">
+<div id="contextMenu" class="context-menu">
+  <ul>
+    <li id="downloadItem"><i class="fas fa-download" style="margin-right:8px; width:20px; text-align:center;"></i> Download</li>
+    <li id="archiveItem"><i class="fas fa-box-archive" style="margin-right:8px; width:20px; text-align:center;"></i> Archive</li>
+    <li id="backupItem"><i class="fas fa-copy" style="margin-right:8px; width:20px; text-align:center;"></i> Create Backup</li>
+    
+    <li id="renameItem"><i class="fas fa-edit" style="margin-right:8px; width:20px; text-align:center;"></i> Rename</li>
+    
+    <li id="deleteItem"><i class="fas fa-trash" style="margin-right:8px; width:20px; text-align:center; color:#e74c3c;"></i> Delete</li>
+  </ul>
+</div>
+
+<div id="deleteModal" class="modal-overlay">
   <div class="modal-box">
     <h3>Delete Item</h3>
-    <p>Are you sure you want to delete this item? This action cannot be undone.</p>
+    <p>Are you sure you want to delete this?</p>
     <div class="modal-actions">
       <button class="cancel-btn" id="cancelDelete">Cancel</button>
       <button class="delete-btn" id="confirmDelete">Delete</button>
@@ -326,596 +299,428 @@
   </div>
 </div>
 
+    
 <script>
 document.addEventListener("DOMContentLoaded", () => {
 
   // ==========================================================
-  // === INITIAL SETUP ===
+  // === CONFIG & DATA ===
   // ==========================================================
-  lucide.createIcons();
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+  
   const qs = s => document.querySelector(s);
   const qsa = s => document.querySelectorAll(s);
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
-  // File manager data
-  let files = JSON.parse(localStorage.getItem('fileManagerFiles')) || [];
-  let folders = JSON.parse(localStorage.getItem('fileManagerFolders')) || [];
-  let currentFolder = null;
-  let selectedItem = null;
-
-  // Initialize with sample data if empty
-  if (folders.length === 0) {
-    folders = [
-      { id: '1', name: 'Documentation', color: '#4a6cf7' },
-      { id: '2', name: 'Summary', color: '#10b981' },
-      { id: '3', name: 'Youth Files', color: '#f59e0b' },
-      { id: '4', name: 'Events', color: '#ef4444' },
-      { id: '5', name: 'Reports', color: '#8b5cf6' },
-      { id: '6', name: 'Archives', color: '#6b7280' }
-    ];
-    localStorage.setItem('fileManagerFolders', JSON.stringify(folders));
-  }
-
-  if (files.length === 0) {
-    files = [
-      { id: '1', name: 'Annual Report 2024.pdf', size: '1.2 MB', type: 'PDF', date: '2024-01-15', folder: '1' },
-      { id: '2', name: 'Youth Profile Data.xlsx', size: '850 KB', type: 'Spreadsheet', date: '2024-01-10', folder: '3' },
-      { id: '3', name: 'Event Photos.zip', size: '2.4 MB', type: 'Archive', date: '2024-01-08', folder: '4' },
-      { id: '4', name: 'Meeting Minutes.docx', size: '512 KB', type: 'Document', date: '2024-01-05', folder: '1' },
-      { id: '5', name: 'Budget Planning.pdf', size: '3.1 MB', type: 'PDF', date: '2024-01-03', folder: '2' },
-      { id: '6', name: 'Youth Survey Results.pdf', size: '1.8 MB', type: 'PDF', date: '2023-12-28', folder: '3' },
-      { id: '7', name: 'Event Banner.png', size: '700 KB', type: 'Image', date: '2023-12-25', folder: '4' },
-      { id: '8', name: 'Financial Report.xlsx', size: '4.5 MB', type: 'Spreadsheet', date: '2023-12-20', folder: '2' }
-    ];
-    localStorage.setItem('fileManagerFiles', JSON.stringify(files));
-  }
-
-  // ==========================================================
-  // === SIDEBAR TOGGLE & SUBMENUS ===
-  // ==========================================================
-  const menuToggle = document.querySelector('.menu-toggle');
-  const sidebar = document.querySelector('.sidebar');
-
-  if (menuToggle && sidebar) {
-    menuToggle.addEventListener('click', (e) => {
-      e.stopPropagation();
-      sidebar.classList.toggle('open');
-    });
-  }
-
-  // === Submenus ===
-  const submenuTriggers = document.querySelectorAll('.nav-item > .nav-link');
-
-  submenuTriggers.forEach(trigger => {
-    trigger.addEventListener('click', (e) => {
-      e.preventDefault(); 
-      
-      const parentItem = trigger.closest('.nav-item');
-      const wasOpen = parentItem.classList.contains('open');
-
-      document.querySelectorAll('.nav-item').forEach(item => {
-        item.classList.remove('open');
-      });
-
-      if (!wasOpen) {
-        parentItem.classList.add('open');
-      }
-    });
-  });
-
-  // ==========================================================
-  // === TIME AUTO-UPDATE ===
-  // ==========================================================
-  const timeEl = qs(".time");
-  const updateTime = () => {
-    if (!timeEl) return;
-    const now = new Date();
-    const shortW = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
-    const shortM = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
-    const h = now.getHours();
-    const m = now.getMinutes().toString().padStart(2, "0");
-    const ampm = h >= 12 ? "PM" : "AM";
-    timeEl.innerHTML = `${shortW[now.getDay()]}, ${shortM[now.getMonth()]} ${now.getDate()} ${h % 12 || 12}:${m} <span>${ampm}</span>`;
-  };
-  updateTime();
-  setInterval(updateTime, 60000);
-
-  // ==========================================================
-  // === NOTIFICATION & PROFILE DROPDOWNS ===
-  // ==========================================================
-  const notifWrapper = qs(".notification-wrapper");
-  const profileWrapper = qs(".profile-wrapper");
-  const profileToggle = qs("#profileToggle");
-
-  notifWrapper?.querySelector(".fa-bell")?.addEventListener("click", e => {
-    e.stopPropagation();
-    notifWrapper.classList.toggle("active");
-    profileWrapper?.classList.remove("active");
-  });
-
-  profileToggle?.addEventListener("click", e => {
-    e.stopPropagation();
-    profileWrapper.classList.toggle("active");
-    notifWrapper?.classList.remove("active");
-  });
-
-  document.addEventListener("click", e => {
-    if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) sidebar.classList.remove('open');
-    profileWrapper?.classList.remove('active');
-    notifWrapper?.classList.remove('active');
-  });
-
-  // ==========================================================
-  // === CUSTOM SELECT ===
-  // ==========================================================
-  const select = qs('.custom-select');
-  if (select) {
-    const trigger = select.querySelector('.select-trigger');
-    const selectedText = select.querySelector('.selected');
-    const options = select.querySelectorAll('.option');
-
-    trigger.addEventListener('click', () => select.classList.toggle('active'));
-    options.forEach(opt => {
-      opt.addEventListener('click', () => {
-        selectedText.textContent = opt.textContent;
-        options.forEach(o => o.classList.remove('selected'));
-        opt.classList.add('selected');
-        select.classList.remove('active');
-        filterFilesByCategory(opt.dataset.value);
-      });
-    });
-    document.addEventListener('click', e => { if (!select.contains(e.target)) select.classList.remove('active'); });
-  }
-
-  // ==========================================================
-  // === FILE MANAGER FUNCTIONALITY ===
-  // ==========================================================
+  // Data
+  let folders = @json($folders ?? []);
+  let files = @json($files ?? []);
   
-  // Initialize file manager
-  function initFileManager() {
-    renderFolders();
-    renderFiles();
-    setupEventListeners();
-  }
+  // DEFAULT FULL NAME (First + Last)
+  const currentUserName = "{{ Auth::user()->given_name }} {{ Auth::user()->last_name }}"; 
 
-  // Render folders
+  // ==========================================================
+  // === UI ELEMENTS ===
+  // ==========================================================
+  const folderList = qs('#folderList');
+  const fileListContainer = qs('#fileListContainer');
+  const addFolderBtn = qs('.add-folder-btn');
+  const backBtn = qs('.back-btn');
+  const quickLabel = qs('.quick-label');
+  const filesTitleLabel = qs('.all-files'); 
+
+  // Modals & Context Menu
+  const previewModal = qs('#filePreviewModal');
+  const previewContent = qs('#previewContent');
+  const contextMenu = qs('#contextMenu');
+  const deleteModal = qs('#deleteModal');
+
+  // State
+  let insideFolder = false;
+  let currentFolderId = null;
+  let selectedItem = null;
+  let previewFileId = null;
+  
+  // STATE: Unread Indicator (Orange Dot)
+  // Default ay FALSE (may highlight), magiging TRUE kapag binuksan mo na.
+  let reportsRead = false; 
+
+  // ==========================================================
+  // === RENDER FOLDERS (With Orange Dot) ===
+  // ==========================================================
   function renderFolders() {
-    const folderList = qs('#folderList');
+    if(!folderList) return;
     folderList.innerHTML = '';
-
+    
     folders.forEach(folder => {
-      const folderCard = document.createElement('div');
-      folderCard.className = 'folder-card';
-      folderCard.dataset.id = folder.id;
+      const card = document.createElement('div');
+      card.className = 'folder-card';
+      card.dataset.id = folder.id;
       
-      folderCard.innerHTML = `
-        <div class="blue-bar" style="background: ${folder.color}"></div>
+      const isReportFolder = folder.name.includes('SK Report Files');
+      
+      // LOGIC: Orange Dot kung Report Folder at HINDI pa nabasa
+      let dotHtml = '';
+      if (isReportFolder && !reportsRead) {
+          dotHtml = `<span class="notification-dot" style="
+              position: absolute;
+              top: 10px;
+              right: 10px;
+              width: 10px;
+              height: 10px;
+              background-color: #f59e0b; /* Orange */
+              border-radius: 50%;
+              box-shadow: 0 0 4px rgba(245, 158, 11, 0.6);
+              z-index: 10;
+          "></span>`;
+      }
+      
+      card.style.position = 'relative'; // Para sa absolute positioning ng dot
+
+      card.innerHTML = `
+        ${dotHtml}
+        <div class="blue-bar"></div>
         <i class="fas fa-folder"></i>
         <span>${folder.name}</span>
       `;
-
-      folderCard.addEventListener('click', () => {
-        openFolder(folder.id);
+      
+      card.addEventListener('click', () => {
+          // Kapag kinlick ang folder na may reports, mark as read
+          if(isReportFolder) {
+              reportsRead = true;
+          }
+          openFolder(folder.id);
       });
-
-      folderCard.addEventListener('contextmenu', (e) => {
+      
+      card.addEventListener('contextmenu', e => {
         e.preventDefault();
-        selectedItem = { type: 'folder', id: folder.id };
+        selectedItem = { type: 'folder', id: folder.id, name: folder.name };
         showContextMenu(e);
       });
 
-      folderList.appendChild(folderCard);
+      folderList.appendChild(card);
     });
   }
 
-  // Render files
-  function renderFiles(filteredFiles = null) {
-    const fileListContainer = qs('#fileListContainer');
+  // ==========================================================
+  // === RENDER FILES (Correct Name & Root Display) ===
+  // ==========================================================
+  function renderFiles() {
+    if(!fileListContainer) return;
     fileListContainer.innerHTML = '';
 
-    const filesToRender = filteredFiles || (currentFolder ? 
-      files.filter(file => file.folder === currentFolder) : files);
+    let filteredFiles = [];
 
-    if (filesToRender.length === 0) {
-      fileListContainer.innerHTML = `
-        <div class="empty-state">
-          <i class="fas fa-folder-open"></i>
-          <p>No files found</p>
-          <button class="upload-file-btn" id="uploadEmptyBtn">
-            <i class="fas fa-upload"></i>
-            Upload your first file
-          </button>
-        </div>
-      `;
-      qs('#uploadEmptyBtn')?.addEventListener('click', () => {
-        qs('#uploadFileModal').style.display = 'flex';
-      });
-      return;
+    if (insideFolder && currentFolderId) {
+        // SCENARIO 1: Inside a Folder
+        filteredFiles = files.filter(f => f.folder_id == currentFolderId);
+    } else {
+        // SCENARIO 2: Root View (Combine Loose Files + Report Files)
+        const reportFolder = folders.find(f => f.name.includes('SK Report Files'));
+        
+        if (reportFolder) {
+            const reportFiles = files.filter(f => f.folder_id == reportFolder.id);
+            const looseFiles = files.filter(f => !f.folder_id);
+            filteredFiles = [...reportFiles, ...looseFiles];
+            
+            if(filesTitleLabel) filesTitleLabel.textContent = "SK Report Files";
+        } else {
+            filteredFiles = files.filter(f => !f.folder_id);
+        }
+    }
+    
+    if (filteredFiles.length === 0) {
+        fileListContainer.innerHTML = `<div style="padding:20px; text-align:center; color:#888;">No files found</div>`;
+        return;
     }
 
-    filesToRender.forEach(file => {
-      const fileRow = document.createElement('div');
-      fileRow.className = 'file-row';
-      fileRow.dataset.id = file.id;
+    // Sort: Newest ID first
+    filteredFiles.sort((a, b) => b.id - a.id);
 
-      const fileIcon = getFileIcon(file.type);
+    filteredFiles.forEach(file => {
+      const row = document.createElement('div');
+      row.className = 'file-row';
+      row.dataset.id = file.id;
       
-      fileRow.innerHTML = `
-        <span class="file-name">
-          <i class="${fileIcon}"></i>
-          ${file.name}
-        </span>
+      let icon = 'fas fa-file';
+      let color = '#888';
+      
+      if(file.type === 'PDF') { icon = 'fas fa-file-pdf'; color = '#e74c3c'; }
+      if(file.type === 'Image') { icon = 'fas fa-file-image'; color = '#f39c12'; }
+      if(file.type.includes('Spreadsheet')) { icon = 'fas fa-file-excel'; color = '#27ae60'; }
+      if(file.type.includes('Document')) { icon = 'fas fa-file-word'; color = '#2980b9'; }
+
+      // --- FULL NAME DISPLAY ---
+      // file.uploaded_by ay galing sa Controller regex (Full Name na kung bago)
+      // currentUserName ay fallback (Full Name din)
+      const uploaderName = file.uploaded_by || currentUserName;
+
+      row.innerHTML = `
+        <span class="file-name"><i class="${icon}" style="color:${color}; margin-right:8px;"></i> ${file.name}</span>
+        <span class="file-owner">${uploaderName}</span>
         <span class="file-size">${file.size}</span>
-        <span class="file-type">${file.type}</span>
-        <span class="file-date">${formatDate(file.date)}</span>
       `;
 
-      fileRow.addEventListener('click', (e) => {
-        if (!e.target.closest('.file-action')) {
-          previewFile(file.id);
+      row.addEventListener('click', (e) => {
+        e.stopPropagation();
+        
+        // Kapag binuksan mo ang file, considered "Read" na rin
+        // (Optional: Kung gusto mo mawala yung dot pag nag-view ng file)
+        const reportFolder = folders.find(f => f.name.includes('SK Report Files'));
+        if(reportFolder && file.folder_id == reportFolder.id) {
+             reportsRead = true;
+             renderFolders(); // Update UI to remove dot
         }
-      });
 
-      fileRow.addEventListener('contextmenu', (e) => {
+        openPreview(file);
+      });
+      
+      row.addEventListener('contextmenu', e => {
         e.preventDefault();
-        selectedItem = { type: 'file', id: file.id };
+        selectedItem = { type: 'file', id: file.id, name: file.name };
         showContextMenu(e);
       });
 
-      fileListContainer.appendChild(fileRow);
+      fileListContainer.appendChild(row);
     });
   }
 
-  // Get file icon based on type
-  function getFileIcon(type) {
-    const icons = {
-      'PDF': 'fas fa-file-pdf',
-      'Document': 'fas fa-file-word',
-      'Spreadsheet': 'fas fa-file-excel',
-      'Image': 'fas fa-file-image',
-      'Archive': 'fas fa-file-archive',
-      'default': 'fas fa-file'
-    };
-    return icons[type] || icons.default;
-  }
-
-  // Format date
-  function formatDate(dateString) {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
-    });
-  }
-
-  // Open folder
-  function openFolder(folderId) {
-    currentFolder = folderId;
-    const folder = folders.find(f => f.id === folderId);
+  function openFolder(id) {
+    insideFolder = true;
+    currentFolderId = id;
     
-    // Update UI for folder view
-    qs('#backBtn').style.display = 'inline-flex';
-    qs('.quick-label').textContent = folder.name;
-    qs('.all-files').textContent = `Files in ${folder.name}`;
-    
-    // Hide all folders except the selected one
-    qsa('.folder-card').forEach(card => {
-      card.style.display = card.dataset.id === folderId ? 'flex' : 'none';
-    });
+    if(filesTitleLabel) filesTitleLabel.textContent = "Folder Files";
+    if(quickLabel) quickLabel.style.display = 'none';
+    if(backBtn) backBtn.style.display = 'inline-flex';
+    if(addFolderBtn) addFolderBtn.innerHTML = `Add File <span class="icon-circle"><i class="fas fa-upload"></i></span>`;
 
-    // Render files in this folder
+    // Re-render folders para mag-update ang active state at mawala ang dot
+    renderFolders(); 
+
+    qsa('.folder-card').forEach(c => {
+        if(c.dataset.id == id) {
+            c.style.display = 'flex';
+            c.classList.add('active'); 
+        } else {
+            c.style.display = 'none';
+            c.classList.remove('active');
+        }
+    });
     renderFiles();
   }
 
-  // Preview file
-  function previewFile(fileId) {
-    const file = files.find(f => f.id === fileId);
-    if (!file) return;
+  // ==========================================================
+  // === PREVIEW & ACTIONS (Retained Logic) ===
+  // ==========================================================
+  function openPreview(file) {
+      previewFileId = file.id;
+      const pName = qs('#previewFileName');
+      if(pName) pName.textContent = file.name;
+      const modalBox = qs('#filePreviewModal .modal-box');
+      if(!modalBox) return;
 
-    const previewModal = qs('#filePreviewModal');
-    const previewFileName = qs('#previewFileName');
-    const previewContent = qs('#previewContent');
+      const fileUrl = `/reports/view/${file.id}`;
+      let contentHTML = '';
 
-    previewFileName.textContent = file.name;
+      if(file.type === 'Image') {
+         modalBox.style.width = '700px'; 
+         contentHTML = `<img src="${fileUrl}" alt="Preview" style="max-width:100%;" onerror="this.onerror=null;this.parentElement.innerHTML='Error loading image';">`;
+      } else if(file.type === 'PDF') {
+         modalBox.style.width = '800px'; 
+         contentHTML = `<iframe src="${fileUrl}#toolbar=0" style="width:100%; height:500px;" title="PDF Preview"></iframe>`;
+      } else {
+         modalBox.style.width = '400px';
+         let iconClass = "fas fa-file";
+         let color = "#888";
+         if(file.type.includes('Spreadsheet')) { iconClass = "fas fa-file-excel"; color = "#27ae60"; }
+         else if(file.type.includes('Document')) { iconClass = "fas fa-file-word"; color = "#2980b9"; }
+         
+         contentHTML = `
+            <div style="text-align:center; padding: 20px;">
+                <i class="${iconClass}" style="font-size: 64px; color: ${color}; margin: 20px 0;"></i>
+                <p><strong>${file.name}</strong></p>
+                <p style="font-size:13px; color:#666; margin-top:10px;">Preview not available.</p>
+                <a href="/reports/download/${file.id}" class="btn btn-primary" style="margin-top:15px; display:inline-block;">Download File</a>
+            </div>
+         `;
+      }
+      if(previewContent) previewContent.innerHTML = contentHTML;
+      if(previewModal) previewModal.style.display = 'flex';
+  }
+
+  const closePreviewBtn = qs('#closePreviewBtn');
+  if(closePreviewBtn) closePreviewBtn.addEventListener('click', () => { previewModal.style.display = 'none'; previewContent.innerHTML = ''; });
+  
+  const downloadPreviewBtn = qs('#downloadPreviewBtn');
+  if(downloadPreviewBtn) downloadPreviewBtn.addEventListener('click', () => { if(previewFileId) window.location.href = `/reports/download/${previewFileId}`; });
+
+  // Back Button
+  backBtn?.addEventListener('click', () => {
+    insideFolder = false;
+    currentFolderId = null;
+    if(filesTitleLabel) filesTitleLabel.textContent = "SK Report files"; 
+    if(quickLabel) quickLabel.style.display = 'block';
+    backBtn.style.display = 'none';
+    addFolderBtn.innerHTML = `Add Folder <span class="icon-circle"><i class="fas fa-plus"></i></span>`;
     
-    // Simple preview based on file type
-    if (file.type === 'Image') {
-      previewContent.innerHTML = `
-        <div class="image-preview">
-          <i class="fas fa-file-image" style="font-size: 48px; color: #3498db;"></i>
-          <p>Image preview would be displayed here</p>
-          <p><strong>File:</strong> ${file.name}</p>
-          <p><strong>Size:</strong> ${file.size}</p>
-          <p><strong>Type:</strong> ${file.type}</p>
-        </div>
-      `;
-    } else if (file.type === 'PDF') {
-      previewContent.innerHTML = `
-        <div class="pdf-preview">
-          <i class="fas fa-file-pdf" style="font-size: 48px; color: #e74c3c;"></i>
-          <p>PDF preview would be displayed here</p>
-          <p><strong>File:</strong> ${file.name}</p>
-          <p><strong>Size:</strong> ${file.size}</p>
-          <p><strong>Type:</strong> ${file.type}</p>
-        </div>
-      `;
-    } else {
-      previewContent.innerHTML = `
-        <div class="file-preview">
-          <i class="${getFileIcon(file.type)}" style="font-size: 48px; color: #2ecc71;"></i>
-          <p><strong>File:</strong> ${file.name}</p>
-          <p><strong>Size:</strong> ${file.size}</p>
-          <p><strong>Type:</strong> ${file.type}</p>
-          <p><strong>Uploaded:</strong> ${formatDate(file.date)}</p>
-        </div>
-      `;
-    }
-
-    // Set up download button
-    qs('#downloadPreviewBtn').onclick = () => downloadFile(fileId);
-
-    previewModal.style.display = 'flex';
-  }
-
-  // Download file
-  function downloadFile(fileId) {
-    const file = files.find(f => f.id === fileId);
-    if (file) {
-      alert(`Downloading: ${file.name}`);
-      // In a real application, this would trigger an actual download
-    }
-  }
-
-  // Filter files by category
-  function filterFilesByCategory(category) {
-    if (category === 'All') {
-      renderFiles();
-    } else {
-      const filteredFiles = files.filter(file => file.type === category);
-      renderFiles(filteredFiles);
-    }
-  }
-
-  // Show context menu
-  function showContextMenu(e) {
-    const contextMenu = qs('#contextMenu');
-    contextMenu.style.display = 'block';
-    contextMenu.style.left = `${e.pageX}px`;
-    contextMenu.style.top = `${e.pageY}px`;
-  }
-
-  // Setup event listeners
-  function setupEventListeners() {
-    // Back button
-    qs('#backBtn').addEventListener('click', () => {
-      currentFolder = null;
-      qs('#backBtn').style.display = 'none';
-      qs('.quick-label').textContent = 'Quick Access';
-      qs('.all-files').textContent = 'All Files';
-      
-      // Show all folders again
-      qsa('.folder-card').forEach(card => {
-        card.style.display = 'flex';
-      });
-
-      renderFiles();
+    renderFolders(); // Re-render to show correct states
+    qsa('.folder-card').forEach(c => {
+        c.style.display = 'flex';
+        c.classList.remove('active'); 
     });
+    renderFiles(); 
+  });
 
-    // Search functionality
-    qs('#fileSearch').addEventListener('input', (e) => {
-      const searchTerm = e.target.value.toLowerCase();
-      const filteredFiles = files.filter(file => 
-        file.name.toLowerCase().includes(searchTerm)
-      );
-      renderFiles(filteredFiles);
-    });
+  // Modal Actions
+  addFolderBtn?.addEventListener('click', () => {
+    if (insideFolder) { if(qs('#addFileModal')) qs('#addFileModal').style.display = 'flex'; }
+    else { if(qs('#addFolderModal')) qs('#addFolderModal').style.display = 'flex'; }
+  });
 
-    // Add folder modal
-    qs('#addFolderBtn').addEventListener('click', () => {
-      qs('#addFolderModal').style.display = 'flex';
-    });
+  qs('#cancelAddFolder')?.addEventListener('click', () => qs('#addFolderModal').style.display = 'none');
+  qs('#cancelAddFile')?.addEventListener('click', () => qs('#addFileModal').style.display = 'none');
 
-    qs('#cancelAddFolder').addEventListener('click', () => {
-      qs('#addFolderModal').style.display = 'none';
-    });
-
-    qs('#confirmAddFolder').addEventListener('click', () => {
-      const folderName = qs('#folderNameInput').value.trim();
-      if (folderName) {
-        const newFolder = {
-          id: Date.now().toString(),
-          name: folderName,
-          color: getRandomColor()
-        };
+  // Add Folder
+  qs('#confirmAddFolder')?.addEventListener('click', () => {
+    const name = qs('#folderNameInput').value.trim();
+    if (!name) return;
+    fetch("{{ route('reports.folder.store') }}", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+        body: JSON.stringify({ name: name })
+    }).then(res => res.json()).then(newFolder => {
         folders.push(newFolder);
-        localStorage.setItem('fileManagerFolders', JSON.stringify(folders));
         renderFolders();
         qs('#addFolderModal').style.display = 'none';
         qs('#folderNameInput').value = '';
-      }
     });
+  });
 
-    // Upload file modal
-    qs('#uploadFileBtn').addEventListener('click', () => {
-      qs('#uploadFileModal').style.display = 'flex';
-    });
-
-    qs('#cancelUploadFile').addEventListener('click', () => {
-      qs('#uploadFileModal').style.display = 'none';
-      qs('#filePreview').innerHTML = '';
-    });
-
-    qs('#confirmUploadFile').addEventListener('click', () => {
-      const fileInput = qs('#fileInput');
-      if (fileInput.files.length > 0) {
-        Array.from(fileInput.files).forEach(file => {
-          const fileType = getFileTypeFromName(file.name);
-          const newFile = {
-            id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-            name: file.name,
-            size: formatFileSize(file.size),
-            type: fileType,
-            date: new Date().toISOString(),
-            folder: currentFolder || '1'
-          };
-          files.unshift(newFile);
-        });
-        localStorage.setItem('fileManagerFiles', JSON.stringify(files));
+  // Add File
+  qs('#confirmAddFile')?.addEventListener('click', () => {
+    const file = qs('#fileInput').files[0];
+    if (!file || !currentFolderId) return;
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('folder_id', currentFolderId);
+    qs('#confirmAddFile').innerText = "Uploading...";
+    fetch("{{ route('reports.upload') }}", {
+        method: 'POST',
+        headers: { 'X-CSRF-TOKEN': csrfToken },
+        body: formData
+    }).then(res => res.json()).then(savedFile => {
+        savedFile.uploaded_by = currentUserName; 
+        files.push(savedFile);
         renderFiles();
-        qs('#uploadFileModal').style.display = 'none';
+        qs('#addFileModal').style.display = 'none';
         qs('#fileInput').value = '';
-        qs('#filePreview').innerHTML = '';
-      }
+        qs('#confirmAddFile').innerText = "Add File";
+    }).catch(() => {
+        alert("Upload Failed");
+        qs('#confirmAddFile').innerText = "Add File";
     });
+  });
 
-    // File input change
-    qs('#fileInput').addEventListener('change', (e) => {
-      const preview = qs('#filePreview');
-      preview.innerHTML = '';
-      
-      Array.from(e.target.files).forEach(file => {
-        const fileElement = document.createElement('div');
-        fileElement.className = 'file-preview-item';
-        fileElement.innerHTML = `
-          <i class="${getFileIcon(getFileTypeFromName(file.name))}"></i>
-          <span>${file.name}</span>
-          <small>${formatFileSize(file.size)}</small>
-        `;
-        preview.appendChild(fileElement);
+  // Context Menu
+  function showContextMenu(e) {
+    if(!contextMenu) return;
+    contextMenu.style.display = 'block';
+    contextMenu.style.left = `${e.pageX}px`;
+    contextMenu.style.top = `${e.pageY}px`;
+    
+    const dlItem = qs('#downloadItem');
+    const arcItem = qs('#archiveItem');
+    const backItem = qs('#backupItem');
+    const renItem = qs('#renameItem');
+
+    if (selectedItem.type === 'folder') {
+        if(dlItem) dlItem.style.display = 'none';
+        if(arcItem) arcItem.style.display = 'none';
+        if(backItem) backItem.style.display = 'none';
+        if(renItem) renItem.style.display = 'block'; 
+    } else {
+        if(dlItem) dlItem.style.display = 'block';
+        if(arcItem) arcItem.style.display = 'block';
+        if(backItem) backItem.style.display = 'block';
+        if(renItem) renItem.style.display = 'block'; 
+    }
+  }
+
+  qs('#downloadItem')?.addEventListener('click', () => {
+      if(selectedItem.type === 'file') window.location.href = `/reports/download/${selectedItem.id}`;
+      contextMenu.style.display = 'none';
+  });
+
+  qs('#renameItem')?.addEventListener('click', () => {
+      if(renameInput) renameInput.value = selectedItem.name;
+      if(renameModal) renameModal.style.display = 'flex';
+      contextMenu.style.display = 'none';
+  });
+
+  qs('#saveRename')?.addEventListener('click', () => {
+      const newName = renameInput.value.trim();
+      if(!newName) return;
+      fetch(`/reports/rename/${selectedItem.type}/${selectedItem.id}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+          body: JSON.stringify({ name: newName })
+      }).then(() => {
+          if(selectedItem.type === 'folder') {
+              const f = folders.find(x => x.id == selectedItem.id);
+              if(f) f.name = newName;
+              renderFolders();
+          } else {
+              const f = files.find(x => x.id == selectedItem.id);
+              if(f) f.name = newName;
+              renderFiles();
+          }
+          renameModal.style.display = 'none';
       });
-    });
+  });
 
-    // Preview modal controls
-    qs('#closePreview').addEventListener('click', () => {
-      qs('#filePreviewModal').style.display = 'none';
-    });
+  qs('#cancelRename')?.addEventListener('click', () => renameModal.style.display = 'none');
 
-    // Context menu actions
-    qs('#openFile').addEventListener('click', () => {
-      if (selectedItem.type === 'file') {
-        previewFile(selectedItem.id);
-      } else if (selectedItem.type === 'folder') {
-        openFolder(selectedItem.id);
-      }
-      qs('#contextMenu').style.display = 'none';
-    });
+  qs('#deleteItem')?.addEventListener('click', () => {
+    if(deleteModal) deleteModal.style.display = 'flex';
+    contextMenu.style.display = 'none';
+  });
+  qs('#cancelDelete')?.addEventListener('click', () => deleteModal.style.display = 'none');
 
-    qs('#renameItem').addEventListener('click', () => {
-      if (selectedItem) {
-        showRenameModal();
-      }
-      qs('#contextMenu').style.display = 'none';
-    });
-
-    qs('#downloadItem').addEventListener('click', () => {
-      if (selectedItem.type === 'file') {
-        downloadFile(selectedItem.id);
-      }
-      qs('#contextMenu').style.display = 'none';
-    });
-
-    qs('#deleteItem').addEventListener('click', () => {
-      if (selectedItem) {
-        showDeleteModal();
-      }
-      qs('#contextMenu').style.display = 'none';
-    });
-
-    // Rename modal
-    qs('#cancelRename').addEventListener('click', () => {
-      qs('#renameModal').style.display = 'none';
-    });
-
-    qs('#saveRename').addEventListener('click', () => {
-      const newName = qs('#renameInput').value.trim();
-      if (newName && selectedItem) {
+  qs('#confirmDelete')?.addEventListener('click', () => {
+    if (!selectedItem) return;
+    fetch(`/reports/${selectedItem.type}/${selectedItem.id}`, {
+        method: 'DELETE',
+        headers: { 'X-CSRF-TOKEN': csrfToken }
+    }).then(res => res.json()).then(() => {
         if (selectedItem.type === 'folder') {
-          const folder = folders.find(f => f.id === selectedItem.id);
-          if (folder) folder.name = newName;
-          localStorage.setItem('fileManagerFolders', JSON.stringify(folders));
-          renderFolders();
-        } else if (selectedItem.type === 'file') {
-          const file = files.find(f => f.id === selectedItem.id);
-          if (file) file.name = newName;
-          localStorage.setItem('fileManagerFiles', JSON.stringify(files));
-          renderFiles();
+            folders = folders.filter(f => f.id != selectedItem.id);
+            files = files.filter(f => f.folder_id != selectedItem.id);
+            renderFolders();
+            if (insideFolder && currentFolderId == selectedItem.id && backBtn) backBtn.click();
+        } else {
+            files = files.filter(f => f.id != selectedItem.id);
+            renderFiles();
         }
-        qs('#renameModal').style.display = 'none';
-      }
+        deleteModal.style.display = 'none';
     });
+  });
 
-    // Delete modal
-    qs('#cancelDelete').addEventListener('click', () => {
-      qs('#deleteModal').style.display = 'none';
-    });
+  window.addEventListener('click', e => {
+    if (contextMenu && !contextMenu.contains(e.target)) contextMenu.style.display = 'none';
+  });
 
-    qs('#confirmDelete').addEventListener('click', () => {
-      if (selectedItem) {
-        if (selectedItem.type === 'folder') {
-          folders = folders.filter(f => f.id !== selectedItem.id);
-          // Also remove files in this folder
-          files = files.filter(f => f.folder !== selectedItem.id);
-          localStorage.setItem('fileManagerFolders', JSON.stringify(folders));
-        } else if (selectedItem.type === 'file') {
-          files = files.filter(f => f.id !== selectedItem.id);
-        }
-        localStorage.setItem('fileManagerFiles', JSON.stringify(files));
-        renderFolders();
-        renderFiles();
-        qs('#deleteModal').style.display = 'none';
-      }
-    });
-
-    // Close modals when clicking outside
-    qsa('.modal-overlay').forEach(modal => {
-      modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-          modal.style.display = 'none';
-        }
-      });
-    });
-
-    // Close context menu when clicking elsewhere
-    document.addEventListener('click', () => {
-      qs('#contextMenu').style.display = 'none';
-    });
+  // Profile Dropdown
+  const profileToggle = qs('#profileToggle');
+  const profileWrapper = qs('.profile-wrapper'); 
+  if (profileToggle && profileWrapper) {
+      profileToggle.addEventListener('click', (e) => { e.stopPropagation(); profileWrapper.classList.toggle('active'); });
+      window.addEventListener('click', (e) => { if (!profileWrapper.contains(e.target)) profileWrapper.classList.remove('active'); });
   }
-
-  // Helper functions
-  function getRandomColor() {
-    const colors = ['#4a6cf7', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#6b7280'];
-    return colors[Math.floor(Math.random() * colors.length)];
-  }
-
-  function getFileTypeFromName(fileName) {
-    const ext = fileName.split('.').pop().toLowerCase();
-    const types = {
-      'pdf': 'PDF',
-      'doc': 'Document',
-      'docx': 'Document',
-      'xls': 'Spreadsheet',
-      'xlsx': 'Spreadsheet',
-      'jpg': 'Image',
-      'jpeg': 'Image',
-      'png': 'Image',
-      'gif': 'Image',
-      'zip': 'Archive',
-      'rar': 'Archive'
-    };
-    return types[ext] || 'Document';
-  }
-
-  function formatFileSize(bytes) {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  }
-
-  // Initialize the file manager
-  initFileManager();
-
+  
+  // INITIAL RENDER
+  renderFolders();
+  renderFiles();
+  
 });
 </script>
 
