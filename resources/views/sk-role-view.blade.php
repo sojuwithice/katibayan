@@ -1,180 +1,305 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="sk-view">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>KatiBayan - SK Analytics</title>
+  <title>KatiBayan - SK Role</title>
   <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/favicon.png') }}">
-   <link rel="stylesheet" href="{{ asset('css/sk-view.css') }}">
+  
+  <!-- CSS Files -->
+  <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+  <link rel="stylesheet" href="{{ asset('css/sk-view.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  
-  <style>
-      /* Ensure modal works even if external CSS fails to load immediately */
-      .modal-overlay {
-          display: none; /* Hidden by default */
-          position: fixed;
-          top: 0; left: 0; width: 100%; height: 100%;
-          background: rgba(0,0,0,0.5);
-          z-index: 9999;
-          justify-content: center;
-          align-items: center;
-      }
-      .modal-overlay.active {
-          display: flex; /* Show when active */
-      }
-  </style>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 </head>
-<body>
+<body class="sk-view">
 <main class="dashboard-container">
 
     <header class="topbar">
+        <!-- Logo with correct dashboard classes -->
         <div class="logo">
-           <img src="{{ asset('images/KatiBayan-Logo_B.png') }}" alt="KatiBayan Logo" class="logo-img">
-             <div class="logo-text">
-                <span><span class="blue">K</span>ati<span class="blue">B</span>ayan.</span>
-                <small>Katipunan ng Kabataan Web Portal</small>
+            <img src="{{ asset('images/logo.png') }}" alt="Logo">
+            <div class="logo-text">
+                <span class="title">Katibayan</span>
+                <span class="subtitle">Web Portal</span>
             </div>
         </div>
 
         <div class="topbar-right">
-            <div class="time" id="currentTime">Loading...</div>
+            <!-- Time Widget -->
+            <div class="time" id="currentTime">MON 10:00 <span>AM</span></div>
 
-            <div class="topbar-icons">
-                <div class="notification-wrapper">
-                    <i class="fas fa-bell"></i>
-                    <span class="notif-count">3</span>
-                    <div class="notif-dropdown">
-                        <div class="notif-header">
-                            <strong>Notification</strong> <span>3</span>
+            <!-- Theme Toggle Button -->
+            <button class="theme-toggle" id="themeToggle">
+                <i data-lucide="moon"></i>
+            </button>
+
+            <!-- Notification System -->
+            <div class="notification-wrapper">
+                <i class="fas fa-bell"></i>
+                @if(isset($notificationCount) && $notificationCount > 0)
+                    <span class="notif-count">{{ $notificationCount }}</span>
+                @endif
+                <div class="notif-dropdown">
+                    <div class="notif-header">
+                        <strong>Notification</strong>
+                        @if(isset($notificationCount) && $notificationCount > 0)
+                            <span>{{ $notificationCount }}</span>
+                        @endif
+                    </div>
+                    
+                    <ul class="notif-list">
+                        <li>
+                            <a href="#" class="notif-link">
+                                <div class="notif-dot-container">
+                                    <span class="notif-dot"></span>
+                                </div>
+                                <div class="notif-main-content">
+                                    <div class="notif-header-line">
+                                        <strong>Program Evaluation Due</strong>
+                                        <span class="notif-timestamp">12/15/2024 2:30 PM</span>
+                                    </div>
+                                    <p class="notif-message">The evaluation for the KK-Assembly is due tomorrow.</p>
+                                </div>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="notif-link">
+                                <div class="notif-dot-container">
+                                    <span class="notif-dot"></span>
+                                </div>
+                                <div class="notif-main-content">
+                                    <div class="notif-header-line">
+                                        <strong>New Project Proposal</strong>
+                                        <span class="notif-timestamp">12/14/2024 10:15 AM</span>
+                                    </div>
+                                    <p class="notif-message">Kagawad Dela Cruz submitted a new project proposal.</p>
+                                </div>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="notif-link">
+                                <div class="notif-dot-container">
+                                    <span class="notif-dot-placeholder"></span>
+                                </div>
+                                <div class="notif-main-content">
+                                    <div class="notif-header-line">
+                                        <strong>Meeting Reminder</strong>
+                                        <span class="notif-timestamp">12/13/2024 4:45 PM</span>
+                                    </div>
+                                    <p class="notif-message">SK Monthly Meeting is scheduled for Friday at 2 PM.</p>
+                                </div>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            @if(Auth::check())
+                @php
+                    $user = Auth::user();
+                    
+                    // Calculate Age
+                    $age = $user->date_of_birth ? \Carbon\Carbon::parse($user->date_of_birth)->age : 'N/A';
+
+                    // Fix "KK-Member" Logic
+                    $rawRole = strtolower($user->role);
+                    if ($rawRole === 'kk' || $rawRole === 'resident') {
+                        $roleBadge = 'KK-Member';
+                    } else {
+                        $roleBadge = ucfirst($rawRole);
+                    }
+
+                    // SK Role Logic
+                    $skTitle = '';
+                    if (!empty($user->sk_role)) {
+                        $skTitle = $user->sk_role; 
+                    } elseif ($user->role === 'sk_chairperson') {
+                        $skTitle = 'Chairperson';
+                    }
+                @endphp
+
+                <!-- Profile Dropdown -->
+                <div class="profile-wrapper">
+                    <img src="{{ $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+                         alt="User" class="avatar" id="profileToggle"> 
+
+                    <div class="profile-dropdown">
+                        <div class="profile-header">
+                            <img src="{{ $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
+                                 alt="User" class="profile-avatar"> 
+
+                            <div class="profile-info">
+                                <h4>{{ $user->given_name }} {{ $user->middle_name }} {{ $user->last_name }} {{ $user->suffix }}</h4>
+                                
+                                <div class="badges-wrapper">
+                                    <!-- Blue Badge -->
+                                    <div class="profile-badge">
+                                        <span class="badge">{{ $roleBadge }}</span>
+                                        <span class="badge">{{ $age }} yrs old</span>
+                                    </div>
+
+                                    <!-- Yellow SK Badge -->
+                                    @if($skTitle)
+                                        <div class="profile-badge sk-badge-yellow">
+                                            <span>{{ $skTitle }}</span>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
                         </div>
-                        <ul class="notif-list">
-                             <li>
-                                <div class="notif-icon"></div>
-                                <div class="notif-content">
-                                    <strong>Program Evaluation Due</strong>
-                                    <p>The evaluation for the KK-Assembly is due tomorrow.</p>
-                                </div>
-                                <span class="notif-dot"></span>
-                            </li>
+                        <hr>
+                        
+                        <!-- Back to Profile Button -->
+                        <div class="profile-button-container">
+                            <a href="{{ route('dashboard.index') }}" class="profile-sk-button">
+                                Back to Profile
+                            </a>
+                        </div>
+
+                        <!-- Menu Items -->
+                        <ul class="profile-menu">
                             <li>
-                                <div class="notif-icon"></div>
-                                <div class="notif-content">
-                                    <strong>New Project Proposal</strong>
-                                    <p>Kagawad Dela Cruz submitted a new project proposal.</p>
-                                </div>
-                                <span class="notif-dot"></span>
+                                <a href="{{ route('profilepage') }}">
+                                    <i class="fas fa-user"></i> Profile
+                                </a>
                             </li>
+                            
                             <li>
-                                <div class="notif-icon"></div>
-                                <div class="notif-content">
-                                    <strong>Meeting Reminder</strong>
-                                    <p>SK Monthly Meeting is scheduled for Friday at 2 PM.</p>
-                                </div>
+                                <a href="{{ route('faqs') }}">
+                                    <i class="fas fa-question-circle"></i> FAQs
+                                </a>
                             </li>
-                             <li>
-                                <div class="notif-icon"></div>
-                                <div class="notif-content">
-                                    <strong>Report Received</strong>
-                                    <p>Received Accomplishment Report from Kagawad Santos.</p>
-                                </div>
+
+                            <li>
+                                <a href="#" id="openFeedbackBtn">
+                                    <i class="fas fa-star"></i> Send Feedback to Katibayan
+                                </a>
+                            </li>
+                            
+                            <li class="logout-item">
+                                <a href="loginpage" onclick="confirmLogout(event)">
+                                    <i class="fas fa-sign-out-alt"></i> Logout
+                                </a>
                             </li>
                         </ul>
-                    </div>
-                </div>
-
-                @if(Auth::check())
-    @php
-        $user = Auth::user();
-        
-        // 1. Calculate Age
-        $age = $user->date_of_birth ? \Carbon\Carbon::parse($user->date_of_birth)->age : 'N/A';
-
-        // 2. Fix "KK-Member" Logic
-        $rawRole = strtolower($user->role);
-        if ($rawRole === 'kk' || $rawRole === 'resident') {
-            $roleBadge = 'KK-Member'; // Specific fix requested
-        } else {
-            $roleBadge = ucfirst($rawRole);
-        }
-
-        // 3. SK Role Logic (Yellow Badge)
-        $skTitle = '';
-        if (!empty($user->sk_role)) {
-            $skTitle = $user->sk_role; 
-        } elseif ($user->role === 'sk_chairperson') {
-            $skTitle = 'Chairperson';
-        }
-    @endphp
-
-    <div class="profile-wrapper">
-        <img src="{{ $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
-             alt="User" class="avatar" id="profileToggle"> 
-
-        <div class="profile-dropdown">
-            <div class="profile-header">
-                <img src="{{ $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
-                     alt="User" class="profile-avatar"> 
-
-                <div class="profile-info">
-                    <h4>{{ $user->given_name }} {{ $user->middle_name }} {{ $user->last_name }} {{ $user->suffix }}</h4>
-                    
-                    <div class="badges-wrapper">
                         
-                        <div class="profile-badge">
-                            <span class="badge">{{ $roleBadge }}</span>
-                            <span class="badge">{{ $age }} yrs old</span>
-                        </div>
-
-                        @if($skTitle)
-                            <span class="badge-2">{{ $skTitle }}</span>
-                        @endif
-
+                        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                            @csrf
+                        </form>
                     </div>
                 </div>
-            </div>
-            <hr>
-            <ul class="profile-menu">
-                <li class="no-hover-bg">
-                    <a href="{{ route('dashboard.index') }}" class="back-to-profile" id="btn-back-profile">
-                        Back to Profile
-                    </a>
-                </li>
-                <li class="logout-item">
-                    <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                        <i class="fas fa-sign-out-alt"></i> Logout
-                    </a>
-                </li>
-            </ul>
-
-            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-                @csrf
-            </form>
-        </div>
-    </div>
-@endif
-            </div>
+            @endif
         </div>
     </header>
 
+    <!-- Feedback Modal (Same as dashboard) -->
+    <div id="feedbackModal" class="modal-overlay">
+      <div class="modal-content">
+        <span class="close-btn" id="closeFeedbackModal">&times;</span>
+
+        <h2>Send us feedback</h2>
+        <p>Help us improve by sharing your thoughts, suggestions, and experiences with our service.</p>
+
+        <div class="feedback-options">
+          <div class="option-card">
+            <i class="fas fa-star"></i>
+            <p><strong>Star Rating</strong><br>Rate your experience with 1–5 stars</p>
+          </div>
+          <div class="option-card">
+            <i class="fas fa-comment"></i> 
+            <p><strong>Comment Section</strong><br>Share your thoughts</p>
+          </div>
+          <div class="option-card">
+            <i class="fas fa-bolt"></i>
+            <p><strong>Quick Submission</strong><br>Simple and intuitive feedback process</p>
+          </div>
+        </div>
+
+        <h3>Enjoying it? Rate us!</h3>
+        <div class="star-rating" id="starRating">
+          <i class="far fa-star" data-value="1"></i>
+          <i class="far fa-star" data-value="2"></i>
+          <i class="far fa-star" data-value="3"></i>
+          <i class="far fa-star" data-value="4"></i>
+          <i class="far fa-star" data-value="5"></i>
+        </div>
+
+        <form id="feedbackForm" action="{{ route('feedback.submit') }}" method="POST">
+          @csrf
+          
+          <label for="type">Feedback Type</label>
+          
+          <div class="custom-select-wrapper" id="customSelect">
+            <div class="custom-select-trigger">
+              <span id="selectedFeedbackType">Select feedback type</span>
+              <div class="custom-arrow"></div>
+            </div>
+            
+            <div class="custom-options-list">
+              <div class="custom-option" data-value="suggestion">
+                <span class="dot suggestion"></span> Suggestion
+              </div>
+              <div class="custom-option" data-value="bug">
+                <span class="dot bug"></span> Bug or Issue
+              </div>
+              <div class="custom-option" data-value="appreciation">
+                <span class="dot appreciation"></span> Appreciation
+              </div>
+              <div class="custom-option" data-value="others">
+                <span class="dot others"></span> Others
+              </div>
+            </div>
+            
+            <select id="type" name="type" required style="display: none;">
+              <option value="" disabled selected>Select feedback type</option>
+              <option value="suggestion">Suggestion</option>
+              <option value="bug">Bug or Issue</option>
+              <option value="appreciation">Appreciation</option>
+              <option value="others">Others</option>
+            </select>
+          </div>
+          <label for="message">Your message</label>
+          <textarea id="message" name="message" rows="5" placeholder="Share your feedback with us..."></textarea>
+
+          <input type="hidden" name="rating" id="ratingInput">
+          
+          <div class="form-actions">
+            <button type="submit" class="submit-btn">Submit</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="modal-overlay simple-alert-modal">
+      <div class="modal-content">
+        <div class="success-icon">
+          <i class="fas fa-check"></i>
+        </div>
+        <h2>Submitted</h2>
+        <p>Thank you for your feedback! Your thoughts help us improve.</p>
+        <button id="closeSuccessModal" class="ok-btn">OK</button>
+      </div>
+    </div>
+
     <section class="welcome-section">
         @php
-            // 1. Get User Data
+            // Get User Data
             $fullName = $user->given_name . ' ' . $user->middle_name . ' ' . $user->last_name . ' ' . $user->suffix;
             $age = $user->date_of_birth ? \Carbon\Carbon::parse($user->date_of_birth)->age : 'N/A';
             
-            // 2. Get SK Role
+            // Get SK Role
             $skRole = $user->sk_role ?? 'Member';
             $roleClass = strtolower($skRole);
 
-            // 3. GET COMMITTEES (Decode JSON from DB)
-            // Siguraduhing naka-array ito. Kung null, empty array.
+            // Get Committees
             $savedCommittees = !empty($user->committees) ? json_decode($user->committees, true) : [];
             $hasCommittees = !empty($savedCommittees);
             
-            // 4. Button Text (Style is same for both)
+            // Button Text
             $buttonText = $hasCommittees ? 'Edit your committee' : 'Set your committee';
         @endphp
 
@@ -195,309 +320,502 @@
         </button>
     </section>
 
-        <div class="modal-overlay" id="committeeModal">
-            <div class="committee-modal">
-                <div class="modal-header">
-                    <h2>Select Your Committee</h2>
-                    <button class="close-modal" id="closeModal">&times;</button>
-                </div>
-                <div class="modal-content">
-                    <div class="modal-section">
-                        <p style="color: #252525ff; margin-bottom: 1rem; font-size: 0.9rem;">
-                          Please select your respective committee to proceed.
-                        </p>
-                        <div class="committee-options">
-                            <div class="committee-option" data-committee="health">
-                                <input type="checkbox" id="health" name="committees" value="health">
-                                <label for="health">Committee on Health</label>
-                            </div>
-                            <div class="committee-option" data-committee="education">
-                                <input type="checkbox" id="education" name="committees" value="education">
-                                <label for="education">Committee on Education</label>
-                            </div>
-                            <div class="committee-option" data-committee="sports">
-                                <input type="checkbox" id="sports" name="committees" value="sports">
-                                <label for="sports">Committee on Sports</label>
-                            </div>
-                            <div class="committee-option" data-committee="culture">
-                                <input type="checkbox" id="culture" name="committees" value="culture">
-                                <label for="culture">Committee on Culture</label>
-                            </div>
-                            <div class="committee-option" data-committee="environment">
-                                <input type="checkbox" id="environment" name="committees" value="environment">
-                                <label for="environment">Committee on Environment</label>
-                            </div>
-                            <div class="committee-option" data-committee="citizenship">
-                                <input type="checkbox" id="citizenship" name="committees" value="citizenship">
-                                <label for="citizenship">Committee on Active Citizenship</label>
-                            </div>
-                            <div class="committee-option" data-committee="social">
-                                <input type="checkbox" id="social" name="committees" value="social">
-                                <label for="social">Committee on Social Inclusion</label>
-                            </div>
-                            <div class="committee-option" data-committee="finance">
-                                <input type="checkbox" id="finance" name="committees" value="finance">
-                                <label for="finance">Committee on Finance</label>
-                            </div>
+    <!-- Committee Modal -->
+    <div class="modal-overlay" id="committeeModal">
+        <div class="committee-modal">
+            <div class="modal-header">
+                <h2>Select Your Committee</h2>
+                <button class="close-modal" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-content">
+                <div class="modal-section">
+                    <p>
+                      Please select your respective committee to proceed.
+                    </p>
+                    <div class="committee-options">
+                        <div class="committee-option" data-committee="health">
+                            <input type="checkbox" id="health" name="committees" value="health">
+                            <label for="health">Committee on Health</label>
                         </div>
-                    </div>
-                    
-                    <div class="modal-section">
-                        <h3>Current Selection</h3>
-                        <div id="selectedCommittees" style="
-                            background: #f8f9fa;
-                            padding: 1rem;
-                            border-radius: 8px;
-                            min-height: 60px;
-                            border: 2px dashed #ddd;
-                        ">
-                            <p style="color: #999; margin: 0; font-style: italic;">No committees selected yet</p>
+                        <div class="committee-option" data-committee="education">
+                            <input type="checkbox" id="education" name="committees" value="education">
+                            <label for="education">Committee on Education</label>
+                        </div>
+                        <div class="committee-option" data-committee="sports">
+                            <input type="checkbox" id="sports" name="committees" value="sports">
+                            <label for="sports">Committee on Sports</label>
+                        </div>
+                        <div class="committee-option" data-committee="culture">
+                            <input type="checkbox" id="culture" name="committees" value="culture">
+                            <label for="culture">Committee on Culture</label>
+                        </div>
+                        <div class="committee-option" data-committee="environment">
+                            <input type="checkbox" id="environment" name="committees" value="environment">
+                            <label for="environment">Committee on Environment</label>
+                        </div>
+                        <div class="committee-option" data-committee="citizenship">
+                            <input type="checkbox" id="citizenship" name="committees" value="citizenship">
+                            <label for="citizenship">Committee on Active Citizenship</label>
+                        </div>
+                        <div class="committee-option" data-committee="social">
+                            <input type="checkbox" id="social" name="committees" value="social">
+                            <label for="social">Committee on Social Inclusion</label>
+                        </div>
+                        <div class="committee-option" data-committee="finance">
+                            <input type="checkbox" id="finance" name="committees" value="finance">
+                            <label for="finance">Committee on Finance</label>
                         </div>
                     </div>
                 </div>
-                <div class="modal-actions">
-                    <button class="btn btn-secondary" id="cancelSelection">Cancel</button>
-                    <button class="btn btn-primary" id="saveCommittees">Save Committees</button>
+                
+                <div class="modal-section">
+                    <h3>Current Selection</h3>
+                    <div id="selectedCommittees">
+                        <p style="color: var(--text-color); opacity: 0.7; margin: 0; font-style: italic;">No committees selected yet</p>
+                    </div>
                 </div>
             </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="cancelSelection">Cancel</button>
+                <button class="btn btn-primary" id="saveCommittees">Save Committees</button>
+            </div>
         </div>
-
-    </section>
+    </div>
 
     <div class="dashboard-grid">
-    <div class="grid-col-1">
-        <div class="card sk-committee">
-            <h2>SK COMMITTEE</h2>
-            <ul>
-                
-                <li class="committee-item">
-                    @if($chairperson)
-                        <span class="name">
-                            {{ strtoupper($chairperson->given_name . ' ' . $chairperson->last_name) }}
-                        </span>
-                        <div class="role-group">
-                            <span class="role-tag role-chairperson">SK CHAIRPERSON</span>
-                        </div>
-                    @else
-                        <span class="name" style="color: #999; font-style: italic;">(VACANT)</span>
-                        <div class="role-group">
-                            <span class="role-tag role-chairperson">SK CHAIRPERSON</span>
-                        </div>
-                    @endif
-                </li>
-
-                <li class="members-header">MEMBERS</li>
-
-                @forelse($members as $member)
-                    @php
-                        // Format Name
-                        $fullName = strtoupper($member->given_name . ' ' . $member->last_name);
-                        
-                        // Format Role Class (e.g. role-treasurer, role-kagawad)
-                        $roleClass = 'role-' . strtolower($member->sk_role);
-                        
-                        // Check Committees (Decode JSON)
-                        $commList = !empty($member->committees) ? json_decode($member->committees, true) : [];
-                    @endphp
-
+        <div class="grid-col-1">
+            <div class="card sk-committee">
+                <h2>SK COMMITTEE</h2>
+                <ul>
+                    <!-- Chairperson -->
                     <li class="committee-item">
-                        <span class="name">{{ $fullName }}</span>
-                        
-                        <div class="role-group">
-                            <span class="role-tag {{ $roleClass }}">
-                                SK {{ strtoupper($member->sk_role) }}
+                        @if($chairperson)
+                            <span class="name">
+                                {{ strtoupper($chairperson->given_name . ' ' . $chairperson->last_name) }}
                             </span>
-
-                            @if(!empty($commList))
-                                @foreach($commList as $comm)
-                                    <span class="committee-role" style="display: block; font-size: 10px; color: #666; margin-top: 4px; font-weight: 600;">
-                                        COMMITTEE ON {{ strtoupper($comm) }}
-                                    </span>
-                                @endforeach
-                            @endif
-                        </div>
+                            <div class="role-group">
+                                <span class="role-tag role-chairperson">SK CHAIRPERSON</span>
+                            </div>
+                        @else
+                            <span class="name" style="color: var(--text-color); opacity: 0.7; font-style: italic;">(VACANT)</span>
+                            <div class="role-group">
+                                <span class="role-tag role-chairperson">SK CHAIRPERSON</span>
+                            </div>
+                        @endif
                     </li>
 
-                @empty
-                    <li class="committee-item" style="justify-content: center; padding: 20px;">
-                        <span class="name" style="color: #999; font-style: italic; font-weight: normal; font-size: 13px;">
-                            No registered SK members yet.
-                        </span>
-                    </li>
-                @endforelse
+                    <li class="members-header">MEMBERS</li>
 
-            </ul>
+                    @forelse($members as $member)
+                        @php
+                            // Format Name
+                            $fullName = strtoupper($member->given_name . ' ' . $member->last_name);
+                            
+                            // Format Role Class
+                            $roleClass = 'role-' . strtolower($member->sk_role);
+                            
+                            // Check Committees
+                            $commList = !empty($member->committees) ? json_decode($member->committees, true) : [];
+                        @endphp
+
+                        <li class="committee-item">
+                            <span class="name">{{ $fullName }}</span>
+                            
+                            <div class="role-group">
+                                <span class="role-tag {{ $roleClass }}">
+                                    SK {{ strtoupper($member->sk_role) }}
+                                </span>
+
+                                @if(!empty($commList))
+                                    @foreach($commList as $comm)
+                                        <span class="committee-role">
+                                            COMMITTEE ON {{ strtoupper($comm) }}
+                                        </span>
+                                    @endforeach
+                                @endif
+                            </div>
+                        </li>
+
+                    @empty
+                        <li class="committee-item" style="justify-content: center; padding: 20px;">
+                            <span class="name" style="color: var(--text-color); opacity: 0.7; font-style: italic; font-weight: normal; font-size: 13px;">
+                                No registered SK members yet.
+                            </span>
+                        </li>
+                    @endforelse
+                </ul>
+            </div>
         </div>
-    </div>
-
 
         <div class="grid-col-2">
-    <div class="card send-report">
-        <h2>SEND REPORT TO YOUR SK CHAIR</h2>
-        
-        <form id="sendReportForm">
-            <div class="form-group">
-                <label for="report-type">Report Type</label>
-                <select id="report-type" name="report_type" required> <option value="">Select type of report</option>
-                    <option value="accomplishment">Accomplishment Report</option>
-                    <option value="financial">Propose Project</option>
-                </select>
-            </div>
-
-            <div class="form-group file-upload">
-                <label for="file-attach">Attach files</label>
-                <div class="file-input-wrapper">
-                    <button type="button" class="file-input-btn" id="browseBtn">
-                        <i class="fas fa-cloud-upload-alt"></i> Choose Files or Drag & Drop
-                    </button>
-                    <input type="file" id="file-attach" name="files[]" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xls,.xlsx" style="display:none;">
-                </div>
+            <div class="card send-report">
+                <h2>SEND REPORT TO YOUR SK CHAIR</h2>
                 
-                <div class="file-size-warning">Max file size: 10MB per file</div>
-                
-                <div class="file-list" id="uploadFileList">
-                    <div class="file-empty-state">No files selected</div>
-                </div>
-            </div>
+                <form id="sendReportForm">
+                    <div class="form-group">
+                        <label for="report-type">Report Type</label>
+                        <select id="report-type" name="report_type" required>
+                            <option value="">Select type of report</option>
+                            <option value="accomplishment">Accomplishment Report</option>
+                            <option value="financial">Propose Project</option>
+                        </select>
+                    </div>
 
-            <button type="submit" class="btn btn-primary" id="submitBtn">Submit Report</button>
-        </form>
-    </div>
-</div>
+                    <div class="form-group file-upload">
+                        <label for="file-attach">Attach files</label>
+                        <div class="file-input-wrapper">
+                            <button type="button" class="file-input-btn" id="browseBtn">
+                                <i class="fas fa-cloud-upload-alt"></i> Choose Files or Drag & Drop
+                            </button>
+                            <input type="file" id="file-attach" name="files[]" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xls,.xlsx" style="display:none;">
+                        </div>
+                        
+                        <div class="file-size-warning">Max file size: 10MB per file</div>
+                        
+                        <div class="file-list" id="uploadFileList">
+                            <div class="file-empty-state">No files selected</div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" id="submitBtn">Submit Report</button>
+                </form>
+            </div>
+        </div>
     </div>
 
     <div class="card propose-project-full">
-    <div class="card-header-flex">
-        <h2>Accomplished Projects</h2>
-        
-        <div class="year-filter-wrapper">
-            <select id="projectYearFilter" class="year-select">
-                @php
-                    $currentYear = \Carbon\Carbon::now()->year;
-                    // Kunin lahat ng years na may record
-                    $availableYears = $completedProjects->keys(); 
-                @endphp
-
-                @if(!$availableYears->contains($currentYear))
-                    <option value="{{ $currentYear }}" selected>{{ $currentYear }}</option>
-                @endif
-
-                @foreach($availableYears as $year)
-                    <option value="{{ $year }}" {{ $year == $currentYear ? 'selected' : '' }}>
-                        {{ $year }}
-                    </option>
-                @endforeach
-                
-                <option value="all">All Years</option>
-            </select>
-        </div>
-    </div>
-    
-    <div class="projects-list-container">
-        @forelse($completedProjects as $year => $projects)
+        <div class="card-header-flex">
+            <h2>Accomplished Projects</h2>
             
-            <div class="year-group-container" 
-                 id="year-group-{{ $year }}" 
-                 style="{{ $year == $currentYear ? 'display: block;' : 'display: none;' }}">
-                
-                <div class="year-header-small">
-                    <span>Records for {{ $year }}</span>
-                </div>
+            <div class="year-filter-wrapper">
+                <select id="projectYearFilter" class="year-select">
+                    @php
+                        $currentYear = \Carbon\Carbon::now()->year;
+                        $availableYears = $completedProjects->keys(); 
+                    @endphp
 
-                <ul class="project-year-group">
-                    @foreach($projects as $project)
-                        <li>
-                            <div class="project-info">
-                                <span class="project-name">{{ $project->title }}</span>
-                                <span class="project-status">
-                                    {{ $project->type }}
-                                </span>
-                            </div>
-                            <span class="project-date">
-                                {{ \Carbon\Carbon::parse($project->date)->format('M d') }}
-                            </span>
-                        </li>
+                    @if(!$availableYears->contains($currentYear))
+                        <option value="{{ $currentYear }}" selected>{{ $currentYear }}</option>
+                    @endif
+
+                    @foreach($availableYears as $year)
+                        <option value="{{ $year }}" {{ $year == $currentYear ? 'selected' : '' }}>
+                            {{ $year }}
+                        </option>
                     @endforeach
-                </ul>
+                    
+                    <option value="all">All Years</option>
+                </select>
             </div>
-
-        @empty
-            <div style="padding: 20px; text-align: center;">
-                <span style="color: #999; font-style: italic;">
-                    No accomplished projects yet.
-                </span>
-            </div>
-        @endforelse
+        </div>
         
-        <div id="no-data-message" style="display: none; padding: 20px; text-align: center;">
-            <span style="color: #999; font-style: italic;">No records found for this year.</span>
+        <div class="projects-list-container">
+            @forelse($completedProjects as $year => $projects)
+                <div class="year-group-container" 
+                     id="year-group-{{ $year }}" 
+                     style="{{ $year == $currentYear ? 'display: block;' : 'display: none;' }}">
+                    
+                    <div class="year-header-small">
+                        <span>Records for {{ $year }}</span>
+                    </div>
+
+                    <ul class="project-year-group">
+                        @foreach($projects as $project)
+                            <li>
+                                <div class="project-info">
+                                    <span class="project-name">{{ $project->title }}</span>
+                                    <span class="project-status">
+                                        {{ $project->type }}
+                                    </span>
+                                </div>
+                                <span class="project-date">
+                                    {{ \Carbon\Carbon::parse($project->date)->format('M d') }}
+                                </span>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            @empty
+                <div style="padding: 20px; text-align: center;">
+                    <span style="color: var(--text-color); opacity: 0.7; font-style: italic;">
+                        No accomplished projects yet.
+                    </span>
+                </div>
+            @endforelse
+            
+            <div id="no-data-message" style="display: none; padding: 20px; text-align: center;">
+                <span style="color: var(--text-color); opacity: 0.7; font-style: italic;">No records found for this year.</span>
+            </div>
         </div>
     </div>
-</div>
-
 </main>
 
+<!-- Main JavaScript -->
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    
-    // =========================================================
-    // 1. GLOBAL UI (Profile, Notifications, Dropdowns)
-    // =========================================================
-    const profileToggle = document.getElementById('profileToggle');
-    const profileWrapper = document.querySelector('.profile-wrapper');
-    const profileDropdown = document.querySelector('.profile-dropdown');
-    const notifBell = document.querySelector('.notification-wrapper .fa-bell');
-    const notifWrapper = document.querySelector('.notification-wrapper');
-    const notifDropdown = document.querySelector('.notif-dropdown');
-
-    // Toggle Profile
-    profileToggle?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        profileWrapper.classList.toggle('active');
-        notifWrapper?.classList.remove('active');
-    });
-    profileDropdown?.addEventListener('click', e => e.stopPropagation());
-
-    // Toggle Notifications
-    notifBell?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        notifWrapper.classList.toggle('active');
-        profileWrapper?.classList.remove('active');
-    });
-    notifDropdown?.addEventListener('click', e => e.stopPropagation());
-
-    // Close Dropdowns on Outside Click
-    window.addEventListener('click', (e) => {
-        if (!profileWrapper?.contains(e.target)) profileWrapper?.classList.remove('active');
-        if (!notifWrapper?.contains(e.target)) notifWrapper?.classList.remove('active');
-    });
-
+    // Initialize Lucide icons
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
 
     // =========================================================
-    // 2. TIME WIDGET UPDATE
+    // 1. TIME UPDATE FUNCTION
     // =========================================================
-    const timeEl = document.getElementById("currentTime");
     function updateTime() {
+        const timeEl = document.querySelector(".time");
         if (!timeEl) return;
+
         const now = new Date();
         const shortWeekdays = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+        const shortMonths = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
         const weekday = shortWeekdays[now.getDay()];
+        const month = shortMonths[now.getMonth()];
+        const day = now.getDate();
         let hours = now.getHours();
-        const minutes = now.getMinutes().toString().padStart(2, '0');
-        const ampm = hours >= 12 ? 'PM' : 'AM';
-        hours = hours % 12;
-        hours = hours ? hours : 12;
-        timeEl.textContent = `${weekday} ${hours}:${minutes} ${ampm}`;
+        const minutes = now.getMinutes().toString().padStart(2, "0");
+        const ampm = hours >= 12 ? "PM" : "AM";
+        hours = hours % 12 || 12;
+
+        timeEl.innerHTML = `${weekday}, ${month} ${day} ${hours}:${minutes} <span>${ampm}</span>`;
     }
+
+    // Initial call and set interval
     updateTime();
     setInterval(updateTime, 60000);
 
+    // =========================================================
+    // 2. THEME TOGGLE FUNCTIONALITY
+    // =========================================================
+    const themeToggle = document.getElementById('themeToggle');
+    
+    function applyTheme(isDark) {
+        const body = document.body;
+        body.classList.toggle('dark-mode', isDark);
+        
+        const icon = isDark ? 'sun' : 'moon';
+        if (themeToggle) {
+            themeToggle.innerHTML = `<i data-lucide="${icon}"></i>`;
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
+        
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+    }
+
+    // Initialize theme
+    const savedTheme = localStorage.getItem('theme') === 'dark';
+    applyTheme(savedTheme);
+
+    if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+            const isDark = !document.body.classList.contains('dark-mode');
+            applyTheme(isDark);
+        });
+    }
 
     // =========================================================
-    // 2. SEND REPORT & FILE UPLOAD LOGIC (FIXED IDs)
+    // 3. PROFILE DROPDOWN & NOTIFICATION LOGIC
     // =========================================================
+    const profileToggle = document.getElementById('profileToggle');
+    const profileWrapper = document.querySelector('.profile-wrapper');
+    const notifWrapper = document.querySelector('.notification-wrapper');
+    const notifBell = notifWrapper?.querySelector('.fa-bell');
+
+    // Profile Dropdown
+    if (profileToggle && profileWrapper) {
+        profileToggle.addEventListener("click", (e) => {
+            e.stopPropagation();
+            profileWrapper.classList.toggle("active");
+            notifWrapper?.classList.remove("active");
+        });
+    }
+
+    // Notifications Dropdown
+    if (notifWrapper && notifBell) {
+        notifBell.addEventListener("click", (e) => {
+            e.stopPropagation();
+            notifWrapper.classList.toggle("active");
+            profileWrapper?.classList.remove("active");
+        });
+    }
+
+    // Global Click Listener
+    document.addEventListener("click", (e) => {
+        if (profileWrapper && !profileWrapper.contains(e.target)) {
+            profileWrapper.classList.remove("active");
+        }
+        if (notifWrapper && !notifWrapper.contains(e.target)) {
+            notifWrapper.classList.remove("active");
+        }
+    });
+
+    // Logout Confirmation
+    function confirmLogout(event) {
+        event.preventDefault();
+        if (confirm('Are you sure you want to logout?')) {
+            document.getElementById('logout-form').submit();
+        }
+    }
+
+    // =========================================================
+    // 4. FEEDBACK MODAL FUNCTIONALITY (Same as dashboard)
+    // =========================================================
+    const feedbackTriggerBtn = document.getElementById('openFeedbackBtn');
+    const feedbackModal = document.getElementById('feedbackModal');
     
-    // MGA TAMANG IDs BASE SA HTML MO:
+    if (feedbackTriggerBtn && feedbackModal) {
+        const feedbackCloseBtn = document.getElementById('closeFeedbackModal');
+        const feedbackStars = document.querySelectorAll('#starRating i');
+        const feedbackRatingInput = document.getElementById('ratingInput');
+        const feedbackForm = document.getElementById('feedbackForm');
+        const submitBtn = feedbackForm?.querySelector('.submit-btn');
+        const successModal = document.getElementById('successModal');
+        const closeSuccessBtn = document.getElementById('closeSuccessModal');
+
+        // Custom Select Box
+        const customSelect = document.getElementById('customSelect');
+        if (customSelect) {
+            const trigger = customSelect.querySelector('.custom-select-trigger');
+            const selectedText = document.getElementById('selectedFeedbackType');
+            const optionsList = customSelect.querySelector('.custom-options-list');
+            const options = customSelect.querySelectorAll('.custom-option');
+            const realSelect = document.getElementById('type');
+
+            trigger?.addEventListener('click', (e) => {
+                e.stopPropagation();
+                customSelect.classList.toggle('open');
+            });
+
+            options?.forEach(option => {
+                option.addEventListener('click', () => {
+                    const value = option.getAttribute('data-value');
+                    const text = option.textContent.trim();
+
+                    if (selectedText) selectedText.textContent = text;
+                    if (realSelect) realSelect.value = value;
+                    trigger?.classList.add('selected');
+
+                    customSelect.classList.remove('open');
+                });
+            });
+
+            document.addEventListener('click', () => {
+                customSelect.classList.remove('open');
+            });
+        }
+
+        feedbackTriggerBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            feedbackModal.style.display = 'flex';
+        });
+
+        feedbackCloseBtn?.addEventListener('click', () => {
+            feedbackModal.style.display = 'none';
+        });
+
+        window.addEventListener('click', (e) => {
+            if (e.target === feedbackModal) {
+                feedbackModal.style.display = 'none';
+            }
+            if (e.target === successModal) {
+                successModal.style.display = 'none';
+            }
+        });
+
+        feedbackStars.forEach(star => {
+            star.addEventListener('click', () => {
+                const rating = star.getAttribute('data-value');
+                if (feedbackRatingInput) feedbackRatingInput.value = rating;
+
+                feedbackStars.forEach(s => {
+                    s.classList.remove('fas');
+                    s.classList.add('far');
+                });
+                for (let i = 0; i < rating; i++) {
+                    feedbackStars[i].classList.remove('far');
+                    feedbackStars[i].classList.add('fas');
+                }
+            });
+        });
+
+        if (feedbackForm) {
+            feedbackForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                const formData = new FormData(feedbackForm);
+                const submitButtonText = submitBtn.textContent;
+
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = 'Submitting...';
+                }
+
+                // Get CSRF token
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                
+                // Add CSRF token to form data
+                if (csrfToken) {
+                    formData.append('_token', csrfToken);
+                }
+
+                fetch(feedbackForm.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        feedbackModal.style.display = 'none';
+                        if (successModal) successModal.style.display = 'flex';
+                    } else {
+                        let errorMsg = data.message || 'Submission failed.';
+                        if (data.errors) {
+                            errorMsg += '\n' + Object.values(data.errors).join('\n');
+                        }
+                        throw new Error(errorMsg);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert(error.message || 'An error occurred. Please try again.');
+                })
+                .finally(() => {
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = submitButtonText;
+                    }
+
+                    feedbackForm.reset();
+                    feedbackStars.forEach(s => {
+                        s.classList.remove('fas');
+                        s.classList.add('far');
+                    });
+                    if (feedbackRatingInput) feedbackRatingInput.value = '';
+
+                    const selectedText = document.getElementById('selectedFeedbackType');
+                    const trigger = customSelect?.querySelector('.custom-select-trigger');
+                    const realSelect = document.getElementById('type');
+                    if (selectedText) selectedText.textContent = 'Select feedback type';
+                    trigger?.classList.remove('selected');
+                    if (realSelect) realSelect.value = '';
+                });
+            });
+        }
+
+        closeSuccessBtn?.addEventListener('click', () => {
+            if (successModal) successModal.style.display = 'none';
+        });
+    }
+
+    // =========================================================
+    // 5. SEND REPORT & FILE UPLOAD LOGIC
+    // =========================================================
     const fileInput = document.getElementById('file-attach');
     const fileListContainer = document.getElementById('uploadFileList'); 
     const browseBtn = document.getElementById('browseBtn'); 
@@ -506,7 +824,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     let currentFiles = [];
 
-    // 1. TRIGGER CLICK (Pag-click ng button, bubukas ang file folder)
+    // Trigger file input click
     if (browseBtn && fileInput) {
         browseBtn.addEventListener('click', (e) => {
             e.preventDefault();
@@ -514,24 +832,23 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 2. FILE SELECTION (Pag may napili na)
+    // Handle file selection
     if (fileInput) {
         fileInput.addEventListener('change', (e) => {
             const newFiles = Array.from(e.target.files);
             
             newFiles.forEach(newFile => {
-                // Check kung duplicate para hindi maulit
                 if (!currentFiles.some(existing => existing.name === newFile.name)) {
                     currentFiles.push(newFile);
                 }
             });
 
             updateFileListUI(fileListContainer, currentFiles);
-            fileInput.value = ''; // Reset para pwede pumili ulit
+            fileInput.value = '';
         });
     }
 
-    // HELPER: Update UI List (Ito ang magpapakita sa screen)
+    // Helper: Update UI List
     function updateFileListUI(container, filesToShow) {
         if (!container) return;
         container.innerHTML = '';
@@ -544,7 +861,6 @@ document.addEventListener('DOMContentLoaded', () => {
         filesToShow.forEach((file, index) => {
             const fileItem = document.createElement('div');
             fileItem.className = 'file-item';
-            fileItem.style.cssText = "display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 8px; margin-bottom: 5px; border: 1px solid #e2e8f0; border-radius: 5px;";
             
             // Format size logic
             let size = (file.size / 1024).toFixed(1) + ' KB';
@@ -552,11 +868,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             fileItem.innerHTML = `
                 <div style="display:flex; align-items:center; gap:8px; overflow:hidden;">
-                    <i class="fas fa-file" style="color:#64748b;"></i>
+                    <i class="fas fa-file" style="color:var(--text-color);"></i>
                     <span class="file-name" title="${file.name}" style="font-size:0.9rem;">${file.name}</span>
                 </div>
                 <div style="display:flex; align-items:center; gap:10px;">
-                    <span style="font-size:0.8rem; color:#888;">${size}</span>
+                    <span style="font-size:0.8rem; color:var(--text-color); opacity:0.7;">${size}</span>
                     <span class="file-remove" data-index="${index}" style="cursor:pointer; color:#ef4444;"><i class="fas fa-times"></i></span>
                 </div>
             `;
@@ -567,13 +883,13 @@ document.addEventListener('DOMContentLoaded', () => {
         container.querySelectorAll('.file-remove').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const idx = parseInt(e.currentTarget.dataset.index);
-                currentFiles.splice(idx, 1); // Remove from array
-                updateFileListUI(container, currentFiles); // Re-render
+                currentFiles.splice(idx, 1);
+                updateFileListUI(container, currentFiles);
             });
         });
     }
 
-    // 3. SUBMIT FORM (AJAX)
+    // Submit form
     if (sendReportForm) {
         sendReportForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -593,7 +909,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const formData = new FormData();
             formData.append('report_type', reportType);
             
-            // Append files manu-mano
             currentFiles.forEach(file => {
                 formData.append('files[]', file);
             });
@@ -626,15 +941,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error(error);
                 alert('An error occurred. Check console.');
             } finally {
-                submitBtn.innerText = origText; // Balik sa original text (Submit Report)
+                submitBtn.innerText = origText;
                 submitBtn.disabled = false;
             }
         });
     }
 
-
     // =========================================================
-    // 4. COMMITTEE SELECTION LOGIC
+    // 6. COMMITTEE SELECTION LOGIC
     // =========================================================
     const setCommitteeBtn = document.getElementById('setCommitteeBtn');
     const committeeModal = document.getElementById('committeeModal');
@@ -714,7 +1028,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (selectedCommittees) {
             selectedCommittees.innerHTML = selected.length > 0 
                 ? selected.join('') 
-                : '<p style="color: #999; margin: 0; font-style: italic;">No committees selected yet</p>';
+                : '<p style="color: var(--text-color); opacity: 0.7; margin: 0; font-style: italic;">No committees selected yet</p>';
         }
     }
 
@@ -763,9 +1077,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-
     // =========================================================
-    // 5. YEAR FILTER LOGIC
+    // 7. YEAR FILTER LOGIC
     // =========================================================
     const yearFilter = document.getElementById('projectYearFilter');
     const yearGroups = document.querySelectorAll('.year-group-container');

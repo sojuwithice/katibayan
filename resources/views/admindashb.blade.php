@@ -104,7 +104,6 @@
  </div>
       <hr>
         <ul>
-         <li><a href="#"><i class="fas fa-user"></i> KatiBayan Profile</a></li>
          <li>
             <a href="{{ route('admin.logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                 <i class="fas fa-sign-out-alt"></i> Logout
@@ -119,7 +118,7 @@
     </div>
 </header>
 <div class="welcome-card">
-    <h2>Welcome Back, {{ $admin->given_name }}!</h2>
+    <h2>Welcome Back, Admin!</h2>
 </div>
 <section class="dashboard-widgets">
       <div class="stat-card">

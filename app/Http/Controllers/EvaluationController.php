@@ -9,6 +9,7 @@ use App\Models\Attendance;
 use App\Models\Evaluation;
 use App\Models\Notification;
 use App\Models\User;
+use App\Models\Announcement;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -30,7 +31,6 @@ class EvaluationController extends Controller
             return redirect()->route('login');
         }
 
-        // Calculate role badge and age for the user - FIXED
         $roleBadge = $user->role ? strtoupper($user->role) . '-Member' : 'GUEST';
         $age = $user->date_of_birth 
             ? Carbon::parse($user->date_of_birth)->age 
@@ -40,7 +40,7 @@ class EvaluationController extends Controller
     }
 
     /**
-     * Show evaluation page with attended events AND programs
+     * Show evaluation page with dashboard-like notifications
      */
     public function index()
     {
@@ -50,7 +50,14 @@ class EvaluationController extends Controller
             abort(403, 'Unauthorized');
         }
 
-        // Get events that user attended - FIXED: Remove status check
+        // --- Get notifications (same as dashboard) ---
+        $generalNotifications = Notification::where('user_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
+        $unreadNotificationCount = $generalNotifications->where('is_read', 0)->count();
+
+        // --- Get attended events and programs ---
         $attendedEvents = Event::whereHas('attendances', function($query) use ($user) {
             $query->where('user_id', $user->id)
                   ->whereNotNull('attended_at');
@@ -61,11 +68,8 @@ class EvaluationController extends Controller
         ->orderBy('event_date', 'desc')
         ->get();
 
-        // Get programs that user registered for - FIXED: Remove status check
         $registeredPrograms = Program::whereHas('programRegistrations', function($query) use ($user) {
             $query->where('user_id', $user->id);
-            // Remove the status condition since the column doesn't exist
-            // ->where('status', 'registered');
         })
         ->with(['evaluations' => function($query) use ($user) {
             $query->where('user_id', $user->id);
@@ -73,7 +77,60 @@ class EvaluationController extends Controller
         ->orderBy('event_date', 'desc')
         ->get();
 
-        // Combine events and programs for the view
+        // --- Unevaluated activities (for notifications) ---
+        $unevaluatedEvents = Event::where('barangay_id', $user->barangay_id)
+            ->where('is_launched', true)
+            ->whereHas('attendances', function($query) use ($user) {
+                $query->where('user_id', $user->id)->whereNotNull('attended_at');
+            })
+            ->whereDoesntHave('evaluations', function($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })
+            ->with(['attendances' => function($query) use ($user) {
+                $query->where('user_id', $user->id);
+            }])
+            ->orderBy('event_date', 'desc')
+            ->get();
+
+        $unevaluatedPrograms = Program::where('barangay_id', $user->barangay_id)
+            ->whereHas('programRegistrations', function($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })
+            ->whereDoesntHave('evaluations', function($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })
+            ->with(['programRegistrations' => function($query) use ($user) {
+                $query->where('user_id', $user->id);
+            }])
+            ->orderBy('event_date', 'desc')
+            ->get();
+
+        $unevaluatedActivities = collect();
+        
+        foreach ($unevaluatedEvents as $event) {
+            $unevaluatedActivities->push([
+                'id' => $event->id,
+                'type' => 'event',
+                'title' => $event->title,
+                'attendance' => $event->attendances->first(),
+                'created_at' => $event->attendances->first()->created_at ?? $event->created_at
+            ]);
+        }
+        
+        foreach ($unevaluatedPrograms as $program) {
+            $unevaluatedActivities->push([
+                'id' => $program->id,
+                'type' => 'program',
+                'title' => $program->title,
+                'registration' => $program->programRegistrations->first(),
+                'created_at' => $program->programRegistrations->first()->created_at ?? $program->created_at
+            ]);
+        }
+
+        // Calculate total notification count
+        $totalNotificationCount = $unreadNotificationCount + $unevaluatedActivities->count();
+
+        // --- Combine data for view ---
         $allActivities = [
             'events' => $attendedEvents,
             'programs' => $registeredPrograms
@@ -85,61 +142,25 @@ class EvaluationController extends Controller
             ? Carbon::parse($user->date_of_birth)->age 
             : 'N/A';
 
-        // Get notification count for unevaluated activities
-        $unevaluatedActivities = $this->getUnevaluatedActivities($user);
-        $notificationCount = count($unevaluatedActivities);
+        // Get announcements
+        $announcements = Announcement::where('barangay_id', $user->barangay_id)
+            ->where(function ($query) {
+                $query->whereNull('expires_at')
+                      ->orWhere('expires_at', '>', now());
+            })
+            ->latest()
+            ->get();
 
-        return view('evaluationpage', compact('allActivities', 'user', 'age', 'roleBadge', 'notificationCount', 'unevaluatedActivities'));
-    }
-
-    /**
-     * Get unevaluated activities for notifications
-     */
-    private function getUnevaluatedActivities($user)
-    {
-        $unevaluatedActivities = [];
-
-        // Get unevaluated events
-        $unevaluatedEvents = Event::whereHas('attendances', function($query) use ($user) {
-            $query->where('user_id', $user->id)
-                  ->whereNotNull('attended_at');
-        })
-        ->whereDoesntHave('evaluations', function($query) use ($user) {
-            $query->where('user_id', $user->id);
-        })
-        ->get();
-
-        foreach ($unevaluatedEvents as $event) {
-            $attendance = $event->attendances()->where('user_id', $user->id)->first();
-            $unevaluatedActivities[] = [
-                'id' => $event->id,
-                'type' => 'event',
-                'title' => $event->title,
-                'date' => $attendance->attended_at ?? $event->event_date
-            ];
-        }
-
-        // Get unevaluated programs - FIXED: Remove status check
-        $unevaluatedPrograms = Program::whereHas('programRegistrations', function($query) use ($user) {
-            $query->where('user_id', $user->id);
-            // Remove status condition
-        })
-        ->whereDoesntHave('evaluations', function($query) use ($user) {
-            $query->where('user_id', $user->id);
-        })
-        ->get();
-
-        foreach ($unevaluatedPrograms as $program) {
-            $registration = $program->programRegistrations()->where('user_id', $user->id)->first();
-            $unevaluatedActivities[] = [
-                'id' => $program->id,
-                'type' => 'program',
-                'title' => $program->title,
-                'date' => $registration->created_at ?? $program->event_date
-            ];
-        }
-
-        return $unevaluatedActivities;
+        return view('evaluationpage', compact(
+            'allActivities',
+            'user',
+            'age',
+            'roleBadge',
+            'generalNotifications',
+            'unevaluatedActivities',
+            'totalNotificationCount',
+            'announcements'
+        ));
     }
 
     /**
@@ -186,10 +207,9 @@ class EvaluationController extends Controller
                 $activity = Event::find($validated['event_id']);
                 $activityType = 'event';
             } else {
-                // Check if user registered for this program - FIXED: Remove status check
+                // Check if user registered for this program
                 $registration = ProgramRegistration::where('user_id', $user->id)
                     ->where('program_id', $validated['program_id'])
-                    // Remove status condition
                     ->first();
 
                 if (!$registration) {
@@ -231,7 +251,7 @@ class EvaluationController extends Controller
                 'submitted_at' => now(),
             ]);
 
-            // Create notifications for SK users in the same barangay
+            // Create notifications for SK users
             $this->createEvaluationNotification($user, $activity, $evaluation, $activityType);
 
             Log::info("Evaluation submitted for {$activityType} {$activity->id} by user {$user->id}");
@@ -251,7 +271,7 @@ class EvaluationController extends Controller
     }
 
     /**
-     * Create notification for SK users when KK evaluates an event or program
+     * Create notification for SK users
      */
     private function createEvaluationNotification($kkUser, $activity, $evaluation, $activityType)
     {
@@ -268,6 +288,7 @@ class EvaluationController extends Controller
                     'user_id' => $skUser->id,
                     'evaluation_id' => $evaluation->id,
                     'type' => 'evaluation_submitted',
+                    'title' => 'New Evaluation Submitted',
                     'message' => "{$kkUser->given_name} {$kkUser->last_name} evaluated the {$activityTypeText} \"{$activity->title}\"",
                     'is_read' => false,
                 ]);
@@ -332,11 +353,10 @@ class EvaluationController extends Controller
             return redirect()->route('evaluation', ['#' => 'event-card-' . $event->id]);
         }
 
-        // If not event, try as program - FIXED: Remove status check
+        // If not event, try as program
         $program = Program::where('id', $id)
             ->whereHas('programRegistrations', function($query) use ($user) {
                 $query->where('user_id', $user->id);
-                // Remove status condition
             })
             ->first();
 
@@ -348,14 +368,31 @@ class EvaluationController extends Controller
     }
 
     /**
-     * Get certificates for evaluated events AND programs
-     * (FIX #8: Pinalitan ang 'request_status' ng Programs 
-     * mula 'null' -> 'not_applicable' para sa tamang button display)
+     * Mark notification as read
      */
+    public function markNotificationAsRead(Request $request, $id)
+    {
+        try {
+            $user = Auth::user();
+            
+            $notification = Notification::where('user_id', $user->id)
+                ->where('id', $id)
+                ->first();
+
+            if ($notification) {
+                $notification->update(['is_read' => true]);
+                return response()->json(['success' => true]);
+            }
+
+            return response()->json(['success' => false, 'error' => 'Notification not found'], 404);
+        } catch (\Exception $e) {
+            Log::error('Error marking notification as read: ' . $e->getMessage());
+            return response()->json(['success' => false, 'error' => 'Server error'], 500);
+        }
+    }
+
     /**
      * Get certificates for evaluated events AND programs
-     * (FIX #9: FINAL FIX. Kino-query na pareho ang events at programs
-     * gamit ang bagong 'program_id' column sa 'certificate_requests')
      */
     public function getCertificates(): JsonResponse
     {
@@ -365,7 +402,7 @@ class EvaluationController extends Controller
 
             Log::info("Fetching certificates for user: {$userId}, Barangay: {$user->barangay_id}");
 
-            // --- Get evaluated events (OKAY NA ITO) ---
+            // Get evaluated events
             $evaluatedEvents = Event::select(
                     'events.id', 
                     'events.title',
@@ -418,7 +455,7 @@ class EvaluationController extends Controller
                     }
                     return [
                         'event_id' => $event->id,
-                        'program_id' => null, // Malinaw na null ito
+                        'program_id' => null,
                         'event_title' => $event->title,
                         'event_date' => $eventDate,
                         'event_image' => $eventImage,
@@ -429,7 +466,7 @@ class EvaluationController extends Controller
                     ];
                 });
 
-            // --- Get evaluated programs (ITO YUNG INAYOS) ---
+            // Get evaluated programs
             $evaluatedPrograms = Program::select(
                     'programs.id', 
                     'programs.title',
@@ -442,9 +479,8 @@ class EvaluationController extends Controller
                 ->whereHas('evaluations', function($query) use ($userId) {
                     $query->where('user_id', $userId);
                 })
-                // --- ITO NA YUNG TAMANG JOIN ---
                 ->leftJoin('certificate_requests', function($join) use ($userId) {
-                    $join->on('programs.id', '=', 'certificate_requests.program_id') // Gamit na 'yung program_id
+                    $join->on('programs.id', '=', 'certificate_requests.program_id')
                          ->where('certificate_requests.user_id', '=', $userId);
                 })
                 ->with(['evaluations' => function($query) use ($userId) {
@@ -470,7 +506,6 @@ class EvaluationController extends Controller
                         } catch (\Exception $e) { Log::error("Error generating image URL: " . $e->getMessage()); }
                     }
                     
-                    // --- Gagamitin na rin natin 'yung totoong data ---
                     $canRequestAgain = false;
                     $requestCount = $program->request_count ?? 0;
                     if ($program->request_status === null) {
@@ -485,8 +520,8 @@ class EvaluationController extends Controller
                     }
 
                     return [
-                        'event_id' => null, // Malinaw na null ito
-                        'program_id' => $program->id, // Ipasa na 'yung program_id
+                        'event_id' => null,
+                        'program_id' => $program->id,
                         'event_title' => $program->title,
                         'event_date' => $programDate,
                         'event_image' => $programImage,

@@ -44,6 +44,16 @@ class ProfileController extends Controller
         // Get the default password from the database
         $defaultPassword = $user->default_password ?? 'Password not set';
 
+        // SK Role status
+        $skTitle = '';
+        if (!empty($user->sk_role)) {
+            $skTitle = $user->sk_role; 
+        } elseif ($user->role === 'sk_chairperson') {
+            $skTitle = 'SK Chairperson';
+        }
+        
+        $isSkOfficial = !empty($user->sk_role) || $user->role === 'sk_chairperson';
+
         // --- Notifications for Dropdown ---
         $generalNotifications = Notification::where('user_id', $user->id)
             ->orderBy('created_at', 'desc')
@@ -164,7 +174,9 @@ class ProfileController extends Controller
             'attendancePercentage',
             'totalActivities',
             'evaluatedActivities',
-            'activitiesToEvaluate'
+            'activitiesToEvaluate',
+            'skTitle',
+            'isSkOfficial'
         ));
     }
 

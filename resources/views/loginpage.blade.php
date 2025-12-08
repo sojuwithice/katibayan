@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KatiBayan - Login</title>
   
-  <!-- Security: Preload critical resources -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
@@ -15,27 +14,79 @@
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   
-  <!-- Security: CSRF Protection -->
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  
-  <!-- Security: Additional meta tags -->
   <meta name="robots" content="noindex, nofollow">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self';">
 </head>
 <body>
 
-  <!-- Security: Add hidden honeypot field -->
   <input type="hidden" id="security_token" name="security_token" value="{{ Str::random(32) }}">
 
+  <!-- Account Locked Modal -->
+  @if($account_locked ?? false)
+  <div class="account-locked-modal active" id="accountLockedModal">
+    <div class="locked-modal-content">
+      <div class="locked-modal-icon">
+        <i class="fas fa-lock"></i>
+      </div>
+      
+      <h2 class="locked-modal-title">Account Locked</h2>
+      
+      <p class="locked-modal-message">
+        Your account has been locked for security reasons. 
+        Please contact the administrator to restore access.
+      </p>
+      
+      <div class="locked-email-section">
+        <div class="locked-email-title">
+          <i class="fas fa-envelope"></i>
+          Contact Support
+        </div>
+        
+        <div class="email-display">
+          <a href="mailto:katibayan.system@gmail.com?subject=Account%20Locked%20-%20Support%20Request" 
+             class="email-address"
+             target="_blank"
+             rel="noopener noreferrer">
+            <i class="fas fa-paper-plane"></i>
+            katibayan.system@gmail.com
+          </a>
+          
+          <button class="copy-email-btn" onclick="copyEmailToClipboard()">
+            <i class="fas fa-copy"></i>
+            Copy Email
+          </button>
+        </div>
+        
+        <p style="font-size: 14px; color: #6c757d; margin-top: 10px;">
+          Click the email to contact support or copy it to your email client.
+        </p>
+      </div>
+      
+      <div class="locked-actions">
+        <button class="locked-btn locked-btn-close" onclick="closeLockedModal()">
+          <i class="fas fa-times"></i> Close
+        </button>
+        <button class="locked-btn locked-btn-email" onclick="window.open('mailto:katibayan.system@gmail.com', '_blank')">
+          <i class="fas fa-envelope"></i> Send Email
+        </button>
+      </div>
+      
+      <p class="locked-note">
+        <i class="fas fa-info-circle"></i> 
+        Include your account number and details for faster assistance.
+      </p>
+    </div>
+  </div>
+  @endif
+
   <div class="container">
-    <!-- Left side -->
     <div class="left-panel">
       <div class="welcome-text">Welcome to</div>
       <div class="brand-text">Kati<span>Bayan</span></div>
       <div class="portal-badge">Web Portal</div>
     </div>
 
-    <!-- Right side -->
     <div class="right-panel">
       <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
         <i data-lucide="moon"></i>
@@ -45,7 +96,6 @@
         <h2 class="login-title">LOGIN</h2>
         <p class="login-subtitle">Please login to your account</p>
 
-        <!-- Security: Enhanced error display -->
         @if ($errors->any())
         <div class="error-messages" role="alert">
             @foreach ($errors->all() as $error)
@@ -54,28 +104,22 @@
         </div>
         @endif
 
-        <!-- Lockout Message -->
         @if (session('lockout_message'))
         <div class="lockout-message" role="alert">
             <i class="fas fa-exclamation-triangle"></i> {{ session('lockout_message') }}
         </div>
         @endif
 
-        <!-- Success Message -->
         @if (session('success'))
         <div class="success-message" style="background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 10px; border-radius: 5px; margin-bottom: 15px;" role="alert">
             <i class="fas fa-check-circle"></i> {{ session('success') }}
         </div>
         @endif
 
-        <!-- Security: Add form submission protection -->
         <form action="{{ route('login.submit') }}" method="POST" id="loginForm" onsubmit="return validateForm()">
             @csrf
-
-            <!-- Security: Add hidden timestamp -->
             <input type="hidden" name="form_submit_time" id="form_submit_time" value="{{ time() }}">
 
-            <!-- Account Number -->
             <div class="form-group">
                 <input type="text" id="account_number" name="account_number" placeholder="Enter your Account Number" 
                        value="{{ old('account_number') }}" required 
@@ -88,7 +132,6 @@
                 @enderror
             </div>
 
-            <!-- Password -->
             <div class="form-group password-group">
                 <input type="password" id="password" name="password" placeholder="Password" required 
                        class="@if(session('lockout_message')) disabled-field @endif"
@@ -103,12 +146,10 @@
                 @enderror
             </div>
 
-            <!-- Security: Honeypot field for bots -->
             <div style="display: none;">
                 <input type="text" id="website" name="website" autocomplete="off">
             </div>
 
-            <!-- Attempts Counter -->
             @if(session('attempts_remaining'))
             <div class="attempts-warning" role="alert">
                 <i class="fas fa-exclamation-circle"></i> 
@@ -116,7 +157,6 @@
             </div>
             @endif
 
-            <!-- Remember me / Forgot password -->
             <div class="remember-forgot">
                 <label>
                     <input type="checkbox" name="remember" {{ old('remember') ? 'checked' : '' }}
@@ -127,7 +167,6 @@
                 <a href="#" class="forgot-password" id="forgotPasswordLink">Forgot Password?</a>
             </div>
 
-            <!-- Submit Button -->
             <button type="submit" class="login-button @if(session('lockout_message')) disabled-field @endif" 
                 @if(session('lockout_message')) disabled @endif
                 id="loginButton">
@@ -198,10 +237,82 @@
     </div>
   </div>
 
-  <!-- JS with Security Enhancements -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <script>
-    // Security: Form validation and protection
+    // Account Locked Modal Functions
+    function closeLockedModal() {
+        const modal = document.getElementById('accountLockedModal');
+        if (modal) {
+            modal.classList.remove('active');
+        }
+    }
+
+    function copyEmailToClipboard() {
+        const email = 'katibayan.system@gmail.com';
+        navigator.clipboard.writeText(email).then(() => {
+            const copyBtn = document.querySelector('.copy-email-btn');
+            const originalHtml = copyBtn.innerHTML;
+            copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            copyBtn.style.background = '#28a745';
+            
+            setTimeout(() => {
+                copyBtn.innerHTML = originalHtml;
+                copyBtn.style.background = '#6c757d';
+            }, 2000);
+        }).catch(err => {
+            console.error('Failed to copy email: ', err);
+            alert('Failed to copy email. Please copy it manually: katibayan.system@gmail.com');
+        });
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeLockedModal();
+        }
+    });
+
+    document.addEventListener('click', function(e) {
+        const modal = document.getElementById('accountLockedModal');
+        if (modal && e.target === modal) {
+            closeLockedModal();
+        }
+    });
+
+    // Auto-show locked modal if account is locked
+    document.addEventListener('DOMContentLoaded', function() {
+        <?php if($account_locked ?? false): ?>
+        const lockedModal = document.getElementById('accountLockedModal');
+        if (lockedModal) {
+            lockedModal.classList.add('active');
+        }
+        <?php endif; ?>
+        
+        // Initialize theme
+        const themeToggle = document.getElementById("themeToggle");
+        const htmlTag = document.documentElement;
+        const savedTheme = localStorage.getItem("theme") || "light";
+        htmlTag.setAttribute("data-theme", savedTheme);
+        updateIcon(savedTheme);
+
+        themeToggle.addEventListener("click", () => {
+            const currentTheme = htmlTag.getAttribute("data-theme");
+            const newTheme = currentTheme === "light" ? "dark" : "light";
+            htmlTag.setAttribute("data-theme", newTheme);
+            localStorage.setItem("theme", newTheme);
+            updateIcon(newTheme);
+        });
+
+        function updateIcon(theme) {
+            const icon = theme === "dark" ? "sun" : "moon";
+            themeToggle.innerHTML = `<i data-lucide="${icon}"></i>`;
+            themeToggle.setAttribute('aria-label', `Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`);
+            lucide.createIcons(); 
+        }
+        
+        lucide.createIcons();
+    });
+
+    // Form validation and protection
     let formSubmitted = false;
 
     function validateForm() {
@@ -210,22 +321,19 @@
             return false;
         }
 
-        // Check honeypot field
         const honeypot = document.getElementById('website').value;
         if (honeypot) {
             console.warn('Bot detected');
             return false;
         }
 
-        // Check form submission timing (prevent too quick submissions)
         const submitTime = Date.now();
-        const formLoadTime = parseInt('{{ time() }}') * 1000;
+        const formLoadTime = parseInt('<?php echo time(); ?>') * 1000;
         if (submitTime - formLoadTime < 1000) {
             console.warn('Form submitted too quickly');
             return false;
         }
 
-        // Validate inputs
         const accountNumber = document.getElementById('account_number').value.trim();
         const password = document.getElementById('password').value;
 
@@ -233,7 +341,6 @@
             return false;
         }
 
-        // Prevent XSS in inputs
         if (accountNumber.includes('<') || accountNumber.includes('>') || 
             password.includes('<') || password.includes('>')) {
             console.warn('Potential XSS attempt detected');
@@ -247,7 +354,7 @@
         return true;
     }
 
-    // Enhanced password toggle with security
+    // Password toggle
     function togglePassword() {
         const passwordField = document.getElementById("password");
         const eyeIcon = document.getElementById("eyeIcon");
@@ -265,57 +372,13 @@
         }
     }
 
-    // Security: Input sanitization
-    function sanitizeInput(input) {
-        return input.replace(/[<>]/g, '');
-    }
-
-    // Enhanced theme toggle
-    const themeToggle = document.getElementById("themeToggle");
-    const htmlTag = document.documentElement;
-    const savedTheme = localStorage.getItem("theme") || "light";
-    htmlTag.setAttribute("data-theme", savedTheme);
-    updateIcon(savedTheme);
-
-    themeToggle.addEventListener("click", () => {
-        const currentTheme = htmlTag.getAttribute("data-theme");
-        const newTheme = currentTheme === "light" ? "dark" : "light";
-        htmlTag.setAttribute("data-theme", newTheme);
-        localStorage.setItem("theme", newTheme);
-        updateIcon(newTheme);
-        
-        // Security: Log theme change for analytics
-        console.log('Theme changed to:', newTheme);
-    });
-
-    function updateIcon(theme) {
-        const icon = theme === "dark" ? "sun" : "moon";
-        themeToggle.innerHTML = `<i data-lucide="${icon}"></i>`;
-        themeToggle.setAttribute('aria-label', `Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`);
-        lucide.createIcons(); 
-    }
-
-    // Security: Auto-remove lockout with enhanced protection
-    <?php if(session('lockout_message')): ?>
-    setTimeout(() => {
-        window.location.reload();
-    }, 120000);
-    <?php endif; ?>
-
-    // Security: Enhanced modal functionality
+    // Forgot Password Modal Functions
     let modalOpen = false;
-
-    // === FORGOT PASSWORD MODAL SECURITY ENHANCEMENTS ===
     let otpTimer;
     const modal = document.getElementById('forgotModal');
     const forgotLink = document.getElementById('forgotPasswordLink');
     const messageBox = document.getElementById("forgotMessage");
     const otpInputs = document.querySelectorAll(".otp-input");
-
-    // Security: Rate limiting for OTP requests
-    let otpRequestCount = 0;
-    const maxOtpRequests = 3;
-    let lastOtpRequestTime = 0;
 
     function closeForgotModal() {
         modal.style.display = 'none';
@@ -355,6 +418,10 @@
         }, 1000);
     }
 
+    let otpRequestCount = 0;
+    const maxOtpRequests = 3;
+    let lastOtpRequestTime = 0;
+
     function canRequestOtp() {
         const now = Date.now();
         if (otpRequestCount >= maxOtpRequests) {
@@ -363,7 +430,7 @@
             return false;
         }
         
-        if (now - lastOtpRequestTime < 30000) { // 30 seconds cooldown
+        if (now - lastOtpRequestTime < 30000) {
             messageBox.textContent = "Please wait before requesting another OTP.";
             messageBox.className = 'form-message error';
             return false;
@@ -397,7 +464,7 @@
                 "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
                 "X-Requested-With": "XMLHttpRequest"
             },
-            body: JSON.stringify({ email: sanitizeInput(email) })
+            body: JSON.stringify({ email: email })
         })
         .then(res => {
             if (!res.ok) {
@@ -421,7 +488,7 @@
         .catch(err => {
             messageBox.textContent = err.message || "Server error. Please try again.";
             messageBox.className = 'form-message error';
-            otpRequestCount--; // Decrement on failure
+            otpRequestCount--;
         });
     }
 
@@ -442,7 +509,6 @@
         });
     }
 
-    // Security: Enhanced event listeners with validation
     forgotLink.addEventListener('click', (e) => {
         e.preventDefault();
         modal.style.display = 'block';
@@ -453,7 +519,6 @@
         if (event.target === modal) closeForgotModal();
     });
 
-    // Security: Prevent modal from opening multiple times
     document.getElementById("sendOtpBtn").addEventListener("click", () => {
         if (!modalOpen) return;
         requestOtp(false);
@@ -488,8 +553,8 @@
                 "X-Requested-With": "XMLHttpRequest"
             },
             body: JSON.stringify({ 
-                email: sanitizeInput(email), 
-                otp: sanitizeInput(otp) 
+                email: email, 
+                otp: otp 
             })
         })
         .then(res => res.json())
@@ -535,7 +600,7 @@
                 "X-Requested-With": "XMLHttpRequest"
             },
             body: JSON.stringify({ 
-                email: sanitizeInput(email), 
+                email: email, 
                 password: password, 
                 password_confirmation: password_confirmation 
             })
@@ -559,10 +624,8 @@
         });
     });
 
-    // Security: Enhanced OTP input handling
     otpInputs.forEach((input, index) => {
         input.addEventListener("input", (e) => {
-            // Only allow numbers
             input.value = input.value.replace(/\D/g, '');
             
             if (input.value.length === 1 && index < otpInputs.length - 1) {
@@ -576,7 +639,6 @@
             }
         });
         
-        // Security: Prevent paste in OTP fields
         input.addEventListener("paste", (e) => {
             e.preventDefault();
             messageBox.textContent = "Pasting is not allowed in OTP fields.";
@@ -584,30 +646,14 @@
         });
     });
 
-    // Initialize password toggles
     setupPasswordToggle('newPassword', 'toggleNewPassword');
     setupPasswordToggle('password_confirmation', 'toggleConfirmPassword');
 
-    // Security: Page load protection
-    document.addEventListener('DOMContentLoaded', function() {
-        // Clear any sensitive data from previous sessions
-        if (performance.navigation.type === 1) { // Page reload
-            console.log('Page reload detected - clearing sensitive data');
-        }
-        
-        // Security: Add no-cache headers simulation
-        window.onbeforeunload = function() {
-            // Clear sensitive form data if needed
-        };
-    });
-
-    // Security: Console protection (basic)
-    if (typeof console === "undefined") {
-        console = {};
-    }
-    if (typeof console.log === "undefined") {
-        console.log = function() {};
-    }
+    <?php if(session('lockout_message')): ?>
+    setTimeout(() => {
+        window.location.reload();
+    }, 120000);
+    <?php endif; ?>
   </script>
 
 </body>

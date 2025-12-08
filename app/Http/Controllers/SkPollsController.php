@@ -8,9 +8,21 @@ use Illuminate\Support\Facades\Auth;
 
 class SKPollsController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+    
     public function index()
     {
         $user = Auth::user();
+        
+        // Check if user exists and has barangay_id
+        if (!$user || !$user->barangay_id) {
+            // Handle unauthenticated or invalid user
+            $polls = collect();
+            return view('sk-polls', compact('user', 'polls'));
+        }
         
         // Get polls created by SK for their barangay
         $polls = Poll::with(['votes', 'user'])
@@ -24,6 +36,14 @@ class SKPollsController extends Controller
     public function store(Request $request)
     {
         $user = Auth::user();
+        
+        // Validate user has barangay_id
+        if (!$user->barangay_id) {
+            return response()->json([
+                'success' => false, 
+                'message' => 'User is not associated with a barangay'
+            ], 400);
+        }
         
         $request->validate([
             'question' => 'required|string|max:255',

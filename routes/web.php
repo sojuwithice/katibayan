@@ -45,6 +45,10 @@ use App\Models\Event;
 use App\Models\Program;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\OcrController;
+use App\Http\Controllers\BackupController;
+use App\Http\Controllers\FAQController;
+use App\Http\Controllers\MaintenanceController;
+
 
 Route::get('/', function () {
     return view('landingpage');
@@ -83,16 +87,17 @@ Route::post('/events/{id}/generate-passcode', [EventController::class, 'generate
 Route::delete('/events/{id}', [EventController::class, 'destroy'])->name('events.destroy');
 Route::get('/eventpage', [EventController::class, 'userEvents'])->name('eventpage');
 
-// routes/web.php
-Route::get('/faqspage', function () {
-    return view('faqspage'); 
-})->name('faqspage');
+
+// FAQs Routes
+
+Route::get('/faqs', [FAQController::class, 'index'])->name('faqs');
+Route::get('/faqspage', [FAQController::class, 'index'])->name('faqspage');
+
 Route::get('/sk-analytics', [SKAnalyticsController::class, 'index'])->name('sk.analytics');
 
 // FIXED: Suggestion Box route - use controller instead of direct view
 Route::get('/suggestionbox', [SuggestionController::class, 'index'])->name('suggestionbox');
 
-Route::view('/attendance', 'attendancepage')->name('attendancepage');
 
 Route::get('/service-offers', [ServiceOffersController::class, 'index'])->name('serviceoffers');
 
@@ -136,7 +141,8 @@ Route::get('/programs/{id}/edit', [ProgramController::class, 'edit'])->name('pro
 Route::put('/programs/{id}', [ProgramController::class, 'update'])->name('programs.update');
 Route::delete('/programs/{id}', [ProgramController::class, 'destroy'])->name('programs.destroy');
 
-// Program registration routes
+// Program registration routes - FIXED: Added missing route
+Route::post('/programs/register', [ProgramController::class, 'storeRegistration'])->name('programs.register'); // ADDED THIS LINE
 Route::post('/program-registrations', [ProgramController::class, 'storeRegistration'])->name('programs.store-registration');
 Route::get('/my-program-registrations', [ProgramController::class, 'getUserRegistrations'])->name('programs.my-registrations');
 Route::get('/programs/{programId}/registrations', [ProgramController::class, 'getProgramRegistrations'])->name('programs.registrations');
@@ -236,11 +242,26 @@ Route::get('/admin/analytics', [AdminController::class, 'analytics'])
     ->name('admin-analytics')
     ->middleware('auth:admin');
 
-Route::get('/user-management', [AdminController::class, 'userManagement']) 
-    ->name('user-management')
-    ->middleware('auth:admin'); 
+// ✅ User management route - FIXED NAME
+Route::get('/admin/user-management', [AdminController::class, 'userManagement'])
+    ->name('user-management2')
+    ->middleware('auth:admin');
 
-// User approval and rejection routes
+// ========== ADMIN USER MANAGEMENT API ROUTES ==========
+Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(function () {
+    // User Actions
+    Route::post('/users/{id}/approve', [AdminController::class, 'approve'])->name('users.approve');
+    Route::post('/users/{id}/reject', [AdminController::class, 'reject'])->name('users.reject');
+    Route::post('/users/{id}/lock', [AdminController::class, 'toggleLock'])->name('users.lock');
+    Route::delete('/users/{id}', [AdminController::class, 'deleteUser'])->name('users.delete');
+    Route::post('/users/{id}/delete', [AdminController::class, 'deleteUser'])->name('users.delete.post');
+    Route::get('/users/{id}/details', [AdminController::class, 'getUserDetails'])->name('users.details');
+    
+    // Notifications
+    Route::get('/notifications', [AdminController::class, 'getNotifications'])->name('notifications');
+});
+
+// User approval and rejection routes (legacy - keep for compatibility)
 Route::patch('/admin/users/{id}/approve', [AdminController::class, 'approve'])->name('admin.users.approve')->middleware('auth:admin');
 Route::patch('/admin/users/{id}/reject', [AdminController::class, 'reject'])->name('admin.users.reject')->middleware('auth:admin');
 
@@ -249,9 +270,7 @@ Route::get('/admin/login', [AdminLoginController::class, 'showLoginForm'])->name
 Route::post('/admin/login', [AdminLoginController::class, 'login'])->name('admin.login.post');
 Route::post('/admin/logout', [AdminLoginController::class, 'logout'])->name('admin.logout');
 
-Route::get('/admin/user-management', [AdminController::class, 'userManagement'])
-    ->name('user-management2')
-    ->middleware('auth:admin');
+
 
 // UPDATED: Users Feedback route - use controller instead of direct view
 Route::get('/users-feedback', [SystemFeedbackController::class, 'index'])->name('users-feedback')->middleware('auth:admin');
@@ -329,6 +348,7 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/programs/{id}', [ProgramController::class, 'destroy'])->name('programs.destroy');
     
     // Protected Program Registration Routes
+    Route::post('/programs/register', [ProgramController::class, 'storeRegistration'])->name('programs.register'); // ADDED INSIDE AUTH
     Route::post('/program-registrations', [ProgramController::class, 'storeRegistration'])->name('programs.store-registration');
     Route::get('/my-program-registrations', [ProgramController::class, 'getUserRegistrations'])->name('programs.my-registrations');
     Route::get('/programs/{programId}/registrations', [ProgramController::class, 'getProgramRegistrations'])->name('programs.registrations');
@@ -383,7 +403,7 @@ Route::get('/attendance/records', [AttendanceController::class, 'getAllAttendanc
 
 Route::get('/attendance/records', [AttendanceController::class, 'getEventAttendances'])
     ->name('attendance.records');
-
+Route::get('/attendance', [AttendanceController::class, 'showAttendancePage'])->name('attendancepage');
 // List of Attendees Route
 Route::get('/list-of-attendees', [AttendanceController::class, 'showAttendees'])->name('attendees.index');
 
@@ -599,3 +619,27 @@ Route::middleware(['auth:admin'])->group(function () {
 });
 
 Route::post('/process-ocr', [OcrController::class, 'process']);
+
+// Backup Routes
+Route::prefix('admin')->group(function () {
+    Route::get('/backup-data', [BackupController::class, 'getBackupData']);
+    Route::post('/backup/create', [BackupController::class, 'createBackup']);
+    Route::get('/backup/download/{filename}', [BackupController::class, 'downloadBackup']);
+    Route::delete('/backup/delete/{filename}', [BackupController::class, 'deleteBackup']);
+    Route::post('/backup/cleanup', [BackupController::class, 'cleanupOldBackups']);
+});
+
+// Maintenance Mode Routes
+Route::prefix('admin')->group(function () {
+    Route::get('/maintenance/status', [MaintenanceController::class, 'status']);
+    Route::post('/maintenance/enable', [MaintenanceController::class, 'enable']);
+    Route::post('/maintenance/disable', [MaintenanceController::class, 'disable']);
+    Route::post('/maintenance/update', [MaintenanceController::class, 'update']);
+    Route::get('/check-access', function() {
+        return response()->json(['access' => 'granted']);
+    })->middleware('auth'); // Only for authenticated admins
+});
+
+// Maintenance page route (must be outside middleware to always be accessible)
+Route::get('/maintenance', [MaintenanceController::class, 'showMaintenancePage']);
+

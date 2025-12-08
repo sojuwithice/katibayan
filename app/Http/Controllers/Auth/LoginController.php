@@ -5,23 +5,22 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Cache\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\Mail;
 use App\Models\User;
 use App\Models\Admin;
+use App\Mail\FailedLoginAlert;
 
 class LoginController extends Controller
 {
-    protected $maxAttempts = 5;
-    protected $decayMinutes = 2;
+    protected $maxAttempts = 3;
+    protected $decayMinutes = 5;
 
-    // Show login form
     public function showLoginForm()
     {
-        // Security: Check if user is already locked out
         $throttleKey = $this->throttleKey(request());
         if ($this->limiter()->tooManyAttempts($throttleKey, $this->maxAttempts)) {
             $seconds = $this->limiter()->availableIn($throttleKey);
@@ -30,16 +29,21 @@ class LoginController extends Controller
             return view('loginpage')->with('lockout_message', "Too many login attempts. Please try again in {$minutes} minutes.");
         }
 
-        // Security: Add CSRF token refresh
+        $accountLocked = session('account_locked', false);
+        $lockedUserEmail = session('locked_user_email', '');
+
         session()->regenerateToken();
 
-        return view('loginpage'); 
+        return view('loginpage', [
+            'account_locked' => $accountLocked,
+            'locked_user_email' => $lockedUserEmail
+        ]); 
     }
 
-    // Enhanced login with security measures
     public function login(Request $request)
     {
-        // Security: Validate request origin
+        Log::info('Login attempt started', ['ip' => $request->ip()]);
+
         if (!$this->isValidRequest($request)) {
             Log::warning('Suspicious login request', [
                 'ip' => $request->ip(),
@@ -51,19 +55,37 @@ class LoginController extends Controller
 
         $credentials = $request->validate([
             'account_number' => 'required|string|max:255',
-            'password' => 'required|string|max:255', // No min length requirement for default passwords
+            'password' => 'required|string|max:255',
         ]);
 
-        // Security: Check rate limiting
+        $user = User::where('account_number', $this->sanitizeInput($request->input('account_number')))->first();
+        
+        if ($user && $user->is_locked) {
+            Log::warning('Locked account login attempt', [
+                'account_number' => $user->account_number,
+                'user_id' => $user->id,
+                'ip_address' => $request->ip()
+            ]);
+            
+            $this->clearLoginAttempts($request);
+            
+            $request->session()->put('account_locked', true);
+            $request->session()->put('locked_user_email', $user->email);
+            
+            return redirect()->route('login')->with('account_locked', true);
+        }
+
         if ($this->hasTooManyLoginAttempts($request)) {
+            if ($user) {
+                $this->sendFailedLoginAlert($user, $request, $this->maxAttempts, true);
+            }
+            
             $this->fireLockoutEvent($request);
             return $this->sendLockoutResponse($request);
         }
 
-        // Security: Add artificial delay to prevent timing attacks
-        usleep(rand(100000, 300000)); // 100-300ms delay
+        usleep(rand(100000, 300000));
 
-        // FIRST: Try to login as ADMIN with enhanced security
         $adminCredentials = [
             'username' => $this->sanitizeInput($request->input('account_number')),
             'password' => $request->input('password'),
@@ -74,40 +96,23 @@ class LoginController extends Controller
             $request->session()->regenerate();
             $this->clearLoginAttempts($request);
             
-            // Security: Set secure session cookie
-            $this->setSecureSessionConfig($request);
-            
             return redirect()->route('admindashb')
                 ->with('success', 'Welcome, Admin!');
         }
 
-        // SECOND: Try to login as regular USER with enhanced security
         $userCredentials = [
             'account_number' => $this->sanitizeInput($request->input('account_number')),
             'password' => $request->input('password'),
         ];
 
-        // Security: Additional user validation
-        $user = User::where('account_number', $userCredentials['account_number'])->first();
-        
-        if ($user && $user->account_status !== 'approved') {
-            $this->incrementLoginAttempts($request);
-            return back()->withErrors([
-                'account_number' => 'Account is not approved or has been suspended.',
-            ])->withInput();
-        }
-
-        if (Auth::attempt($userCredentials, $request->boolean('remember'))) {
+        if ($user && Auth::attempt($userCredentials, $request->boolean('remember'))) {
             $this->logSuccessfulLogin($request, 'user');
             $request->session()->regenerate();
             $this->clearLoginAttempts($request);
             
-            // Security: Set secure session cookie
-            $this->setSecureSessionConfig($request);
+            $request->session()->forget('account_locked');
+            $request->session()->forget('locked_user_email');
 
-            $user = Auth::user();
-
-            // Role-based redirect
             if ($user->role === 'sk') {
                 return redirect()->intended('/sk-dashboard')
                     ->with('success', 'Logged in successfully.');
@@ -120,94 +125,49 @@ class LoginController extends Controller
                 ->with('success', 'Logged in successfully.');
         }
 
-        // Security: Handle failed login
         return $this->handleFailedLogin($request);
     }
 
-    // Enhanced logout with security measures
-    public function logout(Request $request)
-    {
-        // Security: Log logout activity
-        $userType = Auth::guard('admin')->check() ? 'admin' : 'user';
-        Log::info('User logout', [
-            'user_type' => $userType,
-            'user_id' => Auth::guard('admin')->check() ? Auth::guard('admin')->id() : Auth::id(),
-            'ip_address' => $request->ip()
-        ]);
-
-        if (Auth::guard('admin')->check()) {
-            Auth::guard('admin')->logout();
-        } else {
-            Auth::logout();
-        }
-        
-        // Security: Complete session destruction
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        // Security: Clear remember me cookie
-        Cookie::queue(Cookie::forget('remember_web_' . sha1(static::class)));
-
-        return redirect('/login')->with('success', 'Logged out successfully.');
-    }
-
-    /**
-     * SECURITY ENHANCEMENTS
-     */
-    
-    // Input sanitization
-    protected function sanitizeInput($input)
-    {
-        return htmlspecialchars(strip_tags(trim($input)), ENT_QUOTES, 'UTF-8');
-    }
-
-    // Request validation
-    protected function isValidRequest(Request $request)
-    {
-        // Check if request comes from same origin
-        $referer = $request->header('referer');
-        $host = $request->getHost();
-        
-        if ($referer && !str_contains($referer, $host)) {
-            return false;
-        }
-
-        // Check user agent
-        $userAgent = $request->userAgent();
-        if (!$userAgent || strlen($userAgent) > 500) {
-            return false;
-        }
-
-        return true;
-    }
-
-    // Enhanced failed login handling
     protected function handleFailedLogin(Request $request)
     {
-        // Security: Constant-time response to prevent timing attacks
-        usleep(rand(200000, 500000)); // 200-500ms delay
-
+        usleep(rand(200000, 500000));
         $this->incrementLoginAttempts($request);
 
-        // Security: Log failed attempt
-        Log::warning('Failed login attempt', [
-            'account_number' => $request->input('account_number'),
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-            'attempts' => $this->limiter()->attempts($this->throttleKey($request))
-        ]);
+        $user = User::where('account_number', $this->sanitizeInput($request->input('account_number')))->first();
+        
+        if ($user && $user->is_locked) {
+            $request->session()->put('account_locked', true);
+            $request->session()->put('locked_user_email', $user->email);
+            return redirect()->route('login')->with('account_locked', true);
+        }
 
-        // Check if this failed attempt triggered a lockout
+        $attempts = $this->limiter()->attempts($this->throttleKey($request));
+        $remaining = $this->maxAttempts - $attempts;
+        
+        Log::info('Failed login attempt details', [
+            'account_number' => $request->input('account_number'),
+            'attempts' => $attempts,
+            'remaining' => $remaining,
+            'user_found' => $user ? 'Yes' : 'No'
+        ]);
+        
+        if ($user) {
+            if ($attempts == 2) {
+                Log::info('Sending 2nd attempt alert for user: ' . $user->id);
+                $this->sendFailedLoginAlert($user, $request, $attempts, false);
+            }
+            
+            if ($this->hasTooManyLoginAttempts($request)) {
+                Log::info('Sending lockout alert for user: ' . $user->id);
+                $this->sendFailedLoginAlert($user, $request, $attempts, true);
+            }
+        }
+
         if ($this->hasTooManyLoginAttempts($request)) {
             $this->fireLockoutEvent($request);
             return $this->sendLockoutResponse($request);
         }
 
-        // Calculate remaining attempts
-        $attempts = $this->limiter()->attempts($this->throttleKey($request));
-        $remaining = $this->maxAttempts - $attempts;
-        
-        // Generic error message to prevent user enumeration
         $errorMessage = 'Invalid account number or password.';
         if ($remaining > 0 && $remaining <= 3) {
             $errorMessage .= " You have {$remaining} attempt(s) remaining.";
@@ -218,17 +178,87 @@ class LoginController extends Controller
         ])->withInput($request->only('account_number', 'remember'));
     }
 
-    // Secure session configuration
-    protected function setSecureSessionConfig(Request $request)
+    protected function sendFailedLoginAlert($user, $request, $attempts = null, $isLockout = false)
     {
-        config([
-            'session.http_only' => true,
-            'session.secure' => true, // Ensure HTTPS in production
-            'session.same_site' => 'lax',
-        ]);
+        try {
+            Log::info('Attempting to send email alert', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'attempts' => $attempts,
+                'is_lockout' => $isLockout
+            ]);
+
+            if (!$attempts) {
+                $attempts = $this->limiter()->attempts($this->throttleKey($request));
+            }
+            
+            $remainingAttempts = $this->maxAttempts - $attempts;
+            $subject = $isLockout ? 
+                "🚨 ACCOUNT LOCKOUT: {$user->account_number} - {$user->given_name} {$user->last_name}" :
+                "⚠️ Failed Login Attempts: {$user->account_number} - {$user->given_name} {$user->last_name}";
+            
+            $data = [
+                'user_name' => $user->given_name . ' ' . $user->last_name,
+                'account_number' => $user->account_number,
+                'email' => $user->email,
+                'attempts' => $attempts,
+                'max_attempts' => $this->maxAttempts,
+                'remaining_attempts' => $remainingAttempts,
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+                'timestamp' => now()->format('Y-m-d H:i:s'),
+                'is_lockout' => $isLockout,
+                'lockout_duration' => $this->decayMinutes
+            ];
+            
+            Log::info('Sending failed login alert email', [
+                'to' => 'katibayan.system@gmail.com',
+                'subject' => $subject,
+                'data' => $data
+            ]);
+            
+            // Send ONLY the actual alert email
+            Mail::to('katibayan.system@gmail.com')
+                ->send(new FailedLoginAlert($subject, $data));
+            
+            Log::info('Failed login alert sent successfully', [
+                'user_id' => $user->id,
+                'account_number' => $user->account_number,
+                'attempts' => $attempts,
+                'email_sent' => true
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('FAILED TO SEND LOGIN ALERT EMAIL', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'user_id' => $user->id ?? 'unknown'
+            ]);
+        }
     }
 
-    // Login activity logging
+    protected function sanitizeInput($input)
+    {
+        return htmlspecialchars(strip_tags(trim($input)), ENT_QUOTES, 'UTF-8');
+    }
+
+    protected function isValidRequest(Request $request)
+    {
+        $referer = $request->header('referer');
+        $host = $request->getHost();
+        
+        if ($referer && !str_contains($referer, $host)) {
+            return false;
+        }
+
+        $userAgent = $request->userAgent();
+        if (!$userAgent || strlen($userAgent) > 500) {
+            return false;
+        }
+
+        return true;
+    }
+
     protected function logSuccessfulLogin(Request $request, $userType)
     {
         Log::info('Successful login', [
@@ -240,9 +270,6 @@ class LoginController extends Controller
         ]);
     }
 
-    /**
-     * Rate Limiting Methods
-     */
     protected function limiter()
     {
         return app(RateLimiter::class);
@@ -250,7 +277,6 @@ class LoginController extends Controller
 
     protected function throttleKey(Request $request)
     {
-        // Enhanced throttle key with IP and user agent
         return Str::lower($request->input('account_number')).'|'.$request->ip();
     }
 
@@ -291,5 +317,28 @@ class LoginController extends Controller
 
         return back()->with('lockout_message', 'Too many login attempts. Please try again in '.$this->decayMinutes.' minutes.')
                     ->withInput($request->only('account_number', 'remember'));
+    }
+
+    public function logout(Request $request)
+    {
+        $userType = Auth::guard('admin')->check() ? 'admin' : 'user';
+        Log::info('User logout', [
+            'user_type' => $userType,
+            'user_id' => Auth::guard('admin')->check() ? Auth::guard('admin')->id() : Auth::id(),
+            'ip_address' => $request->ip()
+        ]);
+
+        if (Auth::guard('admin')->check()) {
+            Auth::guard('admin')->logout();
+        } else {
+            Auth::logout();
+        }
+        
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        Cookie::queue(Cookie::forget('remember_web_' . sha1(static::class)));
+
+        return redirect('/login')->with('success', 'Logged out successfully.');
     }
 }

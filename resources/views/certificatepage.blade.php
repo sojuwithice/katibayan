@@ -53,7 +53,7 @@
   <!-- Main -->
   <div class="main">
 
-    <!-- Topbar -->
+    <!-- Topbar - MATCHES DASHBOARD -->
     <header class="topbar">
       <button id="mobileMenuBtn" class="mobile-hamburger">
         <i data-lucide="menu"></i>
@@ -69,12 +69,11 @@
       <div class="topbar-right">
         <div class="time">MON 10:00 <span>AM</span></div>
 
-        
         <button class="theme-toggle" id="themeToggle">
           <i data-lucide="moon"></i>
         </button>
 
-        <!-- Notifications - UPDATED TO MATCH DASHBOARD -->
+        <!-- Notifications - EXACT SAME AS DASHBOARD -->
         <div class="notification-wrapper">
           <i class="fas fa-bell"></i>
           @if($notificationCount > 0)
@@ -91,14 +90,26 @@
             <ul class="notif-list">
               @foreach ($generalNotifications as $notif)
                 @php
-                  $link = '#'; // Default
+                  $link = '#';
+                  $onclickAction = '';
+                  
                   if ($notif->type == 'certificate_schedule') {
                     $link = route('certificatepage'); 
+                  } 
+                  elseif ($notif->type == 'sk_request_approved' || $notif->type == 'App\Notifications\SkRequestAccepted') { 
+                    $link = '#'; 
+                    $onclickAction = 'openSetRoleModal(); return false;';
                   }
+
+                  $title = $notif->data['title'] ?? $notif->title ?? 'Notification';
+                  $message = $notif->data['message'] ?? $notif->message ?? 'You have a new notification.';
                 @endphp
                 
                 <li>
-                  <a href="{{ $link }}" class="notif-link {{ $notif->is_read == 0 ? 'unread' : '' }}" data-id="{{ $notif->id }}">
+                  <a href="{{ $link }}" 
+                     class="notif-link {{ $notif->is_read == 0 ? 'unread' : '' }}" 
+                     data-id="{{ $notif->id }}"
+                     @if($onclickAction) onclick="{{ $onclickAction }}" @endif>
                     
                     <div class="notif-dot-container">
                       @if ($notif->is_read == 0)
@@ -110,12 +121,12 @@
 
                     <div class="notif-main-content">
                       <div class="notif-header-line">
-                        <strong>{{ $notif->title }}</strong>
+                        <strong>{{ $title }}</strong>
                         <span class="notif-timestamp">
                           {{ $notif->created_at->format('m/d/Y g:i A') }}
                         </span>
                       </div>
-                      <p class="notif-message">{{ $notif->message }}</p>
+                      <p class="notif-message">{{ $message }}</p>
                     </div>
                   </a>
                 </li>
@@ -152,36 +163,81 @@
           </div>
         </div>
 
-        <!-- Profile Avatar -->
+        <!-- Profile Avatar - MATCHES DASHBOARD -->
         <div class="profile-wrapper">
           <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
                alt="User" class="avatar" id="profileToggle">
+          
           <div class="profile-dropdown">
             <div class="profile-header">
               <img src="{{ $user && $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png') }}" 
                    alt="User" class="profile-avatar">
+                   
               <div class="profile-info">
                 <h4>{{ $user->given_name }} {{ $user->middle_name }} {{ $user->last_name }} {{ $user->suffix }}</h4>
-                <div class="profile-badge">
-                  <span class="badge">{{ $roleBadge }}</span>
-                  <span class="badge">{{ $age }} yrs old</span>
+                
+                <!-- Badges - MATCHES DASHBOARD -->
+                <div class="badges-wrapper">
+                  <div class="profile-badge">
+                    <span class="badge">{{ $roleBadge }}</span>
+                    <span class="badge">{{ $age }} yrs old</span>
+                  </div>
+
+                  @php
+                    $skTitle = '';
+                    if (!empty(Auth::user()->sk_role)) {
+                      $skTitle = Auth::user()->sk_role; 
+                    } 
+                    elseif (Auth::user()->role === 'sk_chairperson') {
+                      $skTitle = 'SK Chairperson';
+                    }
+                  @endphp
+
+                  @if($skTitle)
+                    <div class="profile-badge sk-badge-yellow">
+                      <span>{{ $skTitle }}</span>
+                    </div>
+                  @endif
                 </div>
               </div>
             </div>
             <hr>
+            
+            <div class="profile-button-container">
+              @php
+                $isSkOfficial = !empty(Auth::user()->sk_role) || Auth::user()->role === 'sk_chairperson';
+              @endphp
+
+              @if($isSkOfficial)
+                <a href="{{ route('sk.role.view') }}" class="profile-sk-button">
+                  Switch to SK Role
+                </a>
+              @else
+                <a href="#" class="profile-sk-button" id="accessSKRoleBtn" data-url="{{ route('sk.request.access') }}">
+                  Access SK role
+                </a>
+              @endif
+            </div>
+            
             <ul class="profile-menu">
               <li>
                 <a href="{{ route('profilepage') }}">
                   <i class="fas fa-user"></i> Profile
                 </a>
               </li>
-              <li><i class="fas fa-cog"></i> Manage Password</li>
+      
               <li>
-                <a href="{{ route('faqspage') }}">
+                <a href="{{ route('faqs') }}">
                   <i class="fas fa-question-circle"></i> FAQs
                 </a>
               </li>
-              <li><i class="fas fa-star"></i> Send Feedback to Katibayan</li>
+
+              <li>
+                <a href="#" id="openFeedbackBtn">
+                  <i class="fas fa-star"></i> Send Feedback to Katibayan
+                </a>
+              </li>
+
               <li class="logout-item">
                 <a href="loginpage" onclick="confirmLogout(event)">
                   <i class="fas fa-sign-out-alt"></i> Logout
@@ -198,62 +254,222 @@
       </div>
     </header>
 
-   <!-- Certificates Section -->
-<section class="certificates">
+    <!-- SK Access Modal - MATCHES DASHBOARD -->
+    <div id="skAccessModal" class="modal-overlay" style="display: none;">
+      <div class="sk-modal-box"> 
+        <div class="modal-step active" data-step="1">
+          <h2>Do you want to request access?</h2>
+          <p>This will send a request to your SK Chairperson for permission to access your SK role. Would you like to proceed?</p>
+          
+          <div class="modal-actions" style="justify-content: flex-end;">
+            <button type="button" class="btn btn-cancel" data-action="close">Cancel</button>
+            <button type="button" class="btn btn-confirm" data-action="confirm-request">Yes</button>
+          </div>
+        </div>
 
-  <!-- Header box with border -->
-  <div class="certificates-header">
-    <h2 id="certHeader">Your Certificates</h2>
-    <p id="certificateCountText">Loading certificates...</p>
-  </div>
+        <div class="modal-step" data-step="2">
+          <div class="spinner"></div>
+          <p>Please wait while we send your request to the SK Chairperson. This will just take a moment.</p>
+        </div>
 
-  <!-- Certificate groups will be dynamically populated -->
-  <div id="certificatesContainer">
-    <!-- Content will be loaded via JavaScript -->
-  </div>
+        <div class="modal-step" data-step="3">
+          <div class="modal-icon-wrapper success">
+            <i class="fas fa-check"></i>
+          </div>
+          <h2>Request Sent</h2>
+          <p>Thank you. Your request has been submitted. You will be notified once it is reviewed and approved.</p>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-confirm" data-action="close">OK</button>
+          </div>
+        </div>
 
-  <!-- Empty state -->
-  <div class="empty-state" id="emptyState">
-    <div class="empty-box">
-      <div class="empty-icon">⌀</div>
-      <p>You don't have any certificates yet</p>
-      <p class="sub-message">Complete event evaluations to earn certificates</p>
+        <div class="modal-step" data-step="4">
+          <div class="modal-icon-wrapper error">
+            <i class="fas fa-exclamation-triangle"></i> 
+          </div>
+          <h2>Something went wrong</h2>
+          <p>Please check your network and try again.</p>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-confirm" data-action="try-again">Try again</button>
+          </div>
+        </div>
+      </div> 
     </div>
-  </div>
 
-  <!-- Modal -->
-  <div class="modal-overlay" id="modalOverlay">
-    <div class="modal-box">
-      <div class="modal-icon">
-        <i class="fa-solid fa-check"></i>
+    <!-- Set Role Modal - MATCHES DASHBOARD -->
+    <div id="setRoleModal" class="modal-overlay" style="display: none;">
+      <div class="set-role-modal-content">
+        <h2>Choose your role as SK</h2>
+        <form id="setRoleForm">
+          <div class="role-options-list">
+            <label class="role-option">
+              <input type="radio" name="sk_role" value="Kagawad" checked>
+              <span class="radio-circle"></span>
+              <span class="role-name">Kagawad</span>
+            </label>
+            <label class="role-option">
+              <input type="radio" name="sk_role" value="Secretary">
+              <span class="radio-circle"></span>
+              <span class="role-name">Secretary</span>
+            </label>
+            <label class="role-option">
+              <input type="radio" name="sk_role" value="Treasurer">
+              <span class="radio-circle"></span>
+              <span class="role-name">Treasurer</span>
+            </label>
+          </div>
+          
+          <div class="modal-actions">
+            <button type="submit" class="btn btn-confirm">Set Role</button>
+          </div>
+        </form>
       </div>
-      <h2>Request Submitted!</h2>
-      <p>You'll be notified once your certificate is ready for claiming.</p>
-      <button id="closeModal">OK</button>
     </div>
+
+    <!-- Feedback Modal - MATCHES DASHBOARD -->
+    <div id="feedbackModal" class="modal-overlay">
+      <div class="modal-content">
+        <span class="close-btn" id="closeModal">&times;</span>
+        <h2>Send us feedback</h2>
+        <p>Help us improve by sharing your thoughts, suggestions, and experiences with our service.</p>
+
+        <div class="feedback-options">
+          <div class="option-card">
+            <i class="fas fa-star"></i>
+            <p><strong>Star Rating</strong><br>Rate your experience with 1–5 stars</p>
+          </div>
+          <div class="option-card">
+            <i class="fas fa-comment"></i> 
+            <p><strong>Comment Section</strong><br>Share your thoughts</p>
+          </div>
+          <div class="option-card">
+            <i class="fas fa-bolt"></i>
+            <p><strong>Quick Submission</strong><br>Simple and intuitive feedback process</p>
+          </div>
+        </div>
+
+        <h3>Enjoying it? Rate us!</h3>
+        <div class="star-rating" id="starRating">
+          <i class="far fa-star" data-value="1"></i>
+          <i class="far fa-star" data-value="2"></i>
+          <i class="far fa-star" data-value="3"></i>
+          <i class="far fa-star" data-value="4"></i>
+          <i class="far fa-star" data-value="5"></i>
+        </div>
+
+        <form id="feedbackForm" action="{{ route('feedback.submit') }}" method="POST">
+          @csrf
+          
+          <label for="type">Feedback Type</label>
+          
+          <div class="custom-select-wrapper" id="customSelect">
+            <div class="custom-select-trigger">
+              <span id="selectedFeedbackType">Select feedback type</span>
+              <div class="custom-arrow"></div>
+            </div>
+            
+            <div class="custom-options-list">
+              <div class="custom-option" data-value="suggestion">
+                <span class="dot suggestion"></span> Suggestion
+              </div>
+              <div class="custom-option" data-value="bug">
+                <span class="dot bug"></span> Bug or Issue
+              </div>
+              <div class="custom-option" data-value="appreciation">
+                <span class="dot appreciation"></span> Appreciation
+              </div>
+              <div class="custom-option" data-value="others">
+                <span class="dot others"></span> Others
+              </div>
+            </div>
+            
+            <select id="type" name="type" required style="display: none;">
+              <option value="" disabled selected>Select feedback type</option>
+              <option value="suggestion">Suggestion</option>
+              <option value="bug">Bug or Issue</option>
+              <option value="appreciation">Appreciation</option>
+              <option value="others">Others</option>
+            </select>
+          </div>
+          
+          <label for="message">Your message</label>
+          <textarea id="message" name="message" rows="5"></textarea>
+
+          <input type="hidden" name="rating" id="ratingInput">
+          
+          <div class="form-actions">
+            <button type="submit" class="submit-btn">Submit</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Success Modal - MATCHES DASHBOARD -->
+    <div id="successModal" class="modal-overlay simple-alert-modal">
+      <div class="modal-content">
+        <div class="success-icon">
+          <i class="fas fa-check"></i>
+        </div>
+        <h2>Submitted</h2>
+        <p>Thank you for your feedback! Your thoughts help us improve.</p>
+        <button id="closeSuccessModal" class="ok-btn">OK</button>
+      </div>
+    </div>
+
+    <!-- Certificates Section -->
+    <section class="certificates">
+      <!-- Header box with border -->
+      <div class="certificates-header">
+        <h2 id="certHeader">Your Certificates</h2>
+        <p id="certificateCountText">Loading certificates...</p>
+      </div>
+
+      <!-- Certificate groups will be dynamically populated -->
+      <div id="certificatesContainer">
+        <!-- Content will be loaded via JavaScript -->
+      </div>
+
+      <!-- Empty state -->
+      <div class="empty-state" id="emptyState">
+        <div class="empty-box">
+          <div class="empty-icon">⌀</div>
+          <p>You don't have any certificates yet</p>
+          <p class="sub-message">Complete event evaluations to earn certificates</p>
+        </div>
+      </div>
+
+      <!-- Certificate Request Modal -->
+      <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-box">
+          <div class="modal-icon">
+            <i class="fa-solid fa-check"></i>
+          </div>
+          <h2>Request Submitted!</h2>
+          <p>You'll be notified once your certificate is ready for claiming.</p>
+          <button id="closeModal">OK</button>
+        </div>
+      </div>
+    </section>
   </div>
 
-</section>
-
-  </div>
-
+  <!-- JavaScript - SHARED FUNCTIONALITY -->
   <script>
+    // Make CSRF token globally available
+    window.csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
     document.addEventListener("DOMContentLoaded", () => {
-      // === DARK/LIGHT MODE TOGGLE ===
+      // === DARK/LIGHT MODE TOGGLE (Same as dashboard) ===
       const body = document.body;
       const themeToggle = document.getElementById('themeToggle');
 
-      // Function to apply theme
       function applyTheme(isDark) {
         body.classList.toggle('dark-mode', isDark);
-        // Show sun when dark mode, moon when light mode
         const icon = isDark ? 'sun' : 'moon';
 
         if (themeToggle) {
           themeToggle.innerHTML = `<i data-lucide="${icon}"></i>`;
         }
 
-        // Re-initialize Lucide icons
         if (typeof lucide !== 'undefined') {
           lucide.createIcons();
         }
@@ -262,11 +478,9 @@
         document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
       }
 
-      // Load saved theme
       const savedTheme = localStorage.getItem('theme') === 'dark';
       applyTheme(savedTheme);
 
-      // Add event listener to theme toggle
       if (themeToggle) {
         themeToggle.addEventListener('click', () => {
           const isDark = !body.classList.contains('dark-mode');
@@ -279,7 +493,7 @@
         lucide.createIcons();
       }
 
-      // === Elements ===
+      // === Shared UI Components (Same as dashboard) ===
       const menuToggle = document.querySelector('.menu-toggle');
       const sidebar = document.querySelector('.sidebar');
       const profileItem = document.querySelector('.profile-item');
@@ -290,11 +504,9 @@
       const notifWrapper = document.querySelector(".notification-wrapper");
       const notifBell = notifWrapper?.querySelector(".fa-bell");
       const notifDropdown = notifWrapper?.querySelector(".notif-dropdown");
-      const modalOverlay = document.getElementById('modalOverlay');
-      const closeModal = document.getElementById('closeModal');
       const timeEl = document.querySelector(".time");
 
-      // === Sidebar toggle ===
+      // === Sidebar toggle (Same as dashboard) ===
       menuToggle?.addEventListener('click', (e) => {
         e.stopPropagation();
         sidebar.classList.toggle('open');
@@ -303,12 +515,11 @@
         }
       });
 
-      // Helper: close all submenus
       function closeAllSubmenus() {
         profileItem?.classList.remove('open');
       }
 
-      // === Profile submenu toggle ===
+      // === Profile submenu toggle (Same as dashboard) ===
       if (profileItem && profileLink) {
         profileLink.addEventListener('click', (e) => {
           e.preventDefault();
@@ -320,7 +531,7 @@
         });
       }
 
-      // === Global Click Listeners (Close dropdowns/sidebar) ===
+      // === Global Click Listeners (Same as dashboard) ===
       document.addEventListener('click', (e) => {
         if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
           sidebar.classList.remove('open');
@@ -334,7 +545,7 @@
         }
       });
 
-      // === Topbar Dropdowns ===
+      // === Topbar Dropdowns (Same as dashboard) ===
       if (profileToggle) {
         profileToggle.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -353,7 +564,7 @@
       }
       notifDropdown?.addEventListener('click', e => e.stopPropagation());
 
-      // === Time auto-update ===
+      // === Time auto-update (Same as dashboard) ===
       function updateTime() {
         if (!timeEl) return;
         const now = new Date();
@@ -371,7 +582,7 @@
       updateTime();
       setInterval(updateTime, 60000);
 
-      // === Notification Mark as Read ===
+      // === Notification Mark as Read (Same as dashboard) ===
       function initMarkAsRead() {
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
         if (!csrfToken) {
@@ -427,28 +638,30 @@
         });
       }
 
-      // === (HELPER FUNCTION) Para sa status button ===
+      // Initialize notification mark as read
+      initMarkAsRead();
+
+      // === Certificate-specific JavaScript ===
+      const certificateModalOverlay = document.getElementById('modalOverlay');
+      const closeCertificateModal = document.getElementById('closeModal');
+
+      // Helper function for certificate status button
       function getCertificateAction(cert) {
         const status = cert.request_status;
         
-        // Alamin kung event_id o program_id ang gagamitin
-        const isEvent = !!cert.event_id; // true kung may event_id
+        const isEvent = !!cert.event_id;
         const activityId = isEvent ? cert.event_id : cert.program_id;
         const idType = isEvent ? 'data-event-id' : 'data-program-id';
 
-        // Rule 1: Kung claimed na, tapos na.
         if (status === 'claimed') {
             return `<button class="print-btn status-claimed" disabled>Claimed</button>`;
         }
 
-        // Rule 2: Kung pwede siya mag-request (base sa logic ng Controller)
         if (cert.can_request_again) {
             const buttonText = (status === null) ? 'Print Request' : 'Request Again';
-            // Gagamitin na natin yung 'idType' at 'activityId'
             return `<button class="print-btn" ${idType}="${activityId}">${buttonText}</button>`;
         }
 
-        // Rule 3: Kung HINDI siya pwede mag-request
         switch (status) {
           case 'requesting': 
             return `<button class="print-btn status-pending" disabled>Request Pending</button>`;
@@ -459,12 +672,11 @@
           case 'rejected':
             return `<button class="print-btn status-rejected" disabled>Request Rejected</button>`;
           default: 
-            // Para sa mga kaso na hindi nahabol (e.g. max na)
             return `<button class="print-btn status-pending" disabled>Request Limit Reached</button>`;
         }
       }
 
-      // === Load Certificates ===
+      // Load Certificates
       async function loadCertificates() {
         try {
           const response = await fetch('/evaluation/certificates', {
@@ -486,7 +698,7 @@
         }
       }
 
-      // === Display Certificates ===
+      // Display Certificates
       function displayCertificates(certificates) {
         const container = document.getElementById('certificatesContainer');
         const emptyState = document.getElementById('emptyState');
@@ -540,18 +752,16 @@
 
         // Add event listener for print requests
         container.addEventListener('click', e => {
-          // Check if 'print-btn' was clicked and it's not disabled
           if (e.target.classList.contains('print-btn') && !e.target.disabled) {
             handlePrintRequest(e);
           }
         });
       }
 
-      // === Group Certificates by Month ===
+      // Group Certificates by Month
       function groupCertificatesByMonth(certificates) {
         const groups = {};
         certificates.forEach(cert => {
-          // Parse the evaluation date
           const evalDate = new Date(cert.evaluated_at);
           const monthYear = evalDate.toLocaleDateString('en-US', { 
             month: 'long', 
@@ -565,7 +775,7 @@
         return groups;
       }
 
-      // === Show Empty State ===
+      // Show Empty State
       function showEmptyState() {
         const container = document.getElementById('certificatesContainer');
         const emptyState = document.getElementById('emptyState');
@@ -575,12 +785,11 @@
         certCountText.textContent = 'You have a total of 0 certificates.';
       }
 
-      // === Handle Print Request ===
+      // Handle Print Request
       async function handlePrintRequest(e) {
         const printButton = e.target;
         const originalText = printButton.textContent;
         
-        // Get the activity ID (event or program)
         const eventId = printButton.getAttribute('data-event-id');
         const programId = printButton.getAttribute('data-program-id');
         
@@ -598,7 +807,6 @@
         printButton.textContent = 'Submitting...';
 
         try {
-          // Send request to certificate-request endpoint
           const response = await fetch('/certificate-request', {
             method: 'POST',
             headers: {
@@ -611,7 +819,7 @@
           const data = await response.json();
 
           if (response.ok) {
-            modalOverlay.style.display = 'flex';
+            certificateModalOverlay.style.display = 'flex';
             printButton.textContent = 'Request Pending';
             printButton.classList.add('status-pending');
 
@@ -628,27 +836,327 @@
         }
       }
 
-      // === Modal Handling ===
-      closeModal?.addEventListener('click', () => {
-        modalOverlay.style.display = 'none';
+      // Modal Handling
+      closeCertificateModal?.addEventListener('click', () => {
+        certificateModalOverlay.style.display = 'none';
       });
 
-      modalOverlay?.addEventListener('click', (e) => {
-        if (e.target === modalOverlay) {
-          modalOverlay.style.display = 'none';
+      certificateModalOverlay?.addEventListener('click', (e) => {
+        if (e.target === certificateModalOverlay) {
+          certificateModalOverlay.style.display = 'none';
         }
       });
 
-      // === Initialize Page ===
+      // Initialize Page
       function initializePage() {
         loadCertificates();
-        initMarkAsRead(); // Initialize notification mark as read
       }
 
       // Start the page
       initializePage();
 
     });
+  </script>
+
+  <!-- SK Access Modal JavaScript (Same as dashboard) -->
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const skModal = document.getElementById('skAccessModal');
+    const openModalBtn = document.getElementById('accessSKRoleBtn');
+
+    function showModalStep(stepNumber) {
+      if (!skModal) return;
+      skModal.querySelectorAll('.modal-step').forEach(step => {
+        step.classList.remove('active');
+        step.style.display = 'none';
+      });
+      const activeStep = skModal.querySelector(`.modal-step[data-step="${stepNumber}"]`);
+      if (activeStep) {
+        activeStep.classList.add('active');
+        activeStep.style.display = 'block';
+      }
+    }
+
+    function closeSkModal() {
+      if (skModal) skModal.style.display = 'none';
+    }
+
+    async function handleSubmitRequest() {
+      showModalStep(2);
+
+      const btn = document.getElementById('accessSKRoleBtn');
+      const skAccessUrl = btn?.dataset.url || '/sk/request-access';
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+      if (!csrfToken) {
+        console.error('CSRF Token is missing!');
+        showModalStep(4);
+        return;
+      }
+
+      try {
+        const response = await fetch(skAccessUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({ _token: csrfToken })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          showModalStep(3);
+        } else {
+          console.error(data.message);
+          const errText = skModal.querySelector('.modal-step[data-step="4"] p');
+          if(errText) errText.textContent = data.message || 'Failed to submit request.';
+          showModalStep(4);
+        }
+      } catch (error) {
+        console.error('Fetch error:', error);
+        showModalStep(4);
+      }
+    }
+
+    if (openModalBtn) {
+      openModalBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        showModalStep(1);
+        skModal.style.display = 'flex';
+      });
+    }
+
+    if (skModal) {
+      skModal.addEventListener('click', function(e) {
+        const action = e.target.dataset.action;
+        if (!action) return;
+
+        switch (action) {
+          case 'close':
+            closeSkModal();
+            break;
+          case 'confirm-request':
+            handleSubmitRequest();
+            break;
+          case 'try-again':
+            handleSubmitRequest();
+            break;
+        }
+      });
+    }
+
+    // Set Role Modal Logic
+    const setRoleModal = document.getElementById('setRoleModal');
+    const setRoleForm = document.getElementById('setRoleForm');
+
+    window.openSetRoleModal = function() {
+      if (setRoleModal) {
+        setRoleModal.style.display = 'flex';
+        console.log('Opening Set Role Modal...');
+      } else {
+        console.error('Error: Cannot find modal with id "setRoleModal"');
+      }
+    };
+
+    window.addEventListener('click', function(e) {
+      if (e.target === setRoleModal) {
+        setRoleModal.style.display = 'none';
+      }
+    });
+
+    if (setRoleForm) {
+      setRoleForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const btn = setRoleForm.querySelector('button[type="submit"]');
+        const originalText = btn.textContent;
+        
+        btn.textContent = "Saving...";
+        btn.disabled = true;
+
+        const formData = new FormData(setRoleForm);
+        const selectedRole = formData.get('sk_role');
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+        try {
+          const response = await fetch('/sk/set-role', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-TOKEN': csrfToken,
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify({ role: selectedRole })
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            alert('Role set successfully! Redirecting...');
+            window.location.reload();
+          } else {
+            alert(data.message || 'Failed to set role.');
+            btn.textContent = originalText;
+            btn.disabled = false;
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          alert('Something went wrong. Please try again.');
+          btn.textContent = originalText;
+          btn.disabled = false;
+        }
+      });
+    }
+  });
+  </script>
+
+  <!-- Feedback Modal Script (Same as dashboard) -->
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const feedbackTriggerBtn = document.getElementById('openFeedbackBtn');
+    const feedbackModal = document.getElementById('feedbackModal');
+    if (feedbackTriggerBtn && feedbackModal) {
+      const feedbackCloseBtn = document.getElementById('closeModal');
+      const feedbackStars = document.querySelectorAll('#starRating i');
+      const feedbackRatingInput = document.getElementById('ratingInput');
+      const feedbackForm = document.getElementById('feedbackForm');
+      const submitBtn = feedbackForm?.querySelector('.submit-btn');
+      const successModal = document.getElementById('successModal');
+      const closeSuccessBtn = document.getElementById('closeSuccessModal');
+
+      const customSelect = document.getElementById('customSelect');
+      if (customSelect) {
+        const trigger = customSelect.querySelector('.custom-select-trigger');
+        const selectedText = document.getElementById('selectedFeedbackType');
+        const optionsList = customSelect.querySelector('.custom-options-list');
+        const options = customSelect.querySelectorAll('.custom-option');
+        const realSelect = document.getElementById('type');
+
+        trigger?.addEventListener('click', (e) => {
+          e.stopPropagation();
+          customSelect.classList.toggle('open');
+        });
+
+        options?.forEach(option => {
+          option.addEventListener('click', () => {
+            const value = option.getAttribute('data-value');
+            const text = option.textContent.trim();
+
+            if (selectedText) selectedText.textContent = text;
+            if (realSelect) realSelect.value = value;
+            trigger?.classList.add('selected');
+
+            customSelect.classList.remove('open');
+          });
+        });
+
+        document.addEventListener('click', () => {
+          customSelect.classList.remove('open');
+        });
+      }
+
+      feedbackTriggerBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        feedbackModal.style.display = 'flex';
+      });
+
+      feedbackCloseBtn?.addEventListener('click', () => {
+        feedbackModal.style.display = 'none';
+      });
+
+      window.addEventListener('click', (e) => {
+        if (e.target === feedbackModal) {
+          feedbackModal.style.display = 'none';
+        }
+        if (e.target === successModal) {
+          successModal.style.display = 'none';
+        }
+      });
+
+      feedbackStars.forEach(star => {
+        star.addEventListener('click', () => {
+          const rating = star.getAttribute('data-value');
+          if (feedbackRatingInput) feedbackRatingInput.value = rating;
+
+          feedbackStars.forEach(s => {
+            s.classList.remove('fas');
+            s.classList.add('far');
+          });
+          for (let i = 0; i < rating; i++) {
+            feedbackStars[i].classList.remove('far');
+            feedbackStars[i].classList.add('fas');
+          }
+        });
+      });
+
+      if (feedbackForm) {
+        feedbackForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+
+          const formData = new FormData(feedbackForm);
+          const submitButtonText = submitBtn.textContent;
+
+          if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+          }
+
+          fetch(feedbackForm.action, {
+              method: 'POST',
+              headers: {
+                'X-CSRF-TOKEN': formData.get('_token'),
+                'Accept': 'application/json'
+              },
+              body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                feedbackModal.style.display = 'none';
+                if (successModal) successModal.style.display = 'flex';
+              } else {
+                let errorMsg = data.message || 'Submission failed.';
+                if (data.errors) {
+                  errorMsg += '\n' + Object.values(data.errors).join('\n');
+                }
+                throw new Error(errorMsg);
+              }
+            })
+            .catch(error => {
+              console.error('Error:', error);
+              alert(error.message || 'An error occurred. Please try again.');
+            })
+            .finally(() => {
+              if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = submitButtonText;
+              }
+
+              feedbackForm.reset();
+              feedbackStars.forEach(s => {
+                s.classList.remove('fas');
+                s.classList.add('far');
+              });
+              if (feedbackRatingInput) feedbackRatingInput.value = '';
+
+              const selectedText = document.getElementById('selectedFeedbackType');
+              const trigger = customSelect?.querySelector('.custom-select-trigger');
+              const realSelect = document.getElementById('type');
+              if (selectedText) selectedText.textContent = 'Select feedback type';
+              trigger?.classList.remove('selected');
+              if (realSelect) realSelect.value = '';
+            });
+        });
+      }
+
+      closeSuccessBtn?.addEventListener('click', () => {
+        if (successModal) successModal.style.display = 'none';
+      });
+    }
+  });
   </script>
 
   <script>
@@ -662,7 +1170,6 @@
     document.body.classList.toggle('mobile-sidebar-active');
   });
 
-  // Close sidebar when clicking outside (mobile only)
   document.addEventListener('click', (e) => {
     if (window.innerWidth <= 768 &&
       sidebar.classList.contains('open') &&
@@ -674,7 +1181,6 @@
     }
   });
 
-  // Logout confirmation
   function confirmLogout(event) {
     event.preventDefault();
     if (confirm('Are you sure you want to logout?')) {

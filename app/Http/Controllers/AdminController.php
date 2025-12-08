@@ -11,6 +11,9 @@ use App\Mail\AccountCredentialsMail;
 use App\Http\Controllers\Auth\RegisterController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
+use RealRashid\SweetAlert\Facades\Alert; // ADD THIS LINE
 
 class AdminController extends Controller
 {
@@ -127,7 +130,57 @@ class AdminController extends Controller
     }
 
     /**
-     * Calculate population for each barangay from actual users with SK/KK breakdown
+     * Show the user management page with tabs for SK and KK
+     */
+    public function userManagement()
+    {
+        // Get the authenticated admin user
+        $admin = Auth::guard('admin')->user();
+
+        // DEBUG: Check database counts directly
+        $totalUsers = User::count();
+        $skUsersCount = User::where('role', 'sk')->count();
+        $kkUsersCount = User::where('role', 'kk')->count();
+        $pendingSkCount = User::where('role', 'sk')->where('account_status', 'pending')->count();
+        
+        Log::info('Database Counts:', [
+            'total_users' => $totalUsers,
+            'sk_users' => $skUsersCount,
+            'kk_users' => $kkUsersCount,
+            'pending_sk' => $pendingSkCount
+        ]);
+
+        // Get both SK and KK users with related data
+        $skUsers = User::with(['barangay', 'city', 'province', 'region'])
+                      ->where(function($query) {
+                          $query->where('role', 'sk')
+                                ->orWhere('role', 'kk');
+                      })
+                      ->orderBy('created_at', 'desc')
+                      ->get();
+
+        // Count statistics for tabs
+        $skCount = $skUsers->where('role', 'sk')->count();
+        $kkCount = $skUsers->where('role', 'kk')->count();
+        $pendingSkCount = $skUsers->where('role', 'sk')->where('account_status', 'pending')->count();
+
+        Log::info('User Management Statistics:', [
+            'collection_sk_count' => $skCount,
+            'collection_kk_count' => $kkCount,
+            'collection_pending_sk' => $pendingSkCount
+        ]);
+
+        return view('user-management', compact(
+            'skUsers', 
+            'admin', 
+            'skCount', 
+            'kkCount',
+            'pendingSkCount'
+        ));
+    }
+
+    /**
+     * Calculate population for each barangay from actual users with SWEETALERT EXAMPLES
      */
     private function getBarangayPopulations()
     {
@@ -137,8 +190,6 @@ class AdminController extends Controller
             323 => 'ems_barrio_south', // Em's Barrio South  
             324 => 'ems_barrio_east'   // Em's Barrio East
         ];
-
-        Log::info('Target barangay IDs:', $targetBarangays);
 
         // Initialize population counts with SK/KK breakdown
         $populations = [
@@ -165,19 +216,8 @@ class AdminController extends Controller
             $populations[$barangayKey]['sk'] = $skCount;
             $populations[$barangayKey]['kk'] = $kkCount;
             $populations[$barangayKey]['total'] = $skCount + $kkCount;
-            
-            Log::info("Barangay ID $barangayId ($barangayKey) - SK: $skCount, KK: $kkCount, Total: " . $populations[$barangayKey]['total']);
         }
 
-        // Debug: Show all users in these barangays
-        $allUsers = User::whereIn('barangay_id', array_keys($targetBarangays))
-            ->where('account_status', 'approved')
-            ->with('barangay')
-            ->get(['id', 'role', 'barangay_id', 'given_name', 'last_name']);
-            
-        Log::info('All approved users in target barangays:', $allUsers->toArray());
-
-        Log::info('Final populations:', $populations);
         return $populations;
     }
 
@@ -231,223 +271,435 @@ class AdminController extends Controller
     }
 
     /**
-     * Show the user management page with all pending accounts.
+     * Get complete user details for modal view
      */
-    public function userManagement()
+    public function getUserDetails($id)
     {
-        // Get the authenticated admin user
-        $admin = Auth::guard('admin')->user();
+        try {
+            $user = User::with(['barangay', 'city', 'province', 'region'])
+                        ->findOrFail($id);
 
-        // Get both SK and KK users, sorted by creation date (newest first)
-        $skUsers = User::whereIn('role', ['sk', 'kk'])
-                      ->with('barangay')
-                      ->orderBy('created_at', 'desc')
-                      ->get();
+            // Build complete address
+            $addressParts = [];
+            if (!empty($user->purok_zone)) {
+                $addressParts[] = $user->purok_zone;
+            }
+            if (!empty($user->barangay->name ?? null)) {
+                $addressParts[] = $user->barangay->name;
+            }
+            if (!empty($user->city->name ?? null)) {
+                $addressParts[] = $user->city->name;
+            }
+            if (!empty($user->province->name ?? null)) {
+                $addressParts[] = $user->province->name;
+            }
+            if (!empty($user->region->name ?? null)) {
+                $addressParts[] = $user->region->name;
+            }
+            if (!empty($user->zip_code)) {
+                $addressParts[] = $user->zip_code;
+            }
 
-        return view('user-management', compact('skUsers', 'admin'));
+            $age = Carbon::parse($user->date_of_birth)->age;
+
+            Log::info('User details loaded', [
+                'user_id' => $id,
+                'role' => $user->role,
+                'account_status' => $user->account_status
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'full_name' => $user->given_name . ' ' . $user->last_name . ($user->suffix ? ' ' . $user->suffix : ''),
+                'account_number' => $user->account_number,
+                'role' => $user->role,
+                'account_status' => $user->account_status,
+                'is_locked' => $user->is_locked ?? false,
+                'email' => $user->email,
+                'contact_no' => $user->contact_no,
+                'date_of_birth' => $user->date_of_birth ? Carbon::parse($user->date_of_birth)->format('F d, Y') : 'N/A',
+                'age' => $age,
+                'sex' => ucfirst($user->sex),
+                'civil_status' => $user->civil_status,
+                'education' => $user->education,
+                'work_status' => $user->work_status,
+                'youth_classification' => $user->youth_classification,
+                'sk_voter' => $user->sk_voter,
+                'address' => implode(', ', $addressParts) ?: 'No address provided',
+                'barangay' => $user->barangay->name ?? 'N/A',
+                'city' => $user->city->name ?? 'N/A',
+                'province' => $user->province->name ?? 'N/A',
+                'region' => $user->region->name ?? 'N/A',
+                'purok_zone' => $user->purok_zone ?? 'N/A',
+                'zip_code' => $user->zip_code ?? 'N/A',
+                'sk_role' => $user->sk_role,
+                'committees' => $user->committees,
+                'avatar' => $user->avatar ? asset('storage/' . $user->avatar) : asset('images/default-avatar.png'),
+                'created_at' => $user->created_at->format('F d, Y h:i A'),
+                'updated_at' => $user->updated_at->format('F d, Y h:i A'),
+                'locked_at' => $user->locked_at ? Carbon::parse($user->locked_at)->format('F d, Y h:i A') : null,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error getting user details: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to load user details'
+            ], 500);
+        }
+    }
+/**
+ * Check if SK official can be deleted
+ */
+public function checkSKDelete(Request $request, $id)
+{
+    try {
+        $user = User::findOrFail($id);
+        $barangayId = $request->input('barangay_id');
+        
+        if ($user->role !== 'sk') {
+            return response()->json([
+                'can_delete' => true,
+                'message' => 'User is not an SK official'
+            ]);
+        }
+        
+        // Check if there are KK members depending on this SK official
+        $kkCount = User::where('barangay_id', $barangayId)
+            ->where('role', 'kk')
+            ->where('account_status', 'approved')
+            ->count();
+        
+        // Check if there are other SK officials in the same barangay
+        $otherSkCount = User::where('barangay_id', $barangayId)
+            ->where('role', 'sk')
+            ->where('account_status', 'approved')
+            ->where('id', '!=', $user->id)
+            ->count();
+        
+        $canDelete = true;
+        $message = '';
+        
+        if ($kkCount > 0 && $otherSkCount === 0) {
+            $canDelete = false;
+            $message = 'Cannot delete SK official. There are KK members in this barangay and no other SK official to take over.';
+        } else if ($kkCount > 0 && $otherSkCount > 0) {
+            $message = 'SK official can be deleted. There is another SK official in this barangay to take over the KK members.';
+        } else if ($kkCount === 0) {
+            $message = 'SK official can be deleted. There are no KK members in this barangay.';
+        }
+        
+        return response()->json([
+            'can_delete' => $canDelete,
+            'message' => $message,
+            'kk_count' => $kkCount,
+            'other_sk_count' => $otherSkCount
+        ]);
+        
+    } catch (\Exception $e) {
+        Log::error('Error checking SK deletion: ' . $e->getMessage());
+        return response()->json([
+            'can_delete' => false,
+            'message' => 'Error checking deletion conditions'
+        ], 500);
+    }
+}
+    public function deleteUser($id)
+{
+    try {
+        $user = User::findOrFail($id);
+        
+        // Check if user can be deleted
+        if ($user->role === 'sk' && $user->account_status === 'approved') {
+            // Check if there are KK members depending on this SK official
+            $kkCount = User::where('barangay_id', $user->barangay_id)
+                ->where('role', 'kk')
+                ->where('account_status', 'approved')
+                ->count();
+            
+            // Check if there are other SK officials in the same barangay
+            $otherSkCount = User::where('barangay_id', $user->barangay_id)
+                ->where('role', 'sk')
+                ->where('account_status', 'approved')
+                ->where('id', '!=', $user->id)
+                ->count();
+            
+            if ($kkCount > 0 && $otherSkCount === 0) {
+                // SweetAlert error response - cannot delete because there are KK members and no other SK
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot delete SK official. There are KK members in this barangay and no other SK official to take over.'
+                ], 400);
+            }
+            
+            // If there are KK members but there's another SK official, allow deletion
+            if ($kkCount > 0 && $otherSkCount > 0) {
+                // This is allowed - there's another SK official to take over the KK members
+                Log::info('SK deletion allowed - another SK official exists in barangay', [
+                    'user_id' => $id,
+                    'barangay_id' => $user->barangay_id,
+                    'other_sk_count' => $otherSkCount,
+                    'kk_count' => $kkCount
+                ]);
+            }
+        }
+        
+        // Soft delete the user
+        $user->delete();
+        
+        Log::info('User deleted', ['user_id' => $id, 'deleted_by' => Auth::guard('admin')->user()->id]);
+        
+        // SweetAlert success response
+        return response()->json([
+            'success' => true,
+            'message' => 'User account deleted successfully'
+        ]);
+        
+    } catch (\Exception $e) {
+        Log::error('Error deleting user: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to delete user account'
+        ], 500);
+    }
+}
+
+    /**
+     * Lock or unlock user account - WITH SWEETALERT EXAMPLE
+     */
+    public function toggleLock(Request $request, $id)
+    {
+        try {
+            $user = User::findOrFail($id);
+            $action = $request->input('action');
+            
+            if (!in_array($action, ['lock', 'unlock'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid action'
+                ], 400);
+            }
+            
+            // Update lock status
+            $user->is_locked = ($action === 'lock');
+            $user->locked_at = ($action === 'lock') ? now() : null;
+            $user->locked_by = ($action === 'lock') ? Auth::guard('admin')->user()->id : null;
+            $user->save();
+            
+            $actionText = $action === 'lock' ? 'locked' : 'unlocked';
+            
+            // Log the action
+            Log::info('User account ' . $actionText, [
+                'user_id' => $id,
+                'account_number' => $user->account_number,
+                'action' => $action,
+                'action_by' => Auth::guard('admin')->user()->id,
+                'timestamp' => now()
+            ]);
+            
+            // SweetAlert success response
+            return response()->json([
+                'success' => true,
+                'message' => 'User account ' . $actionText . ' successfully',
+                'user' => [
+                    'id' => $user->id,
+                    'is_locked' => $user->is_locked,
+                    'status_badge' => $this->getStatusBadge($user->account_status, $user->is_locked)
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error toggling user lock: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update account status'
+            ], 500);
+        }
     }
 
     /**
-     * Approve user account.
+     * Helper method to get status badge HTML
+     */
+    private function getStatusBadge($accountStatus, $isLocked)
+    {
+        if ($isLocked) {
+            return '<span class="status-badge status-locked">Locked</span>';
+        }
+        
+        switch($accountStatus) {
+            case 'pending': return '<span class="status-badge status-pending">Pending</span>';
+            case 'approved': return '<span class="status-badge status-approved">Approved</span>';
+            case 'rejected': return '<span class="status-badge status-rejected">Rejected</span>';
+            default: return '<span class="status-badge status-active">Active</span>';
+        }
+    }
+
+    /**
+     * Approve user account - WITH SWEETALERT SUPPORT
      */
     public function approve($id)
     {
-        $user = User::findOrFail($id);
+        try {
+            $user = User::findOrFail($id);
 
-        if ($user->account_status !== 'pending') {
-            return back()->with('error', 'This account is not pending for approval.');
-        }
-
-        // Handle SK user approval
-        if ($user->role === 'sk') {
-            $registerController = new RegisterController();
-            $result = $registerController->sendSKCredentials($user);
-
-            if ($result) {
-                return back()->with('success', 'SK user approved and credentials sent.');
-            } else {
-                return back()->with('error', 'Failed to send credentials email for SK user.');
-            }
-        }
-
-        // Handle KK (Youth) user approval
-        if ($user->role === 'kk') {
-            // Check if there is at least one approved SK Chair in the same barangay
-            $hasApprovedChair = User::where('role', 'sk')
-                ->where('barangay_id', $user->barangay_id)
-                ->where('account_status', 'approved')
-                ->exists();
-
-            if (!$hasApprovedChair) {
-                return back()->with('error', 'Youth cannot be approved yet. The SK Chair for this barangay has not been approved.');
+            if ($user->account_status !== 'pending') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This account is not pending for approval.'
+                ], 400);
             }
 
-            // Proceed if SK Chair exists
-            $user->account_status = 'approved';
-            $user->save();
+            // Handle SK user approval
+            if ($user->role === 'sk') {
+                $registerController = new RegisterController();
+                $result = $registerController->sendSKCredentials($user);
 
-            return back()->with('success', 'KK member has been approved successfully.');
+                if ($result) {
+                    // SweetAlert success
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'SK user approved and credentials sent.'
+                    ]);
+                } else {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Failed to send credentials email for SK user.'
+                    ], 500);
+                }
+            }
+
+            // Handle KK (Youth) user approval
+            if ($user->role === 'kk') {
+                // Check if there is at least one approved SK Chair in the same barangay
+                $hasApprovedChair = User::where('role', 'sk')
+                    ->where('barangay_id', $user->barangay_id)
+                    ->where('account_status', 'approved')
+                    ->exists();
+
+                if (!$hasApprovedChair) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Youth cannot be approved yet. The SK Chair for this barangay has not been approved.'
+                    ], 400);
+                }
+
+                // Proceed if SK Chair exists
+                $user->account_status = 'approved';
+                $user->save();
+
+                // SweetAlert success
+                return response()->json([
+                    'success' => true,
+                    'message' => 'KK member has been approved successfully.'
+                ]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid user role for approval.'
+            ], 400);
+        } catch (\Exception $e) {
+            Log::error('Error approving user: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to approve user account'
+            ], 500);
         }
-
-        return back()->with('error', 'Invalid user role for approval.');
     }
 
     /**
-     * Reject user account.
+     * Reject user account - WITH SWEETALERT SUPPORT
      */
     public function reject($id)
     {
-        $user = User::findOrFail($id);
-        $user->account_status = 'rejected';
-        $user->save();
+        try {
+            $user = User::findOrFail($id);
+            $user->account_status = 'rejected';
+            $user->save();
 
-        return back()->with('success', 'User account has been rejected.');
-    }
-
-    /**
-     * Get admin profile data
-     */
-    public function getAdminProfile()
-    {
-        $admin = Auth::guard('admin')->user();
-        
-        if (!$admin) {
-            return response()->json(['error' => 'Admin not found'], 404);
+            // SweetAlert success
+            return response()->json([
+                'success' => true,
+                'message' => 'User account has been rejected.'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error rejecting user: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to reject user account'
+            ], 500);
         }
-
-        return response()->json([
-            'name' => $admin->given_name . ' ' . $admin->last_name,
-            'email' => $admin->email,
-            'avatar' => $admin->avatar ? asset('storage/' . $admin->avatar) : asset('images/default-avatar.png'),
-            'role' => 'Administrator',
-            'account_number' => $admin->account_number
-        ]);
     }
 
     /**
-     * Get population statistics for API
+     * Get notifications for admin
      */
-    public function getPopulationStats()
+    public function getNotifications()
     {
-        $barangayPopulations = $this->getBarangayPopulations();
-        
-        $totalPopulation = 0;
-        foreach ($barangayPopulations as $barangay) {
-            $totalPopulation += $barangay['total'];
-        }
-
-        return response()->json([
-            'barangay_populations' => $barangayPopulations,
-            'total_population' => $totalPopulation
-        ]);
-    }
-
-    /**
-     * Get notification count for AJAX requests
-     */
-    public function getNotificationCount()
-    {
-        $pendingCount = SystemFeedback::where('status', 'pending')->count();
-        
-        return response()->json([
-            'count' => $pendingCount
-        ]);
-    }
-
-    /**
-     * Get recent notifications for AJAX requests
-     */
-    public function getRecentNotifications()
-    {
-        $recentPendingFeedbacks = SystemFeedback::with(['user' => function($query) {
-                $query->select('id', 'account_number', 'given_name', 'last_name', 'avatar', 'barangay_id')
-                      ->with('barangay:id,name');
-            }])
-            ->where('status', 'pending')
-            ->orderBy('created_at', 'desc')
-            ->take(5)
-            ->get();
-
-        return response()->json([
-            'notifications' => $recentPendingFeedbacks->map(function($feedback) {
+        try {
+            // Get recent pending feedbacks
+            $recentPendingFeedbacks = SystemFeedback::with(['user' => function($query) {
+                    $query->select('id', 'account_number', 'given_name', 'last_name', 'avatar', 'barangay_id')
+                          ->with('barangay:id,name');
+                }])
+                ->where('status', 'pending')
+                ->orderBy('created_at', 'desc')
+                ->take(5)
+                ->get();
+            
+            $notifications = $recentPendingFeedbacks->map(function($feedback) {
                 return [
                     'id' => $feedback->id,
-                    'user_name' => $feedback->user->given_name . ' ' . $feedback->user->last_name,
-                    'account_number' => $feedback->user->account_number,
-                    'barangay' => $feedback->user->barangay->name ?? 'N/A',
+                    'title' => 'New Feedback',
+                    'message' => 'Feedback from ' . $feedback->user->given_name . ' ' . $feedback->user->last_name,
                     'time_ago' => $feedback->created_at->diffForHumans(),
-                    'created_at' => $feedback->created_at->format('Y-m-d H:i:s')
+                    'type' => 'feedback'
                 ];
-            }),
-            'count' => $recentPendingFeedbacks->count()
-        ]);
-    }
-
-    /**
-     * Mark feedback as read
-     */
-    public function markFeedbackAsRead($id)
-    {
-        try {
-            $feedback = SystemFeedback::findOrFail($id);
+            });
             
-            // You can add a 'read_at' timestamp if you want to track read status
-            // $feedback->read_at = now();
-            // $feedback->save();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Notification marked as read'
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Error marking feedback as read: ' . $e->getMessage());
+            // Get pending accounts count
+            $pendingAccountsCount = User::where('account_status', 'pending')->count();
             
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to mark notification as read'
-            ], 500);
-        }
-    }
-
-    /**
-     * Mark all notifications as read
-     */
-    public function markAllNotificationsAsRead()
-    {
-        try {
-            // If you have a read_at column, you can update all pending feedbacks
-            // SystemFeedback::where('status', 'pending')->update(['read_at' => now()]);
+            // Add pending accounts notification if any
+            if ($pendingAccountsCount > 0) {
+                $notifications->prepend([
+                    'id' => 'pending_accounts',
+                    'title' => 'Pending Accounts',
+                    'message' => 'You have ' . $pendingAccountsCount . ' pending account' . ($pendingAccountsCount > 1 ? 's' : '') . ' to review',
+                    'time_ago' => 'Just now',
+                    'type' => 'accounts'
+                ]);
+            }
             
             return response()->json([
                 'success' => true,
-                'message' => 'All notifications marked as read'
+                'notifications' => $notifications,
+                'count' => $notifications->count()
             ]);
         } catch (\Exception $e) {
-            Log::error('Error marking all notifications as read: ' . $e->getMessage());
-            
+            Log::error('Error loading notifications: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to mark all notifications as read'
-            ], 500);
+                'notifications' => [],
+                'count' => 0
+            ]);
         }
     }
-
+    
     /**
-     * Get dashboard statistics for AJAX updates
+     * NEW: Test method to show SweetAlert
      */
-    public function getDashboardStats()
+    public function testSweetAlert()
     {
-        $pendingFeedbacksCount = SystemFeedback::where('status', 'pending')->count();
-        $pendingAccountsCount = User::where('account_status', 'pending')->count();
-        $totalPopulation = User::where('account_status', 'approved')->count();
+        // Different types of SweetAlerts
+        Alert::success('Success Title', 'Success Message');
+        Alert::info('Info Title', 'Info Message');
+        Alert::warning('Warning Title', 'Warning Message');
+        Alert::error('Error Title', 'Error Message');
+        Alert::question('Question Title', 'Question Message');
         
-        $ratingStats = $this->getSystemRatingStats();
-
-        return response()->json([
-            'pending_feedbacks_count' => $pendingFeedbacksCount,
-            'pending_accounts_count' => $pendingAccountsCount,
-            'total_population' => $totalPopulation,
-            'rating_stats' => $ratingStats
-        ]);
+        // Toast notification
+        Alert::toast('User approved successfully!', 'success');
+        
+        return back();
     }
 }
