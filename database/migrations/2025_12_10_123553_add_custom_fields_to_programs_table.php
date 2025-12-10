@@ -1,0 +1,31 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('programs', function (Blueprint $table) {
+            // Add custom_fields column if it doesn't exist
+            if (!Schema::hasColumn('programs', 'custom_fields')) {
+                $table->json('custom_fields')->nullable()->after('registration_close_time');
+            }
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('programs', function (Blueprint $table) {
+            $table->dropColumn('custom_fields');
+        });
+    }
+};

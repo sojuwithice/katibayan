@@ -124,6 +124,9 @@ class EventController extends Controller
                 'published_by' => $event->published_by,
                 'status' => $event->status,
                 'is_launched' => (bool)$event->is_launched,
+                'postponed' => (bool)$event->postponed,
+                'postponed_to' => $event->postponed_to ? Carbon::parse($event->postponed_to)->format('Y-m-d H:i:s') : null,
+                'postponed_reason' => $event->postponed_reason,
                 'passcode' => $event->passcode,
                 'barangay_id' => $event->barangay_id,
             ];
@@ -211,6 +214,7 @@ class EventController extends Controller
             'published_by' => $validated['published_by'],
             'status' => 'upcoming',
             'is_launched' => false,
+            'postponed' => false,
             'user_id' => Auth::id(), 
             'barangay_id' => Auth::user()->barangay_id, 
         ];
@@ -246,6 +250,9 @@ class EventController extends Controller
             $event->update([
                 'is_launched' => true,
                 'status' => 'ongoing',
+                'postponed' => false, // Reset postponed when launching
+                'postponed_to' => null,
+                'postponed_reason' => null,
             ]);
 
             Log::info('Event launched: ' . $eventId . ' for barangay: ' . $user->barangay_id);
@@ -253,6 +260,77 @@ class EventController extends Controller
         } catch (\Exception $e) {
             Log::error('Error launching event: ' . $e->getMessage());
             return response()->json(['success' => false, 'error' => 'Failed to launch event'], 500);
+        }
+    }
+
+    /**
+     * Postpone the specified event.
+     */
+    public function postponeEvent($id, Request $request): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            $eventId = (int)$id;
+            
+            $event = Event::where('id', $eventId)
+                        ->where('barangay_id', $user->barangay_id)
+                        ->first();
+            
+            if (!$event) {
+                return response()->json(['success' => false, 'error' => 'Event not found'], 404);
+            }
+
+            $validated = $request->validate([
+                'postponed_to' => 'required|date|after:today',
+                'postponed_reason' => 'nullable|string|max:1000',
+            ]);
+
+            $postponedTo = Carbon::parse($validated['postponed_to']);
+            
+            $event->update([
+                'postponed' => true,
+                'postponed_to' => $postponedTo,
+                'postponed_reason' => $validated['postponed_reason'] ?? null,
+                'status' => 'postponed',
+            ]);
+
+            Log::info('Event postponed: ' . $eventId . ' to ' . $postponedTo . ' for barangay: ' . $user->barangay_id);
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            Log::error('Error postponing event: ' . $e->getMessage());
+            return response()->json(['success' => false, 'error' => 'Failed to postpone event: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Unpostpone the specified event.
+     */
+    public function unpostponeEvent($id): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            $eventId = (int)$id;
+            
+            $event = Event::where('id', $eventId)
+                        ->where('barangay_id', $user->barangay_id)
+                        ->first();
+            
+            if (!$event) {
+                return response()->json(['success' => false, 'error' => 'Event not found'], 404);
+            }
+            
+            $event->update([
+                'postponed' => false,
+                'postponed_to' => null,
+                'postponed_reason' => null,
+                'status' => 'upcoming',
+            ]);
+
+            Log::info('Event unpostponed: ' . $eventId . ' for barangay: ' . $user->barangay_id);
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            Log::error('Error unpostponing event: ' . $e->getMessage());
+            return response()->json(['success' => false, 'error' => 'Failed to unpostpone event'], 500);
         }
     }
 
@@ -360,6 +438,7 @@ class EventController extends Controller
             // Get LAUNCHED events from the SAME BARANGAY as the user
             $events = Event::where('is_launched', true)
                 ->where('barangay_id', $user->barangay_id)
+                ->where('postponed', false) // Don't show postponed events
                 ->orderBy('event_date', 'asc')
                 ->orderBy('event_time', 'asc')
                 ->get();
@@ -392,6 +471,7 @@ class EventController extends Controller
                 $query->where('user_id', $user->id);
             })
             ->where('is_launched', true)
+            ->where('postponed', false)
             ->where('barangay_id', $user->barangay_id)
             ->with(['attendances' => function($query) use ($user) {
                 $query->where('user_id', $user->id);
@@ -526,6 +606,7 @@ class EventController extends Controller
             $today = Carbon::today();
             
             $events = Event::where('is_launched', true)
+                ->where('postponed', false)
                 ->where('event_date', '>=', $today)
                 ->orderBy('event_date', 'asc')
                 ->orderBy('event_time', 'asc')
@@ -605,6 +686,7 @@ class EventController extends Controller
                       ->whereNotNull('attended_at');
             })
             ->where('barangay_id', $user->barangay_id)
+            ->where('postponed', false)
             ->with(['attendances' => function($query) use ($user) {
                 $query->where('user_id', $user->id);
             }])

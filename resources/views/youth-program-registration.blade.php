@@ -8,6 +8,272 @@
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* Additional styles for End Program functionality */
+    .program-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 15px;
+    }
+    
+    .program-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 15px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      border: none;
+      cursor: pointer;
+      width: 100%;
+      font-size: 14px;
+    }
+    
+    .view-registrations {
+      background: #3C87C4;
+      color: white;
+    }
+    
+    .view-registrations:hover {
+      background: #2a6da9;
+    }
+    
+    .end-program {
+      background: #ff6b6b;
+      color: white;
+    }
+    
+    .end-program:hover {
+      background: #ff5252;
+    }
+    
+    .program-btn i {
+      font-size: 14px;
+    }
+    
+    /* Modal styles for ending program */
+    .end-program-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .end-program-modal-content {
+      background: white;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    }
+    
+    .end-program-header {
+      padding: 20px;
+      border-bottom: 1px solid #e0e0e0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .end-program-header h3 {
+      margin: 0;
+      color: #333;
+    }
+    
+    .close-modal {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #666;
+    }
+    
+    .close-modal:hover {
+      color: #333;
+    }
+    
+    .end-program-body {
+      padding: 20px;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #333;
+    }
+    
+    .form-group input[type="date"],
+    .form-group textarea,
+    .form-group input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    
+    .form-group textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+    
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .checkbox-group input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+    }
+    
+    .end-program-footer {
+      padding: 20px;
+      border-top: 1px solid #e0e0e0;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+    
+    .btn {
+      padding: 10px 20px;
+      border-radius: 6px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-cancel {
+      background: #f0f0f0;
+      color: #666;
+    }
+    
+    .btn-cancel:hover {
+      background: #e0e0e0;
+    }
+    
+    .btn-confirm {
+      background: #ff6b6b;
+      color: white;
+    }
+    
+    .btn-confirm:hover {
+      background: #ff5252;
+    }
+    
+    .btn-confirm:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    
+    /* Program status badge */
+    .program-status {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+    
+    .status-active {
+      background: #e8f5e8;
+      color: #2e7d32;
+    }
+    
+    .status-ended {
+      background: #ffebee;
+      color: #c62828;
+    }
+    
+    /* Alert styles */
+    .alert {
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .alert-success {
+      background: #e8f5e8;
+      color: #2e7d32;
+      border: 1px solid #c8e6c9;
+    }
+    
+    .alert-error {
+      background: #ffebee;
+      color: #c62828;
+      border: 1px solid #ffcdd2;
+    }
+    
+    .alert-info {
+      background: #e8f0fa;
+      color: #3C87C4;
+      border: 1px solid #bbdefb;
+    }
+    
+    /* Loading overlay */
+    .loading-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.8);
+      z-index: 2000;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+    
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #3C87C4;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 15px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    /* Ended program style */
+    .program-card.ended {
+      opacity: 0.8;
+      border: 1px solid #ffcdd2;
+    }
+    
+    .program-card.ended .program-actions .view-registrations {
+      background: #666;
+    }
+    
+    .program-card.ended .program-actions .view-registrations:hover {
+      background: #555;
+    }
+  </style>
 </head>
 <body>
   
@@ -175,6 +441,9 @@
         <h2>Youth Registration</h2>
         <p>
           View and manage youth registrations for programs. See all the information submitted by youth during registration.
+          @if(in_array($user->role, ['sk', 'sk_chairperson']))
+            <br><small>As an SK official, you can end programs that don't have end dates.</small>
+          @endif
         </p>
       </div>
 
@@ -186,18 +455,39 @@
         </div>
       @endif
 
+      <!-- Error Message -->
+      @if(session('error'))
+        <div class="alert alert-error">
+          <i class="fas fa-exclamation-circle"></i>
+          {{ session('error') }}
+        </div>
+      @endif
+
+      <!-- Info Message -->
+      @if(session('info'))
+        <div class="alert alert-info">
+          <i class="fas fa-info-circle"></i>
+          {{ session('info') }}
+        </div>
+      @endif
+
       <!-- Current Month Programs Section -->
       <section class="programs-section">
         <div class="month-badge">Program for this month ({{ date('F Y') }})</div>
         
         <div class="programs-row">
           @forelse($currentMonthPrograms as $program)
-            <div class="program-card">
+            <div class="program-card {{ $program->status === 'ended' ? 'ended' : '' }}">
               @if($program->display_image)
                 <img src="{{ asset('storage/' . $program->display_image) }}" alt="{{ $program->title }}" class="program-img">
               @else
                 <img src="{{ asset('images/default-program.jpg') }}" alt="{{ $program->title }}" class="program-img">
               @endif
+              
+              <span class="program-status status-{{ $program->status }}">
+                {{ ucfirst($program->status) }}
+              </span>
+              
               <h4>{{ $program->title }}</h4>
               <p class="program-date">
                 <i class="fas fa-calendar"></i>
@@ -208,10 +498,28 @@
                 <i class="fas fa-tag"></i>
                 {{ ucfirst($program->category) }}
               </p>
-              <a href="{{ route('youth-registration-list', ['programId' => $program->id]) }}" class="program-btn view-registrations">
-                <span>View Youth Registration</span>
-                <i class="fa-solid fa-chevron-right"></i>
-              </a>
+              
+              <!-- Check if program has end date -->
+              @php
+                $hasEndDate = !empty($program->event_end_date) && $program->event_end_date != $program->event_date;
+                $canEndProgram = (!$hasEndDate || $program->event_end_date === null) && 
+                                 $program->status === 'active' && 
+                                 ($program->user_id === $user->id || in_array($user->role, ['sk', 'sk_chairperson']));
+              @endphp
+              
+              <div class="program-actions">
+                <a href="{{ route('youth-registration-list', ['programId' => $program->id]) }}" class="program-btn view-registrations">
+                  <span>View Youth Registration</span>
+                  <i class="fa-solid fa-chevron-right"></i>
+                </a>
+                
+                @if($canEndProgram)
+                  <button class="program-btn end-program" data-program-id="{{ $program->id }}" data-program-title="{{ $program->title }}">
+                    <span>End Program</span>
+                    <i class="fa-solid fa-flag-checkered"></i>
+                  </button>
+                @endif
+              </div>
             </div>
           @empty
             <div class="no-programs">
@@ -231,12 +539,17 @@
 
           <div class="programs-row">
             @foreach($programs as $program)
-              <div class="program-card">
+              <div class="program-card {{ $program->status === 'ended' ? 'ended' : '' }}">
                 @if($program->display_image)
                   <img src="{{ asset('storage/' . $program->display_image) }}" alt="{{ $program->title }}" class="program-img">
                 @else
                   <img src="{{ asset('images/default-program.jpg') }}" alt="{{ $program->title }}" class="program-img">
                 @endif
+                
+                <span class="program-status status-{{ $program->status }}">
+                  {{ ucfirst($program->status) }}
+                </span>
+                
                 <h4>{{ $program->title }}</h4>
                 <p class="program-date">
                   <i class="fas fa-calendar"></i>
@@ -247,10 +560,28 @@
                   <i class="fas fa-tag"></i>
                   {{ ucfirst($program->category) }}
                 </p>
-                <a href="{{ route('youth-registration-list', ['programId' => $program->id]) }}" class="program-btn view-registrations">
-                  <span>View Youth Registration</span>
-                  <i class="fa-solid fa-chevron-right"></i>
-                </a>
+                
+                <!-- Check if program has end date -->
+                @php
+                  $hasEndDate = !empty($program->event_end_date) && $program->event_end_date != $program->event_date;
+                  $canEndProgram = (!$hasEndDate || $program->event_end_date === null) && 
+                                   $program->status === 'active' && 
+                                   ($program->user_id === $user->id || in_array($user->role, ['sk', 'sk_chairperson']));
+                @endphp
+                
+                <div class="program-actions">
+                  <a href="{{ route('youth-registration-list', ['programId' => $program->id]) }}" class="program-btn view-registrations">
+                    <span>View Youth Registration</span>
+                    <i class="fa-solid fa-chevron-right"></i>
+                  </a>
+                  
+                  @if($canEndProgram)
+                    <button class="program-btn end-program" data-program-id="{{ $program->id }}" data-program-title="{{ $program->title }}">
+                      <span>End Program</span>
+                      <i class="fa-solid fa-flag-checkered"></i>
+                    </button>
+                  @endif
+                </div>
               </div>
             @endforeach
           </div>
@@ -266,11 +597,60 @@
     </main>
   </div>
 
+  <!-- End Program Modal -->
+  <div id="endProgramModal" class="end-program-modal">
+    <div class="end-program-modal-content">
+      <div class="end-program-header">
+        <h3>End Program</h3>
+        <button class="close-modal">&times;</button>
+      </div>
+      <form id="endProgramForm">
+        <div class="end-program-body">
+          <div class="form-group">
+            <label for="programTitle">Program Title</label>
+            <input type="text" id="programTitle" readonly>
+          </div>
+          
+          <div class="form-group">
+            <label for="endDate">End Date <small>(Optional - defaults to today)</small></label>
+            <input type="date" id="endDate" name="end_date" min="{{ date('Y-m-d') }}">
+          </div>
+          
+          <div class="form-group">
+            <label for="reason">Reason for Ending Program <small>(Optional)</small></label>
+            <textarea id="reason" name="reason" placeholder="Enter reason for ending the program..."></textarea>
+          </div>
+          
+          <div class="form-group">
+            <div class="checkbox-group">
+              <input type="checkbox" id="notifyParticipants" name="notify_participants" value="1" checked>
+              <label for="notifyParticipants">Notify all participants that the program has ended</label>
+            </div>
+          </div>
+          
+          <input type="hidden" id="programId" name="program_id">
+          @csrf
+        </div>
+        <div class="end-program-footer">
+          <button type="button" class="btn btn-cancel">Cancel</button>
+          <button type="submit" class="btn btn-confirm">End Program</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="spinner"></div>
+    <p>Processing...</p>
+  </div>
+
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-  // === Lucide icons + sidebar toggle ===
+  // === Initialize Lucide icons ===
   lucide.createIcons();
   
+  // === Sidebar toggle ===
   const menuToggle = document.querySelector('.menu-toggle');
   const sidebar = document.querySelector('.sidebar');
 
@@ -324,7 +704,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const notifWrapper = document.querySelector(".notification-wrapper");
   const profileWrapper = document.querySelector(".profile-wrapper");
   const profileToggle = document.getElementById("profileToggle");
-  const profileDropdown = document.querySelector(".profile-dropdown");
 
   if (notifWrapper) {
     const bell = notifWrapper.querySelector(".fa-bell");
@@ -339,15 +718,17 @@ document.addEventListener("DOMContentLoaded", () => {
     if (dropdown) dropdown.addEventListener("click", (e) => e.stopPropagation());
   }
 
-  if (profileWrapper && profileToggle && profileDropdown) {
+  if (profileWrapper && profileToggle) {
     profileToggle.addEventListener("click", (e) => {
       e.stopPropagation();
       profileWrapper.classList.toggle("active");
       notifWrapper?.classList.remove("active");
     });
-    profileDropdown.addEventListener("click", (e) => e.stopPropagation());
+    const profileDropdown = document.querySelector(".profile-dropdown");
+    if (profileDropdown) profileDropdown.addEventListener("click", (e) => e.stopPropagation());
   }
 
+  // Close dropdowns when clicking outside
   document.addEventListener("click", (e) => {
     if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
       sidebar.classList.remove('open');
@@ -356,20 +737,192 @@ document.addEventListener("DOMContentLoaded", () => {
     if (notifWrapper && !notifWrapper.contains(e.target)) notifWrapper.classList.remove('active');
   });
 
-  // Auto-hide success message after 5 seconds
-  const successAlert = document.querySelector('.alert-success');
-  if (successAlert) {
+  // Auto-hide alerts after 5 seconds
+  const alerts = document.querySelectorAll('.alert');
+  alerts.forEach(alert => {
     setTimeout(() => {
-      successAlert.style.display = 'none';
+      alert.style.display = 'none';
     }, 5000);
-  }
+  });
 
   // Logout confirmation
-  function confirmLogout(event) {
+  window.confirmLogout = function(event) {
     event.preventDefault();
     if (confirm('Are you sure you want to logout?')) {
       document.getElementById('logout-form').submit();
     }
+  };
+
+  // === End Program Functionality ===
+  const endProgramModal = document.getElementById('endProgramModal');
+  const endProgramForm = document.getElementById('endProgramForm');
+  const programTitleInput = document.getElementById('programTitle');
+  const programIdInput = document.getElementById('programId');
+  const endDateInput = document.getElementById('endDate');
+  const loadingOverlay = document.getElementById('loadingOverlay');
+  
+  // Set minimum date for end date input (today)
+  if (endDateInput) {
+    const today = new Date().toISOString().split('T')[0];
+    endDateInput.min = today;
+    endDateInput.value = today;
+  }
+
+  // Open end program modal
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('.end-program')) {
+      const button = e.target.closest('.end-program');
+      const programId = button.dataset.programId;
+      const programTitle = button.dataset.programTitle;
+      
+      // Populate modal with program info
+      programTitleInput.value = programTitle;
+      programIdInput.value = programId;
+      
+      // Show modal
+      endProgramModal.style.display = 'flex';
+    }
+  });
+
+  // Close modal
+  const closeModalButtons = document.querySelectorAll('.close-modal, .btn-cancel');
+  closeModalButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      endProgramModal.style.display = 'none';
+      endProgramForm.reset();
+    });
+  });
+
+  // Close modal when clicking outside
+  endProgramModal.addEventListener('click', (e) => {
+    if (e.target === endProgramModal) {
+      endProgramModal.style.display = 'none';
+      endProgramForm.reset();
+    }
+  });
+
+  // Handle form submission
+  if (endProgramForm) {
+    endProgramForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const programId = programIdInput.value;
+      const formData = new FormData(endProgramForm);
+      
+      // Show loading
+      loadingOverlay.style.display = 'flex';
+      
+      try {
+        const response = await fetch(`/programs/${programId}/end`, {
+          method: 'POST',
+          headers: {
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(Object.fromEntries(formData))
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          // Hide modal and loading
+          endProgramModal.style.display = 'none';
+          loadingOverlay.style.display = 'none';
+          
+          // Show success message
+          showAlert('Program ended successfully!', 'success');
+          
+          // Update the program card
+          updateProgramCard(programId, data.program);
+          
+          // Reset form
+          endProgramForm.reset();
+        } else {
+          throw new Error(data.message || 'Failed to end program');
+        }
+      } catch (error) {
+        console.error('Error ending program:', error);
+        loadingOverlay.style.display = 'none';
+        showAlert('Error: ' + error.message, 'error');
+      }
+    });
+  }
+
+  // Update program card after ending
+  function updateProgramCard(programId, programData) {
+    const programCard = document.querySelector(`.end-program[data-program-id="${programId}"]`)?.closest('.program-card');
+    if (!programCard) return;
+    
+    // Remove the End Program button
+    const endProgramBtn = programCard.querySelector('.end-program');
+    if (endProgramBtn) {
+      endProgramBtn.remove();
+    }
+    
+    // Update status badge
+    const statusBadge = programCard.querySelector('.program-status');
+    if (statusBadge) {
+      statusBadge.textContent = 'Ended';
+      statusBadge.className = 'program-status status-ended';
+    }
+    
+    // Update program card style
+    programCard.classList.add('ended');
+    
+    // Update View Registration button style
+    const viewBtn = programCard.querySelector('.view-registrations');
+    if (viewBtn) {
+      viewBtn.style.background = '#666';
+    }
+    
+    // Update program date if end date was added
+    const programDateElement = programCard.querySelector('.program-date');
+    if (programDateElement && programData.event_end_date) {
+      const startDate = new Date(programData.event_date);
+      const endDate = new Date(programData.event_end_date);
+      
+      if (startDate.toDateString() !== endDate.toDateString()) {
+        const startDateStr = startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        const endDateStr = endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        programDateElement.innerHTML = `<i class="fas fa-calendar"></i> ${startDateStr} - ${endDateStr}`;
+      }
+    }
+  }
+
+  // Show alert message
+  function showAlert(message, type = 'success') {
+    // Remove existing alerts
+    const existingAlert = document.querySelector('.dynamic-alert');
+    if (existingAlert) {
+      existingAlert.remove();
+    }
+    
+    // Create new alert
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} dynamic-alert`;
+    alertDiv.innerHTML = `
+      <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'exclamation' : 'info'}-circle"></i>
+      ${message}
+    `;
+    
+    // Insert after welcome card
+    const welcomeCard = document.querySelector('.welcome-card');
+    if (welcomeCard) {
+      welcomeCard.insertAdjacentElement('afterend', alertDiv);
+    }
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+      if (alertDiv.parentNode) {
+        alertDiv.style.display = 'none';
+        setTimeout(() => {
+          if (alertDiv.parentNode) {
+            alertDiv.remove();
+          }
+        }, 300);
+      }
+    }, 5000);
   }
 });
 </script>

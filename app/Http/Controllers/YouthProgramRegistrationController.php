@@ -110,14 +110,44 @@ class YouthProgramRegistrationController extends Controller
                     $userProfile = $registrationData['user_profile'] ?? [];
                     $customFields = $registrationData['custom_fields'] ?? [];
                     
-                    // Calculate daily attendance
+                    // FIXED: Handle attendance_days properly (it might already be an array)
                     $attendanceDays = $registration->attendance_days ?: [];
-                    $presentDays = 0;
                     
+                    // If it's a string, try to decode it
+                    if (is_string($attendanceDays)) {
+                        try {
+                            $decoded = json_decode($attendanceDays, true);
+                            $attendanceDays = is_array($decoded) ? $decoded : [];
+                        } catch (\Exception $e) {
+                            Log::warning('Error decoding attendance_days JSON', [
+                                'registration_id' => $registration->id,
+                                'attendance_days' => $attendanceDays,
+                                'error' => $e->getMessage()
+                            ]);
+                            $attendanceDays = [];
+                        }
+                    }
+                    
+                    $presentDays = 0;
                     if (is_array($attendanceDays)) {
                         $presentDays = count(array_filter($attendanceDays, function($attended) {
-                            return $attended === true || $attended === 'true';
+                            return $attended === true || $attended === 'true' || $attended === 1 || $attended === '1';
                         }));
+                    }
+                    
+                    // FIXED: Safely parse attended_at date
+                    $attendedAt = null;
+                    if ($registration->attended_at) {
+                        try {
+                            $attendedAt = Carbon::parse($registration->attended_at)->format('M d, Y g:i A');
+                        } catch (\Exception $e) {
+                            Log::warning('Error parsing attended_at date', [
+                                'registration_id' => $registration->id,
+                                'attended_at' => $registration->attended_at,
+                                'error' => $e->getMessage()
+                            ]);
+                            $attendedAt = $registration->attended_at; // Keep original value as string
+                        }
                     }
                     
                     return [
@@ -137,7 +167,7 @@ class YouthProgramRegistrationController extends Controller
                         'present_days' => $presentDays,
                         'total_days' => $totalDays,
                         'registered_at' => $registration->created_at->format('M d, Y g:i A'),
-                        'attended_at' => $registration->attended_at ? $registration->attended_at->format('M d, Y g:i A') : null,
+                        'attended_at' => $attendedAt, // FIXED: Use safely parsed value
                         'registration_data' => $registrationData,
                         'custom_fields' => $customFields,
                         'user_profile' => $userProfile
@@ -215,6 +245,16 @@ class YouthProgramRegistrationController extends Controller
             $registrationData = $updatedRegistration->registration_data ? json_decode($updatedRegistration->registration_data, true) : [];
             $userProfile = $registrationData['user_profile'] ?? [];
 
+            // FIXED: Safely parse attended_at date
+            $attendedAt = null;
+            if ($updatedRegistration->attended_at) {
+                try {
+                    $attendedAt = Carbon::parse($updatedRegistration->attended_at)->format('M d, Y g:i A');
+                } catch (\Exception $e) {
+                    $attendedAt = $updatedRegistration->attended_at; // Keep original value as string
+                }
+            }
+
             $formattedRegistration = [
                 'id' => $updatedRegistration->id,
                 'reference_id' => $updatedRegistration->reference_id,
@@ -229,7 +269,7 @@ class YouthProgramRegistrationController extends Controller
                 'barangay' => $userProfile['barangay'] ?? ($updatedRegistration->user->barangay->name ?? 'N/A'),
                 'attended' => $updatedRegistration->attended,
                 'registered_at' => $updatedRegistration->created_at->format('M d, Y g:i A'),
-                'attended_at' => $updatedRegistration->attended_at ? $updatedRegistration->attended_at->format('M d, Y g:i A') : null,
+                'attended_at' => $attendedAt, // FIXED: Use safely parsed value
             ];
 
             return response()->json([
@@ -280,7 +320,7 @@ class YouthProgramRegistrationController extends Controller
 
             // FIXED: Update all attendance fields including marked_by_user_id
             $registration->update([
-                'attendance_days' => $attendanceData, // This will be automatically cast to JSON
+                'attendance_days' => json_encode($attendanceData), // Explicitly encode to JSON
                 'attended' => $request->present_count > 0, // Mark as attended if at least one day present
                 'attended_at' => $request->present_count > 0 ? now() : null,
                 'marked_by_user_id' => $user->id
@@ -312,7 +352,7 @@ class YouthProgramRegistrationController extends Controller
     }
 
     /**
-     * Get daily attendance data for a specific registration
+     * Get daily attendance data for a specific registration - FIXED VERSION
      */
     public function getDailyAttendance($registrationId)
     {
@@ -344,25 +384,47 @@ class YouthProgramRegistrationController extends Controller
                 Carbon::parse($registration->program->event_end_date) : $startDate;
             $totalDays = $startDate->diffInDays($endDate) + 1;
 
-            // Get attendance data - use the casted array directly
+            // FIXED: Handle attendance_days properly (it might already be an array or JSON string)
             $attendanceDays = $registration->attendance_days ?: [];
+            
+            // If it's a string, try to decode it
+            if (is_string($attendanceDays)) {
+                try {
+                    $decoded = json_decode($attendanceDays, true);
+                    $attendanceDays = is_array($decoded) ? $decoded : [];
+                } catch (\Exception $e) {
+                    Log::warning('Error decoding attendance_days JSON in getDailyAttendance', [
+                        'registration_id' => $registrationId,
+                        'attendance_days' => $attendanceDays,
+                        'error' => $e->getMessage()
+                    ]);
+                    $attendanceDays = [];
+                }
+            }
+            
+            // If it's not an array, initialize as empty array
+            if (!is_array($attendanceDays)) {
+                $attendanceDays = [];
+            }
 
             // Generate day labels
             $dayLabels = [];
+            $dayNames = [];
             $currentDate = $startDate->copy();
             for ($i = 1; $i <= $totalDays; $i++) {
                 $dayKey = "day_{$i}";
-                $dayLabels["day_{$i}"] = [
+                $dayLabels[$dayKey] = [
                     'label' => "Day {$i}",
                     'date' => $currentDate->format('M d, Y'),
-                    'attended' => $attendanceDays["day_{$i}"] ?? false
+                    'attended' => $attendanceDays[$dayKey] ?? false
                 ];
+                $dayNames[$dayKey] = "Day {$i}";
                 $currentDate->addDay();
             }
 
             // Calculate present count
             $presentCount = count(array_filter($attendanceDays, function($attended) {
-                return $attended === true || $attended === 'true';
+                return $attended === true || $attended === 'true' || $attended === 1 || $attended === '1';
             }));
 
             Log::info('Daily attendance data fetched successfully', [
@@ -385,8 +447,10 @@ class YouthProgramRegistrationController extends Controller
                     'total_days' => $totalDays
                 ],
                 'attendance_data' => $attendanceDays,
+                'day_names' => $dayNames, // Added for frontend compatibility
                 'day_labels' => $dayLabels,
-                'present_count' => $presentCount
+                'present_count' => $presentCount,
+                'total_days' => $totalDays // Also return total_days separately
             ]);
 
         } catch (\Exception $e) {
@@ -400,7 +464,7 @@ class YouthProgramRegistrationController extends Controller
     }
 
     /**
-     * Get program registration details with all submitted data (for AJAX/modal)
+     * Get program registration details with all submitted data (for AJAX/modal) - FIXED
      */
     public function getProgramRegistrations($programId)
     {
@@ -436,11 +500,40 @@ class YouthProgramRegistrationController extends Controller
                     $userProfile = $registrationData['user_profile'] ?? [];
                     $customFields = $registrationData['custom_fields'] ?? [];
                     
-                    // Calculate daily attendance
+                    // FIXED: Handle attendance_days properly (it might already be an array)
                     $attendanceDays = $registration->attendance_days ?: [];
+                    
+                    // If it's a string, try to decode it
+                    if (is_string($attendanceDays)) {
+                        try {
+                            $decoded = json_decode($attendanceDays, true);
+                            $attendanceDays = is_array($decoded) ? $decoded : [];
+                        } catch (\Exception $e) {
+                            Log::warning('Error decoding attendance_days JSON in getProgramRegistrations', [
+                                'registration_id' => $registration->id,
+                                'attendance_days' => $attendanceDays
+                            ]);
+                            $attendanceDays = [];
+                        }
+                    }
+                    
                     $presentDays = count(array_filter($attendanceDays, function($attended) {
-                        return $attended === true || $attended === 'true';
+                        return $attended === true || $attended === 'true' || $attended === 1 || $attended === '1';
                     }));
+                    
+                    // FIXED: Safely parse attended_at date
+                    $attendedAt = null;
+                    if ($registration->attended_at) {
+                        try {
+                            $attendedAt = Carbon::parse($registration->attended_at)->format('M d, Y g:i A');
+                        } catch (\Exception $e) {
+                            Log::warning('Error parsing attended_at date for AJAX', [
+                                'registration_id' => $registration->id,
+                                'attended_at' => $registration->attended_at
+                            ]);
+                            $attendedAt = $registration->attended_at; // Keep original value
+                        }
+                    }
                     
                     return [
                         'id' => $registration->id,
@@ -459,7 +552,7 @@ class YouthProgramRegistrationController extends Controller
                         'present_days' => $presentDays,
                         'total_days' => $totalDays,
                         'registered_at' => $registration->created_at->format('M d, Y g:i A'),
-                        'attended_at' => $registration->attended_at ? $registration->attended_at->format('M d, Y g:i A') : null,
+                        'attended_at' => $attendedAt, // FIXED: Use safely parsed value
                         'registration_data' => $registrationData,
                         'custom_fields' => $customFields,
                         'user_profile' => $userProfile

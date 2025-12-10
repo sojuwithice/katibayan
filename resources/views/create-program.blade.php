@@ -350,100 +350,31 @@
         </p>
       </div>
 
-      <!-- Registration Fields -->
-      <div class="regform-fields">
-        <h4>Registration Fields</h4>
-
-        <!-- Default Fields Container -->
-        <div id="defaultFields">
-          <!-- Default fields will be added here dynamically -->
-        </div>
-
-        <!-- Extra question fields (container for all fields) -->
-        <div id="extra-fields">
-          <!-- One field -->
-          <div class="regform-field" data-field-id="field_1">
-            <!-- 3 dots sa labas -->
-            <span class="regform-dots">⋯</span>
-
-            <!-- Dropdown menu -->
-            <div class="dots-menu hidden">
-              <p class="edit-option"><i class="fas fa-edit"></i> Edit</p>
-              <p class="delete-option"><i class="fas fa-trash"></i> Delete</p>
-            </div>
-
-            <!-- Card -->
-            <div class="regform-extra">
-              <!-- Card content -->
-              <div class="regform-main">
-                <div class="regform-top">
-                  <!-- Question input -->
-                  <input type="text" placeholder="Add question" class="field-label" />
-
-                  <!-- Answer type dropdown (upper right) -->
-                  <div class="answer-type-wrapper">
-                    <span class="answer-type">Choose type of answer</span>
-                    <div class="answer-dropdown">
-                      <p data-type="text">Short answer</p>
-                      <p data-type="radio">Radio button</p>
-                      <p data-type="select">Dropdown</p>
-                      <p data-type="file">File upload</p>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Answer preview (short) -->
-                <div class="answer-preview hidden" data-type="text">
-                  <input type="text" placeholder="Short answer" disabled />
-                </div>
-
-                <!-- Radio button preview -->
-                <div class="answer-radio hidden" data-type="radio">
-                  <div class="options-box">
-                    <div class="option-item">
-                      <input type="radio" name="sampleRadio_1" disabled>
-                      <span contenteditable="true" class="editable">Option 1</span>
-                    </div>
-                    <div class="option-item">
-                      <input type="radio" name="sampleRadio_1" disabled>
-                      <span contenteditable="true" class="editable">Option 2</span>
-                    </div>
-                  </div>
-                  <a href="#" class="add-option">+ Add option</a>
-                </div>
-
-                <!-- Dropdown preview -->
-                <div class="answer-select hidden" data-type="select">
-                  <div class="options-box">
-                    <div class="option-item">
-                      <span contenteditable="true" class="editable">Option 1</span>
-                    </div>
-                    <div class="option-item">
-                      <span contenteditable="true" class="editable">Option 2</span>
-                    </div>
-                  </div>
-                  <a href="#" class="add-option">+ Add option</a>
-                </div>
-
-                <!-- File upload preview -->
-                <div class="answer-file hidden" data-type="file">
-                  <input type="file" disabled />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Add button -->
-        <div class="add-btn-wrapper">
-          <button type="button" class="regform-add-btn" id="addFieldBtn">
-            + Add Another Field
+      <!-- Field Builder Section -->
+      <div class="field-builder">
+        <div class="field-builder-header">
+          <h3 class="field-builder-title">Custom Registration Fields</h3>
+          <button type="button" class="add-field-btn" id="addCustomFieldBtn">
+            <i class="fas fa-plus"></i> Add Field
           </button>
         </div>
-
-        <div class="form-actions">
-          <button type="submit" class="btn-submit postProgramBtn">Post Program</button>
+        
+        <div class="fields-container" id="fieldsContainer">
+          <!-- Fields will be added here dynamically -->
+          <div class="fields-empty" id="fieldsEmpty">
+            <i class="fas fa-file-alt"></i>
+            <h3>No fields added yet</h3>
+            <p>Click "Add Field" to start creating your registration form</p>
+          </div>
         </div>
+      </div>
+
+      <!-- Hidden input for custom fields data -->
+      <input type="hidden" name="custom_fields" id="customFieldsData" value="">
+
+      <!-- Submit Button -->
+      <div class="form-actions">
+        <button type="submit" class="btn-submit postProgramBtn">Post Program</button>
       </div>
     </div>
   </form>
@@ -457,7 +388,7 @@
       <div class="time-unit">
         <button type="button" class="arrow up" data-type="hour">▲</button>
         <div id="hour" class="time-value">01</div>
-        <button type="button" class="arrow down" data-type="hour">▼</button>
+        <button type="button" class.arrow down" data-type="hour">▼</button>
       </div>
       <span class="colon">:</span>
       <div class="time-unit">
@@ -502,6 +433,250 @@
 </div>
 
 <script>
+// Field Builder Templates
+const fieldTemplates = {
+  shortAnswer: `
+    <div class="field-item" data-field-type="short_answer">
+      <div class="drag-handle">
+        <i class="fas fa-grip-vertical"></i>
+      </div>
+      <div class="field-header">
+        <input type="text" class="field-title-input" placeholder="Question" required>
+        <div class="field-type-selector">
+          <div class="field-type-toggle">
+            <span>Short answer</span>
+            <i class="fas fa-chevron-down"></i>
+          </div>
+          <div class="field-type-dropdown">
+            <div class="field-type-option" data-type="short_answer">
+              <i class="fas fa-font"></i>
+              <span>Short answer</span>
+            </div>
+            <div class="field-type-option" data-type="multiple_choice">
+              <i class="fas fa-dot-circle"></i>
+              <span>Multiple choice</span>
+            </div>
+            <div class="field-type-option" data-type="file_upload">
+              <i class="fas fa-file-upload"></i>
+              <span>File upload</span>
+            </div>
+            <div class="field-type-option" data-type="dropdown">
+              <i class="fas fa-caret-down"></i>
+              <span>Dropdown</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="field-content">
+        <input type="text" class="short-answer-input" placeholder="Short answer text" disabled>
+      </div>
+      <div class="field-actions">
+        <div class="required-toggle">
+          <input type="checkbox" class="required-checkbox" checked>
+          <span>Required</span>
+        </div>
+        <button type="button" class="remove-field-btn">
+          <i class="fas fa-trash"></i> Remove
+        </button>
+      </div>
+    </div>
+  `,
+
+  multipleChoice: `
+    <div class="field-item" data-field-type="multiple_choice">
+      <div class="drag-handle">
+        <i class="fas fa-grip-vertical"></i>
+      </div>
+      <div class="field-header">
+        <input type="text" class="field-title-input" placeholder="Question" required>
+        <div class="field-type-selector">
+          <div class="field-type-toggle">
+            <span>Multiple choice</span>
+            <i class="fas fa-chevron-down"></i>
+          </div>
+          <div class="field-type-dropdown">
+            <div class="field-type-option" data-type="short_answer">
+              <i class="fas fa-font"></i>
+              <span>Short answer</span>
+            </div>
+            <div class="field-type-option" data-type="multiple_choice">
+              <i class="fas fa-dot-circle"></i>
+              <span>Multiple choice</span>
+            </div>
+            <div class="field-type-option" data-type="file_upload">
+              <i class="fas fa-file-upload"></i>
+              <span>File upload</span>
+            </div>
+            <div class="field-type-option" data-type="dropdown">
+              <i class="fas fa-caret-down"></i>
+              <span>Dropdown</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="field-content">
+        <div class="multiple-choice-options">
+          <div class="mc-option">
+            <input type="radio" name="option_group" disabled>
+            <input type="text" class="option-input" placeholder="Option 1" value="Option 1">
+            <button type="button" class="remove-option-btn" style="display:none;">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div class="mc-option">
+            <input type="radio" name="option_group" disabled>
+            <input type="text" class="option-input" placeholder="Option 2" value="Option 2">
+            <button type="button" class="remove-option-btn" style="display:none;">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+        <button type="button" class="add-option-btn">
+          <i class="fas fa-plus"></i> Add Option
+        </button>
+      </div>
+      <div class="field-actions">
+        <div class="required-toggle">
+          <input type="checkbox" class="required-checkbox" checked>
+          <span>Required</span>
+        </div>
+        <button type="button" class="remove-field-btn">
+          <i class="fas fa-trash"></i> Remove
+        </button>
+      </div>
+    </div>
+  `,
+
+  fileUpload: `
+    <div class="field-item" data-field-type="file_upload">
+      <div class="drag-handle">
+        <i class="fas fa-grip-vertical"></i>
+      </div>
+      <div class="field-header">
+        <input type="text" class="field-title-input" placeholder="Question" required>
+        <div class="field-type-selector">
+          <div class="field-type-toggle">
+            <span>File upload</span>
+            <i class="fas fa-chevron-down"></i>
+          </div>
+          <div class="field-type-dropdown">
+            <div class="field-type-option" data-type="short_answer">
+              <i class="fas fa-font"></i>
+              <span>Short answer</span>
+            </div>
+            <div class="field-type-option" data-type="multiple_choice">
+              <i class="fas fa-dot-circle"></i>
+              <span>Multiple choice</span>
+            </div>
+            <div class="field-type-option" data-type="file_upload">
+              <i class="fas fa-file-upload"></i>
+              <span>File upload</span>
+            </div>
+            <div class="field-type-option" data-type="dropdown">
+              <i class="fas fa-caret-down"></i>
+              <span>Dropdown</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="field-content">
+        <input type="file" class="file-input" style="display:none;" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx">
+        <button type="button" class="file-upload-btn">
+          <i class="fas fa-upload"></i> Upload File
+        </button>
+        <div class="file-upload-preview">
+          <div class="file-preview-content">
+            <i class="fas fa-file file-icon"></i>
+            <div class="file-info">
+              <div class="file-name">filename.jpg</div>
+              <div class="file-size">1.2 MB</div>
+            </div>
+            <button type="button" class="remove-file-btn">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="field-actions">
+        <div class="required-toggle">
+          <input type="checkbox" class="required-checkbox" checked>
+          <span>Required</span>
+        </div>
+        <button type="button" class="remove-field-btn">
+          <i class="fas fa-trash"></i> Remove
+        </button>
+      </div>
+    </div>
+  `,
+
+  dropdown: `
+    <div class="field-item" data-field-type="dropdown">
+      <div class="drag-handle">
+        <i class="fas fa-grip-vertical"></i>
+      </div>
+      <div class="field-header">
+        <input type="text" class="field-title-input" placeholder="Question" required>
+        <div class="field-type-selector">
+          <div class="field-type-toggle">
+            <span>Dropdown</span>
+            <i class="fas fa-chevron-down"></i>
+          </div>
+          <div class="field-type-dropdown">
+            <div class="field-type-option" data-type="short_answer">
+              <i class="fas fa-font"></i>
+              <span>Short answer</span>
+            </div>
+            <div class="field-type-option" data-type="multiple_choice">
+              <i class="fas fa-dot-circle"></i>
+              <span>Multiple choice</span>
+            </div>
+            <div class="field-type-option" data-type="file_upload">
+              <i class="fas fa-file-upload"></i>
+              <span>File upload</span>
+            </div>
+            <div class="field-type-option" data-type="dropdown">
+              <i class="fas fa-caret-down"></i>
+              <span>Dropdown</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="field-content">
+        <select class="dropdown-select" disabled>
+          <option>Option 1</option>
+          <option>Option 2</option>
+        </select>
+        <div class="multiple-choice-options" style="margin-top: 1rem;">
+          <div class="mc-option">
+            <input type="text" class="option-input" placeholder="Option 1" value="Option 1">
+            <button type="button" class="remove-option-btn" style="display:none;">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div class="mc-option">
+            <input type="text" class="option-input" placeholder="Option 2" value="Option 2">
+            <button type="button" class="remove-option-btn" style="display:none;">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+        <button type="button" class="add-option-btn">
+          <i class="fas fa-plus"></i> Add Option
+        </button>
+      </div>
+      <div class="field-actions">
+        <div class="required-toggle">
+          <input type="checkbox" class="required-checkbox" checked>
+          <span>Required</span>
+        </div>
+        <button type="button" class="remove-field-btn">
+          <i class="fas fa-trash"></i> Remove
+        </button>
+      </div>
+    </div>
+  `
+};
+
 document.addEventListener("DOMContentLoaded", () => {
   // === safe icon init ===
   if (typeof lucide !== "undefined" && lucide.createIcons) lucide.createIcons();
@@ -817,8 +992,8 @@ document.addEventListener("DOMContentLoaded", () => {
         updateRegistrationTitle();
         updateRegistrationDescription();
         
-        // Initialize default fields
-        initializeDefaultFields();
+        // Initialize field builder
+        initializeFieldBuilder();
       } else if (option.value === "link") {
         createRegSection.style.display = "none";
         linkSourceField.style.display = "block";
@@ -826,29 +1001,314 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // === DEFAULT FIELDS INITIALIZATION ===
-  function initializeDefaultFields() {
-    const defaultFieldsContainer = document.getElementById('defaultFields');
-    const defaultFields = [
-      { type: 'full_name', label: 'Full Name' },
-      { type: 'email', label: 'Email Address' },
-      { type: 'contact_no', label: 'Contact Number' },
-      { type: 'age', label: 'Age' },
-      { type: 'barangay', label: 'Barangay' }
-    ];
+  // === FIELD BUILDER FUNCTIONALITY ===
+  let fieldCounter = 0;
+  const fieldsContainer = document.getElementById('fieldsContainer');
+  const fieldsEmpty = document.getElementById('fieldsEmpty');
+  const addCustomFieldBtn = document.getElementById('addCustomFieldBtn');
+  const customFieldsData = document.getElementById('customFieldsData');
 
-    defaultFieldsContainer.innerHTML = '';
+  function initializeFieldBuilder() {
+    // Clear existing fields
+    fieldsContainer.innerHTML = '';
+    fieldsEmpty.style.display = 'block';
+    fieldCounter = 0;
     
-    defaultFields.forEach(field => {
-      const fieldHtml = `
-        <div class="default-field" data-field-type="${field.type}">
-          <label class="regform-label">${field.label}</label>
-          <input type="text" class="regform-input" readonly style="background-color: #f5f5f5;">
-          <input type="hidden" name="default_fields[]" value="${field.type}">
-        </div>
-      `;
-      defaultFieldsContainer.innerHTML += fieldHtml;
+    // Add event listener for add field button
+    addCustomFieldBtn.addEventListener('click', addField);
+    
+    // Add first field by default
+    addField('short_answer');
+  }
+
+  function addField(type = 'short_answer') {
+    fieldCounter++;
+    
+    // Hide empty state
+    fieldsEmpty.style.display = 'none';
+    
+    // Create field element
+    const fieldElement = document.createElement('div');
+    fieldElement.innerHTML = fieldTemplates[type === 'multiple_choice' ? 'multipleChoice' : 
+                                            type === 'file_upload' ? 'fileUpload' :
+                                            type === 'dropdown' ? 'dropdown' : 'shortAnswer'];
+    
+    const field = fieldElement.firstElementChild;
+    field.setAttribute('data-field-id', fieldCounter);
+    
+    // Add to container
+    fieldsContainer.appendChild(field);
+    
+    // Initialize field functionality
+    initializeField(field);
+    
+    // Update custom fields data
+    updateCustomFieldsData();
+    
+    return field;
+  }
+
+  function initializeField(field) {
+    // Field type selector
+    const typeToggle = field.querySelector('.field-type-toggle');
+    const typeDropdown = field.querySelector('.field-type-dropdown');
+    const typeOptions = typeDropdown.querySelectorAll('.field-type-option');
+    
+    typeToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      typeDropdown.classList.toggle('show');
     });
+    
+    typeOptions.forEach(option => {
+      option.addEventListener('click', () => {
+        const newType = option.dataset.type;
+        const fieldId = field.getAttribute('data-field-id');
+        
+        // Remove old field
+        field.remove();
+        
+        // Add new field with same ID
+        const newField = addField(newType);
+        newField.setAttribute('data-field-id', fieldId);
+        
+        // Copy title if it exists
+        const oldTitle = field.querySelector('.field-title-input')?.value;
+        if (oldTitle) {
+          newField.querySelector('.field-title-input').value = oldTitle;
+        }
+        
+        // Copy required status
+        const oldRequired = field.querySelector('.required-checkbox')?.checked;
+        if (oldRequired !== undefined) {
+          newField.querySelector('.required-checkbox').checked = oldRequired;
+        }
+      });
+    });
+    
+    // Remove field button
+    const removeBtn = field.querySelector('.remove-field-btn');
+    removeBtn.addEventListener('click', () => {
+      field.remove();
+      if (fieldsContainer.children.length === 1) { // Only empty state remains
+        fieldsEmpty.style.display = 'block';
+      }
+      updateCustomFieldsData();
+    });
+    
+    // Required toggle
+    const requiredCheckbox = field.querySelector('.required-checkbox');
+    requiredCheckbox.addEventListener('change', updateCustomFieldsData);
+    
+    // Title input
+    const titleInput = field.querySelector('.field-title-input');
+    titleInput.addEventListener('input', updateCustomFieldsData);
+    
+    // Field type specific initialization
+    const fieldType = field.getAttribute('data-field-type');
+    
+    if (fieldType === 'multiple_choice' || fieldType === 'dropdown') {
+      initializeMultipleChoiceField(field);
+    } else if (fieldType === 'file_upload') {
+      initializeFileUploadField(field);
+    }
+    
+    // Drag and drop
+    initializeDragAndDrop(field);
+  }
+
+  function initializeMultipleChoiceField(field) {
+    const optionsContainer = field.querySelector('.multiple-choice-options');
+    const addOptionBtn = field.querySelector('.add-option-btn');
+    const isDropdown = field.getAttribute('data-field-type') === 'dropdown';
+    
+    // Show remove buttons for options beyond first two
+    const existingOptions = optionsContainer.querySelectorAll('.mc-option');
+    existingOptions.forEach((option, index) => {
+      if (index >= 2) {
+        const removeBtn = option.querySelector('.remove-option-btn');
+        removeBtn.style.display = 'block';
+        
+        removeBtn.addEventListener('click', () => {
+          option.remove();
+          updateCustomFieldsData();
+        });
+      }
+      
+      // Option input change listener
+      const optionInput = option.querySelector('input[type="text"]');
+      optionInput.addEventListener('input', updateCustomFieldsData);
+    });
+    
+    // Add option button
+    addOptionBtn.addEventListener('click', () => {
+      const optionCount = optionsContainer.querySelectorAll('.mc-option').length + 1;
+      
+      const optionDiv = document.createElement('div');
+      optionDiv.className = 'mc-option';
+      
+      if (!isDropdown) {
+        optionDiv.innerHTML = `
+          <input type="radio" name="option_group_${fieldCounter}" disabled>
+          <input type="text" class="option-input" placeholder="Option ${optionCount}">
+          <button type="button" class="remove-option-btn">
+            <i class="fas fa-times"></i>
+          </button>
+        `;
+      } else {
+        optionDiv.innerHTML = `
+          <input type="text" class="option-input" placeholder="Option ${optionCount}">
+          <button type="button" class="remove-option-btn">
+            <i class="fas fa-times"></i>
+          </button>
+        `;
+      }
+      
+      optionsContainer.appendChild(optionDiv);
+      
+      // Add event listener to remove button
+      const removeBtn = optionDiv.querySelector('.remove-option-btn');
+      removeBtn.addEventListener('click', () => {
+        optionDiv.remove();
+        updateCustomFieldsData();
+      });
+      
+      // Add event listener to option input
+      const optionInput = optionDiv.querySelector('.option-input');
+      optionInput.addEventListener('input', updateCustomFieldsData);
+      
+      updateCustomFieldsData();
+    });
+  }
+
+  function initializeFileUploadField(field) {
+    const fileInput = field.querySelector('.file-input');
+    const uploadBtn = field.querySelector('.file-upload-btn');
+    const preview = field.querySelector('.file-upload-preview');
+    const removeFileBtn = field.querySelector('.remove-file-btn');
+    const fileName = field.querySelector('.file-name');
+    const fileSize = field.querySelector('.file-size');
+    
+    uploadBtn.addEventListener('click', () => {
+      fileInput.click();
+    });
+    
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        fileName.textContent = file.name;
+        fileSize.textContent = formatFileSize(file.size);
+        preview.classList.add('show');
+        updateCustomFieldsData();
+      }
+    });
+    
+    removeFileBtn.addEventListener('click', () => {
+      fileInput.value = '';
+      preview.classList.remove('show');
+      updateCustomFieldsData();
+    });
+  }
+
+  function initializeDragAndDrop(field) {
+    const dragHandle = field.querySelector('.drag-handle');
+    
+    dragHandle.addEventListener('mousedown', startDrag);
+    dragHandle.addEventListener('touchstart', startDrag);
+    
+    function startDrag(e) {
+      e.preventDefault();
+      const fields = Array.from(fieldsContainer.querySelectorAll('.field-item:not(.dragging)'));
+      const draggedField = field;
+      
+      draggedField.classList.add('dragging');
+      
+      const dragStartY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+      const fieldRect = draggedField.getBoundingClientRect();
+      const offsetY = dragStartY - fieldRect.top;
+      
+      function moveHandler(e) {
+        e.preventDefault();
+        const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+        const newY = clientY - offsetY;
+        
+        draggedField.style.position = 'fixed';
+        draggedField.style.top = `${newY}px`;
+        draggedField.style.left = `${fieldRect.left}px`;
+        draggedField.style.width = `${fieldRect.width}px`;
+        draggedField.style.zIndex = '10000';
+        
+        // Find the field to swap with
+        const closestField = fields.reduce((closest, currentField) => {
+          const box = currentField.getBoundingClientRect();
+          const offset = clientY - box.top - box.height / 2;
+          
+          if (offset < 0 && offset > closest.offset) {
+            return { offset: offset, element: currentField };
+          } else {
+            return closest;
+          }
+        }, { offset: Number.NEGATIVE_INFINITY, element: null }).element;
+        
+        if (closestField) {
+          fieldsContainer.insertBefore(draggedField, closestField);
+        } else {
+          fieldsContainer.appendChild(draggedField);
+        }
+      }
+      
+      function stopHandler() {
+        draggedField.classList.remove('dragging');
+        draggedField.style.position = '';
+        draggedField.style.top = '';
+        draggedField.style.left = '';
+        draggedField.style.width = '';
+        draggedField.style.zIndex = '';
+        
+        document.removeEventListener('mousemove', moveHandler);
+        document.removeEventListener('mouseup', stopHandler);
+        document.removeEventListener('touchmove', moveHandler);
+        document.removeEventListener('touchend', stopHandler);
+        
+        updateCustomFieldsData();
+      }
+      
+      document.addEventListener('mousemove', moveHandler);
+      document.addEventListener('mouseup', stopHandler);
+      document.addEventListener('touchmove', moveHandler);
+      document.addEventListener('touchend', stopHandler);
+    }
+  }
+
+  function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
+  function updateCustomFieldsData() {
+    const fields = Array.from(fieldsContainer.querySelectorAll('.field-item'));
+    const fieldsData = fields.map(field => {
+      const type = field.getAttribute('data-field-type');
+      const title = field.querySelector('.field-title-input').value || '';
+      const required = field.querySelector('.required-checkbox')?.checked || false;
+      
+      let options = [];
+      if (type === 'multiple_choice' || type === 'dropdown') {
+        const optionInputs = field.querySelectorAll('.option-input');
+        options = Array.from(optionInputs).map(input => input.value).filter(val => val.trim() !== '');
+      }
+      
+      return {
+        type: type,
+        label: title,
+        required: required,
+        options: options.length > 0 ? options : null
+      };
+    }).filter(field => field.label.trim() !== ''); // Remove empty fields
+    
+    customFieldsData.value = JSON.stringify(fieldsData);
   }
 
   // === DATE + NOTE AUTO UPDATE ===
@@ -884,168 +1344,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   [openDate, openTime, closeDate, closeTime].forEach(input => input.addEventListener("change", updateNote));
 
-  // === DOTS MENU INIT ===
-  function initDotsMenu(field) {
-    const dots = field.querySelector(".regform-dots");
-    const menu = field.querySelector(".dots-menu");
-
-    if (!dots || !menu) return;
-
-    // Toggle menu
-    dots.addEventListener("click", (e) => {
-      e.stopPropagation();
-      document.querySelectorAll(".dots-menu").forEach(m => { if (m !== menu) m.classList.add("hidden"); });
-      menu.classList.toggle("hidden");
-    });
-
-    // Edit option
-    const editBtn = menu.querySelector(".edit-option");
-    if (editBtn) {
-      editBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const input = field.querySelector(".field-label");
-        if (input) input.focus();
-        menu.classList.add("hidden");
-      });
-    }
-
-    // Delete option
-    const deleteBtn = menu.querySelector(".delete-option");
-    if (deleteBtn) {
-      deleteBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        field.remove();
-      });
-    }
-  }
-
-  // === ADD FIELD (clone template) ===
-  const addFieldBtn = document.getElementById("addFieldBtn");
-  const extraFieldsContainer = document.getElementById("extra-fields");
-  const templateField = extraFieldsContainer.firstElementChild?.cloneNode(true);
-
-  let fieldCounter = 1;
-
-  addFieldBtn.addEventListener("click", () => {
-    if (!templateField) return;
-    fieldCounter++;
-    const clone = templateField.cloneNode(true);
-    const fieldId = `field_${fieldCounter}`;
-    
-    clone.setAttribute('data-field-id', fieldId);
-    
-    // Reset and update field
-    const questionInput = clone.querySelector(".field-label");
-    questionInput.value = "";
-    
-    const answerType = clone.querySelector(".answer-type");
-    answerType.textContent = "Choose type of answer";
-    
-    // Reset all previews
-    clone.querySelectorAll(".answer-preview, .answer-radio, .answer-select, .answer-file").forEach(el => {
-      el.classList.add("hidden");
-    });
-    
-    // Update radio button names
-    const radioInputs = clone.querySelectorAll('input[type="radio"]');
-    radioInputs.forEach(input => {
-      input.name = `sampleRadio_${fieldCounter}`;
-    });
-    
-    // Reset dropdown menu
-    clone.querySelectorAll(".dots-menu").forEach(menu => menu.classList.add("hidden"));
-    
-    // Reset options
-    const optionsBoxes = clone.querySelectorAll(".options-box");
-    optionsBoxes.forEach(box => {
-      const firstTwo = box.querySelectorAll(".option-item:not(:nth-child(-n+2))");
-      firstTwo.forEach(item => item.remove());
-      
-      const editableSpans = box.querySelectorAll(".editable");
-      editableSpans[0].textContent = "Option 1";
-      editableSpans[1].textContent = "Option 2";
-    });
-
-    extraFieldsContainer.appendChild(clone);
-    initDotsMenu(clone);
-    initAnswerTypeDropdown(clone);
-    initAddOptionButtons(clone);
-  });
-
-  // Initialize existing fields
-  document.querySelectorAll("#extra-fields .regform-field").forEach(field => {
-    initDotsMenu(field);
-    initAnswerTypeDropdown(field);
-    initAddOptionButtons(field);
-  });
-
-  document.addEventListener("click", () => {
-    document.querySelectorAll(".dots-menu").forEach(menu => menu.classList.add("hidden"));
-    document.querySelectorAll(".answer-dropdown").forEach(dropdown => dropdown.classList.remove("open"));
-  });
-
-  // === ANSWER TYPE DROPDOWN FUNCTIONALITY ===
-  function initAnswerTypeDropdown(field) {
-    const answerType = field.querySelector(".answer-type");
-    const dropdown = field.querySelector(".answer-dropdown");
-    const options = dropdown.querySelectorAll("p");
-
-    answerType.addEventListener("click", (e) => {
-      e.stopPropagation();
-      document.querySelectorAll(".answer-dropdown.open").forEach(d => {
-        if (d !== dropdown) d.classList.remove("open");
-      });
-      dropdown.classList.toggle("open");
-    });
-
-    options.forEach(option => {
-      option.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const type = option.getAttribute("data-type");
-        const typeText = option.textContent;
-        
-        answerType.textContent = typeText;
-        dropdown.classList.remove("open");
-        
-        // Hide all previews
-        field.querySelectorAll(".answer-preview, .answer-radio, .answer-select, .answer-file").forEach(el => {
-          el.classList.add("hidden");
-        });
-        
-        // Show selected preview
-        const selectedPreview = field.querySelector(`[data-type="${type}"]`);
-        if (selectedPreview) {
-          selectedPreview.classList.remove("hidden");
-        }
-      });
-    });
-  }
-
-  // === ADD OPTION BUTTONS ===
-  function initAddOptionButtons(field) {
-    const addOptionButtons = field.querySelectorAll(".add-option");
-    
-    addOptionButtons.forEach(button => {
-      button.addEventListener("click", (e) => {
-        e.preventDefault();
-        const optionsBox = e.target.previousElementSibling;
-        const optionCount = optionsBox.querySelectorAll(".option-item").length + 1;
-        
-        const newOption = document.createElement("div");
-        newOption.className = "option-item";
-        
-        if (optionsBox.classList.contains("answer-radio")) {
-          newOption.innerHTML = `<input type="radio" name="sampleRadio_${fieldCounter}" disabled><span contenteditable="true" class="editable">Option ${optionCount}</span>`;
-        } else {
-          newOption.innerHTML = `<span contenteditable="true" class="editable">Option ${optionCount}</span>`;
-        }
-        
-        optionsBox.appendChild(newOption);
-      });
-    });
-  }
-
-  // === COMPLETE FORM SUBMISSION - FIXED END DATE ISSUE ===
+  // === COMPLETE FORM SUBMISSION ===
   const programForm = document.getElementById("programForm");
   const postedModal = document.getElementById("postedModal");
   const closePostedModal = document.getElementById("closePostedModal");
@@ -1053,66 +1352,9 @@ document.addEventListener("DOMContentLoaded", () => {
   programForm.addEventListener("submit", function(e) {
     e.preventDefault();
     
-    // DEBUG: Log all form values before submission
-    console.log('=== FORM DATA BEFORE SUBMISSION ===');
-    const formDataDebug = new FormData(this);
-    for (let [key, value] of formDataDebug.entries()) {
-      console.log(`${key}: ${value}`);
-    }
+    // Update custom fields data before submission
+    updateCustomFieldsData();
     
-    // Collect custom fields data
-    const customFields = [];
-    const customFieldElements = document.querySelectorAll('#extra-fields .regform-field');
-    
-    customFieldElements.forEach((field, index) => {
-      const labelInput = field.querySelector('.field-label');
-      const answerType = field.querySelector('.answer-type');
-      const options = [];
-      
-      // Get options for radio/select fields
-      const optionsBox = field.querySelector('.options-box');
-      if (optionsBox) {
-        const optionItems = optionsBox.querySelectorAll('.editable');
-        optionItems.forEach(item => {
-          if (item.textContent.trim()) {
-            options.push(item.textContent.trim());
-          }
-        });
-      }
-      
-      if (labelInput && labelInput.value.trim() && answerType.textContent !== 'Choose type of answer') {
-        const fieldType = getFieldTypeFromText(answerType.textContent);
-        
-        // Create field data in the format expected by the backend
-        const fieldData = {
-          type: 'custom',
-          field_type: fieldType,
-          label: labelInput.value.trim(),
-          options: options.length > 0 ? options : null,
-          required: true,
-          editable: true
-        };
-        
-        customFields.push(fieldData);
-      }
-    });
-    
-    // Create form data - FIXED: Use the actual form element directly
-    const formData = new FormData(this);
-    
-    // Add custom fields as JSON string
-    if (customFields.length > 0) {
-      formData.set('custom_fields', JSON.stringify(customFields));
-    } else {
-      formData.set('custom_fields', '[]'); // Empty array as JSON string
-    }
-
-    // DEBUG: Log all form values after modification
-    console.log('=== FORM DATA AFTER MODIFICATION ===');
-    for (let [key, value] of formData.entries()) {
-      console.log(`${key}: ${value}`);
-    }
-
     // Show loading state
     const submitBtn = document.querySelector('.postProgramBtn');
     const originalText = submitBtn.innerHTML;
@@ -1122,20 +1364,18 @@ document.addEventListener("DOMContentLoaded", () => {
     // Submit form via AJAX
     fetch(this.action, {
       method: 'POST',
-      body: formData,
+      body: new FormData(this),
       headers: {
         'X-CSRF-TOKEN': '{{ csrf_token() }}',
         'Accept': 'application/json'
       }
     })
     .then(response => {
-      // Check if response is JSON
       const contentType = response.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
-        // If not JSON, try to parse as text first to get error details
         return response.text().then(text => {
           console.error('Server returned non-JSON response:', text);
-          throw new Error(`Server returned HTML instead of JSON. Status: ${response.status}. The server might have validation errors or be experiencing issues.`);
+          throw new Error(`Server returned HTML instead of JSON. Status: ${response.status}`);
         });
       }
       return response.json();
@@ -1160,10 +1400,10 @@ document.addEventListener("DOMContentLoaded", () => {
         previewImg.src = "";
         previewContainer.style.display = "none";
         uploadLabel.style.display = "flex";
-        // Reset custom fields
-        document.querySelectorAll('#extra-fields .regform-field').forEach(field => {
-          if (field !== templateField) field.remove();
-        });
+        // Reset field builder
+        fieldsContainer.innerHTML = '';
+        fieldsEmpty.style.display = 'block';
+        customFieldsData.value = '';
       } else {
         throw new Error(data.message || 'Unknown error occurred');
       }
@@ -1178,17 +1418,6 @@ document.addEventListener("DOMContentLoaded", () => {
       submitBtn.disabled = false;
     });
   });
-
-  // Helper function to convert answer type text to field type
-  function getFieldTypeFromText(text) {
-    const typeMap = {
-      'Short answer': 'text',
-      'Radio button': 'radio',
-      'Dropdown': 'select',
-      'File upload': 'file'
-    };
-    return typeMap[text] || 'text';
-  }
 
   // Close modal
   closePostedModal.addEventListener("click", () => {
@@ -1207,6 +1436,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Initialize the registration description on page load
   updateRegistrationDescription();
+  
+  // Close dropdowns when clicking outside
+  document.addEventListener('click', (e) => {
+    // Close all field type dropdowns
+    document.querySelectorAll('.field-type-dropdown.show').forEach(dropdown => {
+      if (!dropdown.contains(e.target) && !dropdown.previousElementSibling.contains(e.target)) {
+        dropdown.classList.remove('show');
+      }
+    });
+  });
 });
 </script>
 

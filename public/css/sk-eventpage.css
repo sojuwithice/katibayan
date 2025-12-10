@@ -1852,3 +1852,260 @@ body {
   color: white;
   text-decoration: none;
 }
+/* ===== POSTPONE STYLES ===== */
+
+/* Postpone Button */
+.postpone-btn {
+    background: #FF9800;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s ease;
+}
+
+.postpone-btn:hover {
+    background: #F57C00;
+    transform: translateY(-2px);
+}
+
+.postpone-btn i {
+    font-size: 0.9rem;
+}
+
+/* Unpostpone Button */
+.unpostpone-btn {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s ease;
+}
+
+.unpostpone-btn:hover {
+    background: #388E3C;
+    transform: translateY(-2px);
+}
+
+.unpostpone-btn i {
+    font-size: 0.9rem;
+}
+
+/* Postponed Badge */
+.postponed-badge {
+    background: #FF9800;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.postponed-badge i {
+    font-size: 0.8rem;
+}
+
+/* Postponed Date Styling */
+.postponed-date {
+    background: #FFF3E0;
+    border: 2px solid #FF9800;
+}
+
+.postponed-date .day,
+.postponed-date .num {
+    color: #FF9800;
+}
+
+.postponed-icon {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #FF9800;
+    color: white;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+}
+
+/* Postponed to text */
+.postponed-to {
+    display: block;
+    color: #FF9800;
+    font-weight: 600;
+    font-size: 0.85rem;
+    margin-top: 5px;
+    padding: 5px 10px;
+    background: #FFF3E0;
+    border-radius: 6px;
+    border-left: 3px solid #FF9800;
+}
+
+/* Event action buttons container adjustments */
+.event-action {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* View QR button adjustments */
+.view-qr-btn {
+    background: #2196F3;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s ease;
+}
+
+.view-qr-btn:hover {
+    background: #1976D2;
+    transform: translateY(-2px);
+}
+
+.view-qr-btn i {
+    font-size: 0.9rem;
+}
+
+/* Postpone Modal */
+.postpone-modal {
+    max-width: 500px;
+    padding: 2.5rem;
+}
+
+.postpone-icon {
+    width: 70px;
+    height: 70px;
+    background: #FFF3E0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem auto;
+}
+
+.postpone-icon i {
+    font-size: 2rem;
+    color: #FF9800;
+}
+
+.postpone-modal h2 {
+    color: #FF9800;
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.postpone-modal p {
+    text-align: center;
+    margin-bottom: 2rem;
+    color: var(--text-color);
+}
+
+.postpone-modal .form-group {
+    margin-bottom: 1.5rem;
+}
+
+.postpone-modal label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.postpone-modal input[type="datetime-local"] {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #3C87C4;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-family: 'Montserrat', sans-serif;
+    background: var(--card-bg);
+    color: var(--text-color);
+    box-sizing: border-box;
+}
+
+.postpone-modal textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #3C87C4;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-family: 'Montserrat', sans-serif;
+    background: var(--card-bg);
+    color: var(--text-color);
+    resize: vertical;
+    min-height: 80px;
+    box-sizing: border-box;
+}
+
+.postpone-modal .modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+.postpone-btn-confirm {
+    background: #FF9800;
+    color: white;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.postpone-btn-confirm:hover {
+    background: #F57C00;
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .postpone-date {
+    background: #332600;
+    border-color: #FF9800;
+}
+
+[data-theme="dark"] .postponed-to {
+    background: #332600;
+    color: #FFB74D;
+}
+
+[data-theme="dark"] .postpone-icon {
+    background: #332600;
+}
+
+[data-theme="dark"] .postpone-modal input[type="datetime-local"],
+[data-theme="dark"] .postpone-modal textarea {
+    background: #2a2a2a;
+    border-color: #555;
+    color: #eee;
+}

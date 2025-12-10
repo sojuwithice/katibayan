@@ -13,6 +13,7 @@
     .day-attendance-item {
       display: flex;
       align-items: center;
+      justify-content: space-between;
       margin-bottom: 10px;
       padding: 8px;
       border: 1px solid #e0e0e0;
@@ -23,7 +24,7 @@
       display: flex;
       align-items: center;
       cursor: pointer;
-      width: 100%;
+      flex-grow: 1;
     }
     
     .day-attendance-item input[type="checkbox"] {
@@ -69,6 +70,234 @@
       padding: 10px;
       border: 1px solid #e0e0e0;
       border-radius: 4px;
+    }
+    
+    /* Add Day Button */
+    .add-day-btn {
+      background: #3C87C4;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .add-day-btn:hover {
+      background: #2a6da9;
+    }
+    
+    /* Custom Modal Styles */
+    .custom-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .custom-modal-content {
+      background: white;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 500px;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    }
+    
+    .modal-header {
+      padding: 20px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .modal-header h2 {
+      margin: 0;
+      color: #333;
+    }
+    
+    .modal-body {
+      padding: 20px;
+    }
+    
+    .modal-footer {
+      padding: 20px;
+      border-top: 1px solid #e0e0e0;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+    
+    .modal-close {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      font-size: 24px;
+      cursor: pointer;
+      color: #666;
+      background: none;
+      border: none;
+    }
+    
+    .modal-close:hover {
+      color: #333;
+    }
+    
+    /* Export Modal Specific */
+    .export-options {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+    
+    .export-option {
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .export-option:hover {
+      border-color: #3C87C4;
+      background: #f5f9fd;
+    }
+    
+    .export-option.selected {
+      border-color: #3C87C4;
+      background: #e8f0fa;
+    }
+    
+    .export-option i {
+      font-size: 32px;
+      color: #3C87C4;
+      margin-bottom: 10px;
+    }
+    
+    .export-option h4 {
+      margin: 0 0 5px 0;
+      color: #333;
+    }
+    
+    .export-option p {
+      margin: 0;
+      color: #666;
+      font-size: 14px;
+    }
+    
+    /* Confirmation Modal */
+    .confirmation-modal-content {
+      text-align: center;
+      padding: 30px;
+    }
+    
+    .confirmation-icon {
+      font-size: 48px;
+      color: #4CAF50;
+      margin-bottom: 20px;
+    }
+    
+    .confirmation-text {
+      margin-bottom: 20px;
+      color: #333;
+    }
+    
+    /* Remove Day Button */
+    .remove-day-btn {
+      background: #ff6b6b;
+      color: white;
+      border: none;
+      padding: 4px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      margin-left: 10px;
+    }
+    
+    .remove-day-btn:hover {
+      background: #ff5252;
+    }
+    
+    /* Day Management Header */
+    .day-management-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    
+    .current-days-info {
+      color: #666;
+      font-size: 14px;
+    }
+    
+    /* New Day Input Section */
+    .new-day-input {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+      padding: 15px;
+      background: #f9f9f9;
+      border-radius: 8px;
+    }
+    
+    .new-day-input input {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    
+    .new-day-input button {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    .new-day-input button:hover {
+      background: #45a049;
+    }
+    
+    /* Fix for event time display */
+    .program-info {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-top: 10px;
+    }
+    
+    .program-date,
+    .program-category,
+    .total-registrations,
+    .attendance-summary,
+    .program-days {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 14px;
+      color: #666;
+    }
+    
+    .program-date i,
+    .program-category i,
+    .total-registrations i,
+    .attendance-summary i,
+    .program-days i {
+      color: #3C87C4;
     }
   </style>
 </head>
@@ -235,20 +464,42 @@
     <div class="registration-list-container">
       <!-- Header -->
       <div class="header-section">
-        <h2>{{ $program->title }} - Registration List</h2>
+        <h2>{{ $program->title ?? 'Program Title' }} - Registration List</h2>
         <div class="program-info">
           <span class="program-date">
             <i class="fas fa-calendar"></i>
-            @if($program->event_end_date && $program->event_end_date != $program->event_date)
-              {{ \Carbon\Carbon::parse($program->event_date)->format('M d, Y') }} - {{ \Carbon\Carbon::parse($program->event_end_date)->format('M d, Y') }}
+            @php
+              // Safely parse dates
+              $eventDate = isset($program->event_date) ? \Carbon\Carbon::parse($program->event_date) : null;
+              $eventEndDate = isset($program->event_end_date) ? \Carbon\Carbon::parse($program->event_end_date) : null;
+              $eventTime = isset($program->event_time) ? $program->event_time : '00:00:00';
+            @endphp
+            
+            @if($eventDate && $eventEndDate && $eventEndDate->notEqualTo($eventDate))
+              {{ $eventDate->format('M d, Y') }} - {{ $eventEndDate->format('M d, Y') }}
+            @elseif($eventDate)
+              {{ $eventDate->format('M d, Y') }}
             @else
-              {{ \Carbon\Carbon::parse($program->event_date)->format('M d, Y') }}
+              Date not specified
             @endif
-            at {{ \Carbon\Carbon::parse($program->event_time)->format('g:i A') }}
+            
+            @if($eventTime)
+              @php
+                // Convert time to readable format
+                try {
+                  $time = \Carbon\Carbon::createFromFormat('H:i:s', $eventTime);
+                  $formattedTime = $time->format('g:i A');
+                } catch (\Exception $e) {
+                  // If format is not H:i:s, try other formats
+                  $formattedTime = date('g:i A', strtotime($eventTime));
+                }
+              @endphp
+              at {{ $formattedTime }}
+            @endif
           </span>
           <span class="program-category">
             <i class="fas fa-tag"></i>
-            {{ ucfirst($program->category) }}
+            {{ ucfirst($program->category ?? 'Uncategorized') }}
           </span>
           <span class="total-registrations">
             <i class="fas fa-users"></i>
@@ -258,6 +509,10 @@
             <i class="fas fa-user-check"></i>
             <span id="attendedCount">{{ $attendedCount ?? 0 }}</span> Attended / 
             <span id="totalCount">{{ count($registrations) }}</span> Total
+          </span>
+          <span class="program-days">
+            <i class="fas fa-calendar-alt"></i>
+            <span id="totalDaysCount">{{ $program->number_of_days ?? 1 }}</span> Day(s)
           </span>
         </div>
       </div>
@@ -299,6 +554,26 @@
           </thead>
           <tbody>
             @forelse($registrations as $registration)
+              @php
+                // Calculate present days from attendance data
+                $presentDays = 0;
+                $totalDays = $program->number_of_days ?? 1;
+                
+                if (isset($registration['attendance_data']) && is_array($registration['attendance_data'])) {
+                  $presentDays = array_sum(array_values($registration['attendance_data']));
+                } elseif (isset($registration['custom_fields']) && is_array($registration['custom_fields'])) {
+                  // Try to get attendance from custom fields
+                  foreach ($registration['custom_fields'] as $key => $value) {
+                    if (strpos($key, 'day_') === 0 && $value) {
+                      $presentDays++;
+                    }
+                  }
+                }
+                
+                // Check if attended (for overall attendance)
+                $attended = $registration['attended'] ?? ($presentDays > 0);
+              @endphp
+              
               <tr data-registration-id="{{ $registration['id'] }}">
                 <td>
                   <span class="reference-id">{{ $registration['reference_id'] }}</span>
@@ -314,14 +589,14 @@
                 <td>{{ $registration['barangay'] ?? 'N/A' }}</td>
                 <td>{{ $registration['registered_at'] }}</td>
                 <td>
-                  <span class="attendance-status attendance-{{ $registration['attended'] ? 'present' : 'absent' }}">
-                    {{ $registration['attended'] ? 'Present' : 'Absent' }}
+                  <span class="attendance-status attendance-{{ $attended ? 'present' : 'absent' }}">
+                    {{ $attended ? 'Present' : 'Absent' }}
                   </span>
                 </td>
                 <td>
                   <div class="daily-attendance" id="dailyAttendance_{{ $registration['id'] }}">
                     <span class="attendance-summary-small">
-                      {{ $registration['present_days'] ?? 0 }}/{{ $registration['total_days'] ?? 1 }} days
+                      {{ $presentDays }}/{{ $totalDays }} days
                     </span>
                   </div>
                 </td>
@@ -422,15 +697,34 @@
       <div class="modal-header">
         <h2>Manage Daily Attendance</h2>
         <span class="reference-id-modal" id="dailyModalReferenceId"></span>
+        <div class="current-days-info" id="currentDaysInfo"></div>
       </div>
       <div class="modal-body">
         <div class="user-info-header">
           <h4 id="dailyModalUserName"></h4>
           <p id="dailyModalUserInfo"></p>
         </div>
+        
+        <div class="day-management-header">
+          <h5>Daily Attendance</h5>
+          @if(!$program->event_end_date || (!$program->event_end_date && $program->event_date) || ($program->event_end_date && $program->event_end_date == $program->event_date))
+            <button class="add-day-btn" id="addDayBtn">
+              <i class="fas fa-plus"></i> Add Day
+            </button>
+          @endif
+        </div>
+        
         <div class="days-attendance-container" id="daysAttendanceContainer">
           <!-- Days attendance checkboxes will be populated here -->
         </div>
+        
+        @if(!$program->event_end_date || (!$program->event_end_date && $program->event_date) || ($program->event_end_date && $program->event_end_date == $program->event_date))
+        <div class="new-day-input" id="newDayInput" style="display: none;">
+          <input type="text" id="newDayName" placeholder="Enter day name (e.g., Day 2, Workshop Day, etc.)">
+          <button id="confirmAddDay">Add</button>
+          <button id="cancelAddDay">Cancel</button>
+        </div>
+        @endif
       </div>
       <div class="modal-footer">
         <button class="cancel-btn" id="cancelDailyAttendance">Cancel</button>
@@ -439,7 +733,77 @@
     </div>
   </div>
 
+  <!-- Export/Download Modal -->
+  <div id="exportModal" class="custom-modal">
+    <div class="custom-modal-content">
+      <button class="modal-close" id="closeExportModal">&times;</button>
+      <div class="modal-header">
+        <h2>Export Registration Data</h2>
+      </div>
+      <div class="modal-body">
+        <div class="export-options" id="exportOptions">
+          <div class="export-option" data-format="csv">
+            <i class="fas fa-file-csv"></i>
+            <h4>CSV Format</h4>
+            <p>Comma separated values, compatible with Excel and Google Sheets</p>
+          </div>
+          <div class="export-option" data-format="excel">
+            <i class="fas fa-file-excel"></i>
+            <h4>Excel Format</h4>
+            <p>Microsoft Excel file (.xlsx) with formatted columns</p>
+          </div>
+          <div class="export-option" data-format="pdf">
+            <i class="fas fa-file-pdf"></i>
+            <h4>PDF Report</h4>
+            <p>Printable PDF document with attendance summary</p>
+          </div>
+        </div>
+        
+        <div class="export-filters">
+          <h4>Filter Data</h4>
+          <div style="margin: 15px 0;">
+            <label style="display: block; margin-bottom: 5px;">
+              <input type="checkbox" id="includeAllData" checked> Include all registration data
+            </label>
+            <label style="display: block; margin-bottom: 5px;">
+              <input type="checkbox" id="includeAttendance" checked> Include attendance records
+            </label>
+            <label style="display: block; margin-bottom: 5px;">
+              <input type="checkbox" id="includeCustomFields"> Include custom field responses
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="cancel-btn" id="cancelExport">Cancel</button>
+        <button class="confirm-btn" id="confirmExport" disabled>Export Data</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Export Confirmation Modal -->
+  <div id="exportConfirmationModal" class="custom-modal">
+    <div class="custom-modal-content confirmation-modal-content">
+      <div class="confirmation-icon">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <h3>Export in Progress</h3>
+      <p class="confirmation-text" id="exportConfirmationText">
+        Your export file is being prepared. This may take a moment...
+      </p>
+      <div class="modal-footer">
+        <button class="confirm-btn" id="closeConfirmationModal">OK</button>
+      </div>
+    </div>
+  </div>
+
 <script>
+// Global variables
+let currentProgramDays = {{ $program->number_of_days ?? 1 }};
+let selectedExportFormat = null;
+let currentRegistrationId = null;
+let attendanceData = {};
+
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize Lucide icons
     if (typeof lucide !== 'undefined') {
@@ -512,23 +876,145 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Download functionality
+    // Download/Export modal
     const downloadBtn = document.getElementById('downloadBtn');
+    const exportModal = document.getElementById('exportModal');
+    const closeExportModal = document.getElementById('closeExportModal');
+    const cancelExport = document.getElementById('cancelExport');
+    const exportOptions = document.querySelectorAll('.export-option');
+    const confirmExport = document.getElementById('confirmExport');
+    const exportConfirmationModal = document.getElementById('exportConfirmationModal');
+    const closeConfirmationModal = document.getElementById('closeConfirmationModal');
+
+    // Open export modal
     if (downloadBtn) {
         downloadBtn.addEventListener('click', function() {
-            alert('Download functionality would be implemented here');
+            exportModal.style.display = 'flex';
         });
     }
 
-    // Get total program days
-    function getTotalProgramDays() {
-        const startDate = new Date('{{ $program->event_date }}');
-        const endDate = new Date('{{ $program->event_end_date ? $program->event_end_date : $program->event_date }}');
-        
-        const timeDiff = endDate.getTime() - startDate.getTime();
-        const dayDiff = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1; // +1 to include both start and end dates
-        
-        return dayDiff;
+    // Close export modal
+    if (closeExportModal) {
+        closeExportModal.addEventListener('click', function() {
+            exportModal.style.display = 'none';
+        });
+    }
+
+    if (cancelExport) {
+        cancelExport.addEventListener('click', function() {
+            exportModal.style.display = 'none';
+        });
+    }
+
+    // Select export format
+    exportOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            // Remove selection from all options
+            exportOptions.forEach(opt => opt.classList.remove('selected'));
+            // Select current option
+            this.classList.add('selected');
+            selectedExportFormat = this.dataset.format;
+            confirmExport.disabled = false;
+        });
+    });
+
+    // Confirm export
+    if (confirmExport) {
+        confirmExport.addEventListener('click', function() {
+            if (!selectedExportFormat) {
+                alert('Please select an export format');
+                return;
+            }
+
+            // Show confirmation modal
+            exportModal.style.display = 'none';
+            exportConfirmationModal.style.display = 'flex';
+
+            // Start export process
+            exportData(selectedExportFormat);
+        });
+    }
+
+    // Close confirmation modal
+    if (closeConfirmationModal) {
+        closeConfirmationModal.addEventListener('click', function() {
+            exportConfirmationModal.style.display = 'none';
+            selectedExportFormat = null;
+            exportOptions.forEach(opt => opt.classList.remove('selected'));
+            confirmExport.disabled = true;
+        });
+    }
+
+    // Close modals when clicking outside
+    window.addEventListener('click', function(e) {
+        if (e.target === exportModal) {
+            exportModal.style.display = 'none';
+        }
+        if (e.target === exportConfirmationModal) {
+            exportConfirmationModal.style.display = 'none';
+            selectedExportFormat = null;
+            exportOptions.forEach(opt => opt.classList.remove('selected'));
+            confirmExport.disabled = true;
+        }
+    });
+
+    // Export data function
+    function exportData(format) {
+        const includeAllData = document.getElementById('includeAllData').checked;
+        const includeAttendance = document.getElementById('includeAttendance').checked;
+        const includeCustomFields = document.getElementById('includeCustomFields').checked;
+
+        // Prepare export data
+        const exportData = {
+            program_id: {{ $program->id ?? 0 }},
+            format: format,
+            include_all_data: includeAllData,
+            include_attendance: includeAttendance,
+            include_custom_fields: includeCustomFields,
+            _token: '{{ csrf_token() }}'
+        };
+
+        // Show loading message
+        document.getElementById('exportConfirmationText').textContent = 
+            `Preparing ${format.toUpperCase()} export... This may take a moment.`;
+
+        // Send export request
+        fetch('{{ route("programs.export-registrations") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(exportData)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                // Update confirmation message
+                document.getElementById('exportConfirmationText').textContent = 
+                    'Export completed successfully! Your download will start automatically.';
+
+                // Trigger download
+                if (data.download_url) {
+                    setTimeout(() => {
+                        window.location.href = data.download_url;
+                    }, 1000);
+                }
+            } else {
+                throw new Error(data.message || 'Export failed');
+            }
+        })
+        .catch(error => {
+            console.error('Export error:', error);
+            document.getElementById('exportConfirmationText').textContent = 
+                'Error: ' + error.message;
+        });
     }
 
     // Modal management
@@ -603,75 +1089,52 @@ document.addEventListener('DOMContentLoaded', function() {
         const container = document.getElementById('modalDailyAttendance');
         if (!container) return;
 
-        // Fetch actual attendance data from server - FIXED: Using the correct route
         container.innerHTML = '<p>Loading daily attendance...</p>';
         
-        // Try multiple possible endpoints
-        const endpoints = [
-            `/youth-program-registration/daily-attendance/${registrationId}`,
-            `/programs/daily-attendance/${registrationId}`,
-            `/api/daily-attendance/${registrationId}`
-        ];
-
-        let currentEndpointIndex = 0;
-
-        function tryEndpoint(index) {
-            if (index >= endpoints.length) {
-                container.innerHTML = '<p>Error: Could not load attendance data. Please check if the route exists.</p>';
-                return;
+        fetch(`/programs/daily-attendance/${registrationId}`, {
+            method: 'GET',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
             }
-
-            fetch(endpoints[index], {
-                method: 'GET',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Accept': 'application/json'
-                }
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log('Attendance data received:', data);
-                if (data.success) {
-                    const totalDays = getTotalProgramDays();
-                    let presentDays = 0;
-                    let html = '';
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                let presentDays = 0;
+                let html = '';
+                
+                // Check if we have dynamic days data
+                const daysData = data.attendance_data || {};
+                const totalDays = Object.keys(daysData).length || currentProgramDays;
+                
+                // Generate day items based on actual data
+                for (let i = 1; i <= totalDays; i++) {
+                    const dayKey = `day_${i}`;
+                    const dayName = data.day_names ? (data.day_names[dayKey] || `Day ${i}`) : `Day ${i}`;
+                    const isPresent = daysData[dayKey] || false;
+                    if (isPresent) presentDays++;
                     
-                    // Generate day items based on actual data
-                    for (let i = 1; i <= totalDays; i++) {
-                        const dayKey = `day_${i}`;
-                        const isPresent = data.attendance_data && data.attendance_data[dayKey] || false;
-                        if (isPresent) presentDays++;
-                        
-                        html += `
-                            <div class="day-attendance-item">
-                                <span class="day-label">Day ${i}</span>
-                                <span class="day-attendance-badge ${isPresent ? 'present' : 'absent'}">
-                                    ${isPresent ? 'Present' : 'Absent'}
-                                </span>
-                            </div>
-                        `;
-                    }
-                    
-                    html = `<div class="attendance-summary">${presentDays}/${totalDays} days attended</div>` + html;
-                    container.innerHTML = html;
-                } else {
-                    container.innerHTML = '<p>Error loading attendance data: ' + (data.message || 'Unknown error') + '</p>';
+                    html += `
+                        <div class="day-attendance-item">
+                            <span class="day-label">${dayName}</span>
+                            <span class="day-attendance-badge ${isPresent ? 'present' : 'absent'}">
+                                ${isPresent ? 'Present' : 'Absent'}
+                            </span>
+                        </div>
+                    `;
                 }
-            })
-            .catch(error => {
-                console.error(`Error loading from ${endpoints[index]}:`, error);
-                // Try next endpoint
-                tryEndpoint(index + 1);
-            });
-        }
-
-        // Start trying endpoints
-        tryEndpoint(currentEndpointIndex);
+                
+                html = `<div class="attendance-summary">${presentDays}/${totalDays} days attended</div>` + html;
+                container.innerHTML = html;
+            } else {
+                container.innerHTML = '<p>Error loading attendance data: ' + (data.message || 'Unknown error') + '</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading attendance:', error);
+            container.innerHTML = '<p>Error loading attendance data</p>';
+        });
     }
 
     // Show daily attendance modal
@@ -686,8 +1149,11 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('dailyModalUserName').textContent = userName;
         document.getElementById('dailyModalUserInfo').textContent = 'Reference: ' + referenceId;
 
+        // Update days info
+        document.getElementById('currentDaysInfo').textContent = `${currentProgramDays} day(s)`;
+
         // Store the current registration ID for saving
-        modals.dailyAttendance.dataset.registrationId = registrationId;
+        currentRegistrationId = registrationId;
 
         // Generate days checkboxes
         generateAttendanceCheckboxes(registrationId);
@@ -700,95 +1166,264 @@ document.addEventListener('DOMContentLoaded', function() {
         const container = document.getElementById('daysAttendanceContainer');
         if (!container) return;
 
-        const totalDays = getTotalProgramDays();
-        
         // Show loading state
         container.innerHTML = '<p>Loading attendance data...</p>';
 
-        // Try multiple possible endpoints
-        const endpoints = [
-            `/youth-program-registration/daily-attendance/${registrationId}`,
-            `/programs/daily-attendance/${registrationId}`,
-            `/api/daily-attendance/${registrationId}`
-        ];
+        fetch(`/programs/daily-attendance/${registrationId}`, {
+            method: 'GET',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Attendance data for modal:', data);
+            container.innerHTML = '';
+            
+            if (data.success) {
+                const attendanceData = data.attendance_data || {};
+                const dayNames = data.day_names || {};
+                
+                // Store attendance data globally
+                window.attendanceData = attendanceData;
+                
+                // Generate checkboxes for each day
+                for (let i = 1; i <= currentProgramDays; i++) {
+                    const dayKey = `day_${i}`;
+                    const dayName = dayNames[dayKey] || `Day ${i}`;
+                    const isChecked = attendanceData[dayKey] || false;
+                    
+                    const dayElement = document.createElement('div');
+                    dayElement.className = 'day-attendance-item';
+                    dayElement.dataset.dayKey = dayKey;
+                    dayElement.innerHTML = `
+                        <label>
+                            <input type="checkbox" name="attendance_day_${i}" value="day_${i}" data-day="${i}" ${isChecked ? 'checked' : ''}>
+                            <span class="day-label">${dayName}</span>
+                        </label>
+                        @if(!$program->event_end_date || $program->event_end_date == $program->event_date)
+                        <button class="remove-day-btn" data-day="${i}" ${i <= 1 ? 'style="display:none;"' : ''}>
+                            <i class="fas fa-times"></i> Remove
+                        </button>
+                        @endif
+                    `;
+                    container.appendChild(dayElement);
+                }
 
-        let currentEndpointIndex = 0;
+                // Add event listeners to remove buttons
+                document.querySelectorAll('.remove-day-btn').forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const dayNumber = parseInt(this.dataset.day);
+                        removeDay(dayNumber);
+                    });
+                });
+            } else {
+                container.innerHTML = '<p>Error loading attendance data: ' + (data.message || 'Unknown error') + '</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading attendance:', error);
+            container.innerHTML = '<p>Error loading attendance data</p>';
+        });
+    }
 
-        function tryEndpoint(index) {
-            if (index >= endpoints.length) {
-                container.innerHTML = '<p>Error: Could not load attendance data. Please check if the route exists.</p>';
+    // Add day functionality
+    const addDayBtn = document.getElementById('addDayBtn');
+    const newDayInput = document.getElementById('newDayInput');
+    const newDayNameInput = document.getElementById('newDayName');
+    const confirmAddDay = document.getElementById('confirmAddDay');
+    const cancelAddDay = document.getElementById('cancelAddDay');
+
+    if (addDayBtn) {
+        addDayBtn.addEventListener('click', function() {
+            newDayInput.style.display = 'flex';
+            newDayNameInput.focus();
+        });
+    }
+
+    if (cancelAddDay) {
+        cancelAddDay.addEventListener('click', function() {
+            newDayInput.style.display = 'none';
+            newDayNameInput.value = '';
+        });
+    }
+
+    if (confirmAddDay) {
+        confirmAddDay.addEventListener('click', function() {
+            const dayName = newDayNameInput.value.trim();
+            if (!dayName) {
+                alert('Please enter a day name');
                 return;
             }
 
-            fetch(endpoints[index], {
-                method: 'GET',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Accept': 'application/json'
-                }
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log('Attendance data for modal:', data);
-                container.innerHTML = '';
-                
-                if (data.success) {
-                    const attendanceData = data.attendance_data || {};
-                    
-                    for (let i = 1; i <= totalDays; i++) {
-                        const dayKey = `day_${i}`;
-                        const isChecked = attendanceData[dayKey] || false;
-                        
-                        const dayElement = document.createElement('div');
-                        dayElement.className = 'day-attendance-item';
-                        dayElement.innerHTML = `
-                            <label>
-                                <input type="checkbox" name="attendance_day_${i}" value="day_${i}" data-day="${i}" ${isChecked ? 'checked' : ''}>
-                                <span class="day-label">Day ${i}</span>
-                            </label>
-                        `;
-                        container.appendChild(dayElement);
-                    }
-                } else {
-                    container.innerHTML = '<p>Error loading attendance data: ' + (data.message || 'Unknown error') + '</p>';
-                }
-            })
-            .catch(error => {
-                console.error(`Error loading from ${endpoints[index]}:`, error);
-                // Try next endpoint
-                tryEndpoint(index + 1);
-            });
+            // Add new day
+            addNewDay(dayName);
+            
+            // Reset input
+            newDayInput.style.display = 'none';
+            newDayNameInput.value = '';
+        });
+    }
+
+    // Add new day function
+    function addNewDay(dayName) {
+        currentProgramDays++;
+        
+        // Update UI
+        document.getElementById('totalDaysCount').textContent = currentProgramDays;
+        document.getElementById('currentDaysInfo').textContent = `${currentProgramDays} day(s)`;
+
+        // Add checkbox for new day
+        const container = document.getElementById('daysAttendanceContainer');
+        const dayKey = `day_${currentProgramDays}`;
+        
+        const dayElement = document.createElement('div');
+        dayElement.className = 'day-attendance-item';
+        dayElement.dataset.dayKey = dayKey;
+        dayElement.innerHTML = `
+            <label>
+                <input type="checkbox" name="attendance_day_${currentProgramDays}" value="day_${currentProgramDays}" data-day="${currentProgramDays}">
+                <span class="day-label">${dayName}</span>
+            </label>
+            <button class="remove-day-btn" data-day="${currentProgramDays}">
+                <i class="fas fa-times"></i> Remove
+            </button>
+        `;
+        container.appendChild(dayElement);
+
+        // Add event listener to remove button
+        dayElement.querySelector('.remove-day-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            const dayNumber = parseInt(this.dataset.day);
+            removeDay(dayNumber);
+        });
+
+        // Store day name on server
+        saveDayName(currentProgramDays, dayName);
+    }
+
+    // Remove day function
+    function removeDay(dayNumber) {
+        if (dayNumber <= 1) {
+            alert('Cannot remove Day 1');
+            return;
         }
 
-        // Start trying endpoints
-        tryEndpoint(currentEndpointIndex);
+        if (!confirm(`Are you sure you want to remove Day ${dayNumber}? This will remove attendance data for this day for all attendees.`)) {
+            return;
+        }
+
+        // Remove day from server
+        fetch('{{ route("programs.remove-day") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                program_id: {{ $program->id }},
+                day_number: dayNumber,
+                _token: '{{ csrf_token() }}'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update current program days
+                currentProgramDays--;
+                
+                // Update UI
+                document.getElementById('totalDaysCount').textContent = currentProgramDays;
+                document.getElementById('currentDaysInfo').textContent = `${currentProgramDays} day(s)`;
+                
+                // Regenerate attendance checkboxes
+                generateAttendanceCheckboxes(currentRegistrationId);
+                
+                // Update all rows in the table
+                updateAllRowsAfterDayRemoval(dayNumber);
+            } else {
+                alert('Error removing day: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error removing day:', error);
+            alert('Error removing day');
+        });
+    }
+
+    // Save day name to server
+    function saveDayName(dayNumber, dayName) {
+        fetch('{{ route("programs.save-day-name") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                program_id: {{ $program->id }},
+                day_number: dayNumber,
+                day_name: dayName,
+                _token: '{{ csrf_token() }}'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success) {
+                console.error('Error saving day name:', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error saving day name:', error);
+        });
+    }
+
+    // Update all rows in table after day removal
+    function updateAllRowsAfterDayRemoval(removedDay) {
+        const rows = document.querySelectorAll('#registrationsTable tbody tr');
+        rows.forEach(row => {
+            if (!row.classList.contains('no-data')) {
+                const registrationId = row.dataset.registrationId;
+                // Update the daily attendance summary
+                updateAttendanceSummary(registrationId);
+            }
+        });
+    }
+
+    // Update attendance summary for a row
+    function updateAttendanceSummary(registrationId) {
+        // This would typically fetch updated data from server
+        // For now, we'll just reload the data
+        setTimeout(() => {
+            // Trigger a refresh of the attendance display
+            const dailyAttendanceCell = document.getElementById('dailyAttendance_' + registrationId);
+            if (dailyAttendanceCell) {
+                dailyAttendanceCell.innerHTML = `<span class="attendance-summary-small">Loading...</span>`;
+            }
+        }, 500);
     }
 
     // Save daily attendance
     const saveAttendanceBtn = document.getElementById('saveDailyAttendance');
     if (saveAttendanceBtn) {
         saveAttendanceBtn.addEventListener('click', function() {
-            const registrationId = modals.dailyAttendance.dataset.registrationId;
-            if (!registrationId) {
-                alert('Error: No registration ID found');
-                return;
-            }
-
-            saveDailyAttendance(registrationId);
+            saveDailyAttendance(currentRegistrationId);
         });
     }
 
     // Save daily attendance to server
     function saveDailyAttendance(registrationId) {
+        if (!registrationId) {
+            alert('Error: No registration ID found');
+            return;
+        }
+
         const checkboxes = document.querySelectorAll('#daysAttendanceContainer input[type="checkbox"]');
         const attendanceData = {};
         let presentCount = 0;
-        const totalDays = getTotalProgramDays();
 
         // Collect attendance data
         checkboxes.forEach(checkbox => {
@@ -803,68 +1438,42 @@ document.addEventListener('DOMContentLoaded', function() {
         saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
         saveBtn.disabled = true;
 
-        // Try multiple possible endpoints for saving
-        const saveEndpoints = [
-            '{{ route("programs.update-daily-attendance") }}',
-            '/youth-program-registration/update-daily-attendance',
-            '/programs/update-daily-attendance',
-            '/api/update-daily-attendance'
-        ];
-
-        let currentSaveEndpointIndex = 0;
-
-        function trySaveEndpoint(index) {
-            if (index >= saveEndpoints.length) {
-                alert('Error: Could not save attendance. Please check if the route exists.');
-                saveBtn.innerHTML = originalText;
-                saveBtn.disabled = false;
-                return;
+        // Save to server
+        fetch('{{ route("programs.update-daily-attendance") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                registration_id: registrationId,
+                attendance_data: attendanceData,
+                present_count: presentCount,
+                total_days: currentProgramDays,
+                _token: '{{ csrf_token() }}'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update UI
+                updateAttendanceDisplay(registrationId, presentCount, currentProgramDays);
+                alert('Attendance saved successfully!');
+                modals.dailyAttendance.style.display = 'none';
+            } else {
+                throw new Error(data.message || 'Failed to save attendance');
             }
-
-            fetch(saveEndpoints[index], {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({
-                    registration_id: registrationId,
-                    attendance_data: attendanceData,
-                    present_count: presentCount,
-                    total_days: totalDays
-                })
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    // Update UI
-                    updateAttendanceDisplay(registrationId, presentCount, totalDays);
-                    alert('Attendance saved successfully!');
-                    modals.dailyAttendance.style.display = 'none';
-                } else {
-                    throw new Error(data.message || 'Failed to save attendance');
-                }
-            })
-            .catch(error => {
-                console.error(`Error saving to ${saveEndpoints[index]}:`, error);
-                // Try next endpoint
-                trySaveEndpoint(index + 1);
-            })
-            .finally(() => {
-                // Reset button state
-                saveBtn.innerHTML = originalText;
-                saveBtn.disabled = false;
-            });
-        }
-
-        // Start trying save endpoints
-        trySaveEndpoint(currentSaveEndpointIndex);
+        })
+        .catch(error => {
+            console.error('Error saving attendance:', error);
+            alert('Error saving attendance: ' + error.message);
+        })
+        .finally(() => {
+            // Reset button state
+            saveBtn.innerHTML = originalText;
+            saveBtn.disabled = false;
+        });
     }
 
     // Update attendance display in the table

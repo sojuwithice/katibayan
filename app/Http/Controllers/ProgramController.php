@@ -90,9 +90,9 @@ class ProgramController extends Controller
                     $validated['registration_close_time'] = $this->convertTimeTo24Hour($validated['registration_close_time']);
                 }
 
-                // Store custom fields as JSON
+                // Store custom fields as JSON - UPDATED
                 if ($request->has('custom_fields')) {
-                    $validated['custom_fields'] = $request->custom_fields;
+                    $validated['custom_fields'] = $this->parseCustomFields($request);
                 }
             } else {
                 // If registration type is link, set create registration fields to null
@@ -124,6 +124,9 @@ class ProgramController extends Controller
             $validated['user_id'] = Auth::id();
             $validated['barangay_id'] = Auth::user()->barangay_id;
 
+            // NEW: Add program status (active by default)
+            $validated['status'] = 'active';
+
             // Log final data before creation
             Log::info('Final data before program creation:', $validated);
 
@@ -135,7 +138,8 @@ class ProgramController extends Controller
                 'program_id' => $program->id,
                 'event_date' => $program->event_date,
                 'event_end_date' => $program->event_end_date,
-                'number_of_days' => $program->number_of_days
+                'number_of_days' => $program->number_of_days,
+                'status' => $program->status
             ]);
 
             Log::info('=== PROGRAM STORE REQUEST END ===');
@@ -148,7 +152,8 @@ class ProgramController extends Controller
                     'title' => $program->title,
                     'event_date' => $program->event_date,
                     'event_end_date' => $program->event_end_date,
-                    'number_of_days' => $program->number_of_days
+                    'number_of_days' => $program->number_of_days,
+                    'status' => $program->status
                 ]
             ]);
 
@@ -223,6 +228,8 @@ class ProgramController extends Controller
                 'registration_close_date' => $program->registration_close_date ? Carbon::parse($program->registration_close_date)->format('Y-m-d') : null,
                 'registration_close_time' => $program->registration_close_time ?? null,
                 'number_of_days' => $program->number_of_days ?? 1,
+                'status' => $program->status ?? 'active',
+                'ended_at' => $program->ended_at ? Carbon::parse($program->ended_at)->format('Y-m-d H:i:s') : null,
                 'barangay_id' => $program->barangay_id,
                 'custom_fields' => [],
             ];
@@ -312,6 +319,18 @@ class ProgramController extends Controller
                     'success' => false,
                     'message' => 'Program not found or not available in your barangay.'
                 ], 404);
+            }
+
+            // NEW: Check if program is ended
+            if ($program->status === 'ended') {
+                Log::warning('Program has ended', [
+                    'program_id' => $program->id,
+                    'program_title' => $program->title
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This program has ended. Registration is no longer available.'
+                ], 400);
             }
 
             Log::info('Program found: ' . $program->title);
@@ -428,7 +447,8 @@ class ProgramController extends Controller
                 'program_details' => [
                     'program_id' => $program->id,
                     'program_title' => $program->title,
-                    'program_category' => $program->category
+                    'program_category' => $program->category,
+                    'program_status' => $program->status
                 ],
                 'submitted_at' => Carbon::now()->toDateTimeString(),
                 'registration_id' => $referenceId
@@ -487,6 +507,7 @@ class ProgramController extends Controller
                         'id' => $registration->id,
                         'reference_id' => $registration->reference_id,
                         'program_title' => $registration->program->title,
+                        'program_status' => $registration->program->status ?? 'active',
                         'status' => $registration->status,
                         'submitted_at' => $registration->created_at->format('M j, Y g:i A'),
                         'program_date' => $registration->program->event_date ? Carbon::parse($registration->program->event_date)->format('M j, Y') : 'TBA',
@@ -588,8 +609,9 @@ class ProgramController extends Controller
                     $validated['registration_close_time'] = $this->convertTimeTo24Hour($validated['registration_close_time']);
                 }
 
+                // Store custom fields as JSON - UPDATED
                 if ($request->has('custom_fields')) {
-                    $validated['custom_fields'] = $request->custom_fields;
+                    $validated['custom_fields'] = $this->parseCustomFields($request);
                 }
             } else {
                 $validated['registration_title'] = null;
@@ -616,13 +638,19 @@ class ProgramController extends Controller
                 Log::info('Number of days set to default 1 for update');
             }
 
+            // Keep existing status if not provided
+            if (!isset($validated['status'])) {
+                $validated['status'] = $program->status;
+            }
+
             $program->update($validated);
 
             Log::info('Program updated successfully', [
                 'program_id' => $program->id,
                 'event_date' => $program->event_date,
                 'event_end_date' => $program->event_end_date,
-                'number_of_days' => $program->number_of_days
+                'number_of_days' => $program->number_of_days,
+                'status' => $program->status
             ]);
 
             Log::info('=== PROGRAM UPDATE REQUEST END ===');
@@ -637,6 +665,237 @@ class ProgramController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error updating program: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * NEW: End a program
+     */
+    public function endProgram(Request $request, $id): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not authenticated'
+                ], 401);
+            }
+
+            $program = Program::where('id', $id)
+                ->where('barangay_id', $user->barangay_id)
+                ->first();
+
+            if (!$program) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Program not found or you do not have permission to end it.'
+                ], 404);
+            }
+
+            // Check if user is the program creator or SK official
+            if ($program->user_id !== $user->id && !in_array($user->role, ['sk', 'sk_chairperson'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You do not have permission to end this program.'
+                ], 403);
+            }
+
+            // Validate request
+            $validated = $request->validate([
+                'reason' => 'nullable|string|max:500',
+                'end_date' => 'nullable|date|after_or_equal:event_date',
+                'notify_participants' => 'boolean'
+            ]);
+
+            // Update program status
+            $program->status = 'ended';
+            $program->ended_at = Carbon::now();
+            $program->end_reason = $validated['reason'] ?? null;
+            
+            // If end_date is provided, update event_end_date
+            if (!empty($validated['end_date'])) {
+                $program->event_end_date = $validated['end_date'];
+                
+                // Recalculate number of days
+                $startDate = Carbon::parse($program->event_date);
+                $endDate = Carbon::parse($validated['end_date']);
+                $program->number_of_days = $startDate->diffInDays($endDate) + 1;
+            } elseif (!$program->event_end_date) {
+                // If no end date was set, set it to today
+                $program->event_end_date = Carbon::today();
+            }
+            
+            $program->save();
+
+            Log::info('Program ended successfully', [
+                'program_id' => $program->id,
+                'ended_by' => $user->id,
+                'ended_at' => $program->ended_at,
+                'end_reason' => $program->end_reason
+            ]);
+
+            // If notify_participants is true, send notifications to registrants
+            if ($validated['notify_participants'] ?? false) {
+                $this->notifyParticipantsProgramEnded($program, $user);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Program has been ended successfully.',
+                'program' => [
+                    'id' => $program->id,
+                    'title' => $program->title,
+                    'status' => $program->status,
+                    'ended_at' => $program->ended_at->format('M j, Y g:i A'),
+                    'event_end_date' => $program->event_end_date ? Carbon::parse($program->event_end_date)->format('M j, Y') : null
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error ending program: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error ending program: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * NEW: Reactivate a program
+     */
+    public function reactivateProgram($id): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not authenticated'
+                ], 401);
+            }
+
+            $program = Program::where('id', $id)
+                ->where('barangay_id', $user->barangay_id)
+                ->first();
+
+            if (!$program) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Program not found or you do not have permission to reactivate it.'
+                ], 404);
+            }
+
+            // Check if user is the program creator or SK official
+            if ($program->user_id !== $user->id && !in_array($user->role, ['sk', 'sk_chairperson'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You do not have permission to reactivate this program.'
+                ], 403);
+            }
+
+            // Update program status
+            $program->status = 'active';
+            $program->ended_at = null;
+            $program->end_reason = null;
+            $program->save();
+
+            Log::info('Program reactivated successfully', [
+                'program_id' => $program->id,
+                'reactivated_by' => $user->id,
+                'reactivated_at' => Carbon::now()
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Program has been reactivated successfully.',
+                'program' => [
+                    'id' => $program->id,
+                    'title' => $program->title,
+                    'status' => $program->status,
+                    'event_date' => $program->event_date,
+                    'event_end_date' => $program->event_end_date
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error reactivating program: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error reactivating program: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * NEW: Check if program can be ended
+     */
+    public function canEndProgram($id): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not authenticated'
+                ], 401);
+            }
+
+            $program = Program::where('id', $id)
+                ->where('barangay_id', $user->barangay_id)
+                ->first();
+
+            if (!$program) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Program not found'
+                ], 404);
+            }
+
+            $canEnd = false;
+            $reasons = [];
+
+            // Check if user has permission
+            if ($program->user_id === $user->id || in_array($user->role, ['sk', 'sk_chairperson'])) {
+                $canEnd = true;
+            }
+
+            // Check if program is already ended
+            if ($program->status === 'ended') {
+                $reasons[] = 'Program is already ended.';
+            }
+
+            // Check if program has passed its end date
+            if ($program->event_end_date && Carbon::parse($program->event_end_date)->lt(Carbon::now())) {
+                $reasons[] = 'Program has already passed its scheduled end date.';
+            }
+
+            return response()->json([
+                'success' => true,
+                'can_end' => $canEnd,
+                'program' => [
+                    'id' => $program->id,
+                    'title' => $program->title,
+                    'status' => $program->status,
+                    'event_date' => $program->event_date,
+                    'event_end_date' => $program->event_end_date,
+                    'user_id' => $program->user_id
+                ],
+                'reasons' => $reasons,
+                'user_permission' => $program->user_id === $user->id || in_array($user->role, ['sk', 'sk_chairperson'])
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error checking if program can be ended: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error checking program status'
             ], 500);
         }
     }
@@ -676,10 +935,20 @@ class ProgramController extends Controller
     public function index()
     {
         $user = Auth::user();
+        
+        // Get active programs (not ended)
         $programs = Program::where('barangay_id', $user->barangay_id)
+                          ->where('status', '!=', 'ended')
                           ->with('user')
                           ->latest()
                           ->get();
+
+        // Get ended programs separately for display
+        $endedPrograms = Program::where('barangay_id', $user->barangay_id)
+                              ->where('status', 'ended')
+                              ->with('user')
+                              ->latest('ended_at')
+                              ->get();
 
         $barangay = Barangay::find($user->barangay_id);
         
@@ -691,7 +960,7 @@ class ProgramController extends Controller
         
         $roleBadge = $user->role === 'sk' ? 'SK Member' : 'KK Member';
 
-        return view('programs.index', compact('programs', 'user', 'barangay', 'age', 'roleBadge'));
+        return view('programs.index', compact('programs', 'endedPrograms', 'user', 'barangay', 'age', 'roleBadge'));
     }
 
     /**
@@ -755,6 +1024,7 @@ class ProgramController extends Controller
                     'event_end_date' => $program->event_end_date,
                     'event_time' => $program->event_time,
                     'category' => $program->category,
+                    'status' => $program->status,
                     'total_registrations' => $registrations->count()
                 ],
                 'registrations' => $registrations
@@ -765,6 +1035,720 @@ class ProgramController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error fetching registrations: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * FIXED: Get daily attendance for a registration - PROPERLY HANDLES JSON DECODING
+     */
+    public function getDailyAttendance($registrationId): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            
+            $registration = ProgramRegistration::with(['program', 'user'])
+                ->where('id', $registrationId)
+                ->firstOrFail();
+                
+            // Check if program belongs to user's barangay
+            if ($registration->program->barangay_id !== $user->barangay_id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Access denied'
+                ], 403);
+            }
+            
+            // FIXED: Handle attendance_days properly - check if it's already an array or needs decoding
+            $attendanceDays = [];
+            
+            if ($registration->attendance_days) {
+                // Check if it's already an array (due to Laravel's JSON casting)
+                if (is_array($registration->attendance_days)) {
+                    $attendanceDays = $registration->attendance_days;
+                } 
+                // Check if it's a string that needs decoding
+                elseif (is_string($registration->attendance_days)) {
+                    try {
+                        $decoded = json_decode($registration->attendance_days, true);
+                        $attendanceDays = is_array($decoded) ? $decoded : [];
+                    } catch (\Exception $e) {
+                        Log::warning('Error decoding attendance_days JSON', [
+                            'registration_id' => $registration->id,
+                            'attendance_days' => $registration->attendance_days,
+                            'error' => $e->getMessage()
+                        ]);
+                        $attendanceDays = [];
+                    }
+                }
+            }
+            
+            // If it's an array with numeric keys, convert to day_x format
+            if (is_array($attendanceDays) && isset($attendanceDays[0])) {
+                $convertedAttendance = [];
+                foreach ($attendanceDays as $index => $value) {
+                    $convertedAttendance["day_" . ($index + 1)] = (bool)$value;
+                }
+                $attendanceDays = $convertedAttendance;
+            }
+            
+            // Get day names from program custom fields or default
+            $totalDays = $registration->program->number_of_days ?? 1;
+            $dayNames = [];
+            
+            // Try to get day names from program custom metadata
+            if ($registration->program->custom_fields) {
+                try {
+                    $customFields = json_decode($registration->program->custom_fields, true);
+                    if (isset($customFields['day_names']) && is_array($customFields['day_names'])) {
+                        $dayNames = $customFields['day_names'];
+                    }
+                } catch (\Exception $e) {
+                    Log::warning('Error parsing program custom fields for day names', [
+                        'program_id' => $registration->program->id,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+            
+            // If no custom day names, create default ones
+            for ($i = 1; $i <= $totalDays; $i++) {
+                $dayKey = "day_$i";
+                if (!isset($dayNames[$dayKey])) {
+                    $dayNames[$dayKey] = "Day $i";
+                }
+            }
+            
+            // Calculate present count
+            $presentCount = count(array_filter($attendanceDays, function($attended) {
+                return $attended === true || $attended === 'true' || $attended === 1 || $attended === '1';
+            }));
+
+            Log::info('Daily attendance data fetched successfully', [
+                'registration_id' => $registrationId,
+                'total_days' => $totalDays,
+                'present_count' => $presentCount,
+                'attendance_days_type' => gettype($registration->attendance_days),
+                'attendance_data' => $attendanceDays
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'attendance_data' => $attendanceDays,
+                'day_names' => $dayNames,
+                'total_days' => $totalDays,
+                'present_count' => $presentCount,
+                'registration' => [
+                    'id' => $registration->id,
+                    'reference_id' => $registration->reference_id,
+                    'user_name' => $registration->user->given_name . ' ' . $registration->user->last_name,
+                    'attended' => $registration->attended
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error getting daily attendance: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update daily attendance - FIXED VERSION
+     */
+    public function updateDailyAttendance(Request $request): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            
+            $validated = $request->validate([
+                'registration_id' => 'required|exists:program_registrations,id',
+                'attendance_data' => 'required|array',
+                'present_count' => 'required|integer',
+                'total_days' => 'required|integer'
+            ]);
+            
+            $registration = ProgramRegistration::with('program')
+                ->where('id', $validated['registration_id'])
+                ->firstOrFail();
+                
+            // Check if program belongs to user's barangay
+            if ($registration->program->barangay_id !== $user->barangay_id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Access denied'
+                ], 403);
+            }
+            
+            // NEW: Check if program is ended
+            if ($registration->program->status === 'ended') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot update attendance for an ended program.'
+                ], 400);
+            }
+            
+            // Ensure attendance_data is properly formatted
+            $attendanceData = [];
+            foreach ($validated['attendance_data'] as $day => $attended) {
+                $attendanceData[$day] = filter_var($attended, FILTER_VALIDATE_BOOLEAN);
+            }
+            
+            // FIXED: Update attendance days - Laravel will automatically encode to JSON
+            $registration->attendance_days = $attendanceData;
+            
+            // Update overall attendance status
+            $registration->attended = ($validated['present_count'] > 0);
+            
+            // Update attended_at if first time marking as present
+            if ($validated['present_count'] > 0 && !$registration->attended_at) {
+                $registration->attended_at = now();
+                $registration->marked_by_user_id = $user->id;
+            }
+            
+            // Update program days count if it has changed
+            if ($validated['total_days'] != $registration->program->number_of_days) {
+                $program = $registration->program;
+                $program->number_of_days = $validated['total_days'];
+                
+                // If no end date was set, calculate it based on new number of days
+                if (!$program->event_end_date) {
+                    $startDate = Carbon::parse($program->event_date);
+                    $program->event_end_date = $startDate->copy()->addDays($validated['total_days'] - 1);
+                }
+                
+                $program->save();
+            }
+            
+            $registration->save();
+            
+            Log::info('Daily attendance updated successfully', [
+                'registration_id' => $registration->id,
+                'attendance_data' => $attendanceData,
+                'present_count' => $validated['present_count'],
+                'marked_by_user_id' => $user->id
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Attendance updated successfully',
+                'data' => [
+                    'present_count' => $validated['present_count'],
+                    'total_days' => $validated['total_days'],
+                    'attended' => $registration->attended
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error updating daily attendance: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Save day name for dynamic days
+     */
+    public function saveDayName(Request $request): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            
+            $validated = $request->validate([
+                'program_id' => 'required|exists:programs,id',
+                'day_number' => 'required|integer|min:1',
+                'day_name' => 'required|string|max:255'
+            ]);
+            
+            $program = Program::where('id', $validated['program_id'])
+                ->where('barangay_id', $user->barangay_id)
+                ->firstOrFail();
+            
+            // NEW: Check if program is ended
+            if ($program->status === 'ended') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot modify an ended program.'
+                ], 400);
+            }
+            
+            // Get current custom fields
+            $customFields = [];
+            if ($program->custom_fields) {
+                try {
+                    $customFields = json_decode($program->custom_fields, true);
+                    if (!is_array($customFields)) {
+                        $customFields = [];
+                    }
+                } catch (\Exception $e) {
+                    Log::warning('Error parsing custom fields JSON', [
+                        'program_id' => $program->id,
+                        'error' => $e->getMessage()
+                    ]);
+                    $customFields = [];
+                }
+            }
+            
+            // Initialize day_names array if it doesn't exist
+            if (!isset($customFields['day_names'])) {
+                $customFields['day_names'] = [];
+            }
+            
+            // Save day name
+            $dayKey = "day_{$validated['day_number']}";
+            $customFields['day_names'][$dayKey] = $validated['day_name'];
+            
+            // Update program
+            $program->custom_fields = json_encode($customFields);
+            $program->save();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Day name saved successfully',
+                'day_name' => $validated['day_name'],
+                'day_key' => $dayKey
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error saving day name: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Remove a day from program
+     */
+    public function removeDay(Request $request): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            
+            $validated = $request->validate([
+                'program_id' => 'required|exists:programs,id',
+                'day_number' => 'required|integer|min:2' // Can't remove day 1
+            ]);
+            
+            $program = Program::where('id', $validated['program_id'])
+                ->where('barangay_id', $user->barangay_id)
+                ->firstOrFail();
+            
+            // NEW: Check if program is ended
+            if ($program->status === 'ended') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot modify an ended program.'
+                ], 400);
+            }
+            
+            $dayNumber = $validated['day_number'];
+            $dayKey = "day_{$dayNumber}";
+            
+            // Update all registrations to remove this day from attendance
+            $registrations = ProgramRegistration::where('program_id', $program->id)->get();
+            
+            foreach ($registrations as $registration) {
+                if ($registration->attendance_days) {
+                    // FIXED: Handle attendance_days properly
+                    $attendanceData = [];
+                    
+                    if (is_array($registration->attendance_days)) {
+                        $attendanceData = $registration->attendance_days;
+                    } elseif (is_string($registration->attendance_days)) {
+                        try {
+                            $decoded = json_decode($registration->attendance_days, true);
+                            $attendanceData = is_array($decoded) ? $decoded : [];
+                        } catch (\Exception $e) {
+                            Log::warning('Error decoding attendance_days when removing day', [
+                                'registration_id' => $registration->id,
+                                'error' => $e->getMessage()
+                            ]);
+                            $attendanceData = [];
+                        }
+                    }
+                    
+                    // Remove the day from attendance data
+                    if (isset($attendanceData[$dayKey])) {
+                        unset($attendanceData[$dayKey]);
+                        
+                        // Reindex days if needed (convert from associative to indexed array)
+                        $isIndexed = false;
+                        $newAttendanceData = [];
+                        $index = 1;
+                        
+                        foreach ($attendanceData as $key => $value) {
+                            if (strpos($key, 'day_') === 0) {
+                                $newAttendanceData["day_{$index}"] = $value;
+                                $index++;
+                            } else {
+                                $newAttendanceData[$key] = $value;
+                            }
+                        }
+                        
+                        $registration->attendance_days = $newAttendanceData;
+                        
+                        // Update overall attendance
+                        $presentCount = count(array_filter($newAttendanceData, function($attended) {
+                            return $attended === true || $attended === 'true' || $attended === 1 || $attended === '1';
+                        }));
+                        $registration->attended = ($presentCount > 0);
+                        
+                        $registration->save();
+                    }
+                }
+            }
+            
+            // Update program custom fields to remove day name
+            if ($program->custom_fields) {
+                $customFields = [];
+                try {
+                    $customFields = json_decode($program->custom_fields, true);
+                    if (!is_array($customFields)) {
+                        $customFields = [];
+                    }
+                } catch (\Exception $e) {
+                    Log::warning('Error parsing custom fields when removing day', [
+                        'program_id' => $program->id,
+                        'error' => $e->getMessage()
+                    ]);
+                    $customFields = [];
+                }
+                
+                if (isset($customFields['day_names'][$dayKey])) {
+                    unset($customFields['day_names'][$dayKey]);
+                    
+                    // Reindex day names
+                    $newDayNames = [];
+                    $index = 1;
+                    foreach ($customFields['day_names'] as $key => $name) {
+                        if (strpos($key, 'day_') === 0) {
+                            $newDayNames["day_{$index}"] = $name;
+                            $index++;
+                        } else {
+                            $newDayNames[$key] = $name;
+                        }
+                    }
+                    $customFields['day_names'] = $newDayNames;
+                    
+                    $program->custom_fields = json_encode($customFields);
+                }
+            }
+            
+            // Decrease number of days
+            $program->number_of_days = max(1, $program->number_of_days - 1);
+            
+            // Recalculate end date if no end date was set
+            if (!$program->event_end_date || $program->event_end_date == $program->event_date) {
+                $startDate = Carbon::parse($program->event_date);
+                $program->event_end_date = $startDate->copy()->addDays($program->number_of_days - 1);
+            }
+            
+            $program->save();
+            
+            return response()->json([
+                'success' => true,
+                'message' => "Day {$dayNumber} removed successfully",
+                'new_total_days' => $program->number_of_days
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error removing day: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Export registrations data
+     */
+    public function exportRegistrations(Request $request): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            
+            $validated = $request->validate([
+                'program_id' => 'required|exists:programs,id',
+                'format' => 'required|in:csv,excel,pdf',
+                'include_all_data' => 'boolean',
+                'include_attendance' => 'boolean',
+                'include_custom_fields' => 'boolean'
+            ]);
+            
+            $program = Program::where('id', $validated['program_id'])
+                ->where('barangay_id', $user->barangay_id)
+                ->firstOrFail();
+            
+            $registrations = ProgramRegistration::with(['user', 'user.barangay'])
+                ->where('program_id', $program->id)
+                ->orderBy('created_at', 'desc')
+                ->get();
+            
+            // Prepare data based on format
+            $data = [];
+            
+            foreach ($registrations as $registration) {
+                // FIXED: Handle registration_data properly
+                $registrationData = [];
+                if ($registration->registration_data) {
+                    try {
+                        $registrationData = json_decode($registration->registration_data, true);
+                        if (!is_array($registrationData)) {
+                            $registrationData = [];
+                        }
+                    } catch (\Exception $e) {
+                        Log::warning('Error parsing registration_data for export', [
+                            'registration_id' => $registration->id,
+                            'error' => $e->getMessage()
+                        ]);
+                        $registrationData = [];
+                    }
+                }
+                
+                $row = [
+                    'Reference ID' => $registration->reference_id,
+                    'Full Name' => $registrationData['user_profile']['full_name'] ?? 
+                        $registration->user->given_name . ' ' . $registration->user->last_name,
+                    'Email' => $registrationData['user_profile']['email'] ?? $registration->user->email,
+                    'Contact Number' => $registrationData['user_profile']['contact_no'] ?? $registration->user->contact_no,
+                    'Age' => $registrationData['user_profile']['age'] ?? 
+                        ($registration->user->date_of_birth ? 
+                            Carbon::parse($registration->user->date_of_birth)->age : null),
+                    'Barangay' => $registrationData['user_profile']['barangay'] ?? 
+                        ($registration->user->barangay->name ?? 'N/A'),
+                    'Registered At' => $registration->created_at->format('Y-m-d H:i:s'),
+                    'Overall Attendance' => $registration->attended ? 'Present' : 'Absent',
+                    'Program Status' => $program->status,
+                ];
+                
+                // Add attendance data if requested
+                if ($validated['include_attendance'] && $registration->attendance_days) {
+                    // FIXED: Handle attendance_days properly
+                    $attendanceDays = [];
+                    
+                    if (is_array($registration->attendance_days)) {
+                        $attendanceDays = $registration->attendance_days;
+                    } elseif (is_string($registration->attendance_days)) {
+                        try {
+                            $decoded = json_decode($registration->attendance_days, true);
+                            $attendanceDays = is_array($decoded) ? $decoded : [];
+                        } catch (\Exception $e) {
+                            Log::warning('Error decoding attendance_days for export', [
+                                'registration_id' => $registration->id,
+                                'error' => $e->getMessage()
+                            ]);
+                            $attendanceDays = [];
+                        }
+                    }
+                    
+                    $totalDays = $program->number_of_days;
+                    
+                    // Get day names from program
+                    $dayNames = [];
+                    if ($program->custom_fields) {
+                        try {
+                            $customFields = json_decode($program->custom_fields, true);
+                            $dayNames = $customFields['day_names'] ?? [];
+                        } catch (\Exception $e) {
+                            Log::warning('Error parsing custom fields for day names in export', [
+                                'program_id' => $program->id,
+                                'error' => $e->getMessage()
+                            ]);
+                            $dayNames = [];
+                        }
+                    }
+                    
+                    for ($i = 1; $i <= $totalDays; $i++) {
+                        $dayKey = "day_$i";
+                        $dayName = $dayNames[$dayKey] ?? "Day $i";
+                        $isPresent = $attendanceDays[$dayKey] ?? false;
+                        $row[$dayName] = $isPresent ? 'Present' : 'Absent';
+                    }
+                    
+                    $row['Days Attended'] = count(array_filter($attendanceDays, function($attended) {
+                        return $attended === true || $attended === 'true' || $attended === 1 || $attended === '1';
+                    })) . "/$totalDays";
+                }
+                
+                // Add custom fields if requested
+                if ($validated['include_custom_fields'] && isset($registrationData['custom_fields'])) {
+                    foreach ($registrationData['custom_fields'] as $index => $field) {
+                        if (is_array($field)) {
+                            $fieldLabel = $field['label'] ?? "Field $index";
+                            $fieldValue = $field['answer'] ?? '';
+                            $row[$fieldLabel] = $fieldValue;
+                        }
+                    }
+                }
+                
+                $data[] = $row;
+            }
+            
+            // For now, return the data structure
+            // In a real implementation, you would generate the actual file
+            return response()->json([
+                'success' => true,
+                'message' => 'Export data prepared successfully',
+                'data' => $data,
+                'program' => [
+                    'title' => $program->title,
+                    'event_date' => $program->event_date,
+                    'status' => $program->status,
+                    'total_registrations' => count($registrations)
+                ],
+                'download_url' => '#', // Placeholder for actual download URL
+                'file_name' => "program_registrations_{$program->id}_{$validated['format']}_" . date('Ymd_His') . ".{$validated['format']}"
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error exporting registrations: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * NEW: Helper function to notify participants when program ends
+     */
+    private function notifyParticipantsProgramEnded(Program $program, User $endedBy)
+    {
+        try {
+            $registrations = ProgramRegistration::where('program_id', $program->id)
+                ->with('user')
+                ->get();
+            
+            foreach ($registrations as $registration) {
+                // Create notification for each registrant
+                // This would typically be done through Laravel's notification system
+                // For now, we'll just log it
+                Log::info('Program ended notification would be sent to user', [
+                    'program_id' => $program->id,
+                    'program_title' => $program->title,
+                    'user_id' => $registration->user_id,
+                    'ended_by' => $endedBy->id,
+                    'ended_at' => $program->ended_at
+                ]);
+                
+                // In a real implementation, you would:
+                // 1. Create a notification record in the database
+                // 2. Send email notification
+                // 3. Send in-app notification
+            }
+            
+            return count($registrations);
+            
+        } catch (\Exception $e) {
+            Log::error('Error notifying participants: ' . $e->getMessage());
+            return 0;
+        }
+    }
+
+    /**
+     * NEW: Get programs that can be ended (for SK officials)
+     */
+    public function getEndablePrograms(): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not authenticated'
+                ], 401);
+            }
+
+            // Get programs that are active and can be ended
+            $programs = Program::where('barangay_id', $user->barangay_id)
+                ->where('status', 'active')
+                ->where(function($query) {
+                    $query->whereNull('event_end_date')
+                          ->orWhere('event_end_date', '>=', Carbon::now());
+                })
+                ->with('user')
+                ->orderBy('event_date', 'desc')
+                ->get()
+                ->map(function($program) use ($user) {
+                    return [
+                        'id' => $program->id,
+                        'title' => $program->title,
+                        'event_date' => $program->event_date,
+                        'event_end_date' => $program->event_end_date,
+                        'status' => $program->status,
+                        'created_by' => $program->user->given_name . ' ' . $program->user->last_name,
+                        'can_end' => $program->user_id === $user->id || in_array($user->role, ['sk', 'sk_chairperson']),
+                        'has_end_date' => !empty($program->event_end_date)
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'programs' => $programs,
+                'total' => $programs->count()
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error fetching endable programs: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching programs'
+            ], 500);
+        }
+    }
+
+    /**
+     * NEW: Get ended programs
+     */
+    public function getEndedPrograms(): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not authenticated'
+                ], 401);
+            }
+
+            $programs = Program::where('barangay_id', $user->barangay_id)
+                ->where('status', 'ended')
+                ->with('user')
+                ->orderBy('ended_at', 'desc')
+                ->get()
+                ->map(function($program) {
+                    return [
+                        'id' => $program->id,
+                        'title' => $program->title,
+                        'event_date' => $program->event_date,
+                        'event_end_date' => $program->event_end_date,
+                        'ended_at' => $program->ended_at ? Carbon::parse($program->ended_at)->format('M d, Y g:i A') : null,
+                        'end_reason' => $program->end_reason,
+                        'created_by' => $program->user->given_name . ' ' . $program->user->last_name
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'programs' => $programs,
+                'total' => $programs->count()
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error fetching ended programs: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching ended programs'
             ], 500);
         }
     }
@@ -819,5 +1803,37 @@ class ProgramController extends Controller
             Log::error('Stack trace: ' . $e->getTraceAsString());
             return '00:00:00'; // Fallback
         }
+    }
+
+    /**
+     * Parse custom fields from form data
+     */
+    private function parseCustomFields($request)
+    {
+        $customFields = [];
+        
+        if ($request->has('custom_fields') && !empty($request->custom_fields)) {
+            try {
+                $fieldsData = json_decode($request->custom_fields, true);
+                
+                if (is_array($fieldsData)) {
+                    foreach ($fieldsData as $field) {
+                        if (!empty($field['label']) && !empty($field['type'])) {
+                            $customFields[] = [
+                                'type' => $field['type'],
+                                'label' => $field['label'],
+                                'required' => $field['required'] ?? false,
+                                'options' => $field['options'] ?? null,
+                                'field_id' => 'field_' . uniqid()
+                            ];
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::error('Error parsing custom fields: ' . $e->getMessage());
+            }
+        }
+        
+        return json_encode($customFields);
     }
 }
