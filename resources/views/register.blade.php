@@ -46,6 +46,41 @@
   </div>
 </div>
 
+<!-- Email Verification Error Modal -->
+<div id="emailVerificationModal" class="modal-overlay" style="display: none;">
+  <div class="modal simple-confirmation-modal">
+    <div class="modal-header">
+      <h2>Email Verification Required</h2>
+      <button type="button" class="modal-close-btn" id="closeEmailVerificationBtn" aria-label="Close">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="confirmation-icon">
+        <i class="fas fa-exclamation-circle" style="color: #f44336;"></i>
+      </div>
+      
+      <div class="confirmation-message">
+        <h3>Please verify your email first!</h3>
+        <p>You need to verify your email address before proceeding to the next step.</p>
+        <div class="verification-steps">
+          <p><i class="fas fa-envelope"></i> Step 1: Enter your email address in the "Recovery Email Address" field</p>
+          <p><i class="fas fa-paper-plane"></i> Step 2: Click "Send OTP" button to receive verification code</p>
+          <p><i class="fas fa-key"></i> Step 3: Enter the 6-digit code sent to your email</p>
+          <p><i class="fas fa-check-circle"></i> Step 4: Click "Verify" to complete email verification</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button type="button" id="understandEmailBtn" class="confirm-btn">
+        I Understand
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- Header -->
 <header class="header">
   <div class="header-left">
@@ -841,6 +876,11 @@ const currentStepInput = document.getElementById("currentStep");
 const stepErrors = document.getElementById("stepErrors");
 const stepErrorsList = document.getElementById("stepErrorsList");
 
+// Email verification modal elements
+const emailVerificationModal = document.getElementById("emailVerificationModal");
+const closeEmailVerificationBtn = document.getElementById("closeEmailVerificationBtn");
+const understandEmailBtn = document.getElementById("understandEmailBtn");
+
 // Confirmation Modal Elements
 const confirmationModal = document.getElementById("confirmationModal");
 const closeConfirmationBtn = document.getElementById("closeConfirmationBtn");
@@ -987,6 +1027,47 @@ function validateCurrentStep() {
     return errors;
 }
 
+// Check if email is verified
+function isEmailVerified() {
+    const sendOtpBtn = document.getElementById("sendOtpBtn");
+    // Check if the button text says "Verified"
+    return sendOtpBtn && sendOtpBtn.innerHTML.includes('Verified') && sendOtpBtn.disabled === true;
+}
+
+// Show email verification error modal
+function showEmailVerificationModal() {
+    if (emailVerificationModal) {
+        emailVerificationModal.style.display = "flex";
+        document.body.style.overflow = "hidden";
+    }
+}
+
+// Close email verification modal
+function closeEmailVerificationModal() {
+    if (emailVerificationModal) {
+        emailVerificationModal.style.display = "none";
+        document.body.style.overflow = "auto";
+    }
+}
+
+// Setup email verification modal event listeners
+if (closeEmailVerificationBtn) {
+    closeEmailVerificationBtn.addEventListener('click', closeEmailVerificationModal);
+}
+
+if (understandEmailBtn) {
+    understandEmailBtn.addEventListener('click', closeEmailVerificationModal);
+}
+
+// Close modal when clicking outside
+if (emailVerificationModal) {
+    emailVerificationModal.addEventListener('click', (e) => {
+        if (e.target === emailVerificationModal) {
+            closeEmailVerificationModal();
+        }
+    });
+}
+
 // Handle Next/Submit button click
 nextBtn?.addEventListener('click', (e) => {
     e.preventDefault(); 
@@ -1001,6 +1082,13 @@ nextBtn?.addEventListener('click', (e) => {
                 return;
             }
         }
+    }
+
+    // Check if trying to proceed from step 2 to step 3 without email verification
+    if (currentStep === 2 && !isEmailVerified()) {
+        // Show email verification error modal
+        showEmailVerificationModal();
+        return; // Stop further execution
     }
 
     const errors = validateCurrentStep();
@@ -1163,6 +1251,26 @@ style.textContent = `
     
     @keyframes spin {
         to { transform: rotate(360deg); }
+    }
+    
+    .verification-steps {
+        margin-top: 20px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border-left: 4px solid #3C87C4;
+    }
+    
+    .verification-steps p {
+        margin: 8px 0;
+        color: #555;
+        font-size: 14px;
+    }
+    
+    .verification-steps i {
+        color: #3C87C4;
+        margin-right: 10px;
+        width: 20px;
     }
 `;
 document.head.appendChild(style);

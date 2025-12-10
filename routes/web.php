@@ -2,7 +2,6 @@
 
 //use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
-
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\ProfileController;
@@ -57,10 +56,6 @@ Route::get('/', function () {
 Route::get('loginpage', function () {
     return view('loginpage');
 })->name('loginpage');
-
-Route::get('/registration/success', function () {
-    return view('registration-success'); 
-})->name('registration.success');
 
 Route::get('/dashboard', function () {
     return view('dashboard');
@@ -173,9 +168,10 @@ Route::get('/youth-status', function () {
 })->name('youth-statuspage');
 
 
-Route::get('/registration-success', function () {
-    return view('registration-success');
-})->name('registration.success');
+// ========== REGISTRATION SUCCESS ROUTE - FIXED ==========
+// CHANGED: This route now points to the controller method instead of a direct view
+Route::get('/registration/success', [RegisterController::class, 'showSuccessPage'])
+    ->name('registration.success');
 
 Route::get('/sk-evaluation-feedback', function () {
     return view('sk-evaluation-feedback');
@@ -222,11 +218,10 @@ Route::get('/view-youth-profile', function () {
 })->name('view-youth-profile');
 
 // ========== REGISTRATION ROUTES ==========
-// FIXED: Add the missing registration routes
 Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
-Route::post('/register/preview', [RegisterController::class, 'preview'])->name('register.preview'); // ADD THIS LINE
-Route::get('/register/captcha', [RegisterController::class, 'showCaptcha'])->name('register.captcha'); // ADD THIS LINE
-Route::post('/register/complete', [RegisterController::class, 'complete'])->name('register.complete'); // ADD THIS LINE
+Route::post('/register/preview', [RegisterController::class, 'preview'])->name('register.preview');
+Route::get('/register/captcha', [RegisterController::class, 'showCaptcha'])->name('register.captcha');
+Route::post('/register/complete', [RegisterController::class, 'complete'])->name('register.complete');
 
 // CONTROLLER ROUTES
 
@@ -656,4 +651,3 @@ Route::prefix('admin')->group(function () {
 
 // Maintenance page route (must be outside middleware to always be accessible)
 Route::get('/maintenance', [MaintenanceController::class, 'showMaintenancePage']);
-

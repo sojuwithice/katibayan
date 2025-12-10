@@ -35,7 +35,6 @@ class RegisterController extends Controller
             'middle_name' => 'nullable|string|max:100',
             'suffix' => 'nullable|string|max:10',
             
-            // Location fields
             'region_id' => 'required|exists:regions,id',
             'province_id' => 'required|exists:provinces,id',
             'city_id' => 'required|exists:cities,id',
@@ -55,7 +54,6 @@ class RegisterController extends Controller
             'role' => 'required|in:sk,kk',
         ];
 
-        // File rules by role
         if (isset($data['role']) && $data['role'] === 'sk') {
             $rules['oath_certificate'] = 'required|file|mimes:pdf,png,jpg,jpeg|max:5120';
         } elseif (isset($data['role']) && $data['role'] === 'kk') {
@@ -95,7 +93,6 @@ class RegisterController extends Controller
             'confirm_submission' => 'required|accepted',
         ];
 
-        // File rules by role - required for preview
         if (isset($data['role']) && $data['role'] === 'sk') {
             $rules['oath_certificate'] = 'required|file|mimes:pdf,png,jpg,jpeg|max:5120';
         } elseif (isset($data['role']) && $data['role'] === 'kk') {
@@ -105,15 +102,10 @@ class RegisterController extends Controller
         return Validator::make($data, $rules);
     }
 
-    /**
-     * Step 1: Preview route — validate, store files temporarily and keep data in session,
-     * then redirect to captcha page.
-     */
     public function preview(Request $request)
     {
         Log::info('Preview method called', ['data' => $request->except(['_token', 'oath_certificate', 'barangay_indigency'])]);
 
-        // Use the preview validator which includes checkbox validation
         $validator = $this->previewValidator($request->all());
         
         if ($validator->fails()) {
@@ -124,10 +116,8 @@ class RegisterController extends Controller
                 ->with('error', 'Please fix the validation errors below.');
         }
 
-        // Store inputs except files and checkboxes
         $data = $request->except(['_token', 'oath_certificate', 'barangay_indigency', 'certify_info', 'certify_final', 'confirm_submission']);
 
-        // Store uploaded files temporarily in public disk under temp/
         if ($request->hasFile('oath_certificate')) {
             $data['oath_certificate_temp'] = $request->file('oath_certificate')->store('temp', 'public');
             Log::info('Oath certificate stored temporarily', ['path' => $data['oath_certificate_temp']]);
@@ -137,17 +127,12 @@ class RegisterController extends Controller
             Log::info('Barangay indigency stored temporarily', ['path' => $data['barangay_indigency_temp']]);
         }
 
-        // Save to session with flash data to persist across redirects
         $request->session()->put('pending_registration', $data);
         Log::info('Data stored in session, redirecting to captcha');
 
-        // Redirect to captcha page
         return redirect()->route('register.captcha');
     }
 
-    /**
-     * Show captcha page (only if session has pending_registration)
-     */
     public function showCaptcha()
     {
         if (!session()->has('pending_registration')) {
@@ -166,9 +151,6 @@ class RegisterController extends Controller
         return view('registration-captcha', compact('siteKey'));
     }
 
-    /**
-     * Complete registration: verify captcha with Google, finalize files, create user and role
-     */
     public function complete(Request $request)
     {
         Log::info('Complete method called');
@@ -180,12 +162,9 @@ class RegisterController extends Controller
 
         $token = $request->input('g-recaptcha-response');
         
-        // DEVELOPMENT MODE: Bypass reCAPTCHA for local testing
         if (app()->environment('local')) {
             Log::info('Local environment detected - bypassing reCAPTCHA verification');
-            // Skip reCAPTCHA verification in local development
         } else {
-            // PRODUCTION: Verify reCAPTCHA
             if (!$token) {
                 Log::error('No reCAPTCHA token provided');
                 return redirect()->route('register.captcha')->withErrors('Please complete the captcha.');
@@ -223,12 +202,10 @@ class RegisterController extends Controller
             }
         }
 
-        // Continue with registration process...
         $data = session('pending_registration');
-        Log::info('Processing registration data from session');
+        Log::info('Processing registration data from session', ['role' => $data['role'] ?? 'none']);
 
         try {
-            // Move temp files to final location
             if (!empty($data['oath_certificate_temp'])) {
                 $temp = $data['oath_certificate_temp'];
                 $final = 'documents/sk/' . basename($temp);
@@ -248,39 +225,43 @@ class RegisterController extends Controller
 
             // Create the user
             $user = $this->create($data);
-            Log::info('User created successfully', ['user_id' => $user->id, 'email' => $user->email]);
+            Log::info('User created successfully', [
+                'user_id' => $user->id, 
+                'email' => $user->email,
+                'role' => $user->role,
+                'account_status' => $user->account_status
+            ]);
 
-            // Create role-specific models
             if (isset($data['role']) && $data['role'] === 'sk') {
                 SkOfficial::create([
                     'user_id' => $user->id,
                     'oath_certificate_path' => $data['oath_certificate_path'] ?? null,
-                    'status' => 'pending', // NEW: SK officials start as pending
+                    'status' => 'pending',
                 ]);
                 Log::info('SK official record created with pending status');
+                
+                // Store role in session for success page
+                session(['registration_role' => 'sk']);
+                
             } elseif (isset($data['role']) && $data['role'] === 'kk') {
                 KKMember::create([
                     'user_id' => $user->id,
                     'barangay_indigency_path' => $data['barangay_indigency_path'] ?? null,
-                    'status' => 'approved', // KK members are auto-approved
+                    'status' => 'approved',
                 ]);
                 Log::info('KK member record created with approved status');
+                
+                // Store role in session for success page - THIS IS THE FIX
+                session(['registration_role' => 'kk']);
             }
 
-            // Cleanup session
             session()->forget('pending_registration');
-            Log::info('Session cleaned up, redirecting to success');
+            Log::info('Session cleaned up, redirecting to success', ['role_in_session' => session('registration_role')]);
 
-            // Redirect to success page with different messages based on role
-            $role = $data['role'] ?? 'user';
+            // Store email in session for success page
+            session(['registration_email' => $data['email'] ?? '']);
             
-            if ($role === 'sk') {
-                return redirect()->route('registration.success')
-                    ->with('success', 'Registration submitted successfully. Your SK Chairperson account is pending admin approval. You will receive credentials once approved.');
-            } else {
-                return redirect()->route('registration.success')
-                    ->with('success', 'Registration submitted. Your KK account has been created. Check your email for login credentials.');
-            }
+            return redirect()->route('registration.success');
 
         } catch (\Exception $e) {
             Log::error('Error during user creation: ' . $e->getMessage());
@@ -289,15 +270,31 @@ class RegisterController extends Controller
         }
     }
 
+    /**
+     * Show registration success page
+     */
+    public function showSuccessPage()
+    {
+        // Get role from session
+        $role = session('registration_role');
+        $email = session('registration_email');
+        
+        Log::info('Showing success page', ['role' => $role, 'email' => $email]);
+        
+        // Clear session data after displaying
+        session()->forget(['registration_role', 'registration_email']);
+        
+        return view('registration-success', compact('role', 'email'));
+    }
+
+    /**
+     * CREATE USER - Default password will be AUTO-ENCRYPTED by User model setter
+     */
     protected function create(array $data)
     {
-        // Role prefix
-        $prefix = strtoupper($data['role']); // SK or KK
-
-        // Birthdate in Ymd
+        $prefix = strtoupper($data['role']);
         $birthdate = date('Ymd', strtotime($data['date_of_birth']));
-
-        // Get initials from name
+        
         $fullName = $data['given_name'] . ' ' . ($data['middle_name'] ?? '') . ' ' . $data['last_name'];
         $names = explode(' ', $fullName);
         $initials = '';
@@ -307,34 +304,28 @@ class RegisterController extends Controller
             }
         }
 
-        // Combine role + birthdate + initials
         $accountNumber = $prefix . $birthdate . $initials;
 
-        // Handle password generation based on role
         if ($data['role'] === 'kk') {
-            // KK: Generate password immediately and send email
+            // Generate plain password for KK
             $plainPassword = $prefix . rand(1000, 9999);
             $passwordHash = Hash::make($plainPassword);
-            $defaultPassword = $plainPassword;
-            $accountStatus = 'approved'; // KK auto-approved
+            $accountStatus = 'approved';
         } else {
-            // SK: No password until approved by admin
+            // SK gets no password until approved
             $plainPassword = null;
-            $passwordHash = Hash::make(Str::random(32)); // Temporary random password
-            $defaultPassword = null;
-            $accountStatus = 'pending'; // SK needs admin approval
+            $passwordHash = Hash::make(Str::random(32));
+            $accountStatus = 'pending';
         }
 
-        // Log password generation for debugging
-        Log::info('PASSWORD DEBUG - Before user creation:', [
+        Log::info('Creating user with auto-encrypted default password:', [
             'role' => $data['role'],
-            'generated_password' => $plainPassword,
             'account_number' => $accountNumber,
             'email' => $data['email'],
-            'account_status' => $accountStatus
+            'plain_password_for_email' => $plainPassword
         ]);
 
-        // Create user
+        // Create user - default_password will be AUTO-ENCRYPTED by User model
         $user = User::create([
             'role' => $data['role'],
             'account_number' => $accountNumber,
@@ -342,16 +333,12 @@ class RegisterController extends Controller
             'given_name' => $data['given_name'],
             'middle_name' => $data['middle_name'] ?? null,
             'suffix' => $data['suffix'] ?? null,
-
-            // Location
             'region_id' => $data['region_id'],
             'province_id' => $data['province_id'],
             'city_id' => $data['city_id'],
             'barangay_id' => $data['barangay_id'],
             'purok_zone' => $data['purok_zone'],
             'zip_code' => $data['zip_code'],
-
-            // Personal
             'date_of_birth' => $data['date_of_birth'],
             'sex' => $data['sex'],
             'email' => $data['email'],
@@ -361,43 +348,30 @@ class RegisterController extends Controller
             'work_status' => $data['work_status'],
             'youth_classification' => $data['youth_classification'],
             'sk_voter' => $data['sk_voter'],
-
-            // Account status & password
-            'account_status' => $accountStatus, // 'approved' for KK, 'pending' for SK
+            'account_status' => $accountStatus,
             'password' => $passwordHash,
-            'default_password' => $defaultPassword,
+            'default_password' => $plainPassword, // Will be auto-encrypted by User model
         ]);
 
-        // Debug: Verify what was stored in database
-        $freshUser = User::find($user->id);
-        Log::info('PASSWORD DEBUG - After user creation:', [
-            'role' => $freshUser->role,
-            'stored_default_password' => $freshUser->default_password,
-            'account_status' => $freshUser->account_status
+        Log::info('User created. Default password in database is encrypted:', [
+            'user_id' => $user->id,
+            'default_password_stored' => substr($user->getRawOriginal('default_password') ?? '', 0, 50) . '...',
+            'is_encrypted' => strlen($user->getRawOriginal('default_password') ?? '') > 50
         ]);
 
-        // Send email ONLY for KK users (auto-approved)
+        // Send email with plain password (email is encrypted in transit)
         if ($data['role'] === 'kk') {
             try {
                 Mail::to($user->email)->send(
                     new AccountCredentialsMail($user, $accountNumber, $plainPassword)
                 );
-                Log::info('Account credentials email sent to KK user', [
+                Log::info('Email sent with plain password to KK user', [
                     'user_id' => $user->id,
-                    'email' => $user->email,
-                    'account_number' => $accountNumber,
-                    'password_sent_in_email' => $plainPassword
+                    'email' => $user->email
                 ]);
             } catch (\Exception $e) {
-                Log::error('Failed to send email to KK user: ' . $e->getMessage());
+                Log::error('Failed to send email: ' . $e->getMessage());
             }
-        } else {
-            // SK users - log that no password generated yet
-            Log::info('SK user created - no password generated (pending admin approval)', [
-                'user_id' => $user->id,
-                'email' => $user->email,
-                'account_number' => $accountNumber
-            ]);
         }
 
         return $user;
@@ -408,14 +382,12 @@ class RegisterController extends Controller
      */
     public function sendSKCredentials(User $user)
     {
-        // Only process SK users
         if ($user->role !== 'sk') {
             Log::error('Attempted to send SK credentials to non-SK user', ['user_id' => $user->id]);
             return false;
         }
 
-        // Generate new password for SK user upon approval
-        $prefix = strtoupper($user->role); // SK
+        $prefix = strtoupper($user->role);
         $accountNumber = $user->account_number;
         $plainPassword = $prefix . rand(1000, 9999);
 
@@ -423,25 +395,23 @@ class RegisterController extends Controller
             'user_id' => $user->id,
             'email' => $user->email,
             'account_number' => $accountNumber,
-            'new_generated_password' => $plainPassword
+            'new_password' => $plainPassword
         ]);
 
         try {
-            // Update user with new password AND default_password
+            // Update user - default_password will be AUTO-ENCRYPTED by User model
             $user->update([
                 'password' => Hash::make($plainPassword),
-                'default_password' => $plainPassword,
+                'default_password' => $plainPassword, // Will be auto-encrypted
                 'account_status' => 'approved'
             ]);
 
-            // Also update SkOfficial status
             $skOfficial = SkOfficial::where('user_id', $user->id)->first();
             if ($skOfficial) {
                 $skOfficial->update(['status' => 'approved']);
                 Log::info('SK official record approved', ['user_id' => $user->id]);
             }
 
-            // Send email with credentials
             Mail::to($user->email)->send(
                 new AccountCredentialsMail($user, $accountNumber, $plainPassword)
             );
@@ -449,9 +419,7 @@ class RegisterController extends Controller
             Log::info('SK credentials email sent after admin approval', [
                 'user_id' => $user->id,
                 'email' => $user->email,
-                'account_number' => $accountNumber,
-                'password_sent' => $plainPassword,
-                'default_password_in_db' => $user->fresh()->default_password
+                'password_sent' => $plainPassword
             ]);
             
             return true;
@@ -461,22 +429,16 @@ class RegisterController extends Controller
         }
     }
 
-    /**
-     * Admin method to approve SK users
-     */
     public function approveSkUser(Request $request, User $user)
     {
-        // Validate admin permissions
         if (!auth()->user() || auth()->user()->role !== 'admin') {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
-        // Check if user is SK
         if ($user->role !== 'sk') {
             return response()->json(['error' => 'User is not an SK official'], 400);
         }
 
-        // Send credentials
         $result = $this->sendSKCredentials($user);
 
         if ($result) {
