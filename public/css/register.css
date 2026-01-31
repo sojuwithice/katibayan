@@ -1057,7 +1057,19 @@ p{
 }
 
 
+/* ZIP Code auto-filled style */
+input[name="zip_code"]:read-only {
+    background-color: #f8f9fa !important;
+    color: #666 !important;
+    cursor: not-allowed !important;
+    border-color: #dee2e6 !important;
+}
 
+input[name="zip_code"]:read-only:focus {
+    outline: none !important;
+    border-color: #dee2e6 !important;
+    box-shadow: none !important;
+}
 
 
 

@@ -107,7 +107,7 @@
 }
 
 body {
-  background: var(--bg-color);
+  background: var(--topbar-bg);
   color: var(--text-color);
   transition: background-color 0.3s ease, color 0.3s ease;
 }
@@ -311,7 +311,7 @@ body {
   gap: 0;
 }
 
-/* === Topbar === */
+/* Topbar */
 .topbar {
   position: fixed;
   top: 0;
@@ -321,22 +321,22 @@ body {
   background: var(--topbar-bg);
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 2rem;     
   gap: 1rem;
+  padding: 0.5rem 2rem;
+  justify-content: space-between;
   z-index: 2000;
   transition: background-color 0.3s ease;
 }
 
-/* === Logo Section === */
+/* Logo */
 .logo {
   display: flex;
   align-items: center;
-  gap: -0;         
+  gap: 10px;
 }
 
 .logo img {
-  height: 90px;         
+  height: 50px;
   width: auto;
 }
 
@@ -355,14 +355,14 @@ body {
 .logo-text .subtitle {
   font-size: 13px;
   font-weight: 500;
-  color: #3C87C4;
+  color: var(--primary-color);
 }
 
 .topbar-right {
   display: flex;
   align-items: center;
   gap: 1.5rem;
-  margin-left: auto;   
+  margin-left: auto;
 }
 
 /* === Theme Toggle Button === */

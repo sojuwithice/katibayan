@@ -26,48 +26,51 @@
     <div class="divider"></div>
     <nav class="nav">
       <a href="{{ route('sk.dashboard') }}">
-        <i data-lucide="layout-dashboard"></i>
+        <i data-lucide="layout-dashboard" class="lucide-icon"></i>
         <span class="label">Dashboard</span>
       </a>
 
-      <a href="#">
-        <i data-lucide="chart-pie"></i>
-        <span class="label">Analytics</span>
-      </a>
-
       <a href="{{ route('youth-profilepage') }}" class="active">
-        <i data-lucide="users"></i>
+        <i data-lucide="users" class="lucide-icon"></i>
         <span class="label">Youth Profile</span>
       </a>
 
-      <a href="{{ route('sk-eventpage') }}" class="events-link">
-        <i data-lucide="calendar"></i>
-        <span class="label">Events and Programs</span>
-      </a>
-
-      <div class="evaluation-item nav-item">
-        <a href="{{ route('sk-evaluation-feedback') }}" class="evaluation-link nav-link">
-          <i data-lucide="user-star"></i>
-          <span class="label">Evaluation</span>
-          <i data-lucide="chevron-down" class="submenu-arrow"></i>
+      <div class="nav-item">
+        <a href="#" class="nav-link">
+          <i data-lucide="calendar" class="lucide-icon"></i>
+          <span class="label">Events and Programs</span>
+          <i data-lucide="chevron-down" class="submenu-arrow lucide-icon"></i>
         </a>
         <div class="submenu">
-          <a href="#">Feedbacks</a>
-          <a href="#">Polls</a>
-          <a href="#">Suggestion Box</a>
+          <a href="{{ route('sk-eventpage') }}">Events List</a>
+          <a href="{{ route('youth-program-registration') }}">Youth Registration</a>
         </div>
       </div>
 
-      <a href="#">
-        <i data-lucide="file-chart-column"></i>
+      <a href="{{ route('sk-evaluation-feedback') }}">
+        <i data-lucide="message-square-quote" class="lucide-icon"></i>
+        <span class="label">Feedbacks</span>
+      </a>
+
+      <a href="{{ route('sk-polls') }}">
+        <i data-lucide="vote" class="lucide-icon"></i>
+        <span class="label">Polls</span>
+      </a>
+
+      <a href="{{ route('youth-suggestion') }}">
+        <i data-lucide="lightbulb" class="lucide-icon"></i>
+        <span class="label">Suggestion Box</span>
+      </a>
+      
+      <a href="{{ route('reports') }}">
+        <i data-lucide="file-chart-column" class="lucide-icon"></i>
         <span class="label">Reports</span>
       </a>
 
-      <a href="{{ route('serviceoffers') }}">
-        <i data-lucide="hand-heart"></i>
+      <a href="{{ route('sk-services-offer') }}">
+        <i data-lucide="hand-heart" class="lucide-icon"></i>
         <span class="label">Service Offer</span>
       </a>
-
     </nav>
   </aside>
 
@@ -78,7 +81,7 @@
     <!-- Topbar -->
     <header class="topbar">
       <div class="logo">
-        <img src="{{ asset('images/logo.png') }}" alt="Logo">
+        <img src="{{ asset('images/KatiBayan-Logo_B.png') }}" alt="Logo">
         <div class="logo-text">
           <span class="title">Katibayan</span>
           <span class="subtitle">Web Portal</span>
@@ -586,10 +589,7 @@ if (dropdown) {
     });
 }
 
-// ... (ilagay ito bago mag '});' sa dulo ng script)
 
-// --- FUNCTION PARA KUNIN 'YUNG MGA NA-VIEW NANG ACTIVITIES ---
-// (In-update para sa 'event' at 'program')
 function getViewedActivities() {
     const viewed = localStorage.getItem('viewedCertificateActivities'); // Pinalitan 'yung key
     return viewed ? JSON.parse(viewed) : [];

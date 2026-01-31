@@ -493,4 +493,18 @@ class DashboardController extends Controller
 
         return $allUpcomingItems->sortBy('date')->take(6);
     }
+
+    public function showCommittee()
+{
+    $chairperson = \App\Models\User::where('role', 'sk_chairperson')->first();
+
+$skMembers = \App\Models\User::whereNotNull('sk_role')
+    ->where('sk_role', '!=', '')
+    ->when($chairperson, function ($q) use ($chairperson) {
+        return $q->where('id', '!=', $chairperson->id);
+    })
+    ->get();
+
+}
+
 }

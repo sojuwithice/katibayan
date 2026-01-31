@@ -27,11 +27,6 @@
         <span class="label">Dashboard</span>
       </a>
 
-      <a href="#">
-        <i data-lucide="chart-pie" class="lucide-icon"></i>
-        <span class="label">Analytics</span>
-      </a>
-
       <a href="{{ route('youth-profilepage') }}" class="active">
         <i data-lucide="users" class="lucide-icon"></i>
         <span class="label">Youth Profile</span>
@@ -82,7 +77,7 @@
     <!-- Topbar -->
     <header class="topbar">
       <div class="logo">
-        <img src="{{ asset('images/logo.png') }}" alt="Logo">
+        <img src="{{ asset('images/KatiBayan-Logo_B.png') }}" alt="Logo">
         <div class="logo-text">
           <span class="title">Katibayan</span>
           <span class="subtitle">Web Portal</span>
@@ -795,18 +790,29 @@
         };
       });
 
-      // === CLICK ROW TO VIEW PROFILE ===
-      const youthTable = document.getElementById("youthTable");
-      if (youthTable) {
+      
+// === CLICK ROW TO VIEW PROFILE ===
+    const youthTable = document.getElementById("youthTable");
+    if (youthTable) {
         youthTable.querySelectorAll("tbody tr").forEach(row => {
-          row.style.cursor = "pointer"; 
-          row.addEventListener("click", () => {
-            const youthId = row.getAttribute("data-id"); 
-            if (!youthId) return; 
-            window.location.href = "/view-youth-profile/" + youthId;
-          });
+            row.style.cursor = "pointer"; 
+            row.addEventListener("click", (event) => {
+                // Prevent click if clicking on a link/button inside
+                if (event.target.tagName === 'A' || event.target.tagName === 'BUTTON') {
+                    return;
+                }
+                
+                const youthId = row.getAttribute("data-id"); 
+                if (!youthId) {
+                    console.error('No data-id attribute found on table row');
+                    return; 
+                }
+                
+                // Simple direct URL - this works best
+                window.location.href = "/view-youth-profile/" + youthId;
+            });
         });
-      }
+    }
 
       // === Logout Confirmation ===
       function confirmLogout(event) {
@@ -836,6 +842,73 @@
           });
         }
       }
+
+      // === FIXED FILTER FUNCTION ===
+let activeFilters = {};
+
+document.querySelectorAll(".dropdown-content a[data-filter]").forEach(item => {
+    item.addEventListener("click", function(e) {
+        e.preventDefault();
+        
+        const filterValue = this.getAttribute("data-filter").toLowerCase();
+        const filterColumn = parseInt(this.getAttribute("data-filter-column"));
+        
+        // Update active filters
+        if (filterValue === "") {
+            // If "All" is selected, remove filter for this column
+            delete activeFilters[filterColumn];
+        } else {
+            activeFilters[filterColumn] = filterValue;
+        }
+        
+        applyFilters();
+        
+        // Update button text to show active filter
+        const dropdownBtn = this.closest('.dropdown').querySelector('.dropdown-btn');
+        if (filterValue !== "" && dropdownBtn) {
+            dropdownBtn.innerHTML = `<i class="fas fa-filter"></i> ${this.textContent}`;
+        } else {
+            dropdownBtn.innerHTML = `<i class="fas fa-filter"></i> ${dropdownBtn.textContent.replace(/^[^a-zA-Z]+/, '')}`;
+        }
+    });
+});
+
+// Function to apply all active filters
+function applyFilters() {
+    const rows = document.querySelectorAll("#youthTable tbody tr");
+    const searchValue = document.getElementById("searchInput").value.toLowerCase();
+    
+    rows.forEach(row => {
+        let shouldShow = true;
+        const cells = row.querySelectorAll("td");
+        const rowText = row.textContent.toLowerCase();
+        
+        // Apply search filter
+        if (searchValue && !rowText.includes(searchValue)) {
+            shouldShow = false;
+        }
+        
+        // Apply column filters
+        Object.entries(activeFilters).forEach(([column, filterValue]) => {
+            const cellIndex = parseInt(column);
+            if (cellIndex >= 0 && cellIndex < cells.length) {
+                const cellValue = cells[cellIndex].textContent.toLowerCase();
+                if (cellValue !== filterValue && filterValue !== "") {
+                    shouldShow = false;
+                }
+            }
+        });
+        
+        row.style.display = shouldShow ? "" : "none";
+    });
+}
+
+// Update search to work with filters
+document.getElementById("searchInput").addEventListener("keyup", function() {
+    applyFilters();
+});
+
+
     });
   </script>
 </body>

@@ -47,6 +47,7 @@ use App\Http\Controllers\OcrController;
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\FAQController;
 use App\Http\Controllers\MaintenanceController;
+use App\Http\Controllers\EvaluationQuestionController;
 
 
 Route::get('/', function () {
@@ -213,9 +214,9 @@ Route::get('/reports', function () {
     return view('reports');
 })->name('reports');
 
-Route::get('/view-youth-profile', function () {
-    return view('view-youth-profile');
-})->name('view-youth-profile');
+Route::get('/view-youth-profile/{id}', [YouthProfileController::class, 'show'])
+     ->name('view-youth-profile')
+     ->middleware('auth');
 
 // ========== REGISTRATION ROUTES ==========
 Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
@@ -651,3 +652,16 @@ Route::prefix('admin')->group(function () {
 
 // Maintenance page route (must be outside middleware to always be accessible)
 Route::get('/maintenance', [MaintenanceController::class, 'showMaintenancePage']);
+
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/sk/evaluation/questions', [EvaluationQuestionController::class, 'index']);
+    Route::get('/sk/evaluation/questions/list', [EvaluationQuestionController::class, 'list']);
+    Route::post('/sk/evaluation/questions', [EvaluationQuestionController::class, 'store']);
+    Route::post('/sk/evaluation/questions/save-all', [EvaluationQuestionController::class, 'saveAll']);
+    Route::put('/sk/evaluation/questions/{id}', [EvaluationQuestionController::class, 'update']);
+    Route::delete('/sk/evaluation/questions/{id}', [EvaluationQuestionController::class, 'destroy']);
+    
+    // Dagdag ito para sa restore default
+    Route::put('/sk/evaluation/questions/restore-default', [EvaluationQuestionController::class, 'restoreDefault']);
+});

@@ -458,90 +458,36 @@
                 </p>
 
                 <div class="questions">
-                    <!-- Question 1 -->
-                    <div class="question">
-                        <p>Question 1: Was the purpose of the program/event explained clearly? <span class="required">*</span></p>
-                        <div class="scale">
-                            <label><input type="radio" name="q1" value="1" required><span><div class="circle">1</div>Strongly Disagree</span></label>
-                            <label><input type="radio" name="q1" value="2"><span><div class="circle">2</div>Disagree</span></label>
-                            <label><input type="radio" name="q1" value="3"><span><div class="circle">3</div>Neutral</span></label>
-                            <label><input type="radio" name="q1" value="4"><span><div class="circle">4</div>Agree</span></label>
-                            <label><input type="radio" name="q1" value="5"><span><div class="circle">5</div>Strongly Agree</span></label>
-                        </div>
-                    </div>
+    @foreach($evaluationQuestions as $index => $question)
+    <div class="question">
+        <p>
+            Question {{ $index + 1 }}: {{ $question->question_text }}
+            <span class="required">*</span>
+        </p>
 
-                    <!-- Question 2 -->
-                    <div class="question">
-                        <p>Question 2: Was the time given for the program/event enough? <span class="required">*</span></p>
-                        <div class="scale">
-                            <label><input type="radio" name="q2" value="1" required><span><div class="circle">1</div>Strongly Disagree</span></label>
-                            <label><input type="radio" name="q2" value="2"><span><div class="circle">2</div>Disagree</span></label>
-                            <label><input type="radio" name="q2" value="3"><span><div class="circle">3</div>Neutral</span></label>
-                            <label><input type="radio" name="q2" value="4"><span><div class="circle">4</div>Agree</span></label>
-                            <label><input type="radio" name="q2" value="5"><span><div class="circle">5</div>Strongly Agree</span></label>
-                        </div>
-                    </div>
+        <div class="scale">
+            @for($i = 1; $i <= 5; $i++)
+            <label>
+                <input type="radio"
+                       name="ratings[{{ $question->id }}]"
+                       value="{{ $i }}"
+                       required>
+                <span>
+                    <div class="circle">{{ $i }}</div>
+                    @if($i == 1) Strongly Disagree
+                    @elseif($i == 2) Disagree
+                    @elseif($i == 3) Neutral
+                    @elseif($i == 4) Agree
+                    @else Strongly Agree
+                    @endif
+                </span>
+            </label>
+            @endfor
+        </div>
+    </div>
+    @endforeach
+</div>
 
-                    <!-- Question 3 -->
-                    <div class="question">
-                        <p>Question 3: Were you able to join and participate in the activities? <span class="required">*</span></p>
-                        <div class="scale">
-                            <label><input type="radio" name="q3" value="1" required><span><div class="circle">1</div>Strongly Disagree</span></label>
-                            <label><input type="radio" name="q3" value="2"><span><div class="circle">2</div>Disagree</span></label>
-                            <label><input type="radio" name="q3" value="3"><span><div class="circle">3</div>Neutral</span></label>
-                            <label><input type="radio" name="q3" value="4"><span><div class="circle">4</div>Agree</span></label>
-                            <label><input type="radio" name="q3" value="5"><span><div class="circle">5</div>Strongly Agree</span></label>
-                        </div>
-                    </div>
-
-                    <!-- Question 4 -->
-                    <div class="question">
-                        <p>Question 4: Did you learn something new from this program/event? <span class="required">*</span></p>
-                        <div class="scale">
-                            <label><input type="radio" name="q4" value="1" required><span><div class="circle">1</div>Strongly Disagree</span></label>
-                            <label><input type="radio" name="q4" value="2"><span><div class="circle">2</div>Disagree</span></label>
-                            <label><input type="radio" name="q4" value="3"><span><div class="circle">3</div>Neutral</span></label>
-                            <label><input type="radio" name="q4" value="4"><span><div class="circle">4</div>Agree</span></label>
-                            <label><input type="radio" name="q4" value="5"><span><div class="circle">5</div>Strongly Agree</span></label>
-                        </div>
-                    </div>
-
-                    <!-- Question 5 -->
-                    <div class="question">
-                        <p>Question 5: Did the SK officials/facilitators treat all participants fairly and equally? <span class="required">*</span></p>
-                        <div class="scale">
-                            <label><input type="radio" name="q5" value="1" required><span><div class="circle">1</div>Strongly Disagree</span></label>
-                            <label><input type="radio" name="q5" value="2"><span><div class="circle">2</div>Disagree</span></label>
-                            <label><input type="radio" name="q5" value="3"><span><div class="circle">3</div>Neutral</span></label>
-                            <label><input type="radio" name="q5" value="4"><span><div class="circle">4</div>Agree</span></label>
-                            <label><input type="radio" name="q5" value="5"><span><div class="circle">5</div>Strongly Agree</span></label>
-                        </div>
-                    </div>
-
-                    <!-- Question 6 -->
-                    <div class="question">
-                        <p>Question 6: Did the SK officials/facilitators show enthusiasm and commitment in leading the program/event? <span class="required">*</span></p>
-                        <div class="scale">
-                            <label><input type="radio" name="q6" value="1" required><span><div class="circle">1</div>Strongly Disagree</span></label>
-                            <label><input type="radio" name="q6" value="2"><span><div class="circle">2</div>Disagree</span></label>
-                            <label><input type="radio" name="q6" value="3"><span><div class="circle">3</div>Neutral</span></label>
-                            <label><input type="radio" name="q6" value="4"><span><div class="circle">4</div>Agree</span></label>
-                            <label><input type="radio" name="q6" value="5"><span><div class="circle">5</div>Strongly Agree</span></label>
-                        </div>
-                    </div>
-
-                    <!-- Question 7 -->
-                    <div class="question">
-                        <p>Question 7: Overall, are you satisfied with this program/event? <span class="required">*</span></p>
-                        <div class="scale">
-                            <label><input type="radio" name="q7" value="1" required><span><div class="circle">1</div>Strongly Disagree</span></label>
-                            <label><input type="radio" name="q7" value="2"><span><div class="circle">2</div>Disagree</span></label>
-                            <label><input type="radio" name="q7" value="3"><span><div class="circle">3</div>Neutral</span></label>
-                            <label><input type="radio" name="q7" value="4"><span><div class="circle">4</div>Agree</span></label>
-                            <label><input type="radio" name="q7" value="5"><span><div class="circle">5</div>Strongly Agree</span></label>
-                        </div>
-                    </div>
-                </div>
 
                 <div class="pagination">
                     <span class="dot active"></span>
@@ -839,76 +785,112 @@
             page2.style.display = "block";
         });
 
-        // Submit evaluation
-        submitBtn?.addEventListener("click", async () => {
-            if (!currentEvaluatingActivityId || !currentEvaluatingActivityType) {
-                alert("No activity selected for evaluation.");
-                return;
-            }
+        // Submit evaluation - UPDATED VERSION
+submitBtn?.addEventListener("click", async () => {
+    if (!currentEvaluatingActivityId || !currentEvaluatingActivityType) {
+        alert("No activity selected for evaluation.");
+        return;
+    }
 
-            try {
-                // Collect ratings
-                const ratings = {};
-                for (let i = 1; i <= 7; i++) {
-                    const radio = document.querySelector(`input[name="q${i}"]:checked`);
-                    if (radio) {
-                        ratings[`q${i}`] = parseInt(radio.value);
-                    }
+    try {
+        // Collect ratings - CORRECTED VERSION
+        const ratings = {};
+        
+        // Get all question inputs
+        document.querySelectorAll('input[type="radio"]:checked').forEach(radio => {
+            const name = radio.getAttribute('name');
+            
+            // Extract question ID from name="ratings[1]" format
+            if (name && name.startsWith('ratings[')) {
+                const questionId = name.match(/ratings\[(\d+)\]/)?.[1];
+                if (questionId) {
+                    ratings[questionId] = parseInt(radio.value);
                 }
-
-                // Prepare evaluation data
-                const evaluationData = {
-                    ratings: ratings,
-                    comments: comments.value
-                };
-
-                if (currentEvaluatingActivityType === 'event') {
-                    evaluationData.event_id = currentEvaluatingActivityId;
-                } else {
-                    evaluationData.program_id = currentEvaluatingActivityId;
-                }
-
-                // Submit evaluation
-                const response = await fetch('/evaluation', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': window.csrfToken
-                    },
-                    body: JSON.stringify(evaluationData)
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    evaluationModal.style.display = "none";
-                    successModal.style.display = "flex";
-
-                    // Update UI
-                    const evaluatedBtn = document.querySelector(`.evaluate-btn[data-activity-id="${currentEvaluatingActivityId}"][data-activity-type="${currentEvaluatingActivityType}"]`);
-                    if (evaluatedBtn) {
-                        evaluatedBtn.innerHTML = '<i class="fa-solid fa-check"></i> Evaluated';
-                        evaluatedBtn.classList.add('done');
-                        evaluatedBtn.disabled = true;
-
-                        const statusDot = evaluatedBtn.closest('.program-card').querySelector('.status-dot');
-                        if (statusDot) {
-                            statusDot.classList.add('completed');
-                            statusDot.innerHTML = '<i class="fas fa-check"></i>';
-                        }
-                    }
-
-                    currentEvaluatingActivityId = null;
-                    currentEvaluatingActivityType = null;
-                } else {
-                    alert(result.error || 'Failed to submit evaluation');
-                }
-
-            } catch (error) {
-                console.error('Error submitting evaluation:', error);
-                alert('Failed to submit evaluation. Please try again.');
             }
         });
+
+        // Validate that all questions are answered
+        const totalQuestions = document.querySelectorAll('.question').length;
+        if (Object.keys(ratings).length < totalQuestions) {
+            alert("Please answer all required questions before submitting!");
+            return;
+        }
+
+        // Prepare evaluation data
+        const evaluationData = {
+            ratings: ratings,
+            comments: comments.value.trim()
+        };
+
+        // Add activity ID based on type
+        if (currentEvaluatingActivityType === 'event') {
+            evaluationData.event_id = currentEvaluatingActivityId;
+        } else if (currentEvaluatingActivityType === 'program') {
+            evaluationData.program_id = currentEvaluatingActivityId;
+        }
+
+        console.log('Submitting evaluation:', evaluationData);
+
+        // Submit evaluation
+        const response = await fetch('/evaluation', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': window.csrfToken,
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(evaluationData)
+        });
+
+        console.log('Response status:', response.status);
+
+        // Try to parse response
+        let result;
+        try {
+            const text = await response.text();
+            console.log('Raw response:', text);
+            
+            if (!text) {
+                throw new Error('Empty response from server');
+            }
+            
+            result = JSON.parse(text);
+            console.log('Parsed response:', result);
+        } catch (parseError) {
+            console.error('JSON parse error:', parseError);
+            throw new Error('Invalid response from server');
+        }
+
+        if (result.success) {
+            evaluationModal.style.display = "none";
+            successModal.style.display = "flex";
+
+            // Update UI
+            const evaluatedBtn = document.querySelector(`.evaluate-btn[data-activity-id="${currentEvaluatingActivityId}"][data-activity-type="${currentEvaluatingActivityType}"]`);
+            if (evaluatedBtn) {
+                evaluatedBtn.innerHTML = '<i class="fa-solid fa-check"></i> Evaluated';
+                evaluatedBtn.classList.add('done');
+                evaluatedBtn.disabled = true;
+
+                const statusDot = evaluatedBtn.closest('.program-card').querySelector('.status-dot');
+                if (statusDot) {
+                    statusDot.classList.add('completed');
+                    statusDot.innerHTML = '<i class="fas fa-check"></i>';
+                }
+            }
+
+            currentEvaluatingActivityId = null;
+            currentEvaluatingActivityType = null;
+        } else {
+            alert(result.error || 'Failed to submit evaluation. Please try again.');
+        }
+
+    } catch (error) {
+        console.error('Error submitting evaluation:', error);
+        alert('Failed to submit evaluation: ' + error.message);
+    }
+});
 
         okBtn?.addEventListener("click", () => {
             successModal.style.display = "none";

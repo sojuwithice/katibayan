@@ -47,4 +47,8 @@ class Evaluation extends Model
         return $this->belongsTo(Program::class);
     }
 
+    private function locked()
+{
+    return Evaluation::whereNotNull('submitted_at')->exists();
+}
 }

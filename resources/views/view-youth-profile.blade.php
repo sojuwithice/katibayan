@@ -89,7 +89,7 @@
     <!-- Topbar -->
     <header class="topbar">
       <div class="logo">
-        <img src="{{ asset('images/logo.png') }}" alt="Logo">
+        <img src="{{ asset('images/KatiBayan-Logo_B.png') }}" alt="Logo">
         <div class="logo-text">
           <span class="title">Katibayan</span>
           <span class="subtitle">Web Portal</span>
@@ -138,55 +138,65 @@
 
         <!-- Profile Avatar -->
         <div class="profile-wrapper">
-          <img src="https://i.pravatar.cc/80" alt="User" class="avatar" id="profileToggle">
-          <div class="profile-dropdown">
-            <div class="profile-header">
-              <img src="https://i.pravatar.cc/80" alt="User" class="profile-avatar">
-              <div class="profile-info">
-                <h4>Marijoy S. Novora</h4>
+    <img src="{{ $currentUser && $currentUser->avatar ? asset('storage/' . $currentUser->avatar) : asset('images/default-avatar.png') }}" 
+         alt="User" class="avatar" id="profileToggle">
+    <div class="profile-dropdown">
+        <div class="profile-header">
+            <img src="{{ $currentUser && $currentUser->avatar ? asset('storage/' . $currentUser->avatar) : asset('images/default-avatar.png') }}" 
+                 alt="User" class="profile-avatar">
+            <div class="profile-info">
+                <h4>{{ $currentUser->given_name }} {{ $currentUser->middle_name ?? '' }} {{ $currentUser->last_name }} {{ $currentUser->suffix ?? '' }}</h4>
                 <div class="profile-badge">
-                  <span class="badge">KK- Member</span>
-                  <span class="badge">19 yrs old</span>
+                    <span class="badge">{{ $roleBadge }}</span>
+                    <span class="badge">{{ $currentUserAge }} yrs old</span>
                 </div>
-              </div>
             </div>
-            <hr>
-            <ul class="profile-menu">
-              <li>
-                <a href="{{ route('profilepage') }}">
-                  <i class="fas fa-user"></i> Profile
-                </a>
-              </li>
-              <li><i class="fas fa-cog"></i> Manage Password</li>
-              <li>
-                <a href="{{ route('faqspage') }}">
-                  <i class="fas fa-question-circle"></i> FAQs
-                </a>
-              </li>
-              <li><i class="fas fa-star"></i> Send Feedback to Katibayan</li>
-            </ul>
-          </div>
         </div>
-      </div>
+        <hr>
+        <ul class="profile-menu">
+            <li>
+                <a href="{{ route('profilepage') }}">
+                    <i class="fas fa-user"></i> Profile
+                </a>
+            </li>
+            <li><i class="fas fa-cog"></i> Manage Password</li>
+            <li>
+                <a href="{{ route('faqspage') }}">
+                    <i class="fas fa-question-circle"></i> FAQs
+                </a>
+            </li>
+            <li><i class="fas fa-star"></i> Send Feedback to Katibayan</li>
+        </ul>
+    </div>
+</div>
     </header>
 
     <main class="youth-profile-container">
   <!-- Profile Header -->
   <section class="profile-header">
     <div class="profile-left">
-      <div class="photo-wrapper">
-        <img src="https://i.pravatar.cc/120" alt="Profile" class="profile-photo">
-      </div>
-      <div class="profile-info">
-        <h2>Marijoy S. Novora <span>| 21 years old</span></h2>
-        <div class="profile-tags">
-          <span class="tag member">KK Member</span>
-          <span class="tag voter">Registered Voter</span>
-          <span class="tag location"><i class="fa-solid fa-location-dot"></i> Purok 3, EM’s Barrio East Legazpi City</span>
+        <div class="photo-wrapper">
+            <img src="{{ $youth->avatar ? asset('storage/' . $youth->avatar) : 'https://i.pravatar.cc/120' }}" 
+                 alt="Profile" class="profile-photo">
         </div>
-      </div>
+        <div class="profile-info">
+            <h2>{{ $youth->given_name }} {{ $youth->middle_name ?? '' }} {{ $youth->last_name }} {{ $youth->suffix ?? '' }} 
+                <span>| {{ $age }} years old</span>
+            </h2>
+            <div class="profile-tags">
+                <span class="tag member">{{ $youth->role === 'sk' ? 'SK Member' : 'KK Member' }}</span>
+                @if($isRegisteredVoter)
+                <span class="tag voter">Registered Voter</span>
+                @endif
+                <span class="tag location">
+                    <i class="fa-solid fa-location-dot"></i> 
+                    {{ $youth->barangay->name ?? 'N/A' }}, {{ $youth->city->name ?? 'N/A' }}
+                </span>
+            </div>
+        </div>
     </div>
-  </section>
+</section>
+
 
   <!-- GRID SECTION -->
 <div class="profile-grid">
@@ -205,22 +215,36 @@
               cy="45"
               r="40"
               stroke-dasharray="251"
-              stroke-dashoffset="238"
+              stroke-dashoffset="{{ 251 - (251 * $progressPercentage / 100) }}"
             ></circle>
           </svg>
-          <div class="progress-text">5%</div>
+          <div class="progress-text">{{ $progressPercentage }}%</div>
         </div>
-        <span class="note">Still a long journey ahead!</span>
+        <span class="note">
+          @if($progressPercentage < 30)
+            Still a long journey ahead!
+          @elseif($progressPercentage < 70)
+            Making good progress!
+          @else
+            Excellent participation!
+          @endif
+        </span>
       </div>
 
       <!-- === Evaluated Programs Card === -->
       <div class="card evaluated-card">
         <h3>Evaluated Programs</h3>
-        <div class="big-number">3</div>
+        <div class="big-number">{{ $evaluatedPrograms }}</div>
         <div class="bar-container">
-          <div class="bar-fill" style="width: 60%;"></div>
+          <div class="bar-fill" style="width: {{ min($evaluatedPrograms * 20, 100) }}%;"></div>
         </div>
-        <div class="note">Have 3 events/programs to evaluate</div>
+        <div class="note">
+          @if($evaluatedPrograms > 0)
+            {{ $evaluatedPrograms }} program{{ $evaluatedPrograms > 1 ? 's' : '' }} evaluated
+          @else
+            No programs evaluated yet
+          @endif
+        </div>
       </div>
     </div>
 
@@ -241,25 +265,19 @@
       </div>
 
       <div class="event-list" id="eventList">
-        <div class="month-label">October 2025</div>
-        <div class="event-item" data-month="October 2025">
-          <div class="date">October 13, 2025</div>
-          <p>International Day Against Drug Abuse and Illicit Trafficking</p>
-        </div>
-        <div class="event-item" data-month="October 2025">
-          <div class="date">October 09, 2025</div>
-          <p>Leadership Training and Orientation</p>
-        </div>
-
-        <div class="month-label">September 2025</div>
-        <div class="event-item" data-month="September 2025">
-          <div class="date">September 10, 2025</div>
-          <p>Youth Environmental Summit</p>
-        </div>
-        <div class="event-item" data-month="September 2025">
-          <div class="date">September 05, 2025</div>
-          <p>Tree Planting Activity</p>
-        </div>
+        @forelse($eventsByMonth as $month => $events)
+          <div class="month-label">{{ $month }}</div>
+          @foreach($events as $event)
+            <div class="event-item" data-month="{{ $month }}">
+              <div class="date">{{ $event['date'] }}</div>
+              <p>{{ $event['title'] }}</p>
+            </div>
+          @endforeach
+        @empty
+          <div class="no-events">
+            <p>No events attended yet.</p>
+          </div>
+        @endforelse
       </div>
     </div>
   </div>
@@ -286,28 +304,34 @@
           <p class="subtext">Name of Respondent</p>
 
           <div class="info-grid">
-            <div><strong>Last Name:</strong> Novora</div>
-            <div><strong>First Name:</strong> Marijoy</div>
-            <div><strong>Middle Name:</strong> Novora</div>
-            <div><strong>Address:</strong> Purok 3, EM’s Barrio East Legazpi City</div>
-            <div><strong>Date of Birth:</strong> November 9, 2003</div>
-            <div><strong>Sex:</strong> Female</div>
-            <div><strong>Contact Number:</strong> 0920384****</div>
-            <div><strong>Personal Email:</strong> marijoynr42@gmail.com</div>
-          </div>
+            <div><strong>Last Name:</strong> {{ $youth->last_name }}</div>
+            <div><strong>First Name:</strong> {{ $youth->given_name }}</div>
+            <div><strong>Middle Name:</strong> {{ $youth->middle_name ?? 'N/A' }}</div>
+            <div><strong>Address:</strong> 
+                {{ ($youth->purok_zone ? $youth->purok_zone . ', ' : '') }}
+                {{ $youth->barangay->name ?? '' }}{{ $youth->barangay && $youth->city ? ', ' : '' }}
+                {{ $youth->city->name ?? '' }}{{ $youth->zip_code ? ' ' . $youth->zip_code : '' }}
+                {{ !$youth->purok_zone && !$youth->barangay && !$youth->city ? 'N/A' : '' }}
+            </div>
+            <div><strong>Date of Birth:</strong> {{ $formattedDOB }}</div>
+            <div><strong>Sex:</strong> {{ ucfirst($youth->sex) }}</div>
+            <div><strong>Contact Number:</strong> {{ $youth->contact_no ?? 'N/A' }}</div>
+            <div><strong>Personal Email:</strong> {{ $youth->email }}</div>
+        </div>
 
           <h3>II. Demographics</h3>
           <p class="subtext">Please provide your demographic details as accurately as possible</p>
 
           <div class="info-grid">
-            <div><strong>Educational Attainment:</strong> College Level</div>
-            <div><strong>Occupation:</strong> Student</div>
-            <div><strong>Skills:</strong> Communication, Leadership, Creativity</div>
-            <div><strong>Organization:</strong> SK Youth Volunteers</div>
-            <div><strong>Participation:</strong> Active in local youth programs</div>
-            <div><strong>Barangay:</strong> EM’s Barrio East</div>
-            <div><strong>Registered Voter:</strong> Yes</div>
-            <div><strong>Years as Member:</strong> 2 years</div>
+            <div><strong>Educational Attainment:</strong> {{ $youth->education ?? 'N/A' }}</div>
+            <div><strong>Occupation:</strong> {{ $youth->work_status ?? 'N/A' }}</div>
+            <div><strong>Youth Classification:</strong> {{ $youthClassification }}</div>
+            <div><strong>Civil Status:</strong> {{ ucfirst($youth->civil_status) }}</div>
+            <div><strong>Barangay:</strong> {{ $youth->barangay->name ?? 'N/A' }}</div>
+            <div><strong>Registered Voter:</strong> {{ $isRegisteredVoter ? 'Yes' : 'No' }}</div>
+            
+
+            </div>
           </div>
         </div>
       </div>
@@ -507,33 +531,41 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
 const printBtn = document.querySelector('.print-btn');
-  printBtn?.addEventListener('click', () => {
+printBtn?.addEventListener('click', () => {
     const contentToPrint = document.querySelector('.kk-scrollable');
     if (!contentToPrint) return;
 
     const printWindow = window.open('', '', 'width=800,height=600');
     printWindow.document.write(`
-      <html>
+        <html>
         <head>
-          <style>
-            body { font-family: 'Montserrat', sans-serif; padding: 20px; line-height: 1.6; }
-            h3 { margin: 20px 0 10px 0; }
-            .kk-section { margin-bottom: 20px; }
-            .info-grid { display: block; } /* vertical column */
-            .info-grid div { margin-bottom: 8px; }
-            .divider { border: 0; border-top: 1px solid #ccc; margin: 10px 0; }
-          </style>
+            <title>Youth Profile - {{ $youth->given_name }} {{ $youth->last_name }}</title>
+            <style>
+                body { font-family: 'Montserrat', sans-serif; padding: 20px; line-height: 1.6; }
+                h2 { color: #333; margin-bottom: 10px; }
+                h3 { margin: 20px 0 10px 0; color: #555; }
+                .kk-section { margin-bottom: 20px; }
+                .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0; }
+                .info-grid div { padding: 5px 0; border-bottom: 1px solid #eee; }
+                strong { color: #333; }
+                .divider { border: 0; border-top: 2px solid #ccc; margin: 20px 0; }
+                @media print {
+                    body { padding: 0; }
+                    .no-print { display: none; }
+                }
+            </style>
         </head>
         <body>
-          ${contentToPrint.innerHTML}
+            <h2>Youth Profile - {{ $youth->given_name }} {{ $youth->last_name }}</h2>
+            ${contentToPrint.innerHTML}
         </body>
-      </html>
+    </html>
     `);
     printWindow.document.close();
     printWindow.focus();
     printWindow.print();
     printWindow.close();
-  });
+});
 
   const dropdown = document.querySelector('.custom-dropdown');
 const selected = dropdown.querySelector('.dropdown-selected');
@@ -564,28 +596,36 @@ document.addEventListener('click', (e) => {
 });
 
 // === Filter Events Function ===
+// === Filter Events Function ===
 function filterEvents(filter) {
-  eventItems.forEach(item => {
-    const month = item.dataset.month.toLowerCase();
+    eventItems.forEach(item => {
+        const month = item.dataset.month.toLowerCase();
+        
+        if (filter === 'all') {
+            item.style.display = 'block';
+        } else if (filter === 'This Month') {
+            // Get current month and year
+            const now = new Date();
+            const currentMonth = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toLowerCase();
+            item.style.display = month === currentMonth ? 'block' : 'none';
+        } else if (filter === 'Last Month') {
+            // Get last month
+            const now = new Date();
+            const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+            const lastMonthStr = lastMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toLowerCase();
+            item.style.display = month === lastMonthStr ? 'block' : 'none';
+        } else {
+            item.style.display = 'none';
+        }
+    });
 
-    if (filter === 'all') {
-      item.style.display = 'block';
-    } else if (filter === 'This Month' && month.includes('october 2025')) {
-      item.style.display = 'block';
-    } else if (filter === 'Last Month' && month.includes('september 2025')) {
-      item.style.display = 'block';
-    } else {
-      item.style.display = 'none';
-    }
-  });
-
-  monthLabels.forEach(label => {
-    const month = label.textContent.toLowerCase();
-    const hasVisibleEvents = [...eventItems].some(
-      item => item.style.display === 'block' && item.dataset.month.toLowerCase() === month
-    );
-    label.style.display = hasVisibleEvents ? 'block' : 'none';
-  });
+    monthLabels.forEach(label => {
+        const month = label.textContent.toLowerCase();
+        const hasVisibleEvents = [...eventItems].some(
+            item => item.style.display === 'block' && item.dataset.month.toLowerCase() === month
+        );
+        label.style.display = hasVisibleEvents ? 'block' : 'none';
+    });
 }
 
 

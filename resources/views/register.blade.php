@@ -366,8 +366,7 @@
       <div class="info-note" id="roleInfoNote">
         <i data-lucide="info" class="info-icon"></i>
         <span>
-          <strong>SK Chairperson:</strong> Requires admin approval (no matching needed)<br>
-          <strong>KK Member:</strong> Auto-approved with instant access
+          If you are not the <strong> SK Chairperson </strong>(e.g., Treasurer, Kagawad, Secretary), you must register as a KK Member.
         </span>
       </div>
 
@@ -1389,6 +1388,10 @@ document.head.appendChild(style);
     const cityInput = document.getElementById("cityInput");
     const barangayInput = document.getElementById("barangayInput");
 
+    // 👇 NEW: Zip Code Input
+    const zipInput = document.getElementById("step1_zip"); 
+    // 👆 NEW
+
     // Hidden input fields for IDs
     const regionIdInput = document.getElementById("regionId");
     const provinceIdInput = document.getElementById("provinceId");
@@ -1420,31 +1423,69 @@ document.head.appendChild(style);
     });
 
     // Event delegation for dropdown items with ID storage
-    function setupDropdownSelection(parentDropdown, input, hiddenInput, fetchNext = null) {
-        if (!parentDropdown) return;
-        parentDropdown.addEventListener("click", e => {
-            if (e.target.tagName === "LI") {
-                input.value = e.target.textContent;
-                
-                // Store the ID in the hidden input field
-                if (hiddenInput) {
-                    hiddenInput.value = e.target.dataset.id;
-                }
-
-                // Clear location error when selection is made
-                const fieldWrapper = input.closest('.select-wrapper');
-                if (fieldWrapper) {
-                    const errorSpan = fieldWrapper.querySelector('.field-error');
-                    if (errorSpan) errorSpan.style.display = 'none';
-                }
-
-                // Reset lower-level inputs
-                if (fetchNext) fetchNext(e.target.dataset.id);
-
-                closeAllDropdowns();
+function setupDropdownSelection(parentDropdown, input, hiddenInput, fetchNext = null) {
+    if (!parentDropdown) return;
+    parentDropdown.addEventListener("click", e => {
+        const selectedLi = e.target.closest("li");
+        if (selectedLi) {
+            input.value = selectedLi.textContent;
+            
+            // Store the ID in the hidden input field
+            if (hiddenInput) {
+                hiddenInput.value = selectedLi.dataset.id;
             }
-        });
-    }
+
+            // Clear location error when selection is made
+            const fieldWrapper = input.closest('.select-wrapper');
+            if (fieldWrapper) {
+                const errorSpan = fieldWrapper.querySelector('.field-error');
+                if (errorSpan) errorSpan.style.display = 'none';
+            }
+
+            // 👇 ZIP CODE AUTO-FILL (CITY-LEVEL ONLY)
+            if (input === cityInput) {
+                const selectedCity = selectedLi.textContent;
+                const zipInput = document.getElementById("step1_zip");
+                
+                if (selectedCity && zipInput) {
+                    // Check if city has ZIP code in our mapping
+                    const zipCode = albayZipCodes[selectedCity];
+                    if (zipCode) {
+                        zipInput.value = zipCode;
+                        zipInput.readOnly = true;
+                        zipInput.style.backgroundColor = '#f8f9fa';
+                        zipInput.style.cursor = 'not-allowed';
+                        
+                        // Trigger events for validation
+                        zipInput.dispatchEvent(new Event('input', { bubbles: true }));
+                        zipInput.dispatchEvent(new Event('change', { bubbles: true }));
+                    } else {
+                        // Reset if city doesn't have ZIP code
+                        zipInput.value = '';
+                        zipInput.readOnly = false;
+                        zipInput.style.backgroundColor = '';
+                        zipInput.style.cursor = '';
+                    }
+                }
+            } else if (input === regionInput || input === provinceInput) {
+                // Reset ZIP when region/province changes
+                const zipInput = document.getElementById("step1_zip");
+                if (zipInput) {
+                    zipInput.value = '';
+                    zipInput.readOnly = false;
+                    zipInput.style.backgroundColor = '';
+                    zipInput.style.cursor = '';
+                }
+            }
+            // 👆 END OF ZIP CODE AUTO-FILL LOGIC
+
+            // Reset lower-level inputs
+            if (fetchNext) fetchNext(selectedLi.dataset.id);
+
+            closeAllDropdowns();
+        }
+    });
+}
 
     // Region → Province
     setupDropdownSelection(regionDropdown, regionInput, regionIdInput, regionId => {
@@ -1462,6 +1503,9 @@ document.head.appendChild(style);
         if (barangayInput) barangayInput.disabled = true;
         if (barangayDropdown) barangayDropdown.innerHTML = "";
         if (barangayIdInput) barangayIdInput.value = "";
+
+        // Reset Zip Code when a higher-level location is changed
+        if (zipInput) { zipInput.value = ''; zipInput.readOnly = false; }
 
         fetch(`/get-provinces/${regionId}`)
             .then(res => res.json())
@@ -1490,6 +1534,9 @@ document.head.appendChild(style);
         if (barangayDropdown) barangayDropdown.innerHTML = "";
         if (barangayIdInput) barangayIdInput.value = "";
 
+        // Reset Zip Code before fetching new cities
+        if (zipInput) { zipInput.value = ''; zipInput.readOnly = false; }
+
         fetch(`/get-cities/${provinceId}`)
             .then(res => res.json())
             .then(cities => {
@@ -1498,6 +1545,13 @@ document.head.appendChild(style);
                         const li = document.createElement("li");
                         li.textContent = c.name;
                         li.dataset.id = c.id;
+                        
+                        // 👇 NEW: Store zip code from backend response
+                        if (c.zip_code) {
+                            li.dataset.zip = c.zip_code;
+                        }
+                        // 👆 NEW
+
                         cityDropdown.appendChild(li);
                     });
                 }
@@ -1959,6 +2013,93 @@ document.head.appendChild(style);
             return true;
         }
     }
+
+    // ======================
+// ZIP CODE AUTO-FILL (CITY-BASED)
+// ======================
+
+// ZIP Codes for Albay Cities/Municipalities
+const albayZipCodes = {
+    'Legazpi City': '4500',
+    'Tabaco City': '4511',
+    'Ligao City': '4504',
+    'Guinobatan': '4503',
+    'Camalig': '4502',
+    'Daraga': '4501',
+    'Tiwi': '4513',
+    'Malinao': '4512',
+    'Bacacay': '4509',
+    'Sto. Domingo': '4508',
+    'Polangui': '4506',
+    'Libon': '4507',
+    'Rapu-Rapu': '4510',
+    'Manito': '4514',
+    'Jovellar': '4515'
+};
+
+// Function to auto-fill ZIP code when city is selected
+function setupZipCodeAutoFill() {
+    const zipInput = document.getElementById("step1_zip");
+    const cityInput = document.getElementById("cityInput");
+    
+    if (!zipInput || !cityInput) return;
+    
+    // Listen for city selection
+    cityInput.addEventListener('input', autoFillZipCode);
+    cityInput.addEventListener('change', autoFillZipCode);
+    
+    // Also listen to city dropdown selections
+    const cityDropdown = document.querySelector('#cityInput + .dropdown-options');
+    if (cityDropdown) {
+        cityDropdown.addEventListener('click', function(e) {
+            setTimeout(autoFillZipCode, 100); // Small delay to allow value to update
+        });
+    }
+    
+    function autoFillZipCode() {
+        const selectedCity = cityInput.value;
+        
+        if (selectedCity && albayZipCodes[selectedCity]) {
+            zipInput.value = albayZipCodes[selectedCity];
+            zipInput.readOnly = true;
+            zipInput.style.backgroundColor = '#f8f9fa';
+            zipInput.style.cursor = 'not-allowed';
+            
+            // Update review section if on step 3
+            if (currentStep === 3) {
+                const reviewZipElement = document.getElementById('review_zip');
+                if (reviewZipElement) {
+                    reviewZipElement.textContent = albayZipCodes[selectedCity];
+                }
+            }
+            
+            console.log(`Auto-filled ZIP code for ${selectedCity}: ${albayZipCodes[selectedCity]}`);
+        } else if (zipInput) {
+            // Reset if no valid city or city is cleared
+            zipInput.value = '';
+            zipInput.readOnly = false;
+            zipInput.style.backgroundColor = '';
+            zipInput.style.cursor = '';
+        }
+    }
+    
+    // Reset ZIP when region/province changes
+    [regionInput, provinceInput].forEach(input => {
+        if (input) {
+            input.addEventListener('change', () => {
+                if (zipInput) {
+                    zipInput.value = '';
+                    zipInput.readOnly = false;
+                    zipInput.style.backgroundColor = '';
+                    zipInput.style.cursor = '';
+                }
+            });
+        }
+    });
+}
+
+// Initialize ZIP code auto-fill
+setupZipCodeAutoFill();
 });
 </script>
 </body>

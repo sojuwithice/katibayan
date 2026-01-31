@@ -17,6 +17,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use App\Models\EvaluationQuestion;
+
 
 class EvaluationController extends Controller
 {
@@ -151,6 +153,11 @@ class EvaluationController extends Controller
             ->latest()
             ->get();
 
+        $evaluationQuestions = EvaluationQuestion::where('is_active',1)
+        ->orderBy('order')
+        ->get();
+
+
         return view('evaluationpage', compact(
             'allActivities',
             'user',
@@ -159,7 +166,8 @@ class EvaluationController extends Controller
             'generalNotifications',
             'unevaluatedActivities',
             'totalNotificationCount',
-            'announcements'
+            'announcements',
+            'evaluationQuestions'
         ));
     }
 

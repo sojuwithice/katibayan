@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KatiBayan - Dashboard</title>
   <link rel="stylesheet" href="{{ asset('css/sk-eval.css') }}">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -186,8 +187,14 @@
         </div>
 
         <div class="accomplished-events">
-          <h3>Accomplished Events and Program</h3>
-          <p class="subtitle">Choose an accomplished event or program to see the results.</p>
+  <div class="accomplished-header">
+    <h3>Accomplished Events and Program</h3>
+    <button class="edit-eval-btn" id="openEvalModal">
+      <i class="fas fa-pen"></i> Edit Evaluation Form
+    </button>
+  </div>
+  <p class="subtitle">Choose an accomplished event or program to see the results.</p>
+
 
           <div class="accomplishment-list">
             @if($eventsWithEvaluations->count() > 0)
@@ -266,6 +273,77 @@
       </section>
     </main>
   </div>
+
+
+<!-- Edit Evaluation Modal -->
+<div id="editEvaluationModal" class="modal">
+  <div class="modal-content">
+
+    <!-- Close Button -->
+    <span class="close-btn" id="closeEvalModal">&times;</span>
+
+    <!-- Modal Header -->
+    <h2>Edit Evaluation Form</h2>
+    <p class="instruction">
+      Modify the evaluation questions. All questions can be edited and deleted.
+    </p>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons-wrapper">
+      <button type="button" id="addQuestionBtn" class="add-question-btn">
+        <i class="fas fa-plus"></i> Add Question
+      </button>
+      
+      <!-- Refresh/Restore Default Button -->
+      <button type="button" id="refreshDefaultBtn" class="refresh-default-btn">
+        <i class="fas fa-redo"></i> Restore Default Questions
+      </button>
+    </div>
+
+    <!-- Questions List -->
+    <div class="questions" id="questionsContainer">
+      @foreach($questions as $index => $question)
+        @php
+          $isDefault = $question->is_default ?? false;
+        @endphp
+        <div class="question" data-id="{{ $question->id }}" data-is-default="{{ $isDefault ? 'true' : 'false' }}">
+          <label>Question {{ $index + 1 }}</label>
+          
+          <div class="question-input-wrapper">
+            <input type="text"
+                   class="question-input"
+                   name="question_{{ $question->id }}"
+                   value="{{ $question->question_text }}">
+            
+            @if($isDefault)
+              <span class="default-tag">Default Question</span>
+            @endif
+            
+            <button type="button" class="remove-question-btn" data-id="{{ $question->id }}" data-is-default="{{ $isDefault ? 'true' : 'false' }}">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+
+          @if($isDefault)
+            <small class="text-info">
+              <i class="fas fa-info-circle"></i> Default question
+            </small>
+          @endif
+        </div>
+      @endforeach
+    </div>
+
+    <!-- Actions -->
+    <div class="actions">
+      <button class="cancel-btn" id="cancelEvalEdit">Cancel</button>
+      <button class="save-btn" id="saveEvalQuestions">Save Changes</button>
+    </div>
+
+  </div>
+</div>
+
+  
+
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
@@ -458,6 +536,504 @@
           document.getElementById('logout-form').submit();
         }
       }
+
+      const openEvalModal = document.getElementById('openEvalModal');
+const editModal = document.getElementById('editEvaluationModal');
+const closeEvalModal = document.getElementById('closeEvalModal');
+const cancelEvalEdit = document.getElementById('cancelEvalEdit');
+const addQuestionBtn = document.getElementById('addQuestionBtn');
+const saveEvalQuestions = document.getElementById('saveEvalQuestions');
+const refreshDefaultBtn = document.getElementById('refreshDefaultBtn'); // Added
+
+// Check if we're on SK side (has edit modal)
+const isSkSide = !!editModal;
+
+// Open / Close modal
+if (openEvalModal && editModal) {
+    openEvalModal.addEventListener('click', () => {
+        editModal.style.display = 'block';
+        if (isSkSide) {
+            loadCurrentQuestions();
+        }
+    });
+
+    if (closeEvalModal) {
+        closeEvalModal.addEventListener('click', () => closeEditModal());
+    }
+    
+    if (cancelEvalEdit) {
+        cancelEvalEdit.addEventListener('click', () => closeEditModal());
+    }
+
+    window.addEventListener('click', e => { 
+        if (e.target === editModal) closeEditModal(); 
+    });
+}
+
+function closeEditModal() {
+    if (editModal) {
+        editModal.style.display = 'none';
+    }
+}
+
+// Load current questions from database (for SK side)
+function loadCurrentQuestions() {
+    if (!isSkSide) return;
+    
+    fetch('/sk/evaluation/questions/list')
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.json();
+        })
+        .then(questions => {
+            const container = document.getElementById('questionsContainer');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            questions.forEach((question, index) => {
+                const questionDiv = createQuestionElement(question, index);
+                container.appendChild(questionDiv);
+            });
+            
+            // Attach remove event listeners
+            attachRemoveListeners();
+            
+            // Enable/disable save button
+            updateSaveButtonState();
+        })
+        .catch(error => {
+            console.error('Error loading questions:', error);
+            alert('Failed to load questions. Please try again.');
+        });
+}
+
+// Create question HTML element
+function createQuestionElement(question, index) {
+    const questionDiv = document.createElement('div');
+    questionDiv.className = 'question';
+    questionDiv.dataset.id = question.id;
+    questionDiv.dataset.isDefault = question.is_default ? 'true' : 'false';
+    
+    const isDefault = question.is_default || false;
+    
+    let html = `
+        <label>Question ${index + 1}</label>
+        <div class="question-input-wrapper">
+            <input type="text" 
+                   class="question-input" 
+                   name="question_${question.id}" 
+                   value="${escapeHtml(question.question_text)}">
+    `;
+    
+    if (isDefault) {
+        html += `<span class="default-tag">Default Question</span>`;
+    }
+    
+    // Remove button for ALL questions
+    html += `<button type="button" class="remove-question-btn" data-id="${question.id}" data-is-default="${isDefault}">
+               <i class="fas fa-trash"></i>
+             </button>`;
+    
+    html += `</div>`;
+    
+    if (isDefault) {
+        html += `<small class="text-info">
+                   <i class="fas fa-info-circle"></i> Default question
+                 </small>`;
+    }
+    
+    questionDiv.innerHTML = html;
+    return questionDiv;
+}
+
+// Helper function to escape HTML
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Add new question dynamically
+if (addQuestionBtn) {
+    addQuestionBtn.addEventListener('click', () => {
+        const container = document.getElementById('questionsContainer');
+        if (!container) return;
+        
+        const questionCount = container.querySelectorAll('.question').length + 1;
+        const tempId = `new-${Date.now()}`;
+
+        const newQuestionDiv = document.createElement('div');
+        newQuestionDiv.className = 'question';
+        newQuestionDiv.dataset.id = tempId;
+        newQuestionDiv.dataset.isDefault = 'false';
+        
+        newQuestionDiv.innerHTML = `
+            <label>Question ${questionCount}</label>
+            <div class="question-input-wrapper">
+                <input type="text" class="question-input" name="${tempId}" value="" placeholder="Enter question text..." required>
+                <button type="button" class="remove-question-btn" data-temp-id="${tempId}">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+            <small class="text-info">
+                <i class="fas fa-plus-circle"></i> New question
+            </small>
+        `;
+
+        container.appendChild(newQuestionDiv);
+        
+        // Focus on the new input
+        const newInput = newQuestionDiv.querySelector('.question-input');
+        newInput.focus();
+        
+        // Attach input event to update save button state when user types
+        newInput.addEventListener('input', function() {
+            updateSaveButtonState();
+        });
+        
+        // Attach remove event to new question
+        newQuestionDiv.querySelector('.remove-question-btn').addEventListener('click', function() {
+            if (confirm('Are you sure you want to remove this question?')) {
+                newQuestionDiv.remove();
+                updateQuestionLabels();
+                updateSaveButtonState();
+            }
+        });
+        
+        updateQuestionLabels();
+        updateSaveButtonState();
+    });
+}
+
+// Restore default questions
+if (refreshDefaultBtn) {
+    refreshDefaultBtn.addEventListener('click', function() {
+        if (confirm('This will restore all default questions and remove any custom questions. Current changes will be lost. Continue?')) {
+            restoreDefaultQuestions();
+        }
+    });
+}
+
+// Sa restoreDefaultQuestions function
+function restoreDefaultQuestions() {
+    // Show loading state
+    refreshDefaultBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Restoring...';
+    refreshDefaultBtn.disabled = true;
+
+    fetch('/sk/evaluation/questions/restore-default', {
+        method: 'PUT', // Changed from POST to PUT
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': getCsrfToken()
+        }
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Network response was not ok');
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            // Reload the questions list
+            loadCurrentQuestions();
+            alert('Default questions restored successfully!');
+        } else {
+            throw new Error(data.error || 'Failed to restore default questions');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to restore default questions: ' + error.message);
+    })
+    .finally(() => {
+        // Reset button state
+        refreshDefaultBtn.innerHTML = '<i class="fas fa-redo"></i> Restore Default Questions';
+        refreshDefaultBtn.disabled = false;
+    });
+}
+
+// Attach remove event listeners
+function attachRemoveListeners() {
+    // For existing questions with IDs
+    document.querySelectorAll('.remove-question-btn[data-id]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const questionId = this.dataset.id;
+            const questionDiv = this.closest('.question');
+            const isDefault = this.dataset.isDefault === 'true';
+            
+            let confirmMessage = isDefault 
+                ? 'This is a default question. Are you sure you want to remove it?'
+                : 'Are you sure you want to remove this question?';
+            
+            if (!confirm(confirmMessage)) {
+                return;
+            }
+            
+            deleteQuestion(questionId, questionDiv);
+        });
+    });
+    
+    // For temporary questions
+    document.querySelectorAll('.remove-question-btn[data-temp-id]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const tempId = this.dataset.tempId;
+            const questionDiv = this.closest('.question');
+            
+            if (confirm('Are you sure you want to remove this question?')) {
+                questionDiv.remove();
+                updateQuestionLabels();
+                updateSaveButtonState();
+            }
+        });
+    });
+}
+
+// Delete question via API
+function deleteQuestion(questionId, questionDiv) {
+    fetch(`/sk/evaluation/questions/${questionId}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': getCsrfToken()
+        }
+    })
+    .then(response => {
+        if (response.ok) {
+            return response.json();
+        } else {
+            return response.json().then(data => {
+                throw new Error(data.error || 'Failed to delete question');
+            });
+        }
+    })
+    .then(data => {
+        if (data.success) {
+            questionDiv.remove();
+            updateQuestionLabels();
+            updateSaveButtonState();
+        } else {
+            throw new Error(data.error || 'Failed to delete question');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert(error.message || 'Failed to delete question.');
+    });
+}
+
+// Update question labels after add/remove
+function updateQuestionLabels() {
+    const questions = document.querySelectorAll('#questionsContainer .question');
+    questions.forEach((q, idx) => {
+        const label = q.querySelector('label');
+        if (label) label.textContent = `Question ${idx + 1}`;
+    });
+}
+
+// Update save button state based on form validity
+function updateSaveButtonState() {
+    if (!saveEvalQuestions) return;
+    
+    const questions = document.querySelectorAll('#questionsContainer .question');
+    
+    // Enable save button if there are any questions
+    saveEvalQuestions.disabled = questions.length === 0;
+    
+    // Optional: Add title/tooltip for better UX
+    if (saveEvalQuestions.disabled) {
+        saveEvalQuestions.title = "No questions to save";
+    } else {
+        saveEvalQuestions.title = "";
+    }
+}
+
+// Save all questions
+if (saveEvalQuestions) {
+    saveEvalQuestions.addEventListener('click', async () => {
+        const questionDivs = document.querySelectorAll('#questionsContainer .question');
+        const payload = [];
+        let firstEmptyQuestionIndex = -1;
+        
+        console.log('Total questions found:', questionDivs.length);
+        
+        // Validate all questions first
+        for (let i = 0; i < questionDivs.length; i++) {
+            const div = questionDivs[i];
+            const input = div.querySelector('.question-input');
+            
+            if (!input) {
+                console.warn('No input found for question at index', i);
+                continue;
+            }
+            
+            const questionText = input.value.trim();
+            const isDefault = div.dataset.isDefault === 'true';
+            
+            console.log(`Question ${i + 1}:`, {
+                id: div.dataset.id,
+                text: questionText,
+                isDefault: isDefault
+            });
+            
+            const questionData = {
+                id: div.dataset.id,
+                question_text: questionText,
+                is_default: isDefault,
+                order: i + 1
+            };
+            
+            // Check for empty questions
+            if (!questionText) {
+                if (firstEmptyQuestionIndex === -1) {
+                    firstEmptyQuestionIndex = i + 1;
+                }
+            }
+            
+            payload.push(questionData);
+        }
+
+        // Check if there are empty questions
+        if (firstEmptyQuestionIndex !== -1) {
+            alert(`Question ${firstEmptyQuestionIndex} cannot be empty!`);
+            const emptyInput = questionDivs[firstEmptyQuestionIndex - 1].querySelector('.question-input');
+            if (emptyInput) {
+                emptyInput.focus();
+                emptyInput.classList.add('error-border');
+                setTimeout(() => emptyInput.classList.remove('error-border'), 2000);
+            }
+            return;
+        }
+
+        // Validate at least one question exists
+        if (payload.length === 0) {
+            alert('Evaluation form must have at least one question!');
+            return;
+        }
+
+        console.log('Payload to send:', payload);
+
+        // Show loading state
+        const originalText = saveEvalQuestions.innerHTML;
+        const originalDisabled = saveEvalQuestions.disabled;
+        saveEvalQuestions.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        saveEvalQuestions.disabled = true;
+
+        try {
+            const response = await fetch('/sk/evaluation/questions/save-all', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': getCsrfToken(),
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ 
+                    questions: payload
+                })
+            });
+
+            console.log('Response status:', response.status, response.statusText);
+
+            // Try to parse JSON
+            let data;
+            try {
+                const text = await response.text();
+                console.log('Raw response:', text);
+                
+                if (!text) {
+                    throw new Error('Empty response from server');
+                }
+                
+                data = JSON.parse(text);
+                console.log('Parsed response:', data);
+            } catch (parseError) {
+                console.error('JSON parse error:', parseError);
+                throw new Error('Invalid response from server');
+            }
+
+            if (data.success) {
+                let message = data.message || 'Questions saved successfully!';
+                
+                // Add info about updates if stats are available
+                if (data.stats) {
+                    const stats = data.stats;
+                    if (stats.added_new > 0) {
+                        message += `\n${stats.added_new} new question(s) were added.`;
+                    }
+                    if (stats.deleted > 0) {
+                        message += `\n${stats.deleted} question(s) were deleted.`;
+                    }
+                    if (stats.updated > 0) {
+                        message += `\n${stats.updated} question(s) were updated.`;
+                    }
+                }
+                
+                alert(message);
+                closeEditModal();
+                
+                // Reload the page to reflect changes
+                setTimeout(() => {
+                    window.location.reload();
+                }, 500);
+            } else {
+                let errorMessage = data.message || 'Error saving questions. Please try again.';
+                
+                // Handle specific error types
+                if (data.error === 'no_questions') {
+                    errorMessage = 'No questions were provided to save.';
+                } else if (data.error === 'server_error') {
+                    errorMessage = 'Server error. Please try again or contact support.';
+                }
+                
+                alert(errorMessage);
+            }
+        } catch (error) {
+            console.error('Save error:', error);
+            
+            if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+                alert('Network error. Please check your connection and try again.');
+            } else if (error.message.includes('Invalid response')) {
+                alert('Server returned an invalid response. Please try again.');
+            } else if (error.message.includes('Empty response')) {
+                alert('Server returned an empty response. Please check if the endpoint exists.');
+            } else {
+                alert('Failed to save questions: ' + error.message);
+            }
+        } finally {
+            // Reset button state
+            saveEvalQuestions.innerHTML = originalText;
+            saveEvalQuestions.disabled = originalDisabled;
+        }
+    });
+}
+
+// Get CSRF token
+function getCsrfToken() {
+    const token = document.querySelector('meta[name="csrf-token"]');
+    return token ? token.getAttribute('content') : '';
+}
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Attach event listeners to existing remove buttons
+    attachRemoveListeners();
+    
+    // Attach input events to update save button state
+    if (editModal) {
+        editModal.addEventListener('input', function(e) {
+            if (e.target.classList.contains('question-input')) {
+                // Optional: Remove error styling when user starts typing
+                e.target.classList.remove('error-border');
+                updateSaveButtonState();
+            }
+        });
+    }
+    
+    // Initial state check
+    updateSaveButtonState();
+});
+
+
     });
   </script>
 </body>

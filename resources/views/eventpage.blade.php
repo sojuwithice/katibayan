@@ -101,7 +101,7 @@
         </button>
         
 
-        <!-- Notifications -->
+        <!-- Notification Wrapper - UPDATED TO EXACTLY MATCH DASHBOARD -->
         <div class="notification-wrapper">
           <i class="fas fa-bell"></i>
           @if($notificationCount > 0)
@@ -121,26 +121,35 @@
                   $link = '#';
                   $onclickAction = '';
                   
-                  if ($notif->type == 'certificate_schedule') {
+                  if ($notif['type'] == 'certificate_schedule') {
                     $link = route('certificatepage'); 
                   } 
-                  elseif ($notif->type == 'sk_request_approved' || $notif->type == 'App\Notifications\SkRequestAccepted') { 
+                  elseif ($notif['type'] == 'sk_request_approved' || $notif['type'] == 'App\Notifications\SkRequestAccepted') { 
                     $link = '#'; 
                     $onclickAction = 'openSetRoleModal(); return false;';
                   }
+                  elseif ($notif['notification_type'] == 'evaluation_required') {
+                    $link = route('evaluation.show', $notif['activity_id']);
+                  }
 
-                  $title = $notif->data['title'] ?? $notif->title ?? 'Notification';
-                  $message = $notif->data['message'] ?? $notif->message ?? 'You have a new notification.';
+                  $title = $notif['title'] ?? 'Notification';
+                  $message = $notif['message'] ?? 'You have a new notification.';
+                  $isRead = $notif['is_read'] ?? 0;
                 @endphp
                 
                 <li>
                   <a href="{{ $link }}" 
-                     class="notif-link {{ $notif->is_read == 0 ? 'unread' : '' }}" 
-                     data-id="{{ $notif->id }}"
+                     class="notif-link {{ $isRead == 0 ? 'unread' : '' }}" 
+                     @if(isset($notif['id']) && !str_starts_with($notif['id'], 'eval_'))
+                         data-id="{{ $notif['id'] }}"
+                     @endif
+                     @if(isset($notif['activity_id']))
+                         data-{{ $notif['activity_type'] }}-id="{{ $notif['activity_id'] }}"
+                     @endif
                      @if($onclickAction) onclick="{{ $onclickAction }}" @endif>
                     
                     <div class="notif-dot-container">
-                      @if ($notif->is_read == 0)
+                      @if ($isRead == 0)
                         <span class="notif-dot"></span>
                       @else
                         <span class="notif-dot-placeholder"></span>
@@ -151,7 +160,11 @@
                       <div class="notif-header-line">
                         <strong>{{ $title }}</strong>
                         <span class="notif-timestamp">
-                          {{ $notif->created_at->format('m/d/Y g:i A') }}
+                          @if($notif['created_at'] instanceof \Carbon\Carbon)
+                            {{ $notif['created_at']->format('m/d/Y g:i A') }}
+                          @else
+                            {{ \Carbon\Carbon::parse($notif['created_at'])->format('m/d/Y g:i A') }}
+                          @endif
                         </span>
                       </div>
                       <p class="notif-message">{{ $message }}</p>
@@ -160,29 +173,7 @@
                 </li>
               @endforeach
 
-              @foreach($unevaluatedEvents as $event)
-                <li>
-                  <a href="{{ route('evaluation.show', $event->id) }}" class="notif-link unread" 
-                     data-event-id="{{ $event->id }}">
-                    
-                    <div class="notif-dot-container">
-                      <span class="notif-dot"></span>
-                    </div>
-                    
-                    <div class="notif-main-content">
-                      <div class="notif-header-line">
-                        <strong>Event Evaluation Required</strong>
-                        <span class="notif-timestamp">
-                          {{ $event->attendances->first()->attended_at->format('m/d/Y g:i A') }}
-                        </span>
-                      </div>
-                      <p class="notif-message">Please evaluate "{{ $event->title }}"</p>
-                    </div>
-                  </a>
-                </li>
-              @endforeach
-
-              @if(count($generalNotifications) == 0 && $unevaluatedEvents->count() == 0)
+              @if($generalNotifications->isEmpty())
                 <li class="no-notifications">
                   <p>No new notifications</p>
                 </li>
@@ -1092,9 +1083,6 @@
                 <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--text-color); opacity: 0.7;">
                   <i class="fas fa-calendar-check" style="font-size: 3rem; margin-bottom: 20px;"></i>
                   <p>You haven't attended any events yet.</p>
-                  <a href="{{ route('attendancepage') }}" style="display: inline-block; margin-top: 15px; background: var(--primary-color); color: white; padding: 10px 20px; border-radius: 25px; text-decoration: none; font-weight: 600;">
-                    Browse Events
-                  </a>
                 </div>
               @endif
             </div>
@@ -1296,7 +1284,7 @@
                   <i class="fas fa-calendar-plus" style="font-size: 3rem; margin-bottom: 20px;"></i>
                   <p>You haven't registered for any programs yet.</p>
                   <a href="#programs" style="display: inline-block; margin-top: 15px; background: var(--primary-color); color: white; padding: 10px 20px; border-radius: 25px; text-decoration: none; font-weight: 600;">
-                    Browse Programs
+                  
                   </a>
                 </div>
               @endif
@@ -1422,6 +1410,12 @@
                   </div>
                 </div>
 
+                <!-- Registration Status -->
+                <div id="registrationStatus" class="registration-status" style="display: none;">
+                  <i class="fas fa-info-circle"></i>
+                  <span id="registrationStatusText"></span>
+                </div>
+
                 <!-- Registration Form Fields -->
                 <form id="programRegistrationForm" class="registration-form-fields">
                   @csrf
@@ -1457,7 +1451,7 @@
                   <div id="dynamicCustomFields"></div>
 
                   <div class="form-actions">
-                    <button type="submit" class="submit-btn">
+                    <button type="submit" class="submit-btn" id="submitRegistrationBtn">
                       <i class="fas fa-paper-plane"></i>
                       Submit Registration
                     </button>
@@ -1837,7 +1831,7 @@
       notifDropdown.addEventListener('click', e => e.stopPropagation());
     }
 
-    // === Mark as read functionality ===
+    // === Mark as read functionality - UPDATED TO MATCH DASHBOARD ===
     function initMarkAsRead() {
       const csrfToken = window.csrfToken || document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
       if (!csrfToken) {
@@ -1845,9 +1839,14 @@
         return;
       }
 
-      // Handle individual notification clicks
+      // Handle database notifications (not evaluation notifications)
       document.querySelectorAll('.notif-link[data-id]').forEach(link => {
         link.addEventListener('click', function(e) {
+          // Don't prevent default for evaluation notifications
+          if (this.hasAttribute('data-event-id') || this.hasAttribute('data-program-id')) {
+            return;
+          }
+          
           e.preventDefault();
           const notifId = this.dataset.id;
           const destinationUrl = this.href;
@@ -1855,7 +1854,32 @@
           const notifItem = this.closest('li');
           notifItem?.remove();
 
-          updateNotificationCount(-1);
+          const countEl = document.querySelector('.notif-count');
+          if (countEl) {
+            let currentCount = parseInt(countEl.textContent) || 0;
+            countEl.textContent = Math.max(0, currentCount - 1);
+            if (parseInt(countEl.textContent) === 0) {
+              countEl.remove();
+              const bellDot = document.querySelector('.notif-dot');
+              if (bellDot) bellDot.remove();
+            }
+          }
+
+          const headerCount = document.querySelector('.notif-header span');
+          if (headerCount) {
+            let currentHeaderCount = parseInt(headerCount.textContent) || 0;
+            const newHeaderCount = Math.max(0, currentHeaderCount - 1);
+            if (newHeaderCount > 0) {
+              headerCount.textContent = newHeaderCount;
+            } else {
+              headerCount.remove();
+            }
+          }
+
+          const notifList = document.querySelector('.notif-list');
+          if (notifList && notifList.children.length === 0) {
+            notifList.innerHTML = `<li class="no-notifications"><p>No new notifications</p></li>`;
+          }
 
           fetch(`/notifications/${notifId}/read`, {
               method: 'POST',
@@ -1864,7 +1888,9 @@
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
               },
-              body: JSON.stringify({ id: notifId })
+              body: JSON.stringify({
+                id: notifId
+              })
             })
             .then(res => res.json())
             .then(data => {
@@ -1879,54 +1905,44 @@
         });
       });
 
-      // Handle evaluation notification clicks
-      document.querySelectorAll('.notif-link[data-event-id]').forEach(notification => {
-        notification.addEventListener('click', function(e) {
-          e.preventDefault();
+      // Handle evaluation notification clicks (system-generated)
+      document.querySelectorAll('.notif-link[data-event-id], .notif-link[data-program-id]').forEach(link => {
+        link.addEventListener('click', function(e) {
+          // These should navigate directly to evaluation page
+          // No need for AJAX mark as read since they're system-generated
+          // and not stored in database notifications table
           const eventId = this.getAttribute('data-event-id');
-          
+          const programId = this.getAttribute('data-program-id');
           const notifItem = this.closest('li');
           notifItem?.remove();
-          updateNotificationCount(-1);
 
-          window.location.href = `/evaluation/${eventId}`;
+          // Update notification counts
+          const countEl = document.querySelector('.notif-count');
+          if (countEl) {
+            let currentCount = parseInt(countEl.textContent) || 0;
+            countEl.textContent = Math.max(0, currentCount - 1);
+            if (parseInt(countEl.textContent) === 0) {
+              countEl.remove();
+            }
+          }
+
+          const headerCount = document.querySelector('.notif-header span');
+          if (headerCount) {
+            let currentHeaderCount = parseInt(headerCount.textContent) || 0;
+            const newHeaderCount = Math.max(0, currentHeaderCount - 1);
+            if (newHeaderCount > 0) {
+              headerCount.textContent = newHeaderCount;
+            } else {
+              headerCount.remove();
+            }
+          }
+
+          const notifList = document.querySelector('.notif-list');
+          if (notifList && notifList.children.length === 0) {
+            notifList.innerHTML = `<li class="no-notifications"><p>No new notifications</p></li>`;
+          }
         });
       });
-    }
-
-    // Update notification count
-    function updateNotificationCount(change) {
-      const countEl = document.querySelector('.notif-count');
-      const headerCount = document.querySelector('.notif-header span');
-      
-      if (countEl) {
-        let currentCount = parseInt(countEl.textContent) || 0;
-        const newCount = Math.max(0, currentCount + change);
-        
-        if (newCount > 0) {
-          countEl.textContent = newCount;
-          if (headerCount) headerCount.textContent = newCount;
-        } else {
-          countEl.remove();
-          if (headerCount) headerCount.remove();
-        }
-      }
-
-      if (headerCount && !countEl) {
-        let currentHeaderCount = parseInt(headerCount.textContent) || 0;
-        const newHeaderCount = Math.max(0, currentHeaderCount + change);
-        
-        if (newHeaderCount > 0) {
-          headerCount.textContent = newHeaderCount;
-        } else {
-          headerCount.remove();
-        }
-      }
-
-      const notifList = document.querySelector('.notif-list');
-      if (notifList && notifList.children.length === 0) {
-        notifList.innerHTML = `<li class="no-notifications"><p>No new notifications</p></li>`;
-      }
     }
 
     // Initialize mark as read
@@ -2170,11 +2186,13 @@
       const linkRegistration = document.getElementById('linkRegistration');
       const createRegistration = document.getElementById('createRegistration');
       const noRegistration = document.getElementById('noRegistration');
+      const registrationStatus = document.getElementById('registrationStatus');
       
       // Hide all registration sections first
       linkRegistration.style.display = 'none';
       createRegistration.style.display = 'none';
       noRegistration.style.display = 'none';
+      registrationStatus.style.display = 'none';
       
       // Clear previous custom fields
       document.getElementById('dynamicCustomFields').innerHTML = '';
@@ -2225,6 +2243,36 @@
           document.getElementById('registrationClosePeriod').textContent = 'Until event date';
         }
         
+        // Check registration status (open, closed, or upcoming)
+        const now = new Date();
+        const openDate = program.registration_open_date && program.registration_open_time ? 
+          new Date(program.registration_open_date + 'T' + program.registration_open_time) : null;
+        const closeDate = program.registration_close_date && program.registration_close_time ? 
+          new Date(program.registration_close_date + 'T' + program.registration_close_time) : null;
+        
+        if (openDate && now < openDate) {
+          // Registration hasn't opened yet
+          registrationStatus.style.display = 'flex';
+          registrationStatus.className = 'registration-status upcoming';
+          registrationStatus.innerHTML = `<i class="fas fa-clock"></i> <span>Registration opens on ${openDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} at ${openDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</span>`;
+          document.getElementById('submitRegistrationBtn').disabled = true;
+          document.getElementById('submitRegistrationBtn').innerHTML = '<i class="fas fa-clock"></i> Registration Not Open Yet';
+        } else if (closeDate && now > closeDate) {
+          // Registration has closed
+          registrationStatus.style.display = 'flex';
+          registrationStatus.className = 'registration-status closed';
+          registrationStatus.innerHTML = `<i class="fas fa-times-circle"></i> <span>Registration closed on ${closeDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} at ${closeDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</span>`;
+          document.getElementById('submitRegistrationBtn').disabled = true;
+          document.getElementById('submitRegistrationBtn').innerHTML = '<i class="fas fa-ban"></i> Registration Closed';
+        } else {
+          // Registration is open
+          registrationStatus.style.display = 'flex';
+          registrationStatus.className = 'registration-status open';
+          registrationStatus.innerHTML = `<i class="fas fa-check-circle"></i> <span>Registration is open</span>`;
+          document.getElementById('submitRegistrationBtn').disabled = false;
+          document.getElementById('submitRegistrationBtn').innerHTML = '<i class="fas fa-paper-plane"></i> Submit Registration';
+        }
+        
         // Generate custom fields from program data
         if (program.custom_fields && Array.isArray(program.custom_fields) && program.custom_fields.length > 0) {
           const dynamicFieldsContainer = document.getElementById('dynamicCustomFields');
@@ -2232,81 +2280,97 @@
             const fieldId = `custom_field_${index}`;
             let fieldHtml = '';
             
-            if (field.type === 'text' || field.type === 'email' || field.type === 'number') {
+            // Based on the field type from create-program.blade.php
+            if (field.type === 'short_answer') {
               fieldHtml = `
                 <div class="form-group">
                   <label class="form-label">${field.label}${field.required ? ' *' : ''}</label>
-                  <input type="${field.type}" 
+                  <input type="text" 
                          class="form-input" 
                          id="${fieldId}"
-                         name="${field.name || field.label.toLowerCase().replace(/\s+/g, '_')}"
+                         name="custom_fields[${index}][answer]"
+                         data-field-label="${field.label}"
+                         data-field-type="${field.type}"
                          ${field.required ? 'required' : ''}
-                         ${field.placeholder ? `placeholder="${field.placeholder}"` : ''}
-                         ${field.min ? `min="${field.min}"` : ''}
-                         ${field.max ? `max="${field.max}"` : ''}>
+                         placeholder="Enter your answer">
+                  <input type="hidden" name="custom_fields[${index}][label]" value="${field.label}">
+                  <input type="hidden" name="custom_fields[${index}][type]" value="${field.type}">
+                  <input type="hidden" name="custom_fields[${index}][required]" value="${field.required}">
                 </div>
               `;
-            } else if (field.type === 'textarea') {
+            } else if (field.type === 'multiple_choice') {
+              const options = field.options && Array.isArray(field.options) ? field.options : (field.options ? [field.options] : []);
               fieldHtml = `
                 <div class="form-group">
                   <label class="form-label">${field.label}${field.required ? ' *' : ''}</label>
-                  <textarea class="form-textarea" 
-                            id="${fieldId}"
-                            name="${field.name || field.label.toLowerCase().replace(/\s+/g, '_')}"
-                            rows="${field.rows || 3}"
-                            ${field.required ? 'required' : ''}
-                            ${field.placeholder ? `placeholder="${field.placeholder}"` : ''}></textarea>
+                  <div class="multiple-choice-options" style="display: flex; flex-direction: column; gap: 8px; margin-top: 5px;">
+                    ${options.map((option, optIndex) => `
+                      <label style="display: flex; align-items: center; gap: 8px;">
+                        <input type="radio" 
+                               name="custom_fields[${index}][answer]"
+                               value="${option}"
+                               ${field.required ? 'required' : ''}
+                               ${optIndex === 0 ? 'required' : ''}>
+                        ${option}
+                      </label>
+                    `).join('')}
+                  </div>
+                  <input type="hidden" name="custom_fields[${index}][label]" value="${field.label}">
+                  <input type="hidden" name="custom_fields[${index}][type]" value="${field.type}">
+                  <input type="hidden" name="custom_fields[${index}][required]" value="${field.required}">
+                  ${options.map((option, optIndex) => `
+                    <input type="hidden" name="custom_fields[${index}][options][${optIndex}]" value="${option}">
+                  `).join('')}
                 </div>
               `;
-            } else if (field.type === 'select') {
-              const options = field.options ? field.options.split(',').map(opt => opt.trim()) : [];
+            } else if (field.type === 'dropdown') {
+              const options = field.options && Array.isArray(field.options) ? field.options : (field.options ? [field.options] : []);
               fieldHtml = `
                 <div class="form-group">
                   <label class="form-label">${field.label}${field.required ? ' *' : ''}</label>
                   <select class="form-input" 
                           id="${fieldId}"
-                          name="${field.name || field.label.toLowerCase().replace(/\s+/g, '_')}"
+                          name="custom_fields[${index}][answer]"
                           ${field.required ? 'required' : ''}>
                     <option value="">Select ${field.label}</option>
                     ${options.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
                   </select>
+                  <input type="hidden" name="custom_fields[${index}][label]" value="${field.label}">
+                  <input type="hidden" name="custom_fields[${index}][type]" value="${field.type}">
+                  <input type="hidden" name="custom_fields[${index}][required]" value="${field.required}">
+                  ${options.map((option, optIndex) => `
+                    <input type="hidden" name="custom_fields[${index}][options][${optIndex}]" value="${option}">
+                  `).join('')}
                 </div>
               `;
-            } else if (field.type === 'checkbox') {
-              fieldHtml = `
-                <div class="form-group">
-                  <label class="form-label" style="display: flex; align-items: center; gap: 8px;">
-                    <input type="checkbox" 
-                           id="${fieldId}"
-                           name="${field.name || field.label.toLowerCase().replace(/\s+/g, '_')}"
-                           value="yes"
-                           ${field.required ? 'required' : ''}>
-                    ${field.label}${field.required ? ' *' : ''}
-                  </label>
-                </div>
-              `;
-            } else if (field.type === 'radio') {
-              const options = field.options ? field.options.split(',').map(opt => opt.trim()) : [];
+            } else if (field.type === 'file_upload') {
               fieldHtml = `
                 <div class="form-group">
                   <label class="form-label">${field.label}${field.required ? ' *' : ''}</label>
-                  <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 5px;">
-                    ${options.map(opt => `
-                      <label style="display: flex; align-items: center; gap: 8px;">
-                        <input type="radio" 
-                               name="${field.name || field.label.toLowerCase().replace(/\s+/g, '_')}"
-                               value="${opt}"
-                               ${field.required ? 'required' : ''}>
-                        ${opt}
-                      </label>
-                    `).join('')}
-                  </div>
+                  <input type="file" 
+                         class="form-input" 
+                         id="${fieldId}"
+                         name="custom_fields[${index}][answer]"
+                         ${field.required ? 'required' : ''}
+                         accept=".jpg,.jpeg,.png,.pdf,.doc,.docx">
+                  <small style="display: block; margin-top: 5px; color: #666;">Accepted formats: JPG, PNG, PDF, DOC, DOCX</small>
+                  <input type="hidden" name="custom_fields[${index}][label]" value="${field.label}">
+                  <input type="hidden" name="custom_fields[${index}][type]" value="${field.type}">
+                  <input type="hidden" name="custom_fields[${index}][required]" value="${field.required}">
                 </div>
               `;
             }
             
             dynamicFieldsContainer.innerHTML += fieldHtml;
           });
+        } else {
+          // No custom fields
+          document.getElementById('dynamicCustomFields').innerHTML = `
+            <div class="no-custom-fields" style="text-align: center; padding: 20px; background: var(--bg-color); border-radius: 8px; margin-bottom: 20px;">
+              <i class="fas fa-info-circle" style="font-size: 2rem; color: var(--text-color); opacity: 0.5; margin-bottom: 10px;"></i>
+              <p style="color: var(--text-color); opacity: 0.7;">No additional questions required for this program.</p>
+            </div>
+          `;
         }
         
       } else {
@@ -2331,8 +2395,12 @@
     const registrationForm = document.getElementById('programRegistrationForm');
     if (!registrationForm) return;
     
-    registrationForm.removeEventListener('submit', handleProgramRegistrationSubmit);
-    registrationForm.addEventListener('submit', handleProgramRegistrationSubmit);
+    // Remove any existing event listeners
+    const newRegistrationForm = registrationForm.cloneNode(true);
+    registrationForm.parentNode.replaceChild(newRegistrationForm, registrationForm);
+    
+    // Add new event listener
+    document.getElementById('programRegistrationForm').addEventListener('submit', handleProgramRegistrationSubmit);
   }
   
   // Handle Program Registration Form Submission
@@ -2341,7 +2409,7 @@
     
     const form = e.target;
     const submitBtn = form.querySelector('.submit-btn');
-    const originalText = submitBtn.textContent;
+    const originalText = submitBtn.innerHTML;
     
     // Show loading state
     submitBtn.disabled = true;
@@ -2352,36 +2420,77 @@
     const programId = form.querySelector('#hiddenProgramId').value;
     
     // Collect custom fields data
-    const customFields = {};
-    const customInputs = form.querySelectorAll('[name^="custom_"]');
+    const customFieldsData = [];
+    const customInputs = form.querySelectorAll('[name^="custom_fields"]');
+    
+    // Group custom fields by index
+    const fieldsByIndex = {};
+    
     customInputs.forEach(input => {
-      if (input.type === 'checkbox' || input.type === 'radio') {
-        if (input.checked) {
-          customFields[input.name] = input.value;
+      const name = input.name;
+      const match = name.match(/custom_fields\[(\d+)\]\[(\w+)\]/);
+      
+      if (match) {
+        const index = match[1];
+        const field = match[2];
+        
+        if (!fieldsByIndex[index]) {
+          fieldsByIndex[index] = {};
         }
-      } else {
-        customFields[input.name] = input.value;
+        
+        if (field === 'answer') {
+          if (input.type === 'file') {
+            // Handle file uploads
+            if (input.files.length > 0) {
+              fieldsByIndex[index][field] = input.files[0];
+            }
+          } else if (input.type === 'radio') {
+            // Only collect checked radio buttons
+            if (input.checked) {
+              fieldsByIndex[index][field] = input.value;
+            }
+          } else {
+            fieldsByIndex[index][field] = input.value;
+          }
+        } else if (field === 'label' || field === 'type' || field === 'required') {
+          fieldsByIndex[index][field] = input.value;
+        } else if (field === 'options') {
+          // Handle options array
+          if (!fieldsByIndex[index].options) {
+            fieldsByIndex[index].options = [];
+          }
+          fieldsByIndex[index].options.push(input.value);
+        }
       }
+    });
+    
+    // Convert to array
+    Object.keys(fieldsByIndex).forEach(index => {
+      customFieldsData.push(fieldsByIndex[index]);
     });
     
     // Prepare registration data
     const registrationData = {
-      custom_fields: customFields
+      custom_fields: customFieldsData
     };
+    
+    // Create FormData for file uploads
+    const registrationFormData = new FormData();
+    registrationFormData.append('program_id', programId);
+    registrationFormData.append('registration_data', JSON.stringify(registrationData));
+    
+    // Add CSRF token
+    registrationFormData.append('_token', window.csrfToken);
     
     // Submit registration
     try {
       const response = await fetch('/programs/register', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'X-CSRF-TOKEN': window.csrfToken,
           'Accept': 'application/json'
         },
-        body: JSON.stringify({
-          program_id: programId,
-          registration_data: JSON.stringify(registrationData)
-        })
+        body: registrationFormData
       });
       
       const data = await response.json();
@@ -2418,12 +2527,14 @@
     // Set up event listeners
     closeBtn.onclick = () => {
       modal.style.display = 'none';
+      // Refresh the page to show updated registration status
+      window.location.reload();
     };
     
     viewRegistrationsBtn.onclick = (e) => {
       e.preventDefault();
       modal.style.display = 'none';
-      // Redirect to user's registrations page (you need to create this route)
+      // Redirect to user's registrations page
       window.location.href = '/my-registrations';
     };
     
@@ -2431,6 +2542,7 @@
     modal.onclick = (e) => {
       if (e.target === modal) {
         modal.style.display = 'none';
+        window.location.reload();
       }
     };
     

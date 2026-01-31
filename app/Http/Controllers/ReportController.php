@@ -293,4 +293,5 @@ public function submitReport(Request $request)
         return response()->json(['success' => true, 'message' => 'Report sent successfully to SK Chairperson!']);
     }
 
+    
 }

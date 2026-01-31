@@ -259,7 +259,7 @@ body {
 /* Topbar */
 .topbar {
   position: fixed;
-  top: 0;              
+  top: 0;
   left: 0;
   right: 0;
   height: 70px;
@@ -269,18 +269,19 @@ body {
   gap: 1rem;
   padding: 0.5rem 2rem;
   justify-content: space-between;
-  z-index: 2000;       
-}         
+  z-index: 2000;
+  transition: background-color 0.3s ease;
+}
 
 /* Logo */
 .logo {
   display: flex;
   align-items: center;
-  gap: -0;         
+  gap: 10px;
 }
 
 .logo img {
-  height: 90px;         
+  height: 50px;
   width: auto;
 }
 
@@ -306,7 +307,7 @@ body {
   display: flex;
   align-items: center;
   gap: 1.5rem;
-  margin-left: auto;   
+  margin-left: auto;
 }
 
 /* Time Button */
@@ -793,6 +794,7 @@ body {
 }
 
 /* Button */
+/* Button */
 .btn-view {
   background: var(--card-bg);
   border: 1.5px solid var(--primary-color);
@@ -804,6 +806,10 @@ body {
   cursor: pointer;
   transition: all 0.2s ease;
   text-decoration: none;
+  display: inline-block; /* Add this */
+  white-space: nowrap; /* Prevents text wrapping */
+  min-width: 130px; /* Set minimum width */
+  text-align: center; /* Center text */
 }
 
 .btn-view:hover {

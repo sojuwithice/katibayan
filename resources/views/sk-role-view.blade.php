@@ -449,7 +449,13 @@
 
         <div class="grid-col-2">
             <div class="card send-report">
-                <h2>SEND REPORT TO YOUR SK CHAIR</h2>
+    <div class="card-header-flex">
+        <h2>SEND REPORT TO YOUR SK CHAIR</h2>
+        <!-- Three dots history button -->
+        <button class="history-dots-btn" id="historyDotsBtn" title="View History">
+            <i class="fas fa-ellipsis-h"></i>
+        </button>
+    </div>
                 
                 <form id="sendReportForm">
                     <div class="form-group">
@@ -549,6 +555,86 @@
         </div>
     </div>
 </main>
+
+
+<!-- History Log Modal -->
+<div id="historyModal" class="modal-overlay history-modal">
+    <div class="modal-content history-modal-content">
+        <div class="history-modal-header">
+            <h2>Report History</h2>
+            <button class="close-modal" id="closeHistoryModal">&times;</button>
+        </div>
+        
+        <div class="history-filter-section">
+            <div class="filter-group">
+                <label for="filterMonth">Month</label>
+                <select id="filterMonth" class="filter-select">
+                    <option value="all">All Months</option>
+                    <option value="1">January</option>
+                    <option value="2">February</option>
+                    <option value="3">March</option>
+                    <option value="4">April</option>
+                    <option value="5">May</option>
+                    <option value="6">June</option>
+                    <option value="7">July</option>
+                    <option value="8">August</option>
+                    <option value="9">September</option>
+                    <option value="10">October</option>
+                    <option value="11">November</option>
+                    <option value="12">December</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="filterYear">Year</label>
+                <select id="filterYear" class="filter-select">
+                    <option value="all">All Years</option>
+                    @php
+                        $currentYear = date('Y');
+                        for($year = $currentYear; $year >= $currentYear - 5; $year--) {
+                            echo "<option value=\"{$year}\">{$year}</option>";
+                        }
+                    @endphp
+                </select>
+            </div>
+            
+            <button class="btn btn-secondary" id="applyFilters">Apply Filters</button>
+            <button class="btn btn-outline" id="resetFilters">Reset</button>
+        </div>
+        
+        <div class="history-list-container">
+            <div class="history-list-header">
+                <span class="header-report-type">Report Type</span>
+                <span class="header-date">Date Submitted</span>
+                <span class="header-files">Files</span>
+                <span class="header-remarks">Notes</span>
+            </div>
+            
+            <div class="history-list" id="historyList">
+                <!-- History items will be loaded here -->
+                <div class="history-empty-state">
+                    <i class="fas fa-history"></i>
+                    <p>No report history found</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="history-modal-footer">
+            <div class="pagination-info">
+                Showing <span id="startCount">0</span>-<span id="endCount">0</span> of <span id="totalCount">0</span> reports
+            </div>
+            <div class="pagination-controls">
+                <button class="pagination-btn" id="prevPage" disabled>
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <span id="currentPage">1</span>
+                <button class="pagination-btn" id="nextPage" disabled>
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- Main JavaScript -->
 <script>
@@ -1112,6 +1198,317 @@ document.addEventListener('DOMContentLoaded', () => {
         const event = new Event('change');
         yearFilter.dispatchEvent(event);
     }
+
+    // =========================================================
+// 8. HISTORY MODAL FUNCTIONALITY - REAL DATA
+// =========================================================
+const historyDotsBtn = document.getElementById('historyDotsBtn');
+const historyModal = document.getElementById('historyModal');
+const closeHistoryModal = document.getElementById('closeHistoryModal');
+const applyFilters = document.getElementById('applyFilters');
+const resetFilters = document.getElementById('resetFilters');
+const filterMonth = document.getElementById('filterMonth');
+const filterYear = document.getElementById('filterYear');
+const historyList = document.getElementById('historyList');
+const prevPage = document.getElementById('prevPage');
+const nextPage = document.getElementById('nextPage');
+const startCount = document.getElementById('startCount');
+const endCount = document.getElementById('endCount');
+const totalCount = document.getElementById('totalCount');
+const currentPage = document.getElementById('currentPage');
+
+let currentPageNumber = 1;
+const itemsPerPage = 5;
+let totalItems = 0;
+let totalPages = 1;
+let isLoading = false;
+
+// Open History Modal
+if (historyDotsBtn) {
+    historyDotsBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        historyModal.style.display = 'flex';
+        
+        // Set current month and year
+        const now = new Date();
+        filterMonth.value = (now.getMonth() + 1).toString();
+        filterYear.value = now.getFullYear().toString();
+        
+        // Load data
+        await loadHistoryData();
+    });
+}
+
+// Close History Modal
+if (closeHistoryModal) {
+    closeHistoryModal.addEventListener('click', () => {
+        historyModal.style.display = 'none';
+    });
+}
+
+// Close modal when clicking outside
+if (historyModal) {
+    historyModal.addEventListener('click', (e) => {
+        if (e.target === historyModal) {
+            historyModal.style.display = 'none';
+        }
+    });
+}
+
+// Apply Filters
+if (applyFilters) {
+    applyFilters.addEventListener('click', async () => {
+        currentPageNumber = 1;
+        await loadHistoryData();
+    });
+}
+
+// Reset Filters
+if (resetFilters) {
+    resetFilters.addEventListener('click', async () => {
+        filterMonth.value = 'all';
+        filterYear.value = 'all';
+        currentPageNumber = 1;
+        await loadHistoryData();
+    });
+}
+
+// Pagination
+if (prevPage) {
+    prevPage.addEventListener('click', async () => {
+        if (currentPageNumber > 1) {
+            currentPageNumber--;
+            await loadHistoryData();
+        }
+    });
+}
+
+if (nextPage) {
+    nextPage.addEventListener('click', async () => {
+        if (currentPageNumber < totalPages) {
+            currentPageNumber++;
+            await loadHistoryData();
+        }
+    });
+}
+
+// Load History Data from API
+async function loadHistoryData() {
+    if (isLoading) return;
+    
+    isLoading = true;
+    
+    // Show loading state
+    if (historyList) {
+        historyList.innerHTML = `
+            <div class="history-empty-state">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Loading history...</p>
+            </div>
+        `;
+    }
+    
+    // Get CSRF token
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    
+    // Prepare query params
+    const params = new URLSearchParams({
+        page: currentPageNumber,
+        per_page: itemsPerPage
+    });
+    
+    if (filterMonth.value !== 'all') {
+        params.append('month', filterMonth.value);
+    }
+    
+    if (filterYear.value !== 'all') {
+        params.append('year', filterYear.value);
+    }
+    
+    try {
+        const response = await fetch(`/reports/history?${params.toString()}`, {
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            updateHistoryList(data.data);
+            updatePaginationControls(data);
+        } else {
+            showError('Failed to load history');
+        }
+    } catch (error) {
+        console.error('Error loading history:', error);
+        showError('Error loading report history');
+    } finally {
+        isLoading = false;
+    }
+}
+
+// Update History List
+function updateHistoryList(data) {
+    if (!historyList) return;
+    
+    if (!data || data.length === 0) {
+        historyList.innerHTML = `
+            <div class="history-empty-state">
+                <i class="fas fa-history"></i>
+                <p>No report history found</p>
+            </div>
+        `;
+        return;
+    }
+    
+    historyList.innerHTML = data.map(item => `
+        <div class="history-item">
+            <div>
+                <span class="report-type-badge ${item.report_type}">
+                    ${getReportTypeLabel(item.report_type)}
+                </span>
+                <div style="font-size: 0.85rem; margin-top: 4px; color: var(--text-color); opacity: 0.8;">
+                    ${item.title || 'No title'}
+                </div>
+            </div>
+            <div class="history-date">
+                ${formatDate(item.date)}
+            </div>
+            <div class="file-count">
+                <i class="fas fa-file"></i> ${item.files} file${item.files > 1 ? 's' : ''}
+            </div>
+            <div class="history-remarks" title="${item.remarks || ''}">
+                ${item.remarks || 'No remarks'}
+            </div>
+        </div>
+    `).join('');
+}
+
+// Helper function for report type label
+function getReportTypeLabel(type) {
+    const labels = {
+        'accomplishment': 'Accomplishment Report',
+        'financial': 'Propose Project',
+        'proposal': 'Project Proposal'
+    };
+    return labels[type] || type;
+}
+
+// Format date
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+// Update Pagination Controls
+function updatePaginationControls(data) {
+    if (!totalCount || !startCount || !endCount || !currentPage || !prevPage || !nextPage) return;
+    
+    totalItems = data.total || 0;
+    totalPages = data.total_pages || 1;
+    const perPage = data.per_page || itemsPerPage;
+    
+    const startIndex = ((currentPageNumber - 1) * perPage) + 1;
+    const endIndex = Math.min(startIndex + perPage - 1, totalItems);
+    
+    totalCount.textContent = totalItems;
+    startCount.textContent = totalItems > 0 ? startIndex : 0;
+    endCount.textContent = endIndex;
+    currentPage.textContent = currentPageNumber;
+    
+    prevPage.disabled = currentPageNumber === 1;
+    nextPage.disabled = currentPageNumber === totalPages || totalPages === 0;
+}
+
+// Show error message
+function showError(message) {
+    if (historyList) {
+        historyList.innerHTML = `
+            <div class="history-empty-state">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p>${message}</p>
+            </div>
+        `;
+    }
+}
+
+// Also, update your send report form to refresh history after submission
+if (sendReportForm) {
+    sendReportForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const reportType = document.getElementById('report-type').value;
+        
+        if (!reportType) {
+            alert('Please select a report type.');
+            return;
+        }
+        if (currentFiles.length === 0) {
+            alert('Please attach at least one file.');
+            return;
+        }
+
+        // Prepare Data
+        const formData = new FormData();
+        formData.append('report_type', reportType);
+        
+        // Add title and remarks if you have them
+        const reportTitle = prompt('Enter report title (optional):', '');
+        if (reportTitle) formData.append('title', reportTitle);
+        
+        const reportRemarks = prompt('Enter remarks (optional):', '');
+        if (reportRemarks) formData.append('remarks', reportRemarks);
+        
+        currentFiles.forEach(file => {
+            formData.append('files[]', file);
+        });
+
+        // UI Loading
+        const origText = submitBtn.innerText;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+        submitBtn.disabled = true;
+
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+        try {
+            const response = await fetch('/submit-report', { 
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': csrfToken },
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                alert(data.message);
+                sendReportForm.reset();
+                currentFiles = [];
+                updateFileListUI(fileListContainer, currentFiles);
+                
+                // Refresh history if modal is open
+                if (historyModal.style.display === 'flex') {
+                    await loadHistoryData();
+                }
+            } else {
+                alert('Failed: ' + (data.message || 'Unknown error'));
+            }
+        } catch (error) {
+            console.error(error);
+            alert('An error occurred. Check console.');
+        } finally {
+            submitBtn.innerText = origText;
+            submitBtn.disabled = false;
+        }
+    });
+}
 
 });
 </script>

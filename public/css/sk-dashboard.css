@@ -243,31 +243,29 @@ body {
 /* Topbar */
 .topbar {
   position: fixed;
-  top: 0;              
+  top: 0;
   left: 0;
   right: 0;
   height: 70px;
-  background: #e7e7e7;
+  background: var(--topbar-bg);
   display: flex;
   align-items: center;
   gap: 1rem;
   padding: 0.5rem 2rem;
   justify-content: space-between;
-  z-index: 2000;       
-  
-}         
-
+  z-index: 2000;
+  transition: background-color 0.3s ease;
+}
 
 /* Logo */
-/* === Logo Section === */
 .logo {
   display: flex;
   align-items: center;
-  gap: -0;         
+  gap: 10px;
 }
 
 .logo img {
-  height: 90px;         
+  height: 50px;
   width: auto;
 }
 
@@ -293,7 +291,7 @@ body {
   display: flex;
   align-items: center;
   gap: 1.5rem;
-  margin-left: auto;   
+  margin-left: auto;
 }
 
 .theme-toggle {
@@ -539,6 +537,8 @@ body {
   margin: 1.5rem 0;
   flex-wrap: wrap;
 }
+
+
 
 .option-card {
   flex: 1;
@@ -1330,13 +1330,11 @@ textarea:focus {
   display: flex;
   flex-direction: column;
   
-  /* === ETO 'YUNG MGA FIX === */
-  justify-content: flex-start; /* 1. Ilalagay lahat sa taas */
-  gap: 5rem;                   /* 2. Maglalagay ng space sa gitna nila */
+                  
   
   align-items: center;
   position: relative;
-  height: 305px; 
+  height: 250px; 
   box-sizing: border-box;
 }
 
@@ -1383,6 +1381,9 @@ textarea:focus {
   gap: 0.5rem;
   width: 100%;
   text-align: center;
+  flex-grow: 1; 
+  align-items: center; 
+  justify-items: center; 
 }
 .calendar .day {
   width: 50px;                  
@@ -1529,6 +1530,148 @@ textarea:focus {
   background: var(--card-bg);
 }
 
+
+/* =============================
+   Youth Population Card
+============================= */
+
+.youth-population.card {
+  background: var(--card-bg);
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  height: auto;
+}
+
+.population-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 15px;
+}
+
+.population-chart {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  margin: 0 auto 15px;
+}
+
+#populationChart {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.population-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.population-total {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--primary-color);
+  display: block;
+  line-height: 1;
+}
+
+.population-center p {
+  font-size: 0.85rem;
+  color: var(--text-color);
+  margin-top: 5px;
+  opacity: 0.8;
+}
+
+.population-legend {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin-top: 10px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.legend-item span:first-child {
+  color: #666;
+}
+
+.legend-item span:nth-child(2) {
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.population-legend .dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.population-legend .dot.male {
+  background: var(--primary-color);
+}
+
+.population-legend .dot.female {
+  background: #E96BA8;
+}
+
+/* Dark mode adjustments for Youth Population */
+[data-theme="dark"] .youth-population.card {
+  background: var(--card-bg);
+}
+
+[data-theme="dark"] .population-center p {
+  color: var(--text-color);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .youth-population.card {
+    padding: 15px;
+  }
+  
+  .population-chart {
+    width: 180px;
+    height: 180px;
+  }
+  
+  .population-total {
+    font-size: 2rem;
+  }
+  
+  .population-legend {
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .population-chart {
+    width: 160px;
+    height: 160px;
+  }
+  
+  .population-total {
+    font-size: 1.8rem;
+  }
+  
+  .population-center p {
+    font-size: 0.75rem;
+  }
+}
 
 /* ========================
    SK COMMITTEE

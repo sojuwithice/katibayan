@@ -39,11 +39,6 @@
       <span class="label">Dashboard</span>
     </a>
 
-    <a href="{{ route('sk.analytics') }}">
-      <i data-lucide="chart-pie" class="lucide-icon"></i>
-      <span class="label">Analytics</span>
-    </a>
-
     <a href="{{ route('youth-profilepage') }}">
       <i data-lucide="users" class="lucide-icon"></i>
       <span class="label">Youth Profile</span>
@@ -96,7 +91,7 @@
     <!-- Topbar -->
     <header class="topbar">
       <div class="logo">
-        <img src="{{ asset('images/logo.png') }}" alt="Logo">
+        <img src="{{ asset('images/KatiBayan-Logo_B.png') }}" alt="Logo">
         <div class="logo-text">
           <span class="title">Katibayan</span>
           <span class="subtitle">Web Portal</span>
@@ -400,28 +395,45 @@
     <div class="options-dropdown">
       <ul>
         <li><a href="#" id="openRequestListBtn">See Request List</a></li>
-        <li><a href="#">Manage Roles</a></li>
       </ul>
     </div>
   </div>
 
+  <!-- SK CHAIRPERSON SECTION -->
   <div class="sk-chairperson">
-    <div class="sk-member-item">
-      <div class="member-info">
-        @if($skChairperson)
-            <span class="member-name">
-                {{-- Format: MARI JOY S. NOVORA --}}
-                {{ strtoupper($skChairperson->given_name) }} 
-                {{ $skChairperson->middle_name ? strtoupper(substr($skChairperson->middle_name, 0, 1)) . '.' : '' }} 
-                {{ strtoupper($skChairperson->last_name) }}
-            </span>
-            <span class="member-role">SK CHAIRPERSON</span>
-        @else
-            <span class="member-name" style="color:#999;">(VACANT)</span>
-            <span class="member-role">SK CHAIRPERSON</span>
-        @endif
+    @php
+      // Find the current logged-in user who is the SK Chairperson
+      $chairperson = $user ?? null;
+    @endphp
+    
+    @if($chairperson)
+      <div class="sk-member-item">
+        <div class="member-info">
+          <span class="member-name">
+            {{ strtoupper($chairperson->given_name) }} 
+            {{ $chairperson->middle_name ? strtoupper(substr($chairperson->middle_name, 0, 1)) . '.' : '' }} 
+            {{ strtoupper($chairperson->last_name) }}
+            {{ $chairperson->suffix ? strtoupper($chairperson->suffix) : '' }}
+          </span>
+          <span class="member-role">SK CHAIRPERSON</span>
+          
+          @if(!empty($chairperson->committees))
+            @foreach(explode(',', $chairperson->committees) as $committee)
+              <span class="member-committee">
+                <span class="dot"></span> {{ strtoupper(trim($committee)) }}
+              </span>
+            @endforeach
+          @endif
+        </div>
       </div>
-    </div>
+    @else
+      <div class="sk-member-item">
+        <div class="member-info">
+          <span class="member-name" style="color:#999;">(VACANT)</span>
+          <span class="member-role">SK CHAIRPERSON</span>
+        </div>
+      </div>
+    @endif
   </div>
 
   <h4 class="sk-members-title">MEMBERS</h4>
@@ -429,6 +441,7 @@
   <div class="sk-members-list">
     
     @foreach($skMembers as $member)
+
     <div class="sk-member-item">
       <div class="member-info">
         
@@ -511,6 +524,7 @@
   </div>
 
   <!-- RIGHT PANEL -->
+    <!-- RIGHT PANEL -->
   <div class="right-panel">
     <!-- Calendar -->
     <div class="calendar card">
@@ -523,24 +537,54 @@
     </div>
 
     <!-- Reminders -->
-<div class="reminders-card">
-  <h3 class="reminders-title">Reminders</h3>
+    <div class="reminders-card">
+      <h3 class="reminders-title">Reminders</h3>
 
-  <div class="reminders-scroll-area">
-    
-    <div class="reminders-section">
-      <h4 class="section-label">Today</h4>
-      <div id="todayReminders">
-        <div class="no-reminders">No events for today</div>
+      <div class="reminders-scroll-area">
+        
+        <div class="reminders-section">
+          <h4 class="section-label">Today</h4>
+          <div id="todayReminders">
+            <div class="no-reminders">No events for today</div>
+          </div>
+        </div>
+
+        <div class="reminders-section">
+          <h4 class="section-label">Upcoming</h4>
+          <div id="upcomingReminders">
+            <div class="no-reminders">No upcoming events</div>
+          </div>
+        </div>
+
       </div>
     </div>
 
-    <div class="reminders-section">
-      <h4 class="section-label">Upcoming</h4>
-      <div id="upcomingReminders">
-        <div class="no-reminders">No upcoming events</div>
+    <!-- Youth Population Card - Updated with Dynamic Data -->
+    <div class="youth-population card">
+      <h3 class="population-title">Youth Population</h3>
+      <div class="population-chart">
+        <canvas id="populationChart"></canvas>
+        <div class="population-center">
+          <span class="population-total" id="populationTotal">0</span>
+          <p>Youth population in your barangay</p>
+        </div>
+      </div>
+      <div class="population-legend">
+        <div class="legend-item">
+          <span>Female</span>
+          <span id="femaleCount">0</span>
+          <span class="dot female"></span>
+        </div>
+        <div class="legend-item">
+          <span>Male</span>
+          <span id="maleCount">0</span>
+          <span class="dot male"></span>
+        </div>
       </div>
     </div>
+
+  </div>
+</div>
 
   </div> </div>
 
@@ -1319,21 +1363,14 @@ document.addEventListener("DOMContentLoaded", function() {
   const requestListModal = document.getElementById('requestListModal');
   const skCommitteeDropdown = document.querySelector('.sk-committee-card .options-dropdown');
   
-  // === ETO 'YUNG FIX ===
-  // Gagamitin natin 'yung global variable na ginagamit mo sa buong script
   const csrfToken = window.csrfToken; 
-
-  // Naglagay ako ng "if (requestListModal)" para sigurado
   if (requestListModal) {
     
     const requestListBody = requestListModal.querySelector('.request-list-body');
     const requestListBadge = requestListModal.querySelector('.request-list-header .badge');
 
-    /**
-     * Function para buksan ang modal AT kumuha ng data
-     */
     async function openAndPopulateRequestList() {
-      // Nilipat ko 'yung safety check dito
+    
       if (!requestListModal || !requestListBody) {
         console.error('Request List Modal elements not found.');
         return; 

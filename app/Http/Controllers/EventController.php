@@ -409,193 +409,265 @@ class EventController extends Controller
         }
     }
 
-    /**
-     * Display events page for regular users
-     */
-    public function userEvents(): View|RedirectResponse
-    {
-        try {
-            $user = Auth::user();
-            
-            // Check if user is authenticated
-            if (!$user) {
-                return redirect()->route('login')->with('error', 'Please login to view events.');
-            }
+  /**
+ * Display events page for regular users
+ */
+public function userEvents(): View|RedirectResponse
+{
+    try {
+        $user = Auth::user();
+        
+        // Check if user is authenticated
+        if (!$user) {
+            return redirect()->route('login')->with('error', 'Please login to view events.');
+        }
 
-            $today = Carbon::today();
-            $currentDateTime = Carbon::now();
+        $today = Carbon::today();
+        $now = Carbon::now();
+        $currentDateTime = Carbon::now();
 
-            Log::info("Loading events for user ID: {$user->id}, Barangay ID: {$user->barangay_id}");
+        Log::info("Loading events for user ID: {$user->id}, Barangay ID: {$user->barangay_id}");
 
-            // === GET GENERAL NOTIFICATIONS (FIXED) ===
-            $generalNotifications = Notification::where('user_id', $user->id)
-                ->orderBy('created_at', 'desc')
-                ->limit(5)
-                ->get();
-            
-            $unreadNotificationCount = $generalNotifications->where('is_read', 0)->count();
-
-            // Get LAUNCHED events from the SAME BARANGAY as the user
-            $events = Event::where('is_launched', true)
-                ->where('barangay_id', $user->barangay_id)
-                ->where('postponed', false) // Don't show postponed events
-                ->orderBy('event_date', 'asc')
-                ->orderBy('event_time', 'asc')
-                ->get();
-
-            // Get PROGRAMS from the SAME BARANGAY as the user
-            $programs = Program::where('barangay_id', $user->barangay_id)
-                ->orderBy('event_date', 'asc')
-                ->orderBy('event_time', 'asc')
-                ->get();
-
-            Log::info("Total launched events found for barangay {$user->barangay_id}: " . $events->count());
-            Log::info("Total programs found for barangay {$user->barangay_id}: " . $programs->count());
-
-            // Filter today's events - show ALL launched events happening today
-            $todayEvents = $events->filter(function($event) use ($today) {
-                return Carbon::parse($event->event_date)->isSameDay($today);
+        // === GET DATABASE NOTIFICATIONS (SAME AS DASHBOARD) ===
+        $generalNotifications = Notification::where('user_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get()
+            ->map(function($notification) {
+                return [
+                    'id' => $notification->id,
+                    'type' => $notification->type,
+                    'title' => $notification->data['title'] ?? $notification->title ?? 'Notification',
+                    'message' => $notification->data['message'] ?? $notification->message ?? 'You have a new notification.',
+                    'created_at' => $notification->created_at,
+                    'datetime_object' => $notification->created_at,
+                    'is_read' => $notification->is_read,
+                    'notification_type' => 'general',
+                    'source' => 'database'
+                ];
             });
 
-            // Get today's programs
-            $todayPrograms = $programs->filter(function($program) use ($today) {
-                return Carbon::parse($program->event_date)->isSameDay($today);
-            });
-
-            // Get unevaluated events for notifications (same barangay)
-            $unevaluatedEvents = Event::whereHas('attendances', function($query) use ($user) {
-                $query->where('user_id', $user->id)
-                      ->whereNotNull('attended_at');
+        // === GET UNEVALUATED EVENTS (SAME AS DASHBOARD) ===
+        $unevaluatedEvents = Event::where('barangay_id', $user->barangay_id)
+            ->where('is_launched', true)
+            ->whereHas('attendances', function($query) use ($user) {
+                $query->where('user_id', $user->id)->whereNotNull('attended_at');
             })
             ->whereDoesntHave('evaluations', function($query) use ($user) {
                 $query->where('user_id', $user->id);
             })
-            ->where('is_launched', true)
-            ->where('postponed', false)
-            ->where('barangay_id', $user->barangay_id)
             ->with(['attendances' => function($query) use ($user) {
-                $query->where('user_id', $user->id);
+                $query->where('user_id', $user->id)->latest();
             }])
             ->orderBy('event_date', 'desc')
             ->get();
 
-            // Calculate total notification count (general + unevaluated events)
-            $notificationCount = $unreadNotificationCount + $unevaluatedEvents->count();
+        // === GET UNEVALUATED PROGRAMS (SAME AS DASHBOARD) ===
+        $unevaluatedPrograms = Program::where('barangay_id', $user->barangay_id)
+            ->whereHas('programRegistrations', function($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })
+            ->whereDoesntHave('evaluations', function($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })
+            ->with(['programRegistrations' => function($query) use ($user) {
+                $query->where('user_id', $user->id)->latest();
+            }])
+            ->orderBy('event_date', 'desc')
+            ->get();
 
-            // Filter upcoming events (considering date AND time) - only future launched events
-            $upcomingEvents = $events->filter(function($event) use ($currentDateTime) {
-                $eventDate = Carbon::parse($event->event_date);
-                
-                // Create full datetime object for the event
-                if ($event->event_time) {
-                    // Parse the time and combine with event date
-                    $eventTime = Carbon::parse($event->event_time);
-                    $eventDateTime = Carbon::create(
-                        $eventDate->year,
-                        $eventDate->month,
-                        $eventDate->day,
-                        $eventTime->hour,
-                        $eventTime->minute,
-                        $eventTime->second
-                    );
-                } else {
-                    // If no time specified, use end of day
-                    $eventDateTime = $eventDate->endOfDay();
-                }
-                
-                // Only show events that haven't happened yet
-                return $eventDateTime->gt($currentDateTime);
-            });
-
-            // Filter upcoming programs (considering date AND time) - only future programs
-            $upcomingPrograms = $programs->filter(function($program) use ($currentDateTime) {
-                $programDate = Carbon::parse($program->event_date);
-                
-                // Create full datetime object for the program
-                if ($program->event_time) {
-                    // Parse the time and combine with program date
-                    $programTime = Carbon::parse($program->event_time);
-                    $programDateTime = Carbon::create(
-                        $programDate->year,
-                        $programDate->month,
-                        $programDate->day,
-                        $programTime->hour,
-                        $programTime->minute,
-                        $programTime->second
-                    );
-                } else {
-                    // If no time specified, use end of day
-                    $programDateTime = $programDate->endOfDay();
-                }
-                
-                // Only show programs that haven't happened yet
-                return $programDateTime->gt($currentDateTime);
-            });
-
-            // Compute role badge & age - with null checks
-            $roleBadge = $user && $user->role ? strtoupper($user->role) . '-Member' : 'GUEST';
-            $age = $user && $user->date_of_birth 
-                ? Carbon::parse($user->date_of_birth)->age 
-                : 'N/A';
-
-            // Debug logging
-            Log::info("=== EVENT DEBUG INFO ===");
-            Log::info("User ID: " . $user->id);
-            Log::info("User barangay_id: " . $user->barangay_id);
-            Log::info("Total events: " . $events->count());
-            Log::info("Total programs: " . $programs->count());
-            Log::info("Today's events: " . $todayEvents->count());
-            Log::info("Today's programs: " . $todayPrograms->count());
-            Log::info("Notification count: " . $notificationCount);
-
-            return view('eventpage', compact(
-                'events', 
-                'programs',
-                'todayEvents', 
-                'todayPrograms',
-                'upcomingEvents', 
-                'upcomingPrograms',
-                'user', 
-                'roleBadge', 
-                'age',
-                'unevaluatedEvents',
-                'generalNotifications',
-                'notificationCount',
-                'today',
-                'currentDateTime'
-            ));
-        } catch (\Exception $e) {
-            Log::error('Error loading user events: ' . $e->getMessage());
-            Log::error('Stack trace: ' . $e->getTraceAsString());
-
-            // Provide default values for the missing variables
-            $today = Carbon::today();
-            $currentDateTime = Carbon::now();
-            $user = Auth::user();
-
-            // If user is not authenticated, redirect to login
-            if (!$user) {
-                return redirect()->route('login')->with('error', 'Please login to view events.');
-            }
-
-            return view('eventpage', [
-                'events' => collect(),
-                'programs' => collect(),
-                'todayEvents' => collect(),
-                'todayPrograms' => collect(),
-                'upcomingEvents' => collect(),
-                'upcomingPrograms' => collect(),
-                'user' => $user,
-                'roleBadge' => $user ? (strtoupper($user->role) . '-Member') : 'GUEST',
-                'age' => $user && $user->date_of_birth ? Carbon::parse($user->date_of_birth)->age : 'N/A',
-                'unevaluatedEvents' => collect(),
-                'generalNotifications' => collect(),
-                'notificationCount' => 0,
-                'today' => $today,
-                'currentDateTime' => $currentDateTime
+        $unevaluatedActivities = collect();
+        
+        foreach ($unevaluatedEvents as $event) {
+            $attendance = $event->attendances->first();
+            $createdAt = $attendance ? $attendance->created_at : $event->created_at;
+            
+            $unevaluatedActivities->push([
+                'id' => $event->id,
+                'type' => 'event',
+                'title' => $event->title,
+                'notification_type' => 'evaluation_required',
+                'attendance' => $attendance,
+                'created_at' => $createdAt,
+                'datetime_object' => $createdAt instanceof Carbon ? $createdAt : Carbon::parse($createdAt)
             ]);
         }
+        
+        foreach ($unevaluatedPrograms as $program) {
+            $registration = $program->programRegistrations->first();
+            $createdAt = $registration ? $registration->created_at : $program->created_at;
+            
+            $unevaluatedActivities->push([
+                'id' => $program->id,
+                'type' => 'program',
+                'title' => $program->title,
+                'notification_type' => 'evaluation_required',
+                'registration' => $registration,
+                'created_at' => $createdAt,
+                'datetime_object' => $createdAt instanceof Carbon ? $createdAt : Carbon::parse($createdAt)
+            ]);
+        }
+
+        // === CONVERT UNEVALUATED ACTIVITIES TO NOTIFICATION FORMAT (SAME AS DASHBOARD) ===
+        $evaluationNotifications = $unevaluatedActivities->map(function($activity) {
+            return [
+                'id' => 'eval_' . $activity['id'] . '_' . $activity['type'],
+                'type' => 'evaluation_required',
+                'title' => ucfirst($activity['type']) . ' Evaluation Required',
+                'message' => 'Please evaluate "' . $activity['title'] . '"',
+                'created_at' => $activity['created_at'],
+                'datetime_object' => $activity['datetime_object'],
+                'is_read' => 0,
+                'notification_type' => 'evaluation_required',
+                'source' => 'system',
+                'activity_id' => $activity['id'],
+                'activity_type' => $activity['type']
+            ];
+        });
+
+        // === COMBINE ALL NOTIFICATIONS (SAME AS DASHBOARD) ===
+        $allNotifications = $generalNotifications->concat($evaluationNotifications);
+
+        // Sort by datetime_object (latest first)
+        $allNotifications = $allNotifications->sortByDesc('datetime_object')->values();
+
+        // Limit to 7 notifications for display (same as dashboard)
+        $allNotifications = $allNotifications->take(7);
+
+        // Calculate unread count
+        $notificationCount = $allNotifications->where('is_read', 0)->count();
+
+        // Get LAUNCHED events from the SAME BARANGAY as the user
+        $events = Event::where('is_launched', true)
+            ->where('barangay_id', $user->barangay_id)
+            ->where('postponed', false)
+            ->orderBy('event_date', 'asc')
+            ->orderBy('event_time', 'asc')
+            ->get();
+
+        // Get PROGRAMS from the SAME BARANGAY as the user
+        $programs = Program::where('barangay_id', $user->barangay_id)
+            ->orderBy('event_date', 'asc')
+            ->orderBy('event_time', 'asc')
+            ->get();
+
+        Log::info("Total launched events found for barangay {$user->barangay_id}: " . $events->count());
+        Log::info("Total programs found for barangay {$user->barangay_id}: " . $programs->count());
+
+        // Filter today's events - show ALL launched events happening today
+        $todayEvents = $events->filter(function($event) use ($today) {
+            return Carbon::parse($event->event_date)->isSameDay($today);
+        });
+
+        // Get today's programs
+        $todayPrograms = $programs->filter(function($program) use ($today) {
+            return Carbon::parse($program->event_date)->isSameDay($today);
+        });
+
+        // Filter upcoming events (considering date AND time) - only future launched events
+        $upcomingEvents = $events->filter(function($event) use ($currentDateTime) {
+            $eventDate = Carbon::parse($event->event_date);
+            
+            // Create full datetime object for the event
+            if ($event->event_time) {
+                // Parse the time and combine with event date
+                $eventTime = Carbon::parse($event->event_time);
+                $eventDateTime = Carbon::create(
+                    $eventDate->year,
+                    $eventDate->month,
+                    $eventDate->day,
+                    $eventTime->hour,
+                    $eventTime->minute,
+                    $eventTime->second
+                );
+            } else {
+                // If no time specified, use end of day
+                $eventDateTime = $eventDate->endOfDay();
+            }
+            
+            // Only show events that haven't happened yet
+            return $eventDateTime->gt($currentDateTime);
+        });
+
+        // Filter upcoming programs (considering date AND time) - only future programs
+        $upcomingPrograms = $programs->filter(function($program) use ($currentDateTime) {
+            $programDate = Carbon::parse($program->event_date);
+            
+            // Create full datetime object for the program
+            if ($program->event_time) {
+                // Parse the time and combine with program date
+                $programTime = Carbon::parse($program->event_time);
+                $programDateTime = Carbon::create(
+                    $programDate->year,
+                    $programDate->month,
+                    $programDate->day,
+                    $programTime->hour,
+                    $programTime->minute,
+                    $programTime->second
+                );
+            } else {
+                // If no time specified, use end of day
+                $programDateTime = $programDate->endOfDay();
+            }
+            
+            // Only show programs that haven't happened yet
+            return $programDateTime->gt($currentDateTime);
+        });
+
+        // Compute role badge & age
+        $roleBadge = $user && $user->role ? strtoupper($user->role) . '-Member' : 'GUEST';
+        $age = $user && $user->date_of_birth 
+            ? Carbon::parse($user->date_of_birth)->age 
+            : 'N/A';
+
+        return view('eventpage', [
+            'events' => $events,
+            'programs' => $programs,
+            'todayEvents' => $todayEvents,
+            'todayPrograms' => $todayPrograms,
+            'upcomingEvents' => $upcomingEvents,
+            'upcomingPrograms' => $upcomingPrograms,
+            'user' => $user,
+            'roleBadge' => $roleBadge,
+            'age' => $age,
+            'unevaluatedEvents' => $unevaluatedEvents,
+            'generalNotifications' => $allNotifications, // Use the combined notifications
+            'notificationCount' => $notificationCount,
+            'today' => $today,
+            'currentDateTime' => $currentDateTime
+        ]);
+    } catch (\Exception $e) {
+        Log::error('Error loading user events: ' . $e->getMessage());
+        Log::error('Stack trace: ' . $e->getTraceAsString());
+
+        // Provide default values for the missing variables
+        $today = Carbon::today();
+        $currentDateTime = Carbon::now();
+        $user = Auth::user();
+
+        // If user is not authenticated, redirect to login
+        if (!$user) {
+            return redirect()->route('login')->with('error', 'Please login to view events.');
+        }
+
+        return view('eventpage', [
+            'events' => collect(),
+            'programs' => collect(),
+            'todayEvents' => collect(),
+            'todayPrograms' => collect(),
+            'upcomingEvents' => collect(),
+            'upcomingPrograms' => collect(),
+            'user' => $user,
+            'roleBadge' => $user ? (strtoupper($user->role) . '-Member') : 'GUEST',
+            'age' => $user && $user->date_of_birth ? Carbon::parse($user->date_of_birth)->age : 'N/A',
+            'unevaluatedEvents' => collect(),
+            'generalNotifications' => collect(),
+            'notificationCount' => 0,
+            'today' => $today,
+            'currentDateTime' => $currentDateTime
+        ]);
     }
+}
 
     /**
      * Display events for public viewing (launched events only)

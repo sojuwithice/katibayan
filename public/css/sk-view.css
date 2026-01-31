@@ -828,6 +828,285 @@ body.sk-view {
   transform: translateY(-2px);
 }
 
+
+
+
+/* History Dots Button */
+.history-dots-btn {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.history-dots-btn:hover {
+    background-color: var(--bg-hover);
+    color: var(--primary-color);
+}
+
+/* Card Header Flex */
+.card-header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+/* History Modal Styles */
+.history-modal-content {
+    width: 90%;
+    max-width: 1100px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.history-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 20px;
+}
+
+.history-filter-section {
+    display: flex;
+    gap: 15px;
+    align-items: flex-end;
+    padding: 20px;
+    background: var(--card-bg);
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border: 1px solid var(--border-color);
+}
+
+.filter-group {
+    flex: 1;
+    min-width: 180px;
+}
+
+.filter-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 0.9rem;
+    color: var(--text-color);
+    font-weight: 600;
+}
+
+.filter-select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--bg-color);
+    color: var(--text-color);
+    font-size: 0.9rem;
+}
+
+.btn-outline {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    height: 36px;
+}
+
+.btn-outline:hover {
+    background: var(--bg-hover);
+    border-color: var(--primary-color);
+}
+
+/* History List Styles */
+.history-list-container {
+    flex: 1;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--card-bg);
+}
+
+.history-list-header {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 0.8fr 2fr;
+    padding: 15px 20px;
+    background: var(--bg-hover);
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-color);
+    gap: 15px;
+}
+
+.history-list {
+    min-height: 300px;
+}
+
+.history-item {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 0.8fr 2fr;
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--border-color);
+    gap: 15px;
+    align-items: center;
+}
+
+.history-item:hover {
+    background-color: var(--bg-hover);
+}
+
+.report-type-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: inline-block;
+    text-align: center;
+}
+
+.report-type-badge.accomplishment {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+}
+
+.report-type-badge.financial {
+    background-color: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+}
+
+.history-date {
+    font-family: monospace;
+    font-size: 0.9rem;
+}
+
+.file-count {
+    background: var(--bg-color);
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.file-count i {
+    font-size: 0.8rem;
+}
+
+.history-remarks {
+    font-size: 0.9rem;
+    color: var(--text-color);
+    opacity: 0.9;
+    max-height: 40px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.history-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    text-align: center;
+    color: var(--text-color);
+    opacity: 0.6;
+}
+
+.history-empty-state i {
+    font-size: 3rem;
+    margin-bottom: 15px;
+    opacity: 0.4;
+}
+
+.history-empty-state p {
+    font-size: 1rem;
+    margin: 0;
+}
+
+/* Modal Footer */
+.history-modal-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+    margin-top: 20px;
+}
+
+.pagination-info {
+    font-size: 0.9rem;
+    color: var(--text-color);
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.pagination-btn {
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background: var(--bg-hover);
+    border-color: var(--primary-color);
+}
+
+.pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+#currentPage {
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+/* Add to your CSS */
+.fa-spin {
+    animation: fa-spin 2s infinite linear;
+}
+
+@keyframes fa-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Optional: Add download button to files */
+.file-count {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.file-count:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.file-count:hover i {
+    color: white;
+}
+
+
 /* === RESPONSIVE === */
 @media (max-width: 900px) {
   .dashboard-container {
