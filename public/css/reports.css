@@ -207,13 +207,14 @@ body {
 }
 
 /* Topbar */
+/* Topbar */
 .topbar {
   position: fixed;
   top: 0;              
   left: 0;
   right: 0;
   height: 70px;
-  background: #e7e7e7;
+  background: var(--topbar-bg);
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -230,7 +231,7 @@ body {
 }
 
 .logo img {
-  height: 90px;         
+  height: 50px;         
   width: auto;
 }
 
@@ -238,18 +239,19 @@ body {
   display: flex;
   flex-direction: column;
   line-height: 1.2;
+  margin-left: 10px;
 }
 
 .logo-text .title {
   font-size: 18px;
   font-weight: 700;
-  color: #01214A;
+  color: var(--text-color);
 }
 
 .logo-text .subtitle {
   font-size: 13px;
   font-weight: 500;
-  color: #3C87C4;
+  color: var(--primary-color);
 }
 
 .topbar-right {
@@ -258,6 +260,7 @@ body {
   gap: 1.5rem;
   margin-left: auto;   
 }
+
 
 /* Time Button */
 .topbar-right .time {

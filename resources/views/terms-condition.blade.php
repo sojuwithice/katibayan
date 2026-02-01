@@ -16,7 +16,7 @@
         <span>KatiBayan</span>
         <small>Katipunan ng Kabataan Web Portal</small>
       </div>
-    </div>
+    </div> 
 
     <!-- menu -->
     <div class="menu-toggle" id="menu-toggle">
@@ -29,7 +29,6 @@
       <li><a href="index.html#features">Features</a></li>
       <li><a href="index.html#faqs">FAQs</a></li>
       <li><a href="index.html#about">About Us</a></li>
-      <li><a href="user-guide.html">User Guide</a></li>
       <li class="mobile-login">
         <a href="#" class="login-btn">Login your Account</a>
       </li>
@@ -53,151 +52,228 @@
   <!-- Terms Header -->
   <section class="terms-header" id="home">
     <div class="terms-header-content">
-      <h1>Terms and Conditions</h1>
+      <h1>KatiBayan Terms and Conditions</h1>
       <p>Please read these Terms and Conditions carefully before using the KatiBayan Web Portal. Your access to and use of the service is conditioned on your acceptance of and compliance with these terms.</p>
-      <div class="last-updated">
-        <i class="fas fa-calendar-alt"></i> Last Updated: March 15, 2025
+      <div class="Effective Date">
+        <i class="fas fa-calendar-alt"></i> Effective Date: March 15, 2025
       </div>
     </div>
   </section>
 
-  <!-- Mobile Swipe Container (Visible on Mobile Only) -->
-  <div class="mobile-swipe-container">
-    <div class="mobile-swipe-wrapper" id="swipeWrapper">
+  <!-- Mobile Container (Visible on Mobile Only) -->
+  <div class="mobile-container">
+    <div class="mobile-navigation-arrows">
+      <button class="nav-arrow" id="mobilePrevBtn" disabled>
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      
+      <div class="slide-counter">
+        <span id="currentSlide">1</span> / <span id="totalSlides">11</span>
+      </div>
+      
+      <button class="nav-arrow" id="mobileNextBtn">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+
+    <div class="mobile-slide-wrapper" id="slideWrapper">
       <!-- Slide 1: Introduction -->
-      <div class="mobile-swipe-slide" data-slide="1">
-        <h2>1. Introduction</h2>
-        <p>Welcome to KatiBayan, the official Katipunan ng Kabataan Web Portal ("the Portal"). These Terms and Conditions govern your use of our website and services.</p>
+      <div class="mobile-slide" data-slide="1">
+        <h2>Introduction</h2>
+        <p>Welcome to the KatiBayan System. These Terms and Conditions outline the rules, responsibilities, rights, and legal obligations associated with the use of this platform. By creating an account or using the system, you agree to be bound by all terms stated herein.</p>
         
         <div class="highlight-box">
-          <p><i class="fas fa-info-circle"></i> KatiBayan is designed for youth participation, community engagement, and effective management of Sangguniang Kabataan activities.</p>
+          <p><i class="fas fa-info-circle"></i> By checking "I Agree" and continuing with registration, you acknowledge that you have read, understood, and accepted these Terms and Conditions in full.</p>
         </div>
         
-        <p>By accessing or using the Portal, you agree to be bound by these Terms. If you disagree with any part of the terms, you may not access the service.</p>
-        
-        <div class="swipe-instruction">
-          <i class="fas fa-hand-point-up"></i> Swipe left to continue reading
-        </div>
+        <p>If you do not agree with any part of these Terms and Conditions, you must not create an account or proceed with the use of the system.</p>
       </div>
 
-      <!-- Slide 2: User Accounts -->
-      <div class="mobile-swipe-slide" data-slide="2">
-        <h2>2. User Accounts</h2>
-        
-        <h3>Eligibility</h3>
-        <p>To use the Portal, you must:</p>
-        <ul>
-          <li>Be between 15-30 years old for KK membership</li>
-          <li>Be a duly elected SK official for SK roles</li>
-          <li>Provide accurate and complete registration information</li>
-        </ul>
+      <!-- Slide 2: Acceptance & Purpose -->
+      <div class="mobile-slide" data-slide="2">
+        <h2>1. Acceptance of Terms</h2>
+        <p>By registering and accessing the KatiBayan System, you acknowledge that you have read, understood, and agreed to these Terms and Conditions. If you do not agree with any part of these terms, you must stop using the system immediately.</p>
 
-        <h3>Account Security</h3>
-        <p>You are responsible for:</p>
+        <h2>2. Purpose of the System</h2>
+        <p>The KatiBayan System is developed to support the Sangguniang Kabataan (SK) in:</p>
         <ul>
-          <li>Maintaining the confidentiality of your account</li>
-          <li>All activities under your account</li>
-          <li>Immediately notifying us of unauthorized use</li>
+          <li>Youth profiling and engagement monitoring</li>
+          <li>Community development and governance</li>
+          <li>Delivery of public services</li>
         </ul>
+        <p>All data collected and processed are intended solely for authorized purposes such as program planning, reporting, analytics, documentation, and youth involvement monitoring.</p>
       </div>
 
-      <!-- Slide 3: Acceptable Use -->
-      <div class="mobile-swipe-slide" data-slide="3">
-        <h2>3. Acceptable Use</h2>
-        
-        <h3>Permitted Uses</h3>
-        <p>You may use the Portal to:</p>
+      <!-- Slide 3: User Responsibilities -->
+      <div class="mobile-slide" data-slide="3">
+        <h2>3. User Responsibilities</h2>
+        <p>By using this system, you agree to:</p>
         <ul>
-          <li>Register for youth activities and programs</li>
-          <li>Participate in community engagement</li>
-          <li>Access SK programs and events information</li>
+          <li>Provide accurate, truthful, and updated information during registration and profile updates</li>
+          <li>Maintain the confidentiality of your account credentials</li>
+          <li>Avoid using the system for illegal, harmful, fraudulent, or unauthorized activities</li>
+          <li>Refrain from uploading false, misleading, offensive, or malicious content</li>
+          <li>Inform authorized personnel immediately regarding any unauthorized access or suspicious activity</li>
+          <li>Avoid hacking, disrupting, or manipulating the system's code, database, or security features</li>
         </ul>
-
-        <h3>Prohibited Activities</h3>
-        <p>You agree not to:</p>
-        <ul>
-          <li>Use the Portal for illegal purposes</li>
-          <li>Harass or intimidate other users</li>
-          <li>Post false or misleading content</li>
-        </ul>
-      </div>
-
-      <!-- Slide 4: Privacy -->
-      <div class="mobile-swipe-slide" data-slide="4">
-        <h2>4. Privacy & Data Protection</h2>
-        <p>Your privacy is important to us. Please read our <a href="#" style="color: #3C87C4;">Privacy Policy</a> to understand how we protect your information.</p>
         
         <div class="highlight-box">
-          <p><i class="fas fa-shield-alt"></i> We comply with the Data Privacy Act of 2012 (Republic Act No. 10173).</p>
+          <p><i class="fas fa-exclamation-triangle"></i> Violation of these responsibilities may result in suspension, removal of privileges, or permanent account deactivation.</p>
         </div>
+      </div>
+
+      <!-- Slide 4: Legal Framework -->
+      <div class="mobile-slide" data-slide="4">
+        <h2>4. Legal Framework</h2>
+        <p>The use, collection, storage, and processing of data within the KatiBayan System are governed by Philippine laws and policies:</p>
         
-        <h3>Data Collection</h3>
-        <p>We collect:</p>
+        <h3>4.1 Data Privacy Act of 2012 (RA 10173)</h3>
         <ul>
-          <li>Personal information for registration</li>
-          <li>Usage data to improve our services</li>
-          <li>Contact information for communication</li>
+          <li>Protects personal and sensitive information</li>
+          <li>Requires secure handling, processing, and storage of personal data</li>
+          <li>Grants users rights such as consent, access, and correction</li>
+        </ul>
+
+        <h3>4.2 Sangguniang Kabataan Reform Act of 2015 (RA 10742)</h3>
+        <ul>
+          <li>Mandates proper documentation and profiling for youth governance</li>
+          <li>Supports digital profiling and engagement systems</li>
+          <li>Promotes accountability and transparency within the SK</li>
         </ul>
       </div>
 
-      <!-- Slide 5: Intellectual Property -->
-      <div class="mobile-swipe-slide" data-slide="5">
-        <h2>5. Intellectual Property</h2>
-        <p>The Portal and its original content are owned by KatiBayan and protected by intellectual property laws.</p>
+      <!-- Slide 5: Legal Framework Continued -->
+      <div class="mobile-slide" data-slide="5">
+        <h2>4. Legal Framework (Continued)</h2>
         
-        <h3>User Content</h3>
-        <p>By posting content, you grant us a license to use it for operating the Portal.</p>
-        
-        <h3>Restrictions</h3>
-        <p>You may not:</p>
+        <h3>4.3 Local Government Code of 1991 (RA 7160)</h3>
         <ul>
-          <li>Copy or modify Portal content without permission</li>
-          <li>Use KatiBayan name/logo without authorization</li>
-          <li>Reverse engineer or extract source code</li>
+          <li>Provides LGUs the authority to establish systems that benefit community welfare</li>
+          <li>Supports youth documentation and development initiatives within barangays</li>
         </ul>
+
+        <h3>4.4 Other Relevant Guidelines</h3>
+        <ul>
+          <li>DILG-issued policies on youth governance</li>
+          <li>LGU ordinances on digital data collection and reporting</li>
+        </ul>
+        
+        <p>By using this system, you acknowledge that your data may be processed in accordance with these laws and guidelines.</p>
       </div>
 
-      <!-- Slide 6: Final Terms -->
-      <div class="mobile-swipe-slide" data-slide="6">
-        <h2>6. Final Terms</h2>
-        
-        <h3>Limitation of Liability</h3>
-        <p>KatiBayan is not liable for:</p>
+      <!-- Slide 6: Data Privacy and Security -->
+      <div class="mobile-slide" data-slide="6">
+        <h2>5. Data Privacy and Security</h2>
+        <p>The KatiBayan System is committed to safeguarding user information. By using the platform, you agree that:</p>
         <ul>
-          <li>Indirect or consequential damages</li>
-          <li>Loss of data or profits</li>
-          <li>Service interruptions</li>
+          <li>Your personal data will be collected, stored, and processed securely following RA 10173</li>
+          <li>Only authorized SK Chairperson and designated system administrators may access your data for legitimate purposes</li>
+          <li>The system uses appropriate technical measures such as encryption, secure authentication, role-based access, and data protection protocols</li>
+          <li>While protective measures are implemented, you understand that no system is completely free from risks, and you agree to use the platform responsibly to help maintain its security</li>
+        </ul>
+        
+        <div class="highlight-box">
+          <p><i class="fas fa-shield-alt"></i> We implement multiple layers of security to protect your personal information and ensure data confidentiality.</p>
+        </div>
+      </div>
+
+      <!-- Slide 7: System Availability and Updates -->
+      <div class="mobile-slide" data-slide="7">
+        <h2>6. System Availability and Updates</h2>
+        <p>The KatiBayan System may undergo maintenance, updates, or improvements without prior notice.</p>
+        
+        <p>Users acknowledge and agree that:</p>
+        <ul>
+          <li>Temporary downtime may occur, and continuous, uninterrupted service cannot be guaranteed</li>
+          <li>System features, modules, or functionalities may be added, modified, or removed as part of ongoing development</li>
+          <li>Administrators may temporarily restrict or suspend access for system integrity, security, or technical purposes</li>
+          <li>Regular maintenance is necessary to ensure system performance and security</li>
+        </ul>
+        
+        <div class="highlight-box">
+          <p><i class="fas fa-tools"></i> We strive to schedule maintenance during off-peak hours to minimize disruption to users.</p>
+        </div>
+      </div>
+
+      <!-- Slide 8: Limitation of Liability -->
+      <div class="mobile-slide" data-slide="8">
+        <h2>7. Limitation of Liability</h2>
+        <p>By using this system, you agree that:</p>
+        <ul>
+          <li>The developers, administrators, and SK Chairperson shall not be held liable for any damages resulting from system downtime, unauthorized access, external attacks, data loss, or misuse caused by user negligence</li>
+          <li>The system is provided on an "as-is" and "as-available" basis, without warranties of uninterrupted service or absolute security</li>
+          <li>Users are fully responsible for the accuracy of data they submit and the proper management of their accounts</li>
+          <li>The system operators are not responsible for any indirect, incidental, or consequential damages arising from system use</li>
+        </ul>
+        
+        <div class="highlight-box">
+          <p><i class="fas fa-balance-scale"></i> <strong>Disclaimer:</strong> To the maximum extent permitted by law, KatiBayan System operators disclaim all warranties, express or implied, including but not limited to implied warranties of merchantability, fitness for a particular purpose, and non-infringement.</p>
+        </div>
+      </div>
+
+      <!-- Slide 9: Intellectual Property -->
+      <div class="mobile-slide" data-slide="9">
+        <h2>8. Intellectual Property</h2>
+        <p>All content, design, code, databases, and materials within the KatiBayan System are protected by intellectual property rights. Users agree not to copy, reproduce, distribute, or reverse-engineer any part of the system without explicit written permission.</p>
+        
+        <h3>8.1 User-Generated Content</h3>
+        <p>By uploading or submitting content, you grant the system a non-exclusive license to store, display, and use such content for authorized purposes.</p>
+        
+        <h3>8.2 Third-Party Materials</h3>
+        <p>Any third-party logos, trademarks, or content remain the property of their respective owners.</p>
+      </div>
+
+      <!-- Slide 10: Governing Law -->
+      <div class="mobile-slide" data-slide="10">
+        <h2>9. Governing Law</h2>
+        <p>These Terms and Conditions shall be governed by and construed in accordance with the laws of the Republic of the Philippines. Any disputes arising from the use of this system shall be subject to the exclusive jurisdiction of the courts within the Philippines.</p>
+        
+        <h3>9.1 Amendments</h3>
+        <p>The system administrators reserve the right to modify these Terms and Conditions at any time. Users will be notified of significant changes, and continued use of the system after such modifications constitutes acceptance of the updated terms.</p>
+        
+        <h3>9.2 Severability</h3>
+        <p>If any provision of these Terms is found to be invalid or unenforceable, the remaining provisions shall remain in full force and effect.</p>
+      </div>
+
+      <!-- Slide 11: Final Terms -->
+      <div class="mobile-slide" data-slide="11">
+        <h2>User Acknowledgment</h2>
+        
+        <p>By checking "I Agree" and continuing with the registration or use of the platform, you acknowledge and confirm that:</p>
+        <ul>
+          <li>You have read, understood, and accepted these Terms and Conditions in full</li>
+          <li>You consent to the collection, processing, and use of your personal information in accordance with the system's Privacy Policy and applicable Philippine laws</li>
+          <li>You understand that the KatiBayan System is an official platform intended for youth profiling, engagement monitoring, community development, and governance, and that misuse may result in account suspension or legal consequences</li>
+          <li>You agree to use the platform responsibly, ethically, and lawfully, and to comply with all policies implemented for the security, integrity, and proper functioning of the system</li>
+          <li>You acknowledge that access to certain features depends on your user role, authorization level, and the accuracy of the information you provide</li>
         </ul>
 
-        <h3>Governing Law</h3>
-        <p>These Terms are governed by Philippine laws. Disputes shall be subject to Philippine courts.</p>
-        
         <h3>Contact Information</h3>
         <ul>
           <li><strong>Email:</strong> katibayan.system@gmail.com</li>
-          <li><strong>Office Hours:</strong> Mon-Fri, 8 AM to 5 PM</li>
         </ul>
         
-        <div class="swipe-nav">
-          <button class="swipe-btn" id="prevBtn" disabled>
-            <i class="fas fa-chevron-left"></i> Previous
-          </button>
-          
-          <button class="swipe-btn" id="acceptMobileBtn">
+        <div class="mobile-accept-section">
+          <button class="accept-btn" id="acceptMobileBtn">
             Accept Terms <i class="fas fa-check-circle"></i>
           </button>
         </div>
       </div>
     </div>
 
-    <!-- Swipe Indicator Dots -->
-    <div class="swipe-indicator" id="swipeIndicator">
-      <div class="swipe-dot active" data-slide="1"></div>
-      <div class="swipe-dot" data-slide="2"></div>
-      <div class="swipe-dot" data-slide="3"></div>
-      <div class="swipe-dot" data-slide="4"></div>
-      <div class="swipe-dot" data-slide="5"></div>
-      <div class="swipe-dot" data-slide="6"></div>
+    <!-- Navigation Dots -->
+    <div class="slide-dots" id="slideDots">
+      <div class="slide-dot active" data-slide="1"></div>
+      <div class="slide-dot" data-slide="2"></div>
+      <div class="slide-dot" data-slide="3"></div>
+      <div class="slide-dot" data-slide="4"></div>
+      <div class="slide-dot" data-slide="5"></div>
+      <div class="slide-dot" data-slide="6"></div>
+      <div class="slide-dot" data-slide="7"></div>
+      <div class="slide-dot" data-slide="8"></div>
+      <div class="slide-dot" data-slide="9"></div>
+      <div class="slide-dot" data-slide="10"></div>
+      <div class="slide-dot" data-slide="11"></div>
     </div>
   </div>
 
@@ -206,136 +282,208 @@
     <div class="terms-container">
       <!-- Introduction -->
       <div class="terms-section" id="section1">
-        <h2>1. Introduction</h2>
-        <p>Welcome to KatiBayan, the official Katipunan ng Kabataan Web Portal ("the Portal"). These Terms and Conditions govern your use of our website and services. By accessing or using the Portal, you agree to be bound by these Terms. If you disagree with any part of the terms, you may not access the service.</p>
+        <h2>Introduction</h2>
+        <p>Welcome to the KatiBayan System. These Terms and Conditions outline the rules, responsibilities, rights, and legal obligations associated with the use of this platform. By creating an account or using the system, you agree to be bound by all terms stated herein.</p>
         
         <div class="highlight-box">
-          <p><i class="fas fa-info-circle"></i> KatiBayan is designed for youth participation, community engagement, and effective management of Sangguniang Kabataan activities.</p>
+          <p><i class="fas fa-info-circle"></i> By checking "I Agree" and continuing with the registration or use of the platform, you acknowledge and confirm that you have read, understood, and accepted these Terms and Conditions in full.</p>
         </div>
+        
+        <p>If you do not agree with any part of these Terms and Conditions, you must not create an account or proceed with the use of the system.</p>
       </div>
 
-      <!-- User Accounts -->
+      <!-- User Acknowledgment -->
       <div class="terms-section" id="section2">
-        <h2>2. User Accounts and Registration</h2>
-        
-        <h3>2.1 Eligibility</h3>
-        <p>To use the Portal, you must:</p>
+        <h2>User Acknowledgment</h2>
+        <p>By checking "I Agree" and continuing with the registration or use of the platform, you acknowledge and confirm that:</p>
         <ul>
-          <li>Be between 15-30 years old for KK membership</li>
-          <li>Be a duly elected SK official for SK roles</li>
-          <li>Provide accurate and complete registration information</li>
-          <li>Use only one account per individual</li>
-        </ul>
-
-        <h3>2.2 Account Security</h3>
-        <p>You are responsible for:</p>
-        <ul>
-          <li>Maintaining the confidentiality of your account credentials</li>
-          <li>All activities that occur under your account</li>
-          <li>Immediately notifying us of any unauthorized use of your account</li>
-          <li>Using secure passwords and logging out after each session</li>
+          <li>You have read, understood, and accepted these Terms and Conditions in full</li>
+          <li>You consent to the collection, processing, and use of your personal information in accordance with the system's Privacy Policy and applicable Philippine laws</li>
+          <li>You understand that the KatiBayan System is an official platform intended for youth profiling, engagement monitoring, community development, and governance, and that misuse may result in account suspension or legal consequences</li>
+          <li>You agree to use the platform responsibly, ethically, and lawfully, and to comply with all policies implemented for the security, integrity, and proper functioning of the system</li>
+          <li>You acknowledge that access to certain features depends on your user role, authorization level, and the accuracy of the information you provide</li>
         </ul>
       </div>
 
-      <!-- Acceptable Use -->
+      <!-- Acceptance of Terms -->
       <div class="terms-section" id="section3">
-        <h2>3. Acceptable Use</h2>
-        
-        <h3>3.1 Permitted Uses</h3>
-        <p>You may use the Portal to:</p>
-        <ul>
-          <li>Register for youth activities and programs</li>
-          <li>Participate in community engagement initiatives</li>
-          <li>Access information about SK programs and events</li>
-          <li>Communicate with other youth members and officials</li>
-          <li>Submit proposals and feedback for youth development</li>
-        </ul>
+        <h2>1. Acceptance of Terms</h2>
+        <p>By registering and accessing the KatiBayan System, you acknowledge that you have read, understood, and agreed to these Terms and Conditions. If you do not agree with any part of these terms, you must stop using the system immediately.</p>
+      </div>
 
-        <h3>3.2 Prohibited Activities</h3>
-        <p>You agree not to:</p>
+      <!-- Purpose of the System -->
+      <div class="terms-section" id="section4">
+        <h2>2. Purpose of the System</h2>
+        <p>The KatiBayan System is developed to support the Sangguniang Kabataan (SK) in youth profiling, engagement monitoring, community development, governance, and delivery of public services.</p>
+        <p>All data collected and processed are intended solely for authorized purposes such as:</p>
         <ul>
-          <li>Use the Portal for any illegal purposes</li>
-          <li>Harass, threaten, or intimidate other users</li>
-          <li>Post false, misleading, or defamatory content</li>
-          <li>Impersonate any person or entity</li>
-          <li>Attempt to gain unauthorized access to other accounts</li>
+          <li>Program planning and implementation</li>
+          <li>Reporting and documentation</li>
+          <li>Analytics and research</li>
+          <li>Youth involvement monitoring</li>
+          <li>Governance and transparency initiatives</li>
         </ul>
       </div>
 
-      <!-- Privacy Policy -->
-      <div class="terms-section" id="section4">
-        <h2>4. Privacy and Data Protection</h2>
-        <p>Your privacy is important to us. Please read our <a href="#" style="color: #3C87C4; text-decoration: underline;">Privacy Policy</a> to understand how we collect, use, and protect your personal information.</p>
+      <!-- User Responsibilities -->
+      <div class="terms-section" id="section5">
+        <h2>3. User Responsibilities</h2>
+        <p>By using this system, you agree to:</p>
+        <ul>
+          <li>Provide accurate, truthful, and updated information during registration and profile updates</li>
+          <li>Maintain the confidentiality of your account credentials</li>
+          <li>Avoid using the system for illegal, harmful, fraudulent, or unauthorized activities</li>
+          <li>Refrain from uploading false, misleading, offensive, or malicious content</li>
+          <li>Inform authorized personnel immediately regarding any unauthorized access or suspicious activity</li>
+          <li>Avoid hacking, disrupting, or manipulating the system's code, database, or security features</li>
+        </ul>
         
         <div class="highlight-box">
-          <p><i class="fas fa-shield-alt"></i> We comply with the Data Privacy Act of 2012 (Republic Act No. 10173) and implement appropriate security measures to protect your data.</p>
+          <p><i class="fas fa-exclamation-triangle"></i> Violation of these responsibilities may result in suspension, removal of privileges, or permanent account deactivation.</p>
+        </div>
+      </div>
+
+      <!-- Legal Framework -->
+      <div class="terms-section" id="section6">
+        <h2>4. Legal Framework</h2>
+        <p>The use, collection, storage, and processing of data within the KatiBayan System are governed by the following Philippine laws and policies:</p>
+        
+        <h3>4.1 Data Privacy Act of 2012 (RA 10173)</h3>
+        <ul>
+          <li>Protects personal and sensitive information</li>
+          <li>Requires secure handling, processing, and storage of personal data</li>
+          <li>Grants users rights such as consent, access, and correction</li>
+        </ul>
+
+        <h3>4.2 Sangguniang Kabataan Reform Act of 2015 (RA 10742)</h3>
+        <ul>
+          <li>Mandates proper documentation and profiling for youth governance</li>
+          <li>Supports digital profiling and engagement systems</li>
+          <li>Promotes accountability and transparency within the SK</li>
+        </ul>
+
+        <h3>4.3 Local Government Code of 1991 (RA 7160)</h3>
+        <ul>
+          <li>Provides LGUs the authority to establish systems that benefit community welfare</li>
+          <li>Supports youth documentation and development initiatives within barangays</li>
+        </ul>
+
+        <h3>4.4 Other Relevant Guidelines</h3>
+        <ul>
+          <li>DILG-issued policies on youth governance</li>
+          <li>LGU ordinances on digital data collection and reporting</li>
+        </ul>
+        
+        <p>By using this system, you acknowledge that your data may be processed in accordance with these laws and guidelines.</p>
+      </div>
+
+      <!-- Data Privacy and Security -->
+      <div class="terms-section" id="section7">
+        <h2>5. Data Privacy and Security</h2>
+        <p>The KatiBayan System is committed to safeguarding user information. By using the platform, you agree that:</p>
+        <ul>
+          <li>Your personal data will be collected, stored, and processed securely following RA 10173</li>
+          <li>Only authorized SK Chairperson and designated system administrators may access your data for legitimate purposes</li>
+          <li>The system uses appropriate technical measures such as encryption, secure authentication, role-based access, and data protection protocols</li>
+          <li>While protective measures are implemented, you understand that no system is completely free from risks, and you agree to use the platform responsibly to help maintain its security</li>
+        </ul>
+        
+        <div class="highlight-box">
+          <p><i class="fas fa-shield-alt"></i> <strong>Security Measures:</strong> We implement multiple layers of security including data encryption, secure authentication protocols, role-based access control, regular security audits, and compliance with data protection standards to ensure the confidentiality and integrity of your information.</p>
         </div>
         
-        <h3>4.1 Data Collection</h3>
-        <p>We collect information necessary for:</p>
+        <h3>5.1 Data Retention</h3>
+        <p>Your personal data will be retained only for as long as necessary to fulfill the purposes for which it was collected, or as required by applicable laws and regulations.</p>
+        
+        <h3>5.2 Data Access Rights</h3>
+        <p>As a data subject under RA 10173, you have the right to:</p>
         <ul>
-          <li>User registration and account management</li>
-          <li>Providing and improving our services</li>
-          <li>Communicating important updates and announcements</li>
-          <li>Complying with legal obligations</li>
+          <li>Access your personal information</li>
+          <li>Correct inaccurate or incomplete data</li>
+          <li>Request deletion of your data under certain circumstances</li>
+          <li>Object to the processing of your personal data</li>
+          <li>Withdraw consent at any time</li>
+        </ul>
+      </div>
+
+      <!-- System Availability and Updates -->
+      <div class="terms-section" id="section8">
+        <h2>6. System Availability and Updates</h2>
+        <p>The KatiBayan System may undergo maintenance, updates, or improvements without prior notice. Users acknowledge and agree that:</p>
+        
+        <ul>
+          <li>Temporary downtime may occur, and continuous, uninterrupted service cannot be guaranteed</li>
+          <li>System features, modules, or functionalities may be added, modified, or removed as part of ongoing development</li>
+          <li>Administrators may temporarily restrict or suspend access for system integrity, security, or technical purposes</li>
+          <li>Regular maintenance is necessary to ensure system performance and security</li>
+          <li>Advance notice will be provided for scheduled maintenance whenever possible</li>
+          <li>Emergency maintenance may be performed without prior notice to address critical security or performance issues</li>
+        </ul>
+          <h3>6.1 System Updates</h3>
+        <p>Updates to the system may include:</p>
+        <ul>
+          <li>Security patches and vulnerability fixes</li>
+          <li>Performance improvements</li>
+          <li>New features and functionality</li>
+          <li>Bug fixes and stability improvements</li>
+          <li>Compatibility updates</li>
+        </ul>
+        
+        <h3>6.2 Service Level Agreement</h3>
+        <p>While we strive for high availability, we do not guarantee specific uptime percentages. System availability may be affected by factors beyond our control including:</p>
+        <ul>
+          <li>Internet connectivity issues</li>
+          <li>Third-party service disruptions</li>
+          <li>Power outages</li>
+          <li>Natural disasters</li>
+          <li>Cybersecurity incidents</li>
+        </ul>
+      </div>
+
+      <!-- Limitation of Liability -->
+      <div class="terms-section" id="section9">
+        <h2>7. Limitation of Liability</h2>
+        <p>By using this system, you agree that:</p>
+        <ul>
+          <li>The developers, administrators, and SK Chairperson shall not be held liable for any damages resulting from system downtime, unauthorized access, external attacks, data loss, or misuse caused by user negligence</li>
+          <li>The system is provided on an "as-is" and "as-available" basis, without warranties of uninterrupted service or absolute security</li>
+          <li>Users are fully responsible for the accuracy of data they submit and the proper management of their accounts</li>
+          <li>The system operators are not responsible for any indirect, incidental, or consequential damages arising from system use</li>
+        </ul>
+        
+        <div class="highlight-box">
+          <p><i class="fas fa-balance-scale"></i> <strong>Disclaimer:</strong> To the maximum extent permitted by law, KatiBayan System operators disclaim all warranties, express or implied, including but not limited to implied warranties of merchantability, fitness for a particular purpose, and non-infringement.</p>
+        </div>
+        
+        <h3>7.1 User Liability</h3>
+        <p>Users are liable for:</p>
+        <ul>
+          <li>Any content they upload or share through the system</li>
+          <li>Unauthorized use of their account credentials</li>
+          <li>Any damage caused to the system or other users through misuse</li>
+          <li>Violation of applicable laws or regulations</li>
         </ul>
       </div>
 
       <!-- Intellectual Property -->
-      <div class="terms-section" id="section5">
-        <h2>5. Intellectual Property</h2>
-        <p>The Portal and its original content, features, and functionality are owned by KatiBayan and are protected by international copyright, trademark, and other intellectual property laws.</p>
+      <div class="terms-section" id="section10">
+        <h2>8. Intellectual Property</h2>
+        <p>All content, design, code, databases, and materials within the KatiBayan System are protected by intellectual property rights. Users agree not to copy, reproduce, distribute, or reverse-engineer any part of the system without explicit written permission.</p>
         
-        <h3>5.1 User Content</h3>
-        <p>By posting content on the Portal, you grant us a non-exclusive, worldwide, royalty-free license to use, modify, and display such content for the purposes of operating the Portal.</p>
+        <h3>8.1 User-Generated Content</h3>
+        <p>By uploading or submitting content, you grant the system a non-exclusive license to store, display, and use such content for authorized purposes.</p>
         
-        <h3>5.2 Restrictions</h3>
-        <p>You may not:</p>
-        <ul>
-          <li>Copy, modify, or distribute Portal content without permission</li>
-          <li>Use the KatiBayan name or logo without authorization</li>
-          <li>Reverse engineer or attempt to extract source code</li>
-          <li>Create derivative works based on the Portal</li>
-        </ul>
+        <h3>8.2 Third-Party Materials</h3>
+        <p>Any third-party logos, trademarks, or content remain the property of their respective owners.</p>
       </div>
 
-      <!-- Final Sections -->
-      <div class="terms-section" id="section6">
-        <h2>6. Final Terms</h2>
-        
-        <h3>6.1 Limitation of Liability</h3>
-        <p>To the maximum extent permitted by law, KatiBayan shall not be liable for:</p>
-        <ul>
-          <li>Any indirect, incidental, or consequential damages</li>
-          <li>Loss of data, profits, or business opportunities</li>
-          <li>Errors or omissions in Portal content</li>
-          <li>Third-party actions or content</li>
-          <li>Service interruptions or technical issues</li>
-        </ul>
-
-        <h3>6.2 Changes to Terms</h3>
-        <p>We reserve the right to modify or replace these Terms at any time. If a revision is material, we will provide at least 30 days' notice prior to any new terms taking effect.</p>
-        
-        <h3>6.3 Governing Law</h3>
-        <p>These Terms shall be governed and construed in accordance with the laws of the Republic of the Philippines, without regard to its conflict of law provisions.</p>
-        
-        <h3>6.4 Contact Information</h3>
-        <p>If you have any questions about these Terms and Conditions, please contact us:</p>
-        <ul>
-          <li><strong>Email:</strong> katibayan.system@gmail.com</li>
-          <li><strong>Office Hours:</strong> Monday to Friday, 8:00 AM to 5:00 PM</li>
-          <li><strong>Response Time:</strong> Within 3-5 business days</li>
-        </ul>
-      </div>
-
-      <!-- Desktop Navigation -->
       <div class="desktop-nav">
         <button class="desktop-nav-btn" id="desktopPrevBtn" disabled>
           <i class="fas fa-chevron-left"></i> Previous Section
         </button>
         
         <div class="desktop-progress">
-          Section <span id="currentSection">1</span> of 6
+          Section <span id="currentSection">1</span> of 11
         </div>
         
         <button class="desktop-nav-btn" id="desktopNextBtn">
@@ -375,6 +523,7 @@
 
   <!-- Footer -->
   <footer class="footer">  
+      <div class="footer-above"></div>
     <div class="footer-container">
       <!-- CONTACT INFORMATION -->
       <div class="footer-contact">
@@ -403,14 +552,12 @@
         <h3>LEGAL</h3>
         <ul>
           <li><a href="#" style="font-weight: bold; color: #FFE9AD;">Terms and Conditions</a></li>
-          <li><a href="#">Privacy Policy</a></li>
         </ul>
       </div>
       <div class="footer-legal">
         <h3>USER GUIDE</h3>
         <ul>
           <li><a href="user-guide.html">Learn to Use</a></li>
-          <li><a href="user-guide.html#user-role">Registration Guide</a></li>
         </ul>
       </div>
     </div>
@@ -433,11 +580,13 @@
       const declineBtn = document.getElementById('declineBtn');
       const scrollTopBtn = document.getElementById('scrollTop');
       
-      // Mobile Swipe Variables
-      const swipeWrapper = document.getElementById('swipeWrapper');
-      const swipeDots = document.querySelectorAll('.swipe-dot');
-      const prevBtn = document.getElementById('prevBtn');
-      const nextBtn = document.getElementById('nextBtn');
+      // Mobile Navigation Variables
+      const slideWrapper = document.getElementById('slideWrapper');
+      const slideDots = document.querySelectorAll('.slide-dot');
+      const mobilePrevBtn = document.getElementById('mobilePrevBtn');
+      const mobileNextBtn = document.getElementById('mobileNextBtn');
+      const currentSlideSpan = document.getElementById('currentSlide');
+      const totalSlidesSpan = document.getElementById('totalSlides');
       const acceptMobileBtn = document.getElementById('acceptMobileBtn');
       
       // Desktop Navigation Variables
@@ -448,28 +597,16 @@
       
       let currentSlide = 0;
       let currentDesktopSection = 1;
-      const totalSlides = 6;
-      const totalDesktopSections = 6;
+      const totalSlides = 11;
+      const totalDesktopSections = 11;
       
-      // Initialize Mobile Swipe
-      function initMobileSwipe() {
+      // Initialize Mobile Navigation
+      function initMobileNavigation() {
+        totalSlidesSpan.textContent = totalSlides;
         updateMobileNav();
         
-        // Swipe functionality
-        let touchStartX = 0;
-        let touchEndX = 0;
-        
-        swipeWrapper.addEventListener('touchstart', e => {
-          touchStartX = e.changedTouches[0].screenX;
-        });
-        
-        swipeWrapper.addEventListener('touchend', e => {
-          touchEndX = e.changedTouches[0].screenX;
-          handleSwipe();
-        });
-        
-        // Button navigation
-        prevBtn.addEventListener('click', () => {
+        // Previous button
+        mobilePrevBtn.addEventListener('click', () => {
           if (currentSlide > 0) {
             currentSlide--;
             updateSlidePosition();
@@ -477,8 +614,17 @@
           }
         });
         
+        // Next button
+        mobileNextBtn.addEventListener('click', () => {
+          if (currentSlide < totalSlides - 1) {
+            currentSlide++;
+            updateSlidePosition();
+            updateMobileNav();
+          }
+        });
+        
         // Dot navigation
-        swipeDots.forEach((dot, index) => {
+        slideDots.forEach((dot, index) => {
           dot.addEventListener('click', () => {
             currentSlide = index;
             updateSlidePosition();
@@ -492,51 +638,29 @@
         });
       }
       
-      function handleSwipe() {
-        const swipeThreshold = 50;
-        const diff = touchStartX - touchEndX;
-        
-        if (Math.abs(diff) > swipeThreshold) {
-          if (diff > 0 && currentSlide < totalSlides - 1) {
-            // Swipe left - next slide
-            currentSlide++;
-          } else if (diff < 0 && currentSlide > 0) {
-            // Swipe right - previous slide
-            currentSlide--;
-          }
-          updateSlidePosition();
-          updateMobileNav();
-        }
-      }
-      
       function updateSlidePosition() {
-        swipeWrapper.style.transform = `translateX(-${currentSlide * 100}%)`;
+        slideWrapper.style.transform = `translateX(-${currentSlide * 100}%)`;
+        slideWrapper.style.transition = 'transform 0.3s ease';
       }
       
       function updateMobileNav() {
+        // Update counter
+        currentSlideSpan.textContent = currentSlide + 1;
+        
         // Update dots
-        swipeDots.forEach((dot, index) => {
+        slideDots.forEach((dot, index) => {
           dot.classList.toggle('active', index === currentSlide);
         });
         
         // Update buttons
-        prevBtn.disabled = currentSlide === 0;
+        mobilePrevBtn.disabled = currentSlide === 0;
+        mobileNextBtn.disabled = currentSlide === totalSlides - 1;
         
         // Show/hide accept button on last slide
         if (currentSlide === totalSlides - 1) {
           acceptMobileBtn.style.display = 'flex';
         } else {
           acceptMobileBtn.style.display = 'none';
-        }
-        
-        // Update instruction text
-        const instruction = document.querySelector('.swipe-instruction');
-        if (instruction) {
-          if (currentSlide === totalSlides - 1) {
-            instruction.innerHTML = '<i class="fas fa-hand-point-up"></i> Tap Accept to agree to terms';
-          } else {
-            instruction.innerHTML = '<i class="fas fa-hand-point-up"></i> Swipe left to continue reading';
-          }
         }
       }
       
@@ -654,138 +778,44 @@
         document.body.classList.add('dark-theme');
       }
       updateThemeIcons();
-      
-      // Add dark theme styles
-      const style = document.createElement('style');
-      style.textContent = `
-        body.dark-theme {
-          background: #1a1a1a;
-          color: #f0f0f0;
-        }
-        
-        body.dark-theme .terms-content,
-        body.dark-theme .mobile-swipe-slide {
-          background: #2d2d2d;
-          color: #e0e0e0;
-        }
-        
-        body.dark-theme .terms-section p,
-        body.dark-theme .terms-section li,
-        body.dark-theme .highlight-box p,
-        body.dark-theme .mobile-swipe-slide p,
-        body.dark-theme .mobile-swipe-slide li {
-          color: #d0d0d0;
-        }
-        
-        body.dark-theme .terms-section h2,
-        body.dark-theme .terms-section h3,
-        body.dark-theme .mobile-swipe-slide h2,
-        body.dark-theme .mobile-swipe-slide h3 {
-          color: #8ab4f8;
-        }
-        
-        body.dark-theme .highlight-box {
-          background: #1e3a5f;
-          border-left-color: #3C87C4;
-        }
-        
-        body.dark-theme .ack-modal-content {
-          background: #2d2d2d;
-          color: #f0f0f0;
-        }
-        
-        body.dark-theme .nav-links {
-          background-color: #2d2d2d;
-        }
-        
-        body.dark-theme .nav-links a {
-          color: #f0f0f0;
-        }
-        
-        body.dark-theme .terms-section {
-          border-bottom-color: #444;
-        }
-        
-        body.dark-theme .swipe-instruction {
-          color: #aaa;
-        }
-      `;
-      document.head.appendChild(style);
-      
-      // Add event listeners for theme toggles
-      if (themeToggle) {
-        themeToggle.addEventListener('click', toggleTheme);
-      }
-      
-      if (mobileThemeToggle) {
-        mobileThemeToggle.addEventListener('click', toggleTheme);
-      }
 
       // Email button functionality
-      if (emailBtn) {
-        emailBtn.addEventListener('click', function() {
-          window.location.href = 'mailto:katibayan.system@gmail.com?subject=Terms and Conditions Inquiry&body=Hello KatiBayan Team, I have a question about your Terms and Conditions:';
-        });
-      }
+      emailBtn.addEventListener('click', function() {
+        window.location.href = 'mailto:katibayan.system@gmail.com?subject=Terms and Conditions Inquiry&body=Hello KatiBayan Team, I have a question about your Terms and Conditions:';
+      });
 
       // Modal buttons
-      if (acceptBtn) {
-        acceptBtn.addEventListener('click', function() {
-          alert('Thank you for accepting the Terms and Conditions. You may now proceed to use the KatiBayan Web Portal.');
-          localStorage.setItem('termsAccepted', 'true');
-          hideAcknowledgementModal();
-          // Redirect to home or registration page
-          // window.location.href = 'index.html';
-        });
-      }
+      acceptBtn.addEventListener('click', function() {
+        alert('Thank you for accepting the Terms and Conditions. You may now proceed to use the KatiBayan Web Portal.');
+        localStorage.setItem('termsAccepted', 'true');
+        hideAcknowledgementModal();
+      });
       
-      if (declineBtn) {
-        declineBtn.addEventListener('click', function() {
-          alert('You must accept the Terms and Conditions to use the KatiBayan Web Portal.');
-          hideAcknowledgementModal();
-        });
-      }
+      declineBtn.addEventListener('click', function() {
+        alert('You must accept the Terms and Conditions to use the KatiBayan Web Portal.');
+        hideAcknowledgementModal();
+      });
 
       // Scroll to top functionality
-      if (scrollTopBtn) {
-        window.addEventListener('scroll', function() {
-          if (window.pageYOffset > 300) {
-            scrollTopBtn.style.display = 'flex';
-          } else {
-            scrollTopBtn.style.display = 'none';
-          }
-        });
+      window.addEventListener('scroll', function() {
+        if (window.pageYOffset > 300) {
+          scrollTopBtn.style.display = 'flex';
+        } else {
+          scrollTopBtn.style.display = 'none';
+        }
+      });
 
-        scrollTopBtn.addEventListener('click', function() {
-          window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-          });
-        });
-      }
-
-      // Smooth scrolling for anchor links
-      document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function(e) {
-          if (this.getAttribute('href') === '#') return;
-          
-          e.preventDefault();
-          const targetId = this.getAttribute('href');
-          const targetElement = document.querySelector(targetId);
-          
-          if (targetElement) {
-            window.scrollTo({
-              top: targetElement.offsetTop - 80,
-              behavior: 'smooth'
-            });
-          }
+      scrollTopBtn.addEventListener('click', function() {
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth'
         });
       });
 
       // Initialize based on device
       function initBasedOnDevice() {
         if (window.innerWidth <= 768) {
-          initMobileSwipe();
+          initMobileNavigation();
         } else {
           initDesktopNavigation();
         }
@@ -794,6 +824,15 @@
       // Check on load and resize
       initBasedOnDevice();
       window.addEventListener('resize', initBasedOnDevice);
+
+      // Add event listeners for theme toggles
+      if (themeToggle) {
+        themeToggle.addEventListener('click', toggleTheme);
+      }
+      
+      if (mobileThemeToggle) {
+        mobileThemeToggle.addEventListener('click', toggleTheme);
+      }
 
       // Check if terms were previously accepted
       if (localStorage.getItem('termsAccepted') === 'true') {

@@ -84,13 +84,19 @@
 <!-- Header -->
 <header class="header">
   <div class="header-left">
-    <div class="logo"></div>
+    <img 
+      src="{{ asset('images/KatiBayan-Logo_B.png') }}" 
+      alt="KatiBayan Logo"
+      class="logo"
+    >
     <h2>Welcome to KatiBayan</h2>
   </div>
+
   <button class="theme-toggle" id="themeToggle">
     <i data-lucide="sun" class="lucide-icon"></i>
   </button>
 </header>
+
 
 <!-- Banner -->
 <section class="banner">

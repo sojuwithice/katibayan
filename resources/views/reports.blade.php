@@ -24,10 +24,6 @@
       <span class="label">Dashboard</span>
     </a>
 
-    <a href="#">
-      <i data-lucide="chart-pie"></i>
-      <span class="label">Analytics</span>
-    </a>
 
     <a href="{{ route('youth-profilepage') }}">
       <i data-lucide="users"></i>
@@ -79,7 +75,7 @@
 
     <header class="topbar">
       <div class="logo">
-        <img src="{{ asset('images/logo.png') }}" alt="Logo">
+        <img src="{{ asset('images/KatiBayan-Logo_B.png') }}" alt="Logo">
         <div class="logo-text">
           <span class="title">Katibayan</span>
           <span class="subtitle">Web Portal</span>

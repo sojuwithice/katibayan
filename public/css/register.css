@@ -366,16 +366,17 @@ body {
 }
 
 .logo {
-  width: 40px;
-  height: 40px;
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
   border-radius: 50%;
-  background: radial-gradient(circle at top left, #01214A, #3C87C4, #9ad1ff);
 }
 
 .header h2 {
   font-size: 1rem;
   font-weight: 600;
 }
+
 
 .theme-toggle {
   background: none;

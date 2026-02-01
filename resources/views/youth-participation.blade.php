@@ -27,11 +27,6 @@
         <span class="label">Dashboard</span>
       </a>
 
-      <a href="#">
-        <i data-lucide="chart-pie"></i>
-        <span class="label">Analytics</span>
-      </a>
-
       <a href="{{ route('youth-profilepage') }}">
         <i data-lucide="users"></i>
         <span class="label">Youth Profile</span>
