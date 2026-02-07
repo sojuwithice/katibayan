@@ -186,7 +186,7 @@ body {
   margin-bottom: 0.2rem; 
 }
 
-/* Submenu */
+/* Submenu base styles */
 .submenu {
   display: none;
   flex-direction: column;
@@ -203,11 +203,13 @@ body {
   display: block;
 }
 
+/* active submenu link */
 .submenu a.active {
   background: #fff;
   color: #1C6DD0;
 }
 
+/* hover effect */
 .submenu a:hover {
   color: var(--accent-color);
   background: rgba(255, 255, 255, 0.2);
@@ -272,7 +274,6 @@ body {
   padding: 0.5rem 2rem;
   justify-content: space-between;
   z-index: 2000;       
-  border-bottom: 1px solid var(--border-color);
 }         
 
 /* Logo */

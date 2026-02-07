@@ -59,8 +59,8 @@
     <!-- Topbar -->
     <header class="topbar">
       <button id="mobileMenuBtn" class="mobile-hamburger">
-  <i data-lucide="menu"></i>
-</button>
+        <i data-lucide="menu"></i>
+      </button>
       <div class="logo">
         <img src="{{ asset('images/KatiBayan-Logo_B.png') }}" alt="Logo">
         <div class="logo-text">

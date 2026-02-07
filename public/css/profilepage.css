@@ -52,6 +52,7 @@ body {
   width: 90px;
   min-height: 400px; 
   border-radius: 25px; 
+  border: .2rem solid var(--border-color);
   padding: 1rem 0;
   display: flex;
   flex-direction: column;
@@ -1625,27 +1626,31 @@ textarea:focus {
   gap: .4rem;
   font-size: 12px;
   line-height: 1.4;
+  
 }
 
 /* FIXED BADGE STYLES - Proper one-line display */
 .badge {
   display: inline-flex;
-  align-items: center;
+  align-items: center;      /* vertical */
+  justify-content: center; 
   background: var(--primary-color);
   border: 1px solid var(--primary-color);
   border-radius: 25px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
   overflow: hidden;
   font-size: 11px;
+  text-align: center;
   font-weight: 600;
   color: #fff;
   white-space: nowrap;
   line-height: 1;
   padding: 0;
+  
 }
 
 .badge span {
-  padding: 3px 9px;
+  padding: 3px 10px;
   display: inline-block;
   white-space: nowrap;
 }
@@ -1655,9 +1660,12 @@ textarea:focus {
 }
 
 .badge.blue {
-  background: var(--primary-color);
+  background: #fff;
   border: 1px solid var(--primary-color);
-  color: #fff;
+  color: #3C87C4;
+  width: 12%;
+  text-align: center;
+  height: 15px;
 }
 
 /* === YELLOW SK BADGE FOR PROFILE CARD === */
@@ -1665,6 +1673,8 @@ textarea:focus {
   background: #FBC93F;
   border-color: #FBC93F;
   color: #fff;
+  width: 10%;
+  
 }
 
 .badge.sk-badge span + span {
@@ -1778,30 +1788,24 @@ textarea:focus {
   width: 100%;
   text-align: center;
 }
-
 .calendar .day {
-  width: 50px;
-  height: 90px;
+  width: 50px;                  
+  height: 90px;                 
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: center;      
   border-radius: 20px;
   font-weight: 600;
-  background: var(--secondary-bg);
-  color: var(--text-color);
 }
-
 .calendar .day.active {
   background: var(--accent-color);
 }
-
 .calendar .day.active .weekday,
 .calendar .day.active .date {
   color: #000;
   font-weight: 700;
 }
-
 .weekdays-row {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -1810,13 +1814,11 @@ textarea:focus {
   color: var(--primary-color);
   margin-bottom: 0.5rem;
 }
-
 .dates-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 0.5rem;
 }
-
 .dates-grid .day {
   height: 70px;
   display: flex;
@@ -1824,16 +1826,12 @@ textarea:focus {
   justify-content: center;
   border-radius: 12px;
   font-weight: 600;
-  background: var(--secondary-bg);
-  color: var(--text-color);
+  background: var(--bg-color);
 }
-
 .dates-grid .day.active {
   background: var(--accent-color);
   font-weight: 700;
-  color: #000;
 }
-
 .dates-grid .day.empty {
   background: transparent;
   pointer-events: none;

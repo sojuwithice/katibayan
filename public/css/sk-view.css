@@ -26,19 +26,24 @@ body.sk-view {
 
 /* Fix for SK view header to match dashboard */
 .sk-view .topbar {
-  background: var(--sk-topbar-bg) !important;
-  border-bottom: 1px solid var(--border-color) !important;
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  z-index: 2000 !important;
+  position: fixed;
+  top: 0;              
+  left: 0;
+  right: 0;
+  height: 70px;
+  background: var(--topbar-bg);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 2rem;
+  justify-content: space-between;
+  z-index: 2000;     
 }
 
 /* Logo fix for SK view */
 .sk-view .logo img {
-  height: 90px !important; /* Match dashboard logo size */
-  width: auto !important;
+  height: 50px;         
+  width: auto;
 }
 
 .sk-view .logo-text {
