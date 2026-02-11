@@ -23,28 +23,168 @@
 <!-- Terms and Conditions Modal -->
 <div class="modal-overlay" id="termsModal">
   <div class="modal">
+
+    <!-- Header -->
     <div class="modal-header">
       <h2>Terms and Conditions</h2>
     </div>
-    <div class="modal-body">
+
+    <!-- Body (Scrollable incl. footer) -->
+    <div class="modal-body" id="termsContent">
+
+      <h3>KatiBayan Terms and Conditions</h3>
+      <p>
+        Please read these Terms and Conditions carefully before using the KatiBayan Web Portal.
+        Your access to and use of the service is conditioned on your acceptance of and compliance
+        with these Terms.
+      </p>
+
+      <hr>
+
+      <!-- INTRODUCTION -->
+      <h3>Introduction</h3>
+      <p>
+        Welcome to the KatiBayan System. These Terms and Conditions outline the rules,
+        responsibilities, rights, and legal obligations associated with the use of this
+        platform. By creating an account or accessing the system, you agree to be bound
+        by all terms stated herein.
+      </p>
+
+      <p>
+        If you do not agree with any part of these Terms and Conditions, you must not
+        create an account or proceed with the use of the system.
+      </p>
+
+      <!-- 1. ACCEPTANCE -->
       <h3>1. Acceptance of Terms</h3>
-      <p>By creating an account and using this system, you agree to comply with and be bound by these Terms and Conditions. If you do not agree, you may not proceed with the registration or use the system.</p>
+      <p>
+        By registering, accessing, or using the KatiBayan System, you acknowledge that
+        you have read, understood, and agreed to these Terms and Conditions. Your continued
+        use of the system constitutes your acceptance of any updates or modifications.
+      </p>
 
+      <!-- 2. PURPOSE -->
       <h3>2. Purpose of the System</h3>
-      <p>This system is designed to collect, manage, and analyze user information for official purposes such as youth profiling, community development, governance, and service delivery.</p>
+      <p>
+        The KatiBayan System is developed to support the Sangguniang Kabataan (SK) in:
+      </p>
+      <ul>
+        <li>Youth profiling and engagement monitoring</li>
+        <li>Community development and governance</li>
+        <li>Delivery of public services</li>
+        <li>Program planning, analytics, and reporting</li>
+      </ul>
+      <p>
+        All data collected is intended solely for authorized and official purposes.
+      </p>
 
+      <!-- 3. USER RESPONSIBILITIES -->
       <h3>3. User Responsibilities</h3>
-      <p>You agree to provide accurate, complete, and updated information during registration. You are responsible for maintaining the confidentiality of your account credentials. You agree not to use the system for unlawful, fraudulent, or unauthorized activities.</p>
+      <p>By using this system, you agree to:</p>
+      <ul>
+        <li>Provide accurate, truthful, and updated information</li>
+        <li>Maintain the confidentiality of your login credentials</li>
+        <li>Avoid unlawful, fraudulent, harmful, or unauthorized activities</li>
+        <li>Refrain from uploading false, misleading, offensive, or malicious content</li>
+        <li>Not attempt to hack, disrupt, or manipulate the system</li>
+        <li>Immediately report unauthorized access or suspicious activity</li>
+      </ul>
+      <p>
+        Violation of these responsibilities may result in suspension, restriction,
+        or permanent deactivation of your account.
+      </p>
 
-      <h3>4. Data Privacy and Security</h3>
-      <p>You agree to provide accurate, complete, and updated information during registration. You are responsible for maintaining the confidentiality of your account credentials. You agree not to use the system for unlawful, fraudulent, or unauthorized activities.</p>
-    </div>
-    <div class="modal-footer">
-      <button class="accept-btn" id="acceptBtn">I have read and accept the Term and Condition</button>
-      <button class="cancel-btn" id="cancelBtn">Cancel</button>
+      <!-- 4. LEGAL FRAMEWORK -->
+      <h3>4. Legal Framework</h3>
+      <p>
+        The collection, storage, and processing of data within the KatiBayan System are
+        governed by applicable Philippine laws, including but not limited to:
+      </p>
+      <ul>
+        <li><strong>RA 10173</strong> – Data Privacy Act of 2012</li>
+        <li><strong>RA 10742</strong> – Sangguniang Kabataan Reform Act of 2015</li>
+        <li><strong>RA 7160</strong> – Local Government Code of 1991</li>
+        <li>DILG-issued guidelines and LGU ordinances</li>
+      </ul>
+
+      <!-- 5. DATA PRIVACY -->
+      <h3>5. Data Privacy and Security</h3>
+      <p>
+        The KatiBayan System is committed to protecting your personal data. Information
+        collected will be stored and processed securely and accessed only by authorized
+        personnel for legitimate purposes.
+      </p>
+      <ul>
+        <li>Encryption and secure authentication are implemented</li>
+        <li>Role-based access control is enforced</li>
+        <li>Security audits and protection protocols are applied</li>
+      </ul>
+      <p>
+        While reasonable safeguards are in place, no system is completely free from risks.
+        Users are expected to use the platform responsibly.
+      </p>
+
+      <!-- 6. SYSTEM AVAILABILITY -->
+      <h3>6. System Availability and Updates</h3>
+      <p>
+        The system may undergo maintenance, updates, or improvements without prior notice.
+        Temporary downtime may occur, and uninterrupted service is not guaranteed.
+      </p>
+
+      <!-- 7. LIMITATION OF LIABILITY -->
+      <h3>7. Limitation of Liability</h3>
+      <p>
+        The KatiBayan System is provided on an “as-is” and “as-available” basis. The developers,
+        administrators, and SK officials shall not be held liable for damages arising from:
+      </p>
+      <ul>
+        <li>System downtime or technical issues</li>
+        <li>Unauthorized access or external attacks</li>
+        <li>Data loss due to user negligence</li>
+        <li>Misuse of the platform</li>
+      </ul>
+
+      <!-- 8. INTELLECTUAL PROPERTY -->
+      <h3>8. Intellectual Property</h3>
+      <p>
+        All system content, design, code, databases, and materials are protected by
+        intellectual property laws. Unauthorized copying, reproduction, or distribution
+        is strictly prohibited.
+      </p>
+
+      <!-- 9. GOVERNING LAW -->
+      <h3>9. Governing Law</h3>
+      <p>
+        These Terms and Conditions shall be governed by and construed in accordance with
+        the laws of the Republic of the Philippines. Any disputes shall fall under the
+        exclusive jurisdiction of Philippine courts.
+      </p>
+
+      <!-- 10. USER ACKNOWLEDGMENT -->
+      <h3>10. User Acknowledgment</h3>
+      <p>By accepting these Terms and Conditions, you acknowledge that:</p>
+      <ul>
+        <li>You have read and understood the terms in full</li>
+        <li>You consent to the collection and processing of your data</li>
+        <li>You agree to comply with all system policies</li>
+        <li>You understand that misuse may result in account suspension or legal action</li>
+      </ul>
+
+      <!-- FOOTER (part of scroll) -->
+      <div class="modal-footer">
+        <button class="accept-btn" id="acceptBtn" disabled>
+          I have read and accept the Terms and Conditions
+        </button>
+        <button class="cancel-btn" id="cancelBtn" disabled>
+          Cancel
+        </button>
+      </div>
+
     </div>
   </div>
 </div>
+
+
 
 <!-- Email Verification Error Modal -->
 <div id="emailVerificationModal" class="modal-overlay" style="display: none;">
@@ -765,17 +905,35 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 
-    // ---- TERMS MODAL ----
     const modal = document.getElementById("termsModal");
-    const acceptBtn = document.getElementById("acceptBtn");
-    const cancelBtn = document.getElementById("cancelBtn");
-    if (modal) {
-        modal.style.display = "flex";
-        acceptBtn?.addEventListener("click", () => modal.style.display = "none");
-        cancelBtn?.addEventListener("click", () => {
-            window.location.href = "/loginpage";
-        });
+const termsContent = document.getElementById("termsContent");
+const acceptBtn = document.getElementById("acceptBtn");
+const cancelBtn = document.getElementById("cancelBtn");
+
+if (modal && termsContent) {
+  modal.style.display = "flex";
+
+  termsContent.addEventListener("scroll", () => {
+    const { scrollTop, scrollHeight, clientHeight } = termsContent;
+    
+    // Check if user is within 5px of the bottom
+    if (scrollHeight - scrollTop <= clientHeight + 5) {
+      acceptBtn.disabled = false;
+      cancelBtn.disabled = false;
+      acceptBtn.style.opacity = "1";
+      cancelBtn.style.opacity = "1";
     }
+  });
+
+  acceptBtn.addEventListener("click", () => {
+    modal.style.display = "none";
+  });
+
+  cancelBtn.addEventListener("click", () => {
+    window.location.href = "/loginpage";
+  });
+}
+
 
     // ---- CUSTOM SELECT DROPDOWNS ----
     document.querySelectorAll(".select-wrapper").forEach(wrapper => {
